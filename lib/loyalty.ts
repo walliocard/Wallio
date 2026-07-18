@@ -14,7 +14,9 @@ export type Marchand = {
   mode_recompense: "cyclique" | "progressif";
   icone_tampons: string;
   couleur_principale: string;
-  anti_doublon_delai: number; // secondes
+  couleur_secondaire: string;
+  anti_doublon_delai: number;
+  fuseau_horaire: string;
   nfc_id?: string;
 };
 

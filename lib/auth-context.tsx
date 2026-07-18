@@ -9,6 +9,15 @@ type MarchandData = {
   id: string;
   nom: string;
   actif: boolean;
+  objectif_tampons: number;
+  nom_recompense: string;
+  mode_recompense: "cyclique" | "progressif";
+  icone_tampons: string;
+  couleur_principale: string;
+  couleur_secondaire: string;
+  anti_doublon_delai: number;
+  fuseau_horaire: string;
+  nfc_id?: string;
   [key: string]: unknown;
 };
 
