@@ -49,13 +49,13 @@ export default function AdminPage() {
 
   function formatDate(ts?: { seconds: number }) {
     if (!ts) return "—";
-    return new Date(ts.seconds * 1000).toLocaleDateString("fr-FR");
+    return new Date(ts.seconds * 1000).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
   }
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#00F5A0] border-t-transparent rounded-full animate-spin" />
+      <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
+        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
       </main>
     );
   }
@@ -63,18 +63,29 @@ export default function AdminPage() {
   const actifs = marchands.filter(m => m.actif).length;
 
   return (
-    <main className="min-h-screen p-6">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen px-6 py-10" style={{ background: "var(--bg)" }}>
+
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[10%] w-[600px] h-[500px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, rgba(0,122,255,0.15) 0%, transparent 70%)" }} />
+      </div>
+
+      <div className="max-w-5xl mx-auto relative">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-2xl font-bold">Wallio Admin</h1>
-            <p className="text-white/40 text-sm mt-1">{actifs} marchand{actifs > 1 ? "s" : ""} actif{actifs > 1 ? "s" : ""} · {marchands.length} au total</p>
+            <h1 className="text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
+              Administration
+            </h1>
+            <p className="text-[15px] mt-1" style={{ color: "var(--fg-secondary)" }}>
+              {actifs} marchand{actifs > 1 ? "s" : ""} actif{actifs > 1 ? "s" : ""} · {marchands.length} au total
+            </p>
           </div>
           <button
             onClick={() => signOut(auth).then(() => router.push("/admin/login"))}
-            className="text-xs text-white/30 hover:text-white/60 transition"
+            className="text-[13px] px-4 py-2 rounded-xl transition-all duration-200"
+            style={{ color: "var(--fg-secondary)", background: "var(--glass-bg)", border: "1px solid var(--border)" }}
           >
             Déconnexion
           </button>
@@ -83,61 +94,84 @@ export default function AdminPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Total marchands", value: marchands.length },
-            { label: "Actifs", value: actifs },
-            { label: "En attente", value: marchands.length - actifs },
+            { label: "Total", value: marchands.length, color: "var(--fg)" },
+            { label: "Actifs", value: actifs, color: "var(--accent)" },
+            { label: "En attente", value: marchands.length - actifs, color: "#FF9F0A" },
           ].map(stat => (
-            <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-5">
-              <p className="text-3xl font-bold">{stat.value}</p>
-              <p className="text-white/40 text-xs mt-1">{stat.label}</p>
+            <div key={stat.label} className="rounded-[24px] p-6 transition-all duration-200"
+              style={{
+                background: "var(--glass-bg)",
+                border: "1px solid var(--glass-border)",
+                backdropFilter: "blur(20px)",
+                boxShadow: "var(--shadow-sm)",
+              }}>
+              <p className="text-[36px] font-semibold tracking-tight" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-[13px] mt-1" style={{ color: "var(--fg-secondary)" }}>{stat.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Liste marchands */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+        {/* Table */}
+        <div className="rounded-[24px] overflow-hidden"
+          style={{
+            background: "var(--glass-bg)",
+            border: "1px solid var(--glass-border)",
+            backdropFilter: "blur(20px)",
+            boxShadow: "var(--shadow-md)",
+          }}>
+
           {marchands.length === 0 ? (
-            <div className="p-10 text-center text-white/30 text-sm">
-              Aucun marchand inscrit pour le moment.
+            <div className="py-20 text-center" style={{ color: "var(--fg-tertiary)" }}>
+              <p className="text-[15px]">Aucun marchand inscrit pour le moment.</p>
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left text-xs text-white/40 font-normal px-5 py-3">Établissement</th>
-                  <th className="text-left text-xs text-white/40 font-normal px-5 py-3">Email</th>
-                  <th className="text-left text-xs text-white/40 font-normal px-5 py-3">Inscription</th>
-                  <th className="text-left text-xs text-white/40 font-normal px-5 py-3">Statut</th>
-                  <th className="px-5 py-3" />
+                <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                  {["Établissement", "Email", "Inscription", "Statut", ""].map(h => (
+                    <th key={h} className="text-left text-[12px] font-medium px-6 py-4"
+                      style={{ color: "var(--fg-tertiary)" }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {marchands.map((m, i) => (
-                  <tr key={m.id} className={i < marchands.length - 1 ? "border-b border-white/5" : ""}>
-                    <td className="px-5 py-4 text-sm font-medium">{m.nom || "—"}</td>
-                    <td className="px-5 py-4 text-sm text-white/50">{m.email || "—"}</td>
-                    <td className="px-5 py-4 text-sm text-white/50">{formatDate(m.date_inscription)}</td>
-                    <td className="px-5 py-4">
-                      <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${
-                        m.actif
-                          ? "bg-[#00F5A0]/10 text-[#00F5A0]"
-                          : "bg-white/5 text-white/40"
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${m.actif ? "bg-[#00F5A0]" : "bg-white/30"}`} />
+                  <tr key={m.id}
+                    style={{ borderBottom: i < marchands.length - 1 ? "1px solid var(--border)" : "none" }}>
+                    <td className="px-6 py-4 text-[15px] font-medium" style={{ color: "var(--fg)" }}>
+                      {m.nom || "—"}
+                    </td>
+                    <td className="px-6 py-4 text-[14px]" style={{ color: "var(--fg-secondary)" }}>
+                      {m.email || "—"}
+                    </td>
+                    <td className="px-6 py-4 text-[14px]" style={{ color: "var(--fg-secondary)" }}>
+                      {formatDate(m.date_inscription)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full"
+                        style={{
+                          background: m.actif ? "rgba(0,122,255,0.1)" : "rgba(142,142,147,0.12)",
+                          color: m.actif ? "var(--accent)" : "var(--fg-secondary)",
+                        }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.actif ? "var(--accent)" : "var(--fg-tertiary)" }} />
                         {m.actif ? "Actif" : "En attente"}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => toggleActif(m)}
                         disabled={toggling === m.id}
-                        className={`text-xs font-medium px-3 py-1.5 rounded-lg transition disabled:opacity-50 ${
-                          m.actif
-                            ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                            : "bg-[#00F5A0]/10 text-[#00F5A0] hover:bg-[#00F5A0]/20"
-                        }`}
+                        className="text-[13px] font-medium px-4 py-2 rounded-xl transition-all duration-200"
+                        style={{
+                          background: m.actif ? "rgba(255,59,48,0.08)" : "rgba(0,122,255,0.08)",
+                          color: m.actif ? "#FF3B30" : "var(--accent)",
+                        }}
+                        onMouseEnter={e => { (e.target as HTMLElement).style.transform = "translateY(-1px)"; }}
+                        onMouseLeave={e => { (e.target as HTMLElement).style.transform = "translateY(0)"; }}
                       >
-                        {toggling === m.id ? "..." : m.actif ? "Désactiver" : "Activer"}
+                        {toggling === m.id ? "…" : m.actif ? "Désactiver" : "Activer"}
                       </button>
                     </td>
                   </tr>

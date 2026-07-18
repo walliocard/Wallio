@@ -17,77 +17,112 @@ export default function ConnexionPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       const { user } = await signInWithEmailAndPassword(auth, form.email, form.password);
       const marchand = await getMarchand(user.uid);
-
       if (!marchand || !marchand.actif) {
         await auth.signOut();
         setError("Votre compte est en attente d'activation par l'équipe Wallio.");
         return;
       }
-
       router.push("/dashboard");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("invalid-credential") || msg.includes("user-not-found") || msg.includes("wrong-password")) {
-        setError("Email ou mot de passe incorrect.");
-      } else {
-        setError("Une erreur est survenue. Réessayez.");
-      }
+    } catch {
+      setError("Email ou mot de passe incorrect.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold tracking-tight">Wallio</h1>
-          <p className="text-white/40 text-sm mt-2">Espace marchand</p>
+    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
+
+      {/* Halo lumineux */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[800px] h-[600px] rounded-full opacity-30"
+          style={{ background: "radial-gradient(circle, rgba(0,122,255,0.15) 0%, transparent 70%)" }} />
+      </div>
+
+      <div className="w-full max-w-[380px] relative">
+
+        {/* Logo */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
+            style={{ background: "var(--accent)", boxShadow: "0 8px 24px rgba(0,122,255,0.3)" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L20 7V17L12 22L4 17V7L12 2Z" fill="white" fillOpacity="0.9" />
+            </svg>
+          </div>
+          <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
+            Wallio
+          </h1>
+          <p className="text-[15px] mt-1.5" style={{ color: "var(--fg-secondary)" }}>
+            Espace marchand
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs text-white/50 mb-1.5">Email</label>
-            <input
-              type="email"
-              required
-              placeholder="contact@cafeatlas.ma"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#00F5A0]/60 transition placeholder:text-white/20"
-            />
-          </div>
+        {/* Card */}
+        <div className="rounded-[28px] p-8"
+          style={{
+            background: "var(--glass-bg)",
+            border: "1px solid var(--glass-border)",
+            backdropFilter: "blur(30px)",
+            boxShadow: "var(--shadow-lg)",
+          }}>
 
-          <div>
-            <label className="block text-xs text-white/50 mb-1.5">Mot de passe</label>
-            <input
-              type="password"
-              required
-              placeholder="••••••••"
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#00F5A0]/60 transition placeholder:text-white/20"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-3">
+              <input
+                type="email"
+                required
+                placeholder="Email"
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all duration-200"
+                style={{
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  color: "var(--fg)",
+                }}
+                onFocus={e => e.target.style.borderColor = "var(--accent)"}
+                onBlur={e => e.target.style.borderColor = "var(--border)"}
+              />
+              <input
+                type="password"
+                required
+                placeholder="Mot de passe"
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
+                className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all duration-200"
+                style={{
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  color: "var(--fg)",
+                }}
+                onFocus={e => e.target.style.borderColor = "var(--accent)"}
+                onBlur={e => e.target.style.borderColor = "var(--border)"}
+              />
+            </div>
 
-          {error && <p className="text-red-400 text-xs">{error}</p>}
+            {error && (
+              <p className="text-[13px] text-red-500 px-1">{error}</p>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#00F5A0] text-black font-semibold rounded-xl py-3 text-sm mt-2 hover:bg-[#00F5A0]/90 transition disabled:opacity-50"
-          >
-            {loading ? "Connexion..." : "Se connecter"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all duration-200 mt-2"
+              style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.3)" }}
+              onMouseEnter={e => { (e.target as HTMLElement).style.background = "var(--accent-hover)"; (e.target as HTMLElement).style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { (e.target as HTMLElement).style.background = "var(--accent)"; (e.target as HTMLElement).style.transform = "translateY(0)"; }}
+            >
+              {loading ? "Connexion…" : "Se connecter"}
+            </button>
+          </form>
+        </div>
 
-        <p className="text-center text-white/30 text-xs mt-8">
+        <p className="text-center text-[13px] mt-6" style={{ color: "var(--fg-tertiary)" }}>
           Pas encore de compte ?{" "}
-          <Link href="/auth/inscription" className="text-[#00F5A0] hover:underline">
+          <Link href="/auth/inscription" style={{ color: "var(--accent)" }} className="font-medium">
             Créer un compte
           </Link>
         </p>
