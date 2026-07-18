@@ -85,26 +85,51 @@ function BottomNav({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) 
 
 // ─── Tab Accueil ──────────────────────────────────────────────────────────────
 
+type Stats = {
+  total: number;
+  aujourd_hui: number;
+  tampons_total: number;
+  recompenses: number;
+  ce_mois: number;
+  semaine: number[];
+};
+
 function TabAccueil({ marchand, userId, onScan }: { marchand: Marchand; userId: string; onScan: () => void }) {
-  const [stats, setStats] = useState({ total: 0, aujourd_hui: 0, tampons_total: 0 });
+  const [stats, setStats] = useState<Stats>({ total: 0, aujourd_hui: 0, tampons_total: 0, recompenses: 0, ce_mois: 0, semaine: [0,0,0,0,0,0,0] });
 
   useEffect(() => {
     async function charger() {
       const snap = await getDocs(query(collection(db, "clients"), where("marchand_id", "==", userId)));
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      let aujourd_hui = 0, tampons_total = 0;
+      const now = new Date();
+      const today = new Date(now); today.setHours(0, 0, 0, 0);
+      const moisDebut = new Date(now.getFullYear(), now.getMonth(), 1);
+      let aujourd_hui = 0, tampons_total = 0, recompenses = 0, ce_mois = 0;
+      const semaine = [0,0,0,0,0,0,0];
+
       snap.docs.forEach(d => {
         const data = d.data();
         tampons_total += data.tampons || 0;
-        if (data.derniere_visite?.seconds * 1000 >= today.getTime()) aujourd_hui++;
+        if (data.recompense_en_attente) recompenses++;
+        const dv = data.derniere_visite?.seconds * 1000;
+        if (dv >= today.getTime()) { aujourd_hui++; }
+        if (dv >= moisDebut.getTime()) ce_mois++;
+        for (let i = 0; i < 7; i++) {
+          const jourDebut = new Date(today); jourDebut.setDate(jourDebut.getDate() - (6 - i));
+          const jourFin = new Date(jourDebut); jourFin.setDate(jourFin.getDate() + 1);
+          if (dv >= jourDebut.getTime() && dv < jourFin.getTime()) semaine[i]++;
+        }
       });
-      setStats({ total: snap.size, aujourd_hui, tampons_total });
+
+      setStats({ total: snap.size, aujourd_hui, tampons_total, recompenses, ce_mois, semaine });
     }
     charger();
   }, [userId]);
 
+  const maxSemaine = Math.max(...stats.semaine, 1);
+  const jours = ["L", "M", "M", "J", "V", "S", "D"];
+
   return (
-    <div className="px-5 pt-12">
+    <div className="px-5 pt-12 pb-4">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-[26px] font-semibold tracking-tight" style={{ color: "var(--fg)" }}>{marchand.nom}</h1>
@@ -117,38 +142,72 @@ function TabAccueil({ marchand, userId, onScan }: { marchand: Marchand; userId: 
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         {[
-          { label: "Aujourd'hui", value: stats.aujourd_hui, color: "var(--accent)" },
-          { label: "Clients", value: stats.total, color: "var(--fg)" },
-          { label: "Tampons", value: stats.tampons_total, color: "#34C759" },
+          { label: "Visites aujourd'hui", value: stats.aujourd_hui, color: "var(--accent)" },
+          { label: "Ce mois-ci", value: stats.ce_mois, color: "#34C759" },
+          { label: "Total clients", value: stats.total, color: "var(--fg)" },
+          { label: "Tampons donnés", value: stats.tampons_total, color: "#FF9F0A" },
         ].map(s => (
           <div key={s.label} className="rounded-[20px] p-4"
             style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)" }}>
-            <p className="text-[28px] font-semibold" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{s.label}</p>
+            <p className="text-[30px] font-semibold tracking-tight" style={{ color: s.color }}>{s.value}</p>
+            <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{s.label}</p>
           </div>
         ))}
       </div>
 
+      {/* Graphique 7 jours */}
+      <div className="rounded-[20px] p-5 mb-4"
+        style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)" }}>
+        <p className="text-[13px] font-semibold mb-4" style={{ color: "var(--fg)" }}>Visites — 7 derniers jours</p>
+        <div className="flex items-end gap-2 h-20">
+          {stats.semaine.map((val, i) => (
+            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+              <div className="w-full rounded-lg transition-all"
+                style={{
+                  height: `${Math.max((val / maxSemaine) * 64, val > 0 ? 8 : 2)}px`,
+                  background: i === 6 ? "var(--accent)" : "var(--border)",
+                  minHeight: 2,
+                }} />
+              <span className="text-[10px]" style={{ color: "var(--fg-tertiary)" }}>{jours[i]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Bouton scanner */}
       <button onClick={onScan}
-        className="w-full py-5 rounded-[24px] flex items-center justify-center gap-3 text-white text-[17px] font-semibold"
+        className="w-full py-5 rounded-[24px] flex items-center justify-center gap-3 text-white text-[17px] font-semibold mb-3"
         style={{ background: "var(--accent)", boxShadow: "0 8px 30px rgba(0,122,255,0.35)" }}>
         <span className="text-2xl">📷</span>
         Scanner la carte d&apos;un client
       </button>
 
-      {/* NFC URL */}
-      {marchand.nfc_id && (
-        <div className="mt-4 rounded-[20px] p-4"
+      {/* Liens rapides */}
+      <div className="grid grid-cols-2 gap-3">
+        <a href="/dashboard/carte-comptoir"
+          className="rounded-[20px] p-4 flex items-center gap-3"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
-          <p className="text-[12px] font-medium mb-1" style={{ color: "var(--fg-secondary)" }}>URL de votre tag NFC</p>
-          <p className="text-[13px] font-mono" style={{ color: "var(--accent)" }}>
-            app.wallio.ma/nfc/{marchand.nfc_id}
-          </p>
-        </div>
-      )}
+          <span className="text-2xl">🖨️</span>
+          <span className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Carte comptoir</span>
+        </a>
+        {marchand.nfc_id ? (
+          <div className="rounded-[20px] p-4"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
+            <p className="text-[11px] mb-1" style={{ color: "var(--fg-tertiary)" }}>NFC</p>
+            <p className="text-[12px] font-mono truncate" style={{ color: "var(--accent)" }}>
+              .../nfc/{marchand.nfc_id}
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-[20px] p-4 flex items-center gap-3"
+            style={{ background: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.2)" }}>
+            <span className="text-xl">⚠️</span>
+            <span className="text-[13px]" style={{ color: "#FF9F0A" }}>NFC non configuré</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -480,10 +539,21 @@ function TabCarte({ marchand, userId }: { marchand: Marchand; userId: string }) 
 // ─── Tab Réglages ─────────────────────────────────────────────────────────────
 
 function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string }) {
+  const marchandAny = marchand as Record<string, unknown>;
+  const autoConfig = (marchandAny.automatisations as Record<string, unknown>) || {};
+  const anniConfig = (autoConfig.anniversaire as Record<string, unknown>) || {};
+  const relanceConfig = (autoConfig.relance as Record<string, unknown>) || {};
+
   const [config, setConfig] = useState({
     mode_recompense: marchand.mode_recompense || "cyclique",
     anti_doublon_delai: marchand.anti_doublon_delai || 86400,
     fuseau_horaire: marchand.fuseau_horaire || Intl.DateTimeFormat().resolvedOptions().timeZone,
+  });
+  const [auto, setAuto] = useState({
+    anniversaire_actif: Boolean(anniConfig.actif),
+    anniversaire_jours_avant: Number(anniConfig.jours_avant ?? 0),
+    relance_actif: Boolean(relanceConfig.actif),
+    relance_delai_jours: Number(relanceConfig.delai_jours ?? 30),
   });
   const [nfcId, setNfcId] = useState(marchand.nfc_id || "");
   const [saving, setSaving] = useState(false);
@@ -492,7 +562,14 @@ function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string 
 
   async function sauvegarder() {
     setSaving(true);
-    await updateDoc(doc(db, "marchands", userId), { ...config, updated_at: serverTimestamp() });
+    await updateDoc(doc(db, "marchands", userId), {
+      ...config,
+      automatisations: {
+        anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant },
+        relance: { actif: auto.relance_actif, delai_jours: auto.relance_delai_jours },
+      },
+      updated_at: serverTimestamp(),
+    });
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -503,6 +580,17 @@ function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string 
     const id = await genererNfcId(userId);
     setNfcId(id);
     setGeneratingNfc(false);
+  }
+
+  function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+    return (
+      <button onClick={() => onChange(!value)}
+        className="relative w-12 h-7 rounded-full transition-all flex-shrink-0"
+        style={{ background: value ? "var(--accent)" : "var(--border)" }}>
+        <div className="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-all"
+          style={{ left: value ? "calc(100% - 26px)" : "2px" }} />
+      </button>
+    );
   }
 
   return (
@@ -518,7 +606,7 @@ function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string 
           <div className="grid grid-cols-2 gap-2">
             {(["cyclique", "progressif"] as const).map(mode => (
               <button key={mode} onClick={() => setConfig({ ...config, mode_recompense: mode })}
-                className="py-3 rounded-2xl text-[14px] font-medium transition-all capitalize"
+                className="py-3 rounded-2xl text-[14px] font-medium transition-all"
                 style={{
                   background: config.mode_recompense === mode ? "var(--accent)" : "var(--bg)",
                   color: config.mode_recompense === mode ? "white" : "var(--fg-secondary)",
@@ -528,11 +616,6 @@ function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string 
               </button>
             ))}
           </div>
-          <p className="text-[12px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
-            {config.mode_recompense === "cyclique"
-              ? "Repart à zéro après chaque récompense"
-              : "Tampons cumulatifs, paliers progressifs"}
-          </p>
         </div>
 
         {/* Anti-doublon */}
@@ -546,9 +629,6 @@ function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string 
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
-          <p className="text-[12px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
-            Délai minimum entre deux tampons pour un même client
-          </p>
         </div>
 
         {/* Fuseau horaire */}
@@ -564,16 +644,61 @@ function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string 
           </select>
         </div>
 
+        {/* Automatisations */}
+        <div className="rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
+          <p className="text-[14px] font-semibold mb-4" style={{ color: "var(--fg)" }}>Automatisations</p>
+
+          {/* Anniversaire */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>🎂 Anniversaire client</p>
+                <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>Bonus tampon pour les anniversaires</p>
+              </div>
+              <Toggle value={auto.anniversaire_actif} onChange={v => setAuto({ ...auto, anniversaire_actif: v })} />
+            </div>
+            {auto.anniversaire_actif && (
+              <div className="mt-2">
+                <label className="text-[12px] mb-1.5 block" style={{ color: "var(--fg-secondary)" }}>
+                  Déclencher {auto.anniversaire_jours_avant === 0 ? "le jour J" : `${auto.anniversaire_jours_avant} jour(s) avant`}
+                </label>
+                <input type="range" min={0} max={7} value={auto.anniversaire_jours_avant}
+                  onChange={e => setAuto({ ...auto, anniversaire_jours_avant: Number(e.target.value) })}
+                  className="w-full" style={{ accentColor: "var(--accent)" }} />
+              </div>
+            )}
+          </div>
+
+          {/* Relance */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>💤 Relance inactifs</p>
+                <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>Clients sans visite depuis X jours</p>
+              </div>
+              <Toggle value={auto.relance_actif} onChange={v => setAuto({ ...auto, relance_actif: v })} />
+            </div>
+            {auto.relance_actif && (
+              <div className="mt-2">
+                <label className="text-[12px] mb-1.5 block" style={{ color: "var(--fg-secondary)" }}>
+                  Après {auto.relance_delai_jours} jours d&apos;inactivité
+                </label>
+                <input type="range" min={7} max={90} step={7} value={auto.relance_delai_jours}
+                  onChange={e => setAuto({ ...auto, relance_delai_jours: Number(e.target.value) })}
+                  className="w-full" style={{ accentColor: "var(--accent)" }} />
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* NFC */}
         <div className="rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
           <p className="text-[14px] font-semibold mb-3" style={{ color: "var(--fg)" }}>Tag NFC</p>
           {nfcId ? (
             <>
               <div className="rounded-2xl p-3 mb-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <p className="text-[12px] mb-0.5" style={{ color: "var(--fg-tertiary)" }}>URL à encoder sur le tag</p>
-                <p className="text-[13px] font-mono" style={{ color: "var(--accent)" }}>
-                  app.wallio.ma/nfc/{nfcId}
-                </p>
+                <p className="text-[12px] mb-0.5" style={{ color: "var(--fg-tertiary)" }}>URL à encoder</p>
+                <p className="text-[13px] font-mono" style={{ color: "var(--accent)" }}>app.wallio.ma/nfc/{nfcId}</p>
               </div>
               <button onClick={genererNfc} disabled={generatingNfc}
                 className="text-[13px] px-4 py-2 rounded-xl"
@@ -583,8 +708,8 @@ function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string 
             </>
           ) : (
             <button onClick={genererNfc} disabled={generatingNfc}
-              className="w-full py-3 rounded-2xl text-[15px] font-medium"
-              style={{ background: "var(--accent)", color: "white" }}>
+              className="w-full py-3 rounded-2xl text-[15px] font-medium text-white"
+              style={{ background: "var(--accent)" }}>
               {generatingNfc ? "Génération…" : "Générer mon identifiant NFC"}
             </button>
           )}
@@ -593,7 +718,7 @@ function TabReglages({ marchand, userId }: { marchand: Marchand; userId: string 
         <button onClick={sauvegarder} disabled={saving}
           className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white transition-all"
           style={{ background: saved ? "#34C759" : "var(--accent)" }}>
-          {saving ? "Sauvegarde…" : saved ? "✅ Sauvegardé !" : "Sauvegarder les réglages"}
+          {saving ? "Sauvegarde…" : saved ? "✅ Sauvegardé !" : "Sauvegarder"}
         </button>
       </div>
     </div>

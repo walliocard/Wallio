@@ -11,6 +11,16 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: "Wallio",
   description: "Cartes de fidélité digitales",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Wallio",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
