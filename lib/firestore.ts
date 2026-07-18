@@ -16,7 +16,7 @@ export const clients = collection(db, "clients");
 
 export async function getMarchand(marchandId: string) {
   const snap = await getDoc(doc(db, "marchands", marchandId));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  return snap.exists() ? { id: snap.id, actif: false, ...snap.data() } : null;
 }
 
 export async function getClientByWalletId(walletId: string, marchandId: string) {
