@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getMarchand } from "@/lib/firestore";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,23 @@ export default function ConnexionPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const router = useRouter();
+
+  async function handleReset() {
+    if (!form.email) { setError("Entre ton email d'abord."); return; }
+    setResetLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, form.email);
+      setResetSent(true);
+      setError("");
+    } catch {
+      setError("Email introuvable.");
+    } finally {
+      setResetLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -120,12 +136,21 @@ export default function ConnexionPage() {
           </form>
         </div>
 
-        <p className="text-center text-[13px] mt-6" style={{ color: "var(--fg-tertiary)" }}>
-          Pas encore de compte ?{" "}
-          <Link href="/auth/inscription" style={{ color: "var(--accent)" }} className="font-medium">
+        {resetSent && (
+          <p className="text-center text-[13px] mt-4" style={{ color: "#34C759" }}>
+            ✅ Email de réinitialisation envoyé.
+          </p>
+        )}
+
+        <div className="flex items-center justify-between mt-5">
+          <button onClick={handleReset} disabled={resetLoading}
+            className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>
+            {resetLoading ? "Envoi…" : "Mot de passe oublié ?"}
+          </button>
+          <Link href="/auth/inscription" className="text-[13px] font-medium" style={{ color: "var(--accent)" }}>
             Créer un compte
           </Link>
-        </p>
+        </div>
       </div>
     </main>
   );

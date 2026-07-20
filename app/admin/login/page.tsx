@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-
-const ADMIN_EMAIL = "wallio.card@gmail.com";
 
 export default function AdminLoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -18,15 +14,16 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
     try {
-      const { user } = await signInWithEmailAndPassword(auth, form.email, form.password);
-      if (user.email !== ADMIN_EMAIL) {
-        await auth.signOut();
-        setError("Accès réservé à l'administrateur Wallio.");
-        return;
-      }
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Erreur."); return; }
       router.push("/admin");
     } catch {
-      setError("Email ou mot de passe incorrect.");
+      setError("Une erreur est survenue.");
     } finally {
       setLoading(false);
     }
@@ -34,7 +31,6 @@ export default function AdminLoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
-
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[800px] h-[500px] rounded-full opacity-20"
           style={{ background: "radial-gradient(circle, rgba(0,122,255,0.2) 0%, transparent 70%)" }} />
@@ -53,46 +49,25 @@ export default function AdminLoginPage() {
         </div>
 
         <div className="rounded-[28px] p-8"
-          style={{
-            background: "var(--glass-bg)",
-            border: "1px solid var(--glass-border)",
-            backdropFilter: "blur(30px)",
-            boxShadow: "var(--shadow-lg)",
-          }}>
+          style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(30px)", boxShadow: "var(--shadow-lg)" }}>
           <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              type="email"
-              required
-              placeholder="Email"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all duration-200"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-              onFocus={e => e.target.style.borderColor = "var(--accent)"}
-              onBlur={e => e.target.style.borderColor = "var(--border)"}
-            />
-            <input
-              type="password"
-              required
-              placeholder="Mot de passe"
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all duration-200"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-              onFocus={e => e.target.style.borderColor = "var(--accent)"}
-              onBlur={e => e.target.style.borderColor = "var(--border)"}
-            />
-
-            {error && <p className="text-[13px] text-red-500 px-1">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all duration-200 mt-1"
-              style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.3)" }}
-              onMouseEnter={e => { (e.target as HTMLElement).style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { (e.target as HTMLElement).style.transform = "translateY(0)"; }}
-            >
+            {[
+              { key: "email", type: "email", placeholder: "Email" },
+              { key: "password", type: "password", placeholder: "Mot de passe" },
+            ].map(f => (
+              <input key={f.key} type={f.type} required placeholder={f.placeholder}
+                value={form[f.key as keyof typeof form]}
+                onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                onFocus={e => e.target.style.borderColor = "var(--accent)"}
+                onBlur={e => e.target.style.borderColor = "var(--border)"}
+              />
+            ))}
+            {error && <p className="text-red-500 text-[13px]">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all mt-1"
+              style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.3)" }}>
               {loading ? "Vérification…" : "Accéder"}
             </button>
           </form>
