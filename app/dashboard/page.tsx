@@ -13,6 +13,7 @@ type Stats = {
   tampons_total: number;
   ce_mois: number;
   semaine: number[];
+  recompenses: number;
 };
 
 const JOURS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -20,7 +21,7 @@ const JOURS = ["L", "M", "M", "J", "V", "S", "D"];
 export default function AccueilPage() {
   const { user, marchand } = useAuth();
   const [stats, setStats] = useState<Stats>({
-    total: 0, aujourd_hui: 0, tampons_total: 0, ce_mois: 0, semaine: [0,0,0,0,0,0,0],
+    total: 0, aujourd_hui: 0, tampons_total: 0, ce_mois: 0, semaine: [0,0,0,0,0,0,0], recompenses: 0,
   });
 
   useEffect(() => {
@@ -30,11 +31,12 @@ export default function AccueilPage() {
       const now = new Date();
       const today = new Date(now); today.setHours(0, 0, 0, 0);
       const moisDebut = new Date(now.getFullYear(), now.getMonth(), 1);
-      let aujourd_hui = 0, tampons_total = 0, ce_mois = 0;
+      let aujourd_hui = 0, tampons_total = 0, ce_mois = 0, recompenses = 0;
       const semaine = [0, 0, 0, 0, 0, 0, 0];
       snap.docs.forEach(d => {
         const data = d.data();
         tampons_total += data.tampons || 0;
+        if (data.recompense_en_attente) recompenses++;
         const dv = (data.derniere_visite?.seconds || 0) * 1000;
         if (dv >= today.getTime()) aujourd_hui++;
         if (dv >= moisDebut.getTime()) ce_mois++;
@@ -44,7 +46,7 @@ export default function AccueilPage() {
           if (dv >= j.getTime() && dv < jf.getTime()) semaine[i]++;
         }
       });
-      setStats({ total: snap.size, aujourd_hui, tampons_total, ce_mois, semaine });
+      setStats({ total: snap.size, aujourd_hui, tampons_total, ce_mois, semaine, recompenses });
     }
     charger();
   }, [user]);
@@ -54,10 +56,10 @@ export default function AccueilPage() {
   const maxSemaine = Math.max(...stats.semaine, 1);
 
   const STAT_CARDS = [
-    { label: "Aujourd'hui", value: stats.aujourd_hui, color: "var(--accent)" },
-    { label: "Ce mois",     value: stats.ce_mois,     color: "#34C759" },
-    { label: "Total clients", value: stats.total,     color: "var(--fg)" },
-    { label: "Tampons",     value: stats.tampons_total, color: "var(--fg-secondary)" },
+    { label: "Aujourd'hui",    value: stats.aujourd_hui,  color: "var(--accent)" },
+    { label: "Ce mois",        value: stats.ce_mois,      color: "#34C759" },
+    { label: "Total clients",  value: stats.total,        color: "var(--fg)" },
+    { label: "Récompenses",    value: stats.recompenses,  color: stats.recompenses > 0 ? "#FF9F0A" : "var(--fg-tertiary)" },
   ];
 
   return (

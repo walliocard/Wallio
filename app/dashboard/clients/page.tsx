@@ -4,67 +4,206 @@ import { useAuth } from "@/lib/auth-context";
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { Client } from "@/lib/loyalty";
+import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } from "@/lib/loyalty";
 import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
+
+type Sort = "recent" | "tampons" | "alpha";
 
 export default function ClientsPage() {
   const { user, marchand } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<Sort>("recent");
+  const [filterRecompense, setFilterRecompense] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ prenom: "", nom: "", telephone: "", date_naissance: "" });
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
 
-  useEffect(() => {
+  async function charger() {
     if (!user) return;
-    async function charger() {
-      const snap = await getDocs(query(
-        collection(db, "clients"),
-        where("marchand_id", "==", user!.uid),
-        orderBy("date_inscription", "desc"),
-      ));
-      setClients(snap.docs.map(d => ({ id: d.id, ...d.data() } as Client)));
-      setLoading(false);
-    }
-    charger();
-  }, [user]);
+    const snap = await getDocs(query(
+      collection(db, "clients"),
+      where("marchand_id", "==", user.uid),
+      orderBy("date_inscription", "desc"),
+    ));
+    setClients(snap.docs.map(d => ({ id: d.id, ...d.data() } as Client)));
+    setLoading(false);
+  }
+
+  useEffect(() => { charger(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!marchand) return null;
 
-  const filtered = clients.filter(c =>
-    `${c.prenom} ${c.nom} ${c.telephone}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const recompensesCount = clients.filter(c => c.recompense_en_attente).length;
+
+  const filtered = clients
+    .filter(c => !filterRecompense || c.recompense_en_attente)
+    .filter(c => !search || `${c.prenom} ${c.nom} ${c.telephone}`.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (sort === "tampons") return b.tampons - a.tampons;
+      if (sort === "alpha") return `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr");
+      return 0; // "recent" already sorted by Firestore
+    });
+
+  async function ajouterClient() {
+    if (!user || !form.prenom.trim() || !form.telephone.trim()) {
+      setFormError("Prénom et téléphone requis.");
+      return;
+    }
+    setSaving(true);
+    setFormError("");
+    const existing = await getClientByTelephone(form.telephone.trim(), user.uid);
+    if (existing) {
+      setFormError("Ce numéro est déjà inscrit.");
+      setSaving(false);
+      return;
+    }
+    await creerClient({
+      prenom: form.prenom.trim(),
+      nom: form.nom.trim(),
+      telephone: form.telephone.trim(),
+      date_naissance: form.date_naissance,
+      marchand_id: user.uid,
+    });
+    setForm({ prenom: "", nom: "", telephone: "", date_naissance: "" });
+    setShowModal(false);
+    setSaving(false);
+    await charger();
+  }
 
   return (
     <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10">
 
+      {/* Modal ajout client */}
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-5"
+          style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)" }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-[28px] p-7"
+            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-[18px] font-semibold mb-5" style={{ color: "var(--fg)" }}>Ajouter un client</h3>
+            <div className="space-y-3">
+              {[
+                { key: "prenom",        label: "Prénom *",         type: "text",  placeholder: "Marie" },
+                { key: "nom",           label: "Nom",              type: "text",  placeholder: "Dupont" },
+                { key: "telephone",     label: "Téléphone *",      type: "tel",   placeholder: "+212 6 00 00 00 00" },
+                { key: "date_naissance",label: "Date de naissance",type: "date",  placeholder: "" },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--fg-tertiary)" }}>
+                    {f.label}
+                  </label>
+                  <input
+                    type={f.type}
+                    placeholder={f.placeholder}
+                    value={form[f.key as keyof typeof form]}
+                    onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
+                    style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                    onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                    onBlur={e => (e.target.style.borderColor = "var(--border)")}
+                  />
+                </div>
+              ))}
+              {formError && (
+                <p className="text-[13px]" style={{ color: "#FF3B30" }}>{formError}</p>
+              )}
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => { setShowModal(false); setFormError(""); }}
+                className="flex-1 py-3 rounded-2xl text-[14px] font-medium"
+                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={ajouterClient}
+                disabled={saving}
+                className="flex-1 py-3 rounded-2xl text-[14px] font-semibold text-white"
+                style={{ background: "var(--accent)" }}
+              >
+                {saving ? "Ajout…" : "Ajouter"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="flex items-end justify-between mb-6">
+      <div className="flex items-end justify-between mb-5">
         <div>
           <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
             {loading ? "—" : `${clients.length} client${clients.length > 1 ? "s" : ""}`}
           </p>
           <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Clients</h1>
         </div>
+        <button
+          onClick={() => { setShowModal(true); setFormError(""); }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[13px] font-semibold text-white"
+          style={{ background: "var(--accent)", boxShadow: "0 4px 14px rgba(0,122,255,0.25)" }}
+        >
+          <span className="text-[18px] leading-none font-light">+</span>
+          Ajouter
+        </button>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-5">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-tertiary)" }}>
-          <Icons.Search size={16} />
-        </span>
-        <input
-          type="text"
-          placeholder="Rechercher…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 rounded-2xl text-[14px] outline-none transition-all"
+      {/* Filtres */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        {/* Recherche */}
+        <div className="relative flex-1 min-w-[160px]">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-tertiary)" }}>
+            <Icons.Search size={15} />
+          </span>
+          <input
+            type="text"
+            placeholder="Rechercher…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl text-[14px] outline-none"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+            onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+            onBlur={e => (e.target.style.borderColor = "var(--border)")}
+          />
+        </div>
+
+        {/* Sort */}
+        <select
+          value={sort}
+          onChange={e => setSort(e.target.value as Sort)}
+          className="px-3 py-2.5 rounded-2xl text-[13px] outline-none"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-          onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-          onBlur={e => (e.target.style.borderColor = "var(--border)")}
-        />
+        >
+          <option value="recent">Plus récents</option>
+          <option value="tampons">Plus de tampons</option>
+          <option value="alpha">A → Z</option>
+        </select>
+
+        {/* Filtre récompenses */}
+        {recompensesCount > 0 && (
+          <button
+            onClick={() => setFilterRecompense(f => !f)}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl text-[13px] font-medium transition-all"
+            style={{
+              background: filterRecompense ? "rgba(52,199,89,0.12)" : "var(--glass-bg)",
+              border: `1px solid ${filterRecompense ? "rgba(52,199,89,0.3)" : "var(--border)"}`,
+              color: filterRecompense ? "#34C759" : "var(--fg-secondary)",
+            }}
+          >
+            🎁 {recompensesCount}
+          </button>
+        )}
       </div>
 
-      {/* List */}
+      {/* Liste */}
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="w-5 h-5 rounded-full border-2 animate-spin"
@@ -73,13 +212,13 @@ export default function ClientsPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-[15px]" style={{ color: "var(--fg-tertiary)" }}>
-            {search ? "Aucun résultat" : "Aucun client pour l'instant"}
+            {search || filterRecompense ? "Aucun résultat" : "Aucun client pour l'instant"}
           </p>
         </div>
       ) : (
         <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {filtered.map(client => {
-            const initiales = `${client.prenom?.[0] || ""}${client.nom?.[0] || ""}`;
+            const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
             const pct = Math.round((client.tampons / marchand.objectif_tampons) * 100);
             return (
               <Link
@@ -101,10 +240,9 @@ export default function ClientsPage() {
                   <p className="text-[14px] font-medium truncate" style={{ color: "var(--fg)" }}>
                     {client.prenom} {client.nom}
                   </p>
-                  <p className="text-[12px] truncate" style={{ color: "var(--fg-tertiary)" }}>
-                    {client.telephone}
+                  <p className="text-[11px] truncate" style={{ color: "var(--fg-tertiary)" }}>
+                    {formatTempsDepuis(client.derniere_visite)}
                   </p>
-                  {/* Progress bar */}
                   <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
                     <div
                       className="h-full rounded-full transition-all"
@@ -113,7 +251,7 @@ export default function ClientsPage() {
                   </div>
                 </div>
 
-                {/* Tampons */}
+                {/* Tampons + récompense */}
                 <div className="text-right flex-shrink-0">
                   <p className="text-[15px] font-semibold" style={{ color: "var(--accent)" }}>
                     {client.tampons}
@@ -122,9 +260,9 @@ export default function ClientsPage() {
                     </span>
                   </p>
                   {client.recompense_en_attente && (
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                       style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
-                      Récompense
+                      🎁 Récompense
                     </span>
                   )}
                 </div>

@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getClientByWalletId, getMarchandById, ajouterTampon, validerRecompense, formatTemps, type Client, type Marchand, type TamponResult } from "@/lib/loyalty";
+import Link from "next/link";
+import {
+  getClientByWalletId, getMarchandById,
+  ajouterTampon, validerRecompense, setTampons,
+  formatTemps, formatTempsDepuis,
+  type Client, type Marchand, type TamponResult,
+} from "@/lib/loyalty";
 import { useAuth } from "@/lib/auth-context";
+import { Icons } from "@/components/dashboard/icons";
 
 export default function ClientQrPage({ params }: { params: { walletId: string } }) {
   const { walletId } = params;
@@ -11,13 +18,13 @@ export default function ClientQrPage({ params }: { params: { walletId: string } 
   const [marchand, setMarchand] = useState<Marchand | null>(null);
   const [result, setResult] = useState<TamponResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ajoutEnCours, setAjoutEnCours] = useState(false);
+  const [validationEnCours, setValidationEnCours] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || !marchandAuth?.actif) {
-      setLoading(false);
-      return;
-    }
+    if (!user || !marchandAuth?.actif) { setLoading(false); return; }
     async function init() {
       const m = await getMarchandById(user!.uid);
       if (!m) { setLoading(false); return; }
@@ -30,91 +37,239 @@ export default function ClientQrPage({ params }: { params: { walletId: string } 
   }, [user, marchandAuth, authLoading, walletId]);
 
   async function handleAjouterTampon() {
-    if (!client || !marchand) return;
+    if (!client || !marchand || ajoutEnCours) return;
+    setAjoutEnCours(true);
     const r = await ajouterTampon(client, marchand);
     setResult(r);
-    if (r.type === "ok") setClient(prev => prev ? { ...prev, tampons: r.tampons } : prev);
+    if (r.type === "ok") {
+      setClient(prev => prev ? { ...prev, tampons: r.tampons, derniere_visite: { seconds: Date.now() / 1000 } as never } : prev);
+    }
+    if (r.type === "recompense") {
+      const newTampons = marchand.mode_recompense === "cyclique" ? 0 : r.tampons;
+      setClient(prev => prev ? { ...prev, tampons: newTampons, recompense_en_attente: true, derniere_visite: { seconds: Date.now() / 1000 } as never } : prev);
+    }
+    setAjoutEnCours(false);
   }
 
   async function handleValiderRecompense() {
-    if (!client || !marchand) return;
+    if (!client || !marchand || validationEnCours) return;
+    setValidationEnCours(true);
     await validerRecompense(client.id, marchand);
     setResult(null);
-    setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
+    setClient(prev => prev ? {
+      ...prev,
+      tampons: marchand.mode_recompense === "cyclique" ? 0 : prev.tampons,
+      recompense_en_attente: false,
+    } : prev);
+    setValidationEnCours(false);
+  }
+
+  async function handleAjuster(delta: number) {
+    if (!client || !marchand || adjusting) return;
+    const next = Math.max(0, Math.min(client.tampons + delta, marchand.objectif_tampons));
+    setAdjusting(true);
+    await setTampons(client.id, next);
+    setClient(prev => prev ? { ...prev, tampons: next } : prev);
+    setResult(null);
+    setAdjusting(false);
   }
 
   if (loading || authLoading) return <Loading />;
-  if (!user || !marchandAuth?.actif) return <Erreur message="Connectez-vous pour scanner une carte." />;
-  if (!client) return <Erreur message="Client introuvable." />;
+  if (!user || !marchandAuth?.actif) return <Erreur message="Connectez-vous pour accéder à cette page." />;
+  if (!client) return <Erreur message="Client introuvable pour cet établissement." />;
+
+  const objectif = marchand?.objectif_tampons || 10;
+  const pct = Math.min((client.tampons / objectif) * 100, 100);
+  const restants = objectif - client.tampons;
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
-      <div className="w-full max-w-[380px]">
+    <main className="min-h-screen pb-10" style={{ background: "var(--bg)" }}>
+      <div className="max-w-lg mx-auto px-5 pt-6">
 
-        {/* Carte client */}
-        <div className="rounded-[28px] p-7 mb-5"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(30px)", boxShadow: "var(--shadow-lg)" }}>
+        {/* Retour */}
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 mb-6 text-[14px]"
+          style={{ color: "var(--accent)" }}
+        >
+          <Icons.ArrowLeft size={15} />
+          Dashboard
+        </Link>
 
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl"
-              style={{ background: "var(--accent)", boxShadow: "0 4px 12px rgba(0,122,255,0.3)" }}>
-              {marchand?.icone_tampons || "⭐"}
-            </div>
-            <div>
-              <p className="text-[18px] font-semibold" style={{ color: "var(--fg)" }}>{client.prenom} {client.nom}</p>
-              <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>Dernière visite : {client.derniere_visite ? new Date(client.derniere_visite.seconds * 1000).toLocaleDateString("fr-FR") : "jamais"}</p>
-            </div>
+        {/* Header client */}
+        <div className="flex items-center gap-4 mb-5">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-[18px] flex-shrink-0"
+            style={{ background: "var(--accent)", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }}
+          >
+            {(client.prenom?.[0] || "").toUpperCase()}{(client.nom?.[0] || "").toUpperCase()}
           </div>
+          <div>
+            <h1 className="text-[22px] font-semibold tracking-tight leading-tight" style={{ color: "var(--fg)" }}>
+              {client.prenom} {client.nom}
+            </h1>
+            <p className="text-[14px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{client.telephone}</p>
+          </div>
+        </div>
 
-          {/* Tampons */}
-          <div className="flex gap-2 flex-wrap mb-6">
-            {Array.from({ length: marchand?.objectif_tampons || 10 }).map((_, i) => (
-              <div key={i} className="w-8 h-8 rounded-full flex items-center justify-center text-base transition-all"
-                style={{ background: i < client.tampons ? "var(--accent)" : "var(--border)" }}>
+        {/* Infos */}
+        <div className="rounded-2xl overflow-hidden mb-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+          {[
+            {
+              label: "Dernière visite",
+              value: formatTempsDepuis(client.derniere_visite),
+              highlight: !client.derniere_visite,
+            },
+            {
+              label: "Client depuis",
+              value: client.date_inscription
+                ? new Date((client.date_inscription as { seconds: number }).seconds * 1000)
+                    .toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+                : "—",
+            },
+            {
+              label: "Anniversaire",
+              value: client.date_naissance || "—",
+            },
+          ].map((row, i, arr) => (
+            <div
+              key={row.label}
+              className="flex items-center justify-between px-5 py-3.5"
+              style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}
+            >
+              <span className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{row.label}</span>
+              <span className="text-[13px] font-medium" style={{ color: row.highlight ? "var(--fg-tertiary)" : "var(--fg)" }}>
+                {row.value}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Tampons */}
+        <div className="rounded-2xl p-5 mb-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[15px] font-semibold" style={{ color: "var(--fg)" }}>
+              {client.tampons} / {objectif} tampons
+            </p>
+            <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
+              {marchand?.icone_tampons} {marchand?.nom_recompense}
+            </p>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "var(--border)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${pct}%`, background: "var(--accent)" }}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: objectif }).map((_, i) => (
+              <div
+                key={i}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-300"
+                style={{ background: i < client.tampons ? "var(--accent)" : "var(--border)" }}
+              >
                 {i < client.tampons ? (marchand?.icone_tampons || "⭐") : ""}
               </div>
             ))}
           </div>
-
-          <p className="text-center text-[15px] font-medium mb-6" style={{ color: "var(--fg)" }}>
-            {client.tampons}/{marchand?.objectif_tampons || 10} tampons
-          </p>
-
-          {/* Résultat */}
-          {result && (
-            <div className="rounded-2xl p-4 mb-5 text-center"
-              style={{
-                background: result.type === "anti_doublon" ? "rgba(255,159,10,0.1)" : result.type === "recompense" ? "rgba(52,199,89,0.1)" : "rgba(0,122,255,0.1)",
-                border: `1px solid ${result.type === "anti_doublon" ? "rgba(255,159,10,0.2)" : result.type === "recompense" ? "rgba(52,199,89,0.2)" : "rgba(0,122,255,0.2)"}`,
-              }}>
-              <p className="text-[15px] font-medium" style={{ color: result.type === "anti_doublon" ? "#FF9F0A" : result.type === "recompense" ? "#34C759" : "var(--accent)" }}>
-                {result.type === "ok" && `✅ Tampon ajouté — ${result.tampons}/${result.objectif}`}
-                {result.type === "anti_doublon" && `⏳ Reviens dans ${formatTemps(result.secondes_restantes)}`}
-                {result.type === "recompense" && `🎁 ${result.nom_recompense} !`}
-              </p>
-            </div>
-          )}
-
-          {result?.type === "recompense" ? (
-            <button onClick={handleValiderRecompense}
-              className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white"
-              style={{ background: "#34C759", boxShadow: "0 4px 16px rgba(52,199,89,0.3)" }}>
-              Valider la récompense
-            </button>
-          ) : (
-            <button onClick={handleAjouterTampon}
-              className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white transition-all"
-              style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.3)" }}
-              onMouseEnter={e => (e.target as HTMLElement).style.transform = "translateY(-1px)"}
-              onMouseLeave={e => (e.target as HTMLElement).style.transform = "translateY(0)"}>
-              + Ajouter un tampon
-            </button>
-          )}
         </div>
 
-        <p className="text-center text-[13px]" style={{ color: "var(--fg-tertiary)" }}>
-          <a href="/dashboard" style={{ color: "var(--accent)" }}>← Retour au dashboard</a>
-        </p>
+        {/* Résultat */}
+        {result && (
+          <div
+            className="rounded-2xl p-4 mb-4"
+            style={{
+              background:
+                result.type === "anti_doublon" ? "rgba(255,159,10,0.1)" :
+                result.type === "recompense"   ? "rgba(52,199,89,0.1)" :
+                "rgba(0,122,255,0.08)",
+              border: `1px solid ${
+                result.type === "anti_doublon" ? "rgba(255,159,10,0.25)" :
+                result.type === "recompense"   ? "rgba(52,199,89,0.25)" :
+                "rgba(0,122,255,0.2)"}`,
+            }}
+          >
+            <p
+              className="text-[15px] font-semibold mb-0.5"
+              style={{
+                color:
+                  result.type === "anti_doublon" ? "#FF9F0A" :
+                  result.type === "recompense"   ? "#34C759" :
+                  "var(--accent)",
+              }}
+            >
+              {result.type === "ok"          && `✅ Tampon ajouté — ${result.tampons}/${result.objectif}`}
+              {result.type === "anti_doublon" && "⏳ Déjà enregistré récemment"}
+              {result.type === "recompense"   && `🎁 ${result.nom_recompense} débloqué !`}
+            </p>
+            <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
+              {result.type === "ok" && restants > 0 && `${restants} tampon${restants > 1 ? "s" : ""} restant avant la récompense`}
+              {result.type === "anti_doublon" && `Prochain tampon dans ${formatTemps(result.secondes_restantes)}`}
+              {result.type === "recompense" && "Validez la récompense pour continuer"}
+            </p>
+          </div>
+        )}
+
+        {/* CTA principal */}
+        {client.recompense_en_attente ? (
+          <button
+            onClick={handleValiderRecompense}
+            disabled={validationEnCours}
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-3"
+            style={{ background: "#34C759", boxShadow: "0 4px 18px rgba(52,199,89,0.35)" }}
+          >
+            {validationEnCours ? "Validation…" : "🎁 Valider la récompense"}
+          </button>
+        ) : (
+          <button
+            onClick={handleAjouterTampon}
+            disabled={ajoutEnCours}
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-5"
+            style={{ background: "var(--accent)", boxShadow: "0 4px 18px rgba(0,122,255,0.3)" }}
+          >
+            {ajoutEnCours ? "Enregistrement…" : "+ Ajouter un tampon"}
+          </button>
+        )}
+
+        {/* Correction manuelle */}
+        <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+          <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>
+            Correction manuelle
+          </p>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => handleAjuster(-1)}
+              disabled={adjusting || client.tampons === 0}
+              className="w-12 h-12 rounded-2xl text-[22px] font-bold flex items-center justify-center transition-all"
+              style={{
+                background: "rgba(255,59,48,0.08)",
+                color: "#FF3B30",
+                opacity: client.tampons === 0 ? 0.3 : 1,
+              }}
+            >
+              −
+            </button>
+            <div className="text-center">
+              <p className="text-[32px] font-semibold leading-none" style={{ color: "var(--fg)" }}>
+                {client.tampons}
+              </p>
+              <p className="text-[11px] mt-1" style={{ color: "var(--fg-tertiary)" }}>tampons</p>
+            </div>
+            <button
+              onClick={() => handleAjuster(1)}
+              disabled={adjusting || client.tampons >= objectif}
+              className="w-12 h-12 rounded-2xl text-[22px] font-bold flex items-center justify-center transition-all"
+              style={{
+                background: "rgba(0,122,255,0.08)",
+                color: "var(--accent)",
+                opacity: client.tampons >= objectif ? 0.3 : 1,
+              }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+
       </div>
     </main>
   );
@@ -133,8 +288,10 @@ function Erreur({ message }: { message: string }) {
   return (
     <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
       <div className="text-center max-w-sm">
-        <p className="text-[17px]" style={{ color: "var(--fg-secondary)" }}>{message}</p>
-        <a href="/dashboard" className="text-[15px] mt-4 block" style={{ color: "var(--accent)" }}>← Dashboard</a>
+        <p className="text-[17px] mb-5" style={{ color: "var(--fg-secondary)" }}>{message}</p>
+        <Link href="/dashboard" className="text-[15px] font-medium" style={{ color: "var(--accent)" }}>
+          ← Dashboard
+        </Link>
       </div>
     </main>
   );

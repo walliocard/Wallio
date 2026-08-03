@@ -29,6 +29,7 @@ export type Client = {
   wallet_id: string;
   marchand_id: string;
   tampons: number;
+  date_inscription?: Timestamp;
   derniere_visite?: Timestamp;
   recompense_en_attente?: boolean;
 };
@@ -178,6 +179,23 @@ export function formatTemps(secondes: number): string {
   if (secondes < 3600) return `${Math.ceil(secondes / 60)} min`;
   if (secondes < 86400) return `${Math.ceil(secondes / 3600)} h`;
   return `${Math.ceil(secondes / 86400)} jour${Math.ceil(secondes / 86400) > 1 ? "s" : ""}`;
+}
+
+export function formatTempsDepuis(ts?: { seconds: number } | null): string {
+  if (!ts) return "jamais";
+  const sec = Date.now() / 1000 - ts.seconds;
+  if (sec < 60) return "à l'instant";
+  if (sec < 3600) return `il y a ${Math.floor(sec / 60)} min`;
+  if (sec < 86400) return `il y a ${Math.floor(sec / 3600)} h`;
+  const j = Math.floor(sec / 86400);
+  if (j === 1) return "hier";
+  if (j < 30) return `il y a ${j} jours`;
+  if (j < 365) return `il y a ${Math.floor(j / 30)} mois`;
+  return `il y a ${Math.floor(j / 365)} an(s)`;
+}
+
+export async function setTampons(clientId: string, tampons: number): Promise<void> {
+  await updateDoc(doc(db, "clients", clientId), { tampons: Math.max(0, tampons) });
 }
 
 export const WALLET_KEY = (marchandId: string) => `wallio_${marchandId}`;
