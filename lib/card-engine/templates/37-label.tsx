@@ -31,11 +31,7 @@ const template: CardTemplate = {
         </div>
 
         {/* QR coin bas droite */}
-        {!thumbnail && (
-          <div style={{ position: "absolute", bottom: "6%", right: "6%" }}>
-            <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>
-          </div>
-        )}
+        
         {/* WALLIO watermark */}
         <div style={{ position: "absolute", bottom: "5%", left: "5%", fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary, opacity: 0.6 }}>WALLIO</div>
       </div>

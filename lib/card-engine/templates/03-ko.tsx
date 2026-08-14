@@ -107,9 +107,7 @@ const template: CardTemplate = {
                 <div style={{ fontSize: 8, color: tokens.textSecondary, marginTop: 2 }}>{data.nom_recompense}</div>
               )}
             </div>
-            {!thumbnail && (
-              <QRBox size={30} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>
-            )}
+            
           </div>
         </div>
 

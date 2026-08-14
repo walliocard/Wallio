@@ -34,7 +34,7 @@ const template: CardTemplate = {
           {/* Bas — tampons points minuscules + QR */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 5 : 9} gap={thumbnail ? 2 : 4} perRow={10}/>
-            {!thumbnail && <div style={{ opacity: 0.6 }}><QRBox size={24} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/></div>}
+            
           </div>
           <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary, marginTop: 4 }}>{data.nom_recompense}</div>
               {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}

@@ -41,7 +41,7 @@ const template: CardTemplate = {
             <div style={{ background: tokens.surface, borderRadius: 12, padding: thumbnail ? "3px 8px" : "4px 12px" }}>
               <span style={{ fontSize: thumbnail ? 5 : 8, fontWeight: 700, color: tokens.accent }}>🎁 {data.nom_recompense}</span>
             </div>
-            {!thumbnail && <div style={{ background: "rgba(255,255,255,0.8)", borderRadius: 10, padding: 3 }}><QRBox size={30} bg="#fff" fg={tokens.text} radius={6}/></div>}
+            
           </div>
         </div>
       </div>

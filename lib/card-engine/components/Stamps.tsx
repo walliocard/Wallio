@@ -127,12 +127,19 @@ function StampShape({
   }
 }
 
+function balancedPerRow(total: number): number {
+  if (total <= 8) return total;          // 1 ligne pour ≤8
+  if (total <= 16) return Math.ceil(total / 2); // 2 lignes équilibrées
+  return Math.ceil(total / 3);           // 3 lignes pour >16
+}
+
 export default function Stamps({
   total, filled, style, tokens, size = 22, gap = 5, perRow = 9, iconPath, fillWidth = false,
 }: StampsProps) {
+  const effectivePerRow = fillWidth ? balancedPerRow(total) : perRow;
   const rows: number[][] = [];
-  for (let i = 0; i < total; i += perRow) {
-    rows.push(Array.from({ length: Math.min(perRow, total - i) }, (_, j) => i + j));
+  for (let i = 0; i < total; i += effectivePerRow) {
+    rows.push(Array.from({ length: Math.min(effectivePerRow, total - i) }, (_, j) => i + j));
   }
 
   if (fillWidth) {

@@ -107,9 +107,7 @@ const template: CardTemplate = {
                 {filled} / {data.objectif_tampons}
               </div>
             </div>
-            {!thumbnail && (
-              <QRBox size={32} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>
-            )}
+            
           </div>
         </div>
       </div>

@@ -96,9 +96,7 @@ const template: CardTemplate = {
               {data.nom_recompense || "Récompense"}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {!thumbnail && (
-                <QRBox size={36} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={4}/>
-              )}
+              
               <span style={{ fontSize: thumbnail ? 7 : 10, fontWeight: 600, color: tokens.textSecondary }}>
                 {filled}/{data.objectif_tampons}
               </span>

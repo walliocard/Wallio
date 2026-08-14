@@ -19,11 +19,7 @@ const template: CardTemplate = {
         {/* Bande verticale gauche — passeport */}
         <div style={{ width: thumbnail ? 18 : 32, background: tokens.text, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", padding: "6% 0", flexShrink: 0 }}>
           <div style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.background, opacity: 0.7 }}>PASSEPORT FIDÉLITÉ</div>
-          {!thumbnail && (
-            <div style={{ background: tokens.background, padding: 2, opacity: 0.9 }}>
-              <QRBox size={24} bg="#fff" fg={tokens.text} radius={0}/>
-            </div>
-          )}
+          
           <div style={{ fontSize: thumbnail ? 4 : 5, color: tokens.background, opacity: 0.5, letterSpacing: "0.1em" }}>WALLIO</div>
         </div>
 

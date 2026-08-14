@@ -154,10 +154,18 @@ export default function CartePage() {
           <div style={{ display: "flex", height: "100%", gap: 0 }}>
 
             {/* Preview sticky */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, gap: 16 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, gap: 0 }}>
               <div style={{ width: "100%", maxWidth: 460 }}>
-                <div style={{ width: "100%", aspectRatio: "375/246", borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+                {/* Carte */}
+                <div style={{ width: "100%", aspectRatio: "375/246", borderRadius: "16px 16px 0 0", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
                   {template.render({ data, tokens: palette.tokens, palette, thumbnail: false })}
+                </div>
+                {/* Extension QR */}
+                <div style={{ width: "100%", background: palette.tokens.background, borderRadius: "0 0 16px 16px", borderTop: `1px solid ${palette.tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 0 12px", boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
+                  <div style={{ width: 60, height: 60, background: "#fff", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="52" height="52" viewBox="0 0 200 200"><rect width="200" height="200" fill="#fff"/><rect x="10" y="10" width="70" height="70" rx="6" fill="#000"/><rect x="20" y="20" width="50" height="50" rx="3" fill="#fff"/><rect x="30" y="30" width="30" height="30" rx="2" fill="#000"/><rect x="120" y="10" width="70" height="70" rx="6" fill="#000"/><rect x="130" y="20" width="50" height="50" rx="3" fill="#fff"/><rect x="140" y="30" width="30" height="30" rx="2" fill="#000"/><rect x="10" y="120" width="70" height="70" rx="6" fill="#000"/><rect x="20" y="130" width="50" height="50" rx="3" fill="#fff"/><rect x="30" y="140" width="30" height="30" rx="2" fill="#000"/><rect x="100" y="100" width="10" height="10" fill="#000"/><rect x="120" y="105" width="10" height="10" fill="#000"/><rect x="140" y="100" width="10" height="10" fill="#000"/><rect x="100" y="120" width="15" height="10" fill="#000"/><rect x="130" y="125" width="20" height="10" fill="#000"/><rect x="100" y="140" width="10" height="10" fill="#000"/><rect x="125" y="145" width="15" height="10" fill="#000"/><rect x="150" y="140" width="20" height="10" fill="#000"/></svg>
+                  </div>
+                  <p style={{ fontSize: 9, marginTop: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: palette.tokens.textTertiary }}>Votre carte · Wallio</p>
                 </div>
               </div>
             </div>
@@ -169,32 +177,27 @@ export default function CartePage() {
               display: "flex", flexDirection: "column", gap: 20,
             }}>
 
-              {/* Logo */}
+              {/* Logo — label direct pour meilleure compat navigateur */}
               <Section label="Logo">
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <div style={{
+                  <label style={{
                     width: 52, height: 52, borderRadius: 12,
                     border: "1px solid var(--border)",
                     overflow: "hidden", flexShrink: 0,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "var(--glass-bg)",
+                    background: "var(--glass-bg)", cursor: uploadingLogo ? "wait" : "pointer",
                   }}>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
                     {data.logo_url
                       ? <img src={data.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
-                      : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="1.5" strokeLinecap="round">
-                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                          <circle cx="12" cy="13" r="4"/>
-                        </svg>
+                      : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     }
-                  </div>
+                  </label>
                   <div style={{ flex: 1 }}>
-                    <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload}/>
-                    <button onClick={() => fileRef.current?.click()} disabled={uploadingLogo} style={{
-                      width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
-                      background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer",
-                    }}>
-                      {uploadingLogo ? "Upload…" : data.logo_url ? "Changer" : "Ajouter un logo"}
-                    </button>
+                    <label style={{ display: "block", width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: uploadingLogo ? "wait" : "pointer", textAlign: "center" }}>
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
+                      {uploadingLogo ? "Upload…" : data.logo_url ? "Changer" : "Upload…"}
+                    </label>
                     {data.logo_url && (
                       <button onClick={() => set("logo_url", "")} style={{ width: "100%", marginTop: 4, padding: "5px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
                         Supprimer
@@ -244,17 +247,46 @@ export default function CartePage() {
                     <button key={p.id} onClick={() => setPaletteId(p.id)} style={{
                       display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
                       borderRadius: 10,
-                      background: paletteId === p.id ? "var(--glass-bg)" : "transparent",
+                      background: paletteId === p.id ? "rgba(0,122,255,0.08)" : "transparent",
                       border: `1px solid ${paletteId === p.id ? "var(--accent)" : "var(--border)"}`,
                       cursor: "pointer",
                     }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 6, background: p.tokens.background, border: "1px solid rgba(0,0,0,0.1)", flexShrink: 0 }}/>
-                      <div style={{ display: "flex", gap: 4 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 6, background: p.tokens.background, border: "1px solid rgba(128,128,128,0.3)", flexShrink: 0 }}/>
+                      <div style={{ display: "flex", gap: 3 }}>
                         <div style={{ width: 12, height: 12, borderRadius: 3, background: p.tokens.accent }}/>
                         <div style={{ width: 12, height: 12, borderRadius: 3, background: p.tokens.stampActive }}/>
                       </div>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--fg)" }}>{p.name}</span>
+                      <span style={{ fontSize: 12, fontWeight: paletteId === p.id ? 600 : 500, color: paletteId === p.id ? "var(--accent)" : "var(--fg)" }}>{p.name}</span>
                     </button>
+                  ))}
+                </div>
+              </Section>
+
+              {/* Couleurs libres */}
+              <Section label="Couleurs personnalisées">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginTop: -6 }}>Remplace la palette sélectionnée</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[
+                    { label: "Fond", key: "background" as const },
+                    { label: "Accent / tampons", key: "accent" as const },
+                    { label: "Texte", key: "text" as const },
+                  ].map(({ label, key }) => (
+                    <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 12, color: "var(--fg)" }}>{label}</span>
+                      <input
+                        type="color"
+                        value={palette.tokens[key] || "#000000"}
+                        onChange={e => {
+                          const newTokens = { ...palette.tokens, [key]: e.target.value };
+                          if (key === "accent") newTokens.accentSecondary = e.target.value;
+                          if (key === "accent") newTokens.stampActive = e.target.value;
+                          const idx = template.palettes.findIndex(p => p.id === paletteId);
+                          if (idx >= 0) template.palettes[idx] = { ...template.palettes[idx], tokens: newTokens };
+                          setPaletteId(p => p); // force re-render
+                        }}
+                        style={{ width: 36, height: 28, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer", padding: 2 }}
+                      />
+                    </div>
                   ))}
                 </div>
               </Section>

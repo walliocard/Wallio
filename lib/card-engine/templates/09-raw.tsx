@@ -102,9 +102,7 @@ const template: CardTemplate = {
                 {data.nom_recompense}
               </div>
             </div>
-            {!thumbnail && (
-              <QRBox size={36} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>
-            )}
+            
           </div>
         </div>
       </div>

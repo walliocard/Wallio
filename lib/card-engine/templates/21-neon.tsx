@@ -42,7 +42,7 @@ const template: CardTemplate = {
               {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
               <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</div>
             </div>
-            {!thumbnail && <div style={{ background: "#FFFFFF", padding: 3, borderRadius: 4 }}><QRBox size={30} bg="#fff" fg="#000" radius={2}/></div>}
+            
           </div>
         </div>
       </div>

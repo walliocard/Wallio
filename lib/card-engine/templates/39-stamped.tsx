@@ -47,7 +47,7 @@ const template: CardTemplate = {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons} · {data.nom_recompense}</div>
-            {!thumbnail && <div style={{ transform: "rotate(2deg)", background: "rgba(255,255,255,0.5)", padding: 3, borderRadius: 2 }}><QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/></div>}
+            
           </div>
         </div>
       </div>

@@ -75,11 +75,7 @@ const template: CardTemplate = {
           <div style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", fontSize: thumbnail ? 5 : 7, letterSpacing: "0.15em", color: tokens.textTertiary }}>
             N° {memberNum}
           </div>
-          {!thumbnail && (
-            <div style={{ marginTop: 8 }}>
-              <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={2}/>
-            </div>
-          )}
+          
         </div>
 
         {/* Zone principale */}

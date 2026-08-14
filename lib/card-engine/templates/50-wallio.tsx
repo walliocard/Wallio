@@ -95,9 +95,10 @@ const template: CardTemplate = {
                 <span style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 800, color: "#fff" }}>W</span>
               </div>
             )}
-            <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 600, color: tokens.text, letterSpacing: -0.3 }}>
-              {data.nom || "Wallio"}
-            </span>
+            <div>
+              <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 600, color: tokens.text, letterSpacing: -0.3 }}>{data.nom || "Wallio"}</span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>{data.slogan}</div>}
+            </div>
           </div>
           <div style={{
             padding: thumbnail ? "1px 4px" : "2px 8px", borderRadius: 20,
@@ -113,7 +114,7 @@ const template: CardTemplate = {
 
         {/* Tampons */}
         <div style={{ zIndex: 1 }}>
-          <Stamps
+          <Stamps fillWidth={!thumbnail}
             total={data.objectif_tampons} filled={filled}
             style="circle" tokens={tokens}
             size={thumbnail ? 11 : 20} gap={thumbnail ? 3 : 5} perRow={9}
@@ -132,14 +133,11 @@ const template: CardTemplate = {
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.textTertiary }}>{data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
               <div style={{ fontSize: thumbnail ? 7 : 10, fontWeight: 600, color: tokens.textSecondary, marginTop: 1 }}>
                 {filled}/{data.objectif_tampons}
               </div>
             </div>
-            {!thumbnail && (
-              <QRBox size={38} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={6}/>
-            )}
+            
           </div>
         </div>
       </div>
