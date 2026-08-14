@@ -156,12 +156,17 @@ export default function CartePage() {
                   {template.render({ data, tokens: palette.tokens, palette, thumbnail: false, dimensions: dims })}
                 </div>
                 {/* Extension QR */}
-                <div style={{ width: "100%", background: palette.tokens.background, borderRadius: "0 0 16px 16px", borderTop: `1px solid ${palette.tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 0 12px", boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
-                  <div style={{ width: 60, height: 60, background: "#fff", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="52" height="52" viewBox="0 0 200 200"><rect width="200" height="200" fill="#fff"/><rect x="10" y="10" width="70" height="70" rx="6" fill="#000"/><rect x="20" y="20" width="50" height="50" rx="3" fill="#fff"/><rect x="30" y="30" width="30" height="30" rx="2" fill="#000"/><rect x="120" y="10" width="70" height="70" rx="6" fill="#000"/><rect x="130" y="20" width="50" height="50" rx="3" fill="#fff"/><rect x="140" y="30" width="30" height="30" rx="2" fill="#000"/><rect x="10" y="120" width="70" height="70" rx="6" fill="#000"/><rect x="20" y="130" width="50" height="50" rx="3" fill="#fff"/><rect x="30" y="140" width="30" height="30" rx="2" fill="#000"/><rect x="100" y="100" width="10" height="10" fill="#000"/><rect x="120" y="105" width="10" height="10" fill="#000"/><rect x="140" y="100" width="10" height="10" fill="#000"/><rect x="100" y="120" width="15" height="10" fill="#000"/><rect x="130" y="125" width="20" height="10" fill="#000"/><rect x="100" y="140" width="10" height="10" fill="#000"/><rect x="125" y="145" width="15" height="10" fill="#000"/><rect x="150" y="140" width="20" height="10" fill="#000"/></svg>
-                  </div>
-                  <p style={{ fontSize: 9, marginTop: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: palette.tokens.textTertiary }}>Votre carte · Wallio</p>
-                </div>
+                {(() => {
+                  const qr = dims.qrSize ?? 56;
+                  return (
+                    <div style={{ width: "100%", background: palette.tokens.background, borderRadius: "0 0 16px 16px", borderTop: `1px solid ${palette.tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", padding: `${Math.round(qr * 0.25)}px 0`, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
+                      <div style={{ width: qr, height: qr, background: "#fff", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <svg width={qr - 8} height={qr - 8} viewBox="0 0 200 200"><rect width="200" height="200" fill="#fff"/><rect x="10" y="10" width="70" height="70" rx="6" fill="#000"/><rect x="20" y="20" width="50" height="50" rx="3" fill="#fff"/><rect x="30" y="30" width="30" height="30" rx="2" fill="#000"/><rect x="120" y="10" width="70" height="70" rx="6" fill="#000"/><rect x="130" y="20" width="50" height="50" rx="3" fill="#fff"/><rect x="140" y="30" width="30" height="30" rx="2" fill="#000"/><rect x="10" y="120" width="70" height="70" rx="6" fill="#000"/><rect x="20" y="130" width="50" height="50" rx="3" fill="#fff"/><rect x="30" y="140" width="30" height="30" rx="2" fill="#000"/><rect x="100" y="100" width="10" height="10" fill="#000"/><rect x="120" y="105" width="10" height="10" fill="#000"/><rect x="140" y="100" width="10" height="10" fill="#000"/><rect x="100" y="120" width="15" height="10" fill="#000"/><rect x="130" y="125" width="20" height="10" fill="#000"/><rect x="100" y="140" width="10" height="10" fill="#000"/><rect x="125" y="145" width="15" height="10" fill="#000"/><rect x="150" y="140" width="20" height="10" fill="#000"/></svg>
+                      </div>
+                      <p style={{ fontSize: 9, marginTop: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: palette.tokens.textTertiary }}>Votre carte · Wallio</p>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -258,15 +263,18 @@ export default function CartePage() {
               </Section>
 
               {/* Dimensions */}
-              <Section label="Dimensions">
-                {[
-                  { label: "Tampons", key: "stampSize" as const, min: 10, max: 40, step: 1, defaultVal: 20, unit: "px", format: (v: number) => `${v}px` },
-                  { label: "Nom", key: "nameScale" as const, min: 0.6, max: 1.8, step: 0.05, defaultVal: 1, unit: "×", format: (v: number) => `${v.toFixed(2)}×` },
-                  { label: "Récompense", key: "rewardScale" as const, min: 0.6, max: 1.8, step: 0.05, defaultVal: 1, unit: "×", format: (v: number) => `${v.toFixed(2)}×` },
-                ].map(({ label, key, min, max, step, defaultVal, format: fmt }) => (
-                  <Field key={key} label={`${label} — ${fmt(dims[key] as number ?? defaultVal)}`}>
+              <Section label="Dimensions des éléments">
+                {([
+                  { label: "Logo", key: "logoSize",    min: 16, max: 56,  step: 2,    def: 28, fmt: (v: number) => `${v}px` },
+                  { label: "Nom", key: "nameScale",    min: 0.6, max: 2,  step: 0.05, def: 1,  fmt: (v: number) => `${v.toFixed(2)}×` },
+                  { label: "Tampons", key: "stampSize",min: 8,  max: 48,  step: 1,    def: 20, fmt: (v: number) => `${v}px` },
+                  { label: "Récompense", key: "rewardScale", min: 0.6, max: 2, step: 0.05, def: 1, fmt: (v: number) => `${v.toFixed(2)}×` },
+                  { label: "Compteur", key: "scoreScale", min: 0.6, max: 2, step: 0.05, def: 1, fmt: (v: number) => `${v.toFixed(2)}×` },
+                  { label: "QR code", key: "qrSize",   min: 32, max: 100, step: 4,    def: 56, fmt: (v: number) => `${v}px` },
+                ] as { label: string; key: keyof typeof dims; min: number; max: number; step: number; def: number; fmt: (v: number) => string }[]).map(({ label, key, min, max, step, def, fmt }) => (
+                  <Field key={key} label={`${label} — ${fmt((dims[key] as number) ?? def)}`}>
                     <input type="range" min={min} max={max} step={step}
-                      value={(dims[key] as number) ?? defaultVal}
+                      value={(dims[key] as number) ?? def}
                       onChange={e => setDim(key, Number(e.target.value))}
                       style={{ width: "100%", accentColor: "var(--accent)" }}/>
                     <button onClick={() => setDim(key, undefined)} style={{ fontSize: 10, color: "var(--fg-tertiary)", background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 2 }}>

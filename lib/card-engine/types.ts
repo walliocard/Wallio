@@ -18,11 +18,13 @@ export interface CardData {
 
 /* ── Dimensions personnalisées ── */
 export interface CardDimensions {
-  stampSize?: number;      // taille px des tampons en full (défaut template)
+  logoSize?: number;       // taille px du logo/avatar en full (défaut: 28)
   nameScale?: number;      // multiplicateur taille nom 0.6–2.0
   sloganScale?: number;    // multiplicateur taille slogan 0.6–2.0
-  rewardScale?: number;    // multiplicateur taille récompense 0.6–2.0
-  paddingScale?: number;   // multiplicateur padding 0.5–1.5
+  stampSize?: number;      // taille px des tampons en full (défaut template)
+  rewardScale?: number;    // multiplicateur texte récompense 0.6–2.0
+  scoreScale?: number;     // multiplicateur compteur tampons ex: "6/10" 0.6–2.0
+  qrSize?: number;         // taille px du QR code dans l'extension (défaut: 56)
   format?: "standard" | "compact" | "wide"; // ratio carte
 }
 

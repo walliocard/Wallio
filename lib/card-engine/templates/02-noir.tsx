@@ -54,57 +54,103 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+
     return (
       <div style={{
-        width: "100%", height: "100%", background: tokens.background,
+        width: "100%", height: "100%",
+        background: tokens.background,
         display: "flex", flexDirection: "column",
-        padding: "6% 7%", fontFamily: "Georgia, 'Times New Roman', serif",
-        position: "relative", gap: "5%",
+        fontFamily: "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+        position: "relative", overflow: "hidden",
       }}>
-        {/* Filet doré haut */}
-        <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${tokens.accent}, transparent)` }}/>
+        {/* Filet doré haut — très subtil */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0,
+          height: thumbnail ? 1 : 1.5,
+          background: `linear-gradient(90deg, transparent, ${tokens.accent}, transparent)`,
+          opacity: 0.6,
+        }}/>
+        {/* Filet bas */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          height: thumbnail ? 1 : 1.5,
+          background: `linear-gradient(90deg, transparent, ${tokens.accent}, transparent)`,
+          opacity: 0.6,
+        }}/>
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {/* HEADER */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+          padding: thumbnail ? "6% 7% 3%" : "7% 8% 4%",
+          position: "relative", zIndex: 1,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
             {data.logo_url ? (
-              <img src={data.logo_url} alt="" style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", border: `1px solid ${tokens.accent}` }}/>
+              <img src={data.logo_url} alt="" style={{ width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: thumbnail ? 5 : 8, objectFit: "cover", border: `1px solid ${tokens.accent}40` }}/>
             ) : (
-              <div style={{ width: 26, height: 26, borderRadius: "50%", border: `1px solid ${tokens.accent}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 11, color: tokens.accent, fontFamily: "Georgia, serif" }}>{(data.nom[0] || "W").toUpperCase()}</span>
+              <div style={{
+                width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: thumbnail ? 5 : 8,
+                border: `1px solid ${tokens.accent}60`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <span style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.accent }}>
+                  {(data.nom[0] || "W").toUpperCase()}
+                </span>
               </div>
             )}
             <div>
-              <span style={{ fontSize: thumbnail ? 8 : 12, fontStyle: "italic", color: tokens.text, letterSpacing: 0.5 }}>
+              <div style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 600, color: tokens.text, letterSpacing: -0.3, lineHeight: 1.2 }}>
                 {data.nom || "Établissement"}
-              </span>
-              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>{data.slogan}</div>}
+              </div>
+              {data.slogan && !thumbnail && (
+                <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>
+                  {data.slogan}
+                </div>
+              )}
             </div>
           </div>
-          <span style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.2em", color: tokens.accent }}>
-            MEMBER CARD
-          </span>
+          {/* Badge WALLIO pill translucide */}
+          <div style={{
+            background: `${tokens.accent}18`, backdropFilter: "blur(8px)",
+            borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px",
+            border: `1px solid ${tokens.accent}30`, flexShrink: 0,
+          }}>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+          </div>
         </div>
 
-        {/* Tampons médaillons */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled}
+        {/* TAMPONS — style ring pour luxe */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+            total={data.objectif_tampons} filled={filled}
             style="ring" tokens={tokens}
-            size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={10}
+            size={thumbnail ? 9 : 20} gap={thumbnail ? 3 : 6} perRow={10}
           />
         </div>
 
-        {/* Footer */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* FOOTER */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "flex-end",
+          padding: thumbnail ? "3% 7% 6%" : "4% 8% 7%",
+          position: "relative", zIndex: 1,
+        }}>
           <div>
-            <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.12em", color: tokens.textTertiary, marginBottom: 2 }}>RÉCOMPENSE</div>
-            <div style={{ fontSize: thumbnail ? 7 : 10, color: tokens.accent }}>{data.nom_recompense}</div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textTertiary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2 }}>
+              Récompense
+            </div>
+            <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.accent }}>
+              {data.nom_recompense}
+            </div>
           </div>
-          <div style={{ fontSize: thumbnail ? 6 : 8, fontWeight: 600, color: tokens.textSecondary }}>{Math.round(data.objectif_tampons * 0.6)}/{data.objectif_tampons}</div>
+          <div style={{
+            background: `${tokens.accent}15`, backdropFilter: "blur(8px)",
+            borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
+            border: `1px solid ${tokens.accent}25`,
+          }}>
+            <span style={{ fontSize: thumbnail ? 6 : 11, fontWeight: 700, color: tokens.accent }}>
+              {filled}/{data.objectif_tampons}
+            </span>
+          </div>
         </div>
-
-        {/* Filet bas */}
-        <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${tokens.accent}, transparent)` }}/>
       </div>
     );
   },

@@ -54,57 +54,82 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+
     return (
       <div style={{
-        width: "100%", height: "100%", background: tokens.background,
-        display: "flex", position: "relative",
-        fontFamily: "'Arial Black', 'Helvetica Neue', sans-serif",
-        overflow: "hidden",
+        width: "100%", height: "100%",
+        background: tokens.background,
+        display: "flex",
+        fontFamily: "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+        position: "relative", overflow: "hidden",
       }}>
-        {/* Numéro géant en fond */}
-        <div style={{
-          position: "absolute", right: thumbnail ? "-2%" : "-3%", bottom: "-5%",
-          fontSize: thumbnail ? 60 : 120, fontWeight: 900, color: tokens.surface,
-          lineHeight: 1, userSelect: "none",
-        }}>
-          {filled}
-        </div>
-
-        {/* Barre verticale accent */}
+        {/* Bande verticale accent — signature RAW */}
         <div style={{
           width: thumbnail ? 4 : 8, background: tokens.accent, flexShrink: 0,
         }}/>
 
+        {/* Numéro géant en fond — opacity très subtile */}
+        <div style={{
+          position: "absolute", right: thumbnail ? "-2%" : "-3%", bottom: "-5%",
+          fontSize: thumbnail ? 60 : 120, fontWeight: 900, color: tokens.surface,
+          lineHeight: 1, userSelect: "none", pointerEvents: "none",
+        }}>
+          {filled}
+        </div>
+
         {/* Contenu */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "5% 5%", justifyContent: "space-between" }}>
-          {/* Haut */}
-          <div>
-            <div style={{ fontSize: thumbnail ? 5 : 7, fontWeight: 900, letterSpacing: "0.15em", color: tokens.accent, marginBottom: 3 }}>
-              CARTE DE FIDÉLITÉ
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 5%" : "7% 6%", position: "relative", zIndex: 1 }}>
+          {/* HEADER */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: thumbnail ? 5 : 7, fontWeight: 700, letterSpacing: "0.12em", color: tokens.accent, marginBottom: 3, textTransform: "uppercase" }}>
+                FIDÉLITÉ
+              </div>
+              <div style={{ fontSize: thumbnail ? 9 : ns(16), fontWeight: 900, color: tokens.text, lineHeight: 1.0, letterSpacing: "-0.02em", textTransform: "uppercase" }}>
+                {data.nom || "ÉTABLISSEMENT"}
+              </div>
+              {data.slogan && !thumbnail && (
+                <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 3 }}>
+                  {data.slogan}
+                </div>
+              )}
             </div>
-            <div style={{ fontSize: thumbnail ? 9 : 15, fontWeight: 900, textTransform: "uppercase", color: tokens.text, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
-              {data.nom || "ÉTABLISSEMENT"}
+            {/* Badge WALLIO */}
+            <div style={{
+              background: `${tokens.accent}18`, backdropFilter: "blur(8px)",
+              borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px",
+              border: `1px solid ${tokens.accent}30`, flexShrink: 0,
+            }}>
+              <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
             </div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
 
-          {/* Tampons carrés */}
-          <Stamps sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled}
+          {/* TAMPONS — carrés brutaux */}
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+            total={data.objectif_tampons} filled={filled}
             style="square" tokens={tokens}
-            size={thumbnail ? 8 : 15} gap={thumbnail ? 2 : 3} perRow={9}
+            size={thumbnail ? 8 : 16} gap={thumbnail ? 2 : 3} perRow={9}
           />
 
-          {/* Bas */}
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+          {/* FOOTER */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
-              <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 900, color: tokens.text }}>
-                {filled}<span style={{ color: tokens.textTertiary }}>/{data.objectif_tampons}</span>
+              <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textTertiary, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 2 }}>
+                Récompense
               </div>
-              <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, marginTop: 2 }}>
+              <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 700, color: tokens.text }}>
                 {data.nom_recompense}
               </div>
             </div>
-            
+            <div style={{
+              background: `${tokens.accent}18`, backdropFilter: "blur(8px)",
+              borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
+              border: `1px solid ${tokens.accent}30`,
+            }}>
+              <span style={{ fontSize: thumbnail ? 6 : 12, fontWeight: 900, color: tokens.accent }}>
+                {filled}/{data.objectif_tampons}
+              </span>
+            </div>
           </div>
         </div>
       </div>
