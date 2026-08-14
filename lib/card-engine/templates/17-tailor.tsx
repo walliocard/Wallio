@@ -40,8 +40,8 @@ const template: CardTemplate = {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textSecondary, fontStyle: "italic" }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
-            {!thumbnail && <QRBox size={26} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={2}/>}
+            <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textSecondary, fontStyle: "italic" }}>{data.nom_recompense}</div>
+            <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
           </div>
         </div>
       </div>

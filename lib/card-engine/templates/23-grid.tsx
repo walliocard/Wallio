@@ -24,6 +24,7 @@ const template: CardTemplate = {
           <div>
             <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{">"} WALLIO_LOYALTY v2.0</div>
             <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, marginTop: 1 }}>ID: {(data.nom || "USER").toUpperCase().replace(/ /g, "_")}</div>
+            {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}># {data.slogan}</div>}
           </div>
 
           <div>
@@ -40,10 +41,9 @@ const template: CardTemplate = {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>REWARD: {data.nom_recompense.toUpperCase()}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
               {!thumbnail && <div style={{ fontSize: 6, color: tokens.textTertiary, marginTop: 2 }}>{ts}</div>}
             </div>
-            {!thumbnail && <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>}
+            <div style={{ fontSize: thumbnail ? 5 : 7, fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</div>
           </div>
         </div>
       </div>

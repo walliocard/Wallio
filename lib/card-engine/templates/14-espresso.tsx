@@ -97,7 +97,7 @@ const template: CardTemplate = {
 
           {/* Tampons grains */}
           <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-            <Stamps
+            <Stamps fillWidth={!thumbnail}
               total={data.objectif_tampons} filled={filled}
               style="circle" tokens={tokens}
               size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}

@@ -22,9 +22,11 @@ const template: CardTemplate = {
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, serif", position: "relative", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "5% 6%" : "6% 7%", alignItems: "center" }}>
           {/* Header */}
-          <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: thumbnail ? 6 : 9, fontStyle: "italic", color: tokens.text }}>{data.nom || "Seal"}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+          <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <div style={{ fontSize: thumbnail ? 6 : 9, fontStyle: "italic", color: tokens.text }}>{data.nom || "Seal"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>{data.slogan}</div>}
+            </div>
             <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
           </div>
 
@@ -43,7 +45,7 @@ const template: CardTemplate = {
           {/* Footer */}
           <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, fontStyle: "italic" }}>{data.nom_recompense}</div>
-            {!thumbnail && <QRBox size={26} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>}
+            <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary }}>REWARD</div>
           </div>
         </div>
       </div>

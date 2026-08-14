@@ -41,7 +41,7 @@ const template: CardTemplate = {
             <div style={{ background: tokens.surface, borderRadius: 20, padding: thumbnail ? "3px 8px" : "4px 14px" }}>
               <span style={{ fontSize: thumbnail ? 5 : 8, color: tokens.accent, fontWeight: 600 }}>{data.nom_recompense} 🍬</span>
             </div>
-            
+            <span style={{ fontSize: thumbnail ? 6 : 10, fontWeight: 700, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</span>
           </div>
         </div>
       </div>

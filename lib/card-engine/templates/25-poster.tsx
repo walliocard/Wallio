@@ -27,16 +27,16 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 16 : 28, fontWeight: 900, color: tokens.accent, lineHeight: 0.9, textTransform: "uppercase", letterSpacing: -1 }}>
               {(data.nom || "POSTER").toUpperCase().slice(0, 7)}
             </div>
+            {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textSecondary, marginTop: 6, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
 
           <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="circle" tokens={tokens} size={thumbnail ? 8 : 14} gap={thumbnail ? 2 : 4} perRow={9}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>
-              {filled}/{data.objectif_tampons} — {data.nom_recompense.toUpperCase()}
+              {data.nom_recompense.toUpperCase()}
             </div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
-            {!thumbnail && <QRBox size={26} bg={tokens.qrBackground} fg={tokens.background} radius={0}/>}
+            <div style={{ fontSize: thumbnail ? 6 : 9, fontWeight: 900, color: tokens.accent }}>{filled}/{data.objectif_tampons}</div>
           </div>
         </div>
       </div>

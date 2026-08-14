@@ -45,10 +45,8 @@ const template: CardTemplate = {
           </div>
 
           <div style={{ borderTop: `1px solid ${tokens.border}`, paddingTop: thumbnail ? 4 : 7, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ fontSize: thumbnail ? 4 : 5, letterSpacing: "0.1em", color: tokens.textTertiary }}>SPEC: {filled}/{data.objectif_tampons} — {data.nom_recompense.toUpperCase().slice(0, 12)}</div>
-            </div>
-            {!thumbnail && <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={2}/>}
+            <div style={{ fontSize: thumbnail ? 4 : 5, letterSpacing: "0.1em", color: tokens.textTertiary }}>SPEC: {data.nom_recompense.toUpperCase().slice(0, 12)}</div>
+            <div style={{ fontSize: thumbnail ? 5 : 7, fontWeight: 700, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
           </div>
         </div>
       </div>

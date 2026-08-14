@@ -18,11 +18,13 @@ const template: CardTemplate = {
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, 'Times New Roman', serif", position: "relative", overflow: "hidden" }}>
         {/* En-tête journal */}
-        <div style={{ borderBottom: `${thumbnail ? 1.5 : 2.5}px solid ${tokens.text}`, borderTop: `${thumbnail ? 0.5 : 1}px solid ${tokens.text}`, padding: thumbnail ? "2px 5%" : "3px 6%", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-          <div style={{ fontSize: thumbnail ? 5 : 8, letterSpacing: "0.08em", color: tokens.textTertiary }}>Vol. I</div>
-          <div style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.text, fontStyle: "italic" }}>{data.nom || "La Gazette"}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
-          <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textTertiary }}>WALLIO</div>
+        <div style={{ borderBottom: `${thumbnail ? 1.5 : 2.5}px solid ${tokens.text}`, borderTop: `${thumbnail ? 0.5 : 1}px solid ${tokens.text}`, padding: thumbnail ? "2px 5%" : "3px 6%", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontSize: thumbnail ? 5 : 8, letterSpacing: "0.08em", color: tokens.textTertiary }}>Vol. I</div>
+            <div style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.text, fontStyle: "italic" }}>{data.nom || "La Gazette"}</div>
+            <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textTertiary }}>WALLIO</div>
+          </div>
+          {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, textAlign: "center", paddingBottom: 2, fontStyle: "italic" }}>{data.slogan}</div>}
         </div>
 
         {/* Corps — colonnes */}
@@ -42,16 +44,11 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{filled}/{data.objectif_tampons} tampons</div>
           </div>
 
-          {/* Colonne 2 — QR */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            {!thumbnail ? (
-              <>
-                <div style={{ fontSize: 5, color: tokens.textTertiary, marginBottom: 4, letterSpacing: "0.1em" }}>VOTRE CODE</div>
-                <QRBox size={40} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>
-              </>
-            ) : (
-              <div style={{ fontSize: 4, color: tokens.textTertiary }}>QR</div>
-            )}
+          {/* Colonne 2 — score */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: thumbnail ? 2 : 4 }}>
+            <div style={{ fontSize: thumbnail ? 5 : 8, letterSpacing: "0.1em", color: tokens.textTertiary, textAlign: "center" }}>POINTS</div>
+            <div style={{ fontSize: thumbnail ? 12 : 22, fontWeight: 900, color: tokens.text, lineHeight: 1 }}>{filled}</div>
+            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>sur {data.objectif_tampons}</div>
           </div>
         </div>
       </div>

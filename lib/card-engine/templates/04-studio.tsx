@@ -81,9 +81,12 @@ const template: CardTemplate = {
 
         {/* Case haut-droite — nom + tampons */}
         <div style={{ padding: "6% 6% 6% 8%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <span style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: tokens.text }}>
-            {data.nom || "ÉTABLISSEMENT"}
-          </span>
+          <div>
+            <span style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: tokens.text }}>
+              {data.nom || "ÉTABLISSEMENT"}
+            </span>
+            {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+          </div>
           <Stamps
             total={data.objectif_tampons} filled={filled}
             style="square" tokens={tokens}
@@ -98,14 +101,13 @@ const template: CardTemplate = {
           </span>
         </div>
 
-        {/* Case bas-droite — récompense + QR */}
+        {/* Case bas-droite — récompense + score */}
         <div style={{ padding: "6% 6% 6% 8%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary, marginBottom: 3 }}>RÉCOMPENSE</div>
             <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.text, fontWeight: 500 }}>{data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
-          
+          <span style={{ fontSize: thumbnail ? 5 : 8, fontWeight: 600, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</span>
         </div>
       </div>
     );

@@ -69,10 +69,12 @@ const template: CardTemplate = {
                 <span style={{ fontSize: 12, fontWeight: 700, color: tokens.text }}>{(data.nom[0] || "W").toUpperCase()}</span>
               </div>
             )}
-            <span style={{ fontSize: thumbnail ? 9 : 13, fontWeight: 600, color: tokens.text, letterSpacing: -0.3 }}>
-              {data.nom || "Nom établissement"}
-            </span>
-            {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>{data.slogan}</div>}
+            <div>
+              <span style={{ fontSize: thumbnail ? 9 : 13, fontWeight: 600, color: tokens.text, letterSpacing: -0.3 }}>
+                {data.nom || "Nom établissement"}
+              </span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>{data.slogan}</div>}
+            </div>
           </div>
           <span style={{ fontSize: thumbnail ? 6 : 8, fontWeight: 700, letterSpacing: "0.14em", color: tokens.textTertiary }}>
             WALLIO
@@ -80,7 +82,7 @@ const template: CardTemplate = {
         </div>
 
         {/* Stamps */}
-        <Stamps
+        <Stamps fillWidth={!thumbnail}
           total={data.objectif_tampons} filled={filled}
           style="circle" tokens={tokens}
           size={thumbnail ? 12 : 20} gap={thumbnail ? 3 : 5} perRow={9}

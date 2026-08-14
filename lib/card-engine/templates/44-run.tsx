@@ -21,6 +21,7 @@ const template: CardTemplate = {
             <div>
               <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{">"} {(data.nom || "RUNNER").toUpperCase()}</div>
               <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.accent, fontWeight: 700 }}>LOYALTY RUN</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>// {data.slogan}</div>}
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>WALLIO</div>
@@ -56,8 +57,6 @@ const template: CardTemplate = {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>REWARD: {data.nom_recompense.toUpperCase()}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
-            
           </div>
         </div>
       </div>

@@ -23,8 +23,11 @@ const template: CardTemplate = {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "7% 8%" : "8% 9%", position: "relative", zIndex: 1 }}>
           {/* Haut — minuscule */}
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: thumbnail ? 5 : 8, letterSpacing: "0.15em", color: tokens.textTertiary }}>{(data.nom || "GALLERY").toUpperCase().slice(0, 8)}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <span style={{ fontSize: thumbnail ? 5 : 8, letterSpacing: "0.15em", color: tokens.textTertiary }}>{(data.nom || "GALLERY").toUpperCase().slice(0, 8)}</span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>{data.slogan}</div>}
+            </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{filled}/{data.objectif_tampons}</span>
           </div>
 
@@ -37,7 +40,6 @@ const template: CardTemplate = {
             
           </div>
           <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary, marginTop: 4 }}>{data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
         </div>
       </div>
     );

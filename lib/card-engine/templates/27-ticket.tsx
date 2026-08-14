@@ -87,6 +87,7 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary, marginTop: 2 }}>
               CARTE DE FIDÉLITÉ — MEMBRE
             </div>
+            {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 3, fontStyle: "italic", fontWeight: 400 }}>{data.slogan}</div>}
           </div>
 
           {/* Cases tampons style ticket */}
@@ -108,7 +109,6 @@ const template: CardTemplate = {
           <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>
             {filled}/{data.objectif_tampons} — {data.nom_recompense}
           </div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
         </div>
 
         {/* Perforations bas */}

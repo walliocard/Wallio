@@ -42,9 +42,9 @@ const template: CardTemplate = {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary }}>REWARD</div>
-                <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.textSecondary }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
+                <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.textSecondary }}>{data.nom_recompense}</div>
               </div>
-              {!thumbnail && <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>}
+              <div style={{ fontSize: thumbnail ? 6 : 10, fontWeight: 700, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
             </div>
           </div>
         </div>

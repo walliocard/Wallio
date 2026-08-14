@@ -45,7 +45,7 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 8 : 14, fontWeight: 700, color: tokens.text, fontStyle: "italic", letterSpacing: 1 }}>
               {data.nom || "The Club"}
             </div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+            {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 4 }}>
               <div style={{ height: 1, width: thumbnail ? 10 : 20, background: tokens.accent, opacity: 0.5 }}/>
               <div style={{ width: 3, height: 3, borderRadius: "50%", background: tokens.accent }}/>
@@ -59,7 +59,6 @@ const template: CardTemplate = {
           {/* Footer */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons} · {data.nom_recompense}</div>
-            {!thumbnail && <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={2}/>}
           </div>
         </div>
       </div>

@@ -35,8 +35,8 @@ const template: CardTemplate = {
           <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="square" tokens={tokens} size={thumbnail ? 8 : 14} gap={thumbnail ? 2 : 4} perRow={9}/>
 
           <div style={{ borderTop: `1px solid ${tokens.borderStrong}`, paddingTop: thumbnail ? 4 : 7, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>{data.nom_recompense} / {data.objectif_tampons}</div>
-            {!thumbnail && <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>}
+            <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>{data.nom_recompense}</div>
+            <div style={{ fontSize: thumbnail ? 5 : 8, fontWeight: 700, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
           </div>
         </div>
       </div>

@@ -28,7 +28,7 @@ const template: CardTemplate = {
           <div>
             <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.textTertiary }}>NOM DU TITULAIRE</div>
             <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, color: tokens.text }}>{data.nom || "ÉTABLISSEMENT"}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+            {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
 
           {/* Cases de tampons style visa */}

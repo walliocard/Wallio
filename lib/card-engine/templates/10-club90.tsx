@@ -26,8 +26,11 @@ const template: CardTemplate = {
         ))}
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: 1 }}>{data.nom || "CLUB"}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: 1 }}>{data.nom || "CLUB"}</span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, textTransform: "none" }}>{data.slogan}</div>}
+            </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textSecondary, letterSpacing: "0.1em" }}>★ WALLIO ★</span>
           </div>
 
@@ -37,9 +40,7 @@ const template: CardTemplate = {
             <div>
               <div style={{ fontSize: thumbnail ? 8 : 14, fontWeight: 900, color: tokens.accent }}>{filled}<span style={{ color: tokens.textTertiary, fontSize: thumbnail ? 6 : 10 }}>/{data.objectif_tampons}</span></div>
               <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>{data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
-            
           </div>
         </div>
       </div>

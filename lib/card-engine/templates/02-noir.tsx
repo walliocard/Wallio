@@ -71,9 +71,12 @@ const template: CardTemplate = {
                 <span style={{ fontSize: 11, color: tokens.accent, fontFamily: "Georgia, serif" }}>{(data.nom[0] || "W").toUpperCase()}</span>
               </div>
             )}
-            <span style={{ fontSize: thumbnail ? 8 : 12, fontStyle: "italic", color: tokens.text, letterSpacing: 0.5 }}>
-              {data.nom || "Établissement"}
-            </span>
+            <div>
+              <span style={{ fontSize: thumbnail ? 8 : 12, fontStyle: "italic", color: tokens.text, letterSpacing: 0.5 }}>
+                {data.nom || "Établissement"}
+              </span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>{data.slogan}</div>}
+            </div>
           </div>
           <span style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.2em", color: tokens.accent }}>
             MEMBER CARD
@@ -82,7 +85,7 @@ const template: CardTemplate = {
 
         {/* Tampons médaillons */}
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-          <Stamps
+          <Stamps fillWidth={!thumbnail}
             total={data.objectif_tampons} filled={filled}
             style="ring" tokens={tokens}
             size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={10}
@@ -94,9 +97,8 @@ const template: CardTemplate = {
           <div>
             <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.12em", color: tokens.textTertiary, marginBottom: 2 }}>RÉCOMPENSE</div>
             <div style={{ fontSize: thumbnail ? 7 : 10, color: tokens.accent }}>{data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
-          
+          <div style={{ fontSize: thumbnail ? 6 : 8, fontWeight: 600, color: tokens.textSecondary }}>{Math.round(data.objectif_tampons * 0.6)}/{data.objectif_tampons}</div>
         </div>
 
         {/* Filet bas */}

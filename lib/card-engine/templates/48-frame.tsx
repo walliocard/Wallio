@@ -77,20 +77,23 @@ const template: CardTemplate = {
           ))}
 
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
               {data.logo_url ? (
                 <img src={data.logo_url} alt="" style={{ width: thumbnail ? 14 : 22, height: thumbnail ? 14 : 22, objectFit: "cover" }}/>
               ) : null}
-              <span style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: tokens.text }}>
-                {data.nom || "Établissement"}
-              </span>
+              <div>
+                <span style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: tokens.text }}>
+                  {data.nom || "Établissement"}
+                </span>
+                {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+              </div>
             </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.2em", color: tokens.textTertiary }}>WALLIO</span>
           </div>
 
           {/* Tampons */}
-          <Stamps
+          <Stamps fillWidth={!thumbnail}
             total={data.objectif_tampons} filled={filled}
             style="circle" tokens={tokens}
             size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}
@@ -102,7 +105,6 @@ const template: CardTemplate = {
               <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.1em", color: tokens.textTertiary }}>
                 {data.nom_recompense}
               </div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
               <div style={{ fontSize: thumbnail ? 6 : 9, fontWeight: 500, color: tokens.textSecondary, marginTop: 2 }}>
                 {filled} / {data.objectif_tampons}
               </div>

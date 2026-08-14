@@ -22,12 +22,14 @@ const template: CardTemplate = {
 
         {/* Étiquette centrale */}
         <div style={{ background: tokens.surface, border: `1.5px solid ${tokens.borderStrong}`, padding: thumbnail ? "6% 8%" : "8% 10%", display: "flex", flexDirection: "column", gap: thumbnail ? 4 : 8, alignItems: "center", width: "75%", position: "relative", zIndex: 1 }}>
-          <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.2em", color: tokens.textTertiary }}>{(data.nom || "LABEL").toUpperCase()}</div>
+          <div>
+            <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.2em", color: tokens.textTertiary, textAlign: "center" }}>{(data.nom || "LABEL").toUpperCase()}</div>
+            {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", textAlign: "center" }}>{data.slogan}</div>}
+          </div>
           <div style={{ height: "0.5px", width: "100%", background: tokens.borderStrong, opacity: 0.5 }}/>
           <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 2 : 4} perRow={8}/>
           <div style={{ height: "0.5px", width: "100%", background: tokens.borderStrong, opacity: 0.5 }}/>
           <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, textAlign: "center" }}>{filled}/{data.objectif_tampons} — {data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
         </div>
 
         {/* QR coin bas droite */}

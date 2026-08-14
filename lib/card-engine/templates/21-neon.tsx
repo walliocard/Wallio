@@ -21,8 +21,11 @@ const template: CardTemplate = {
         <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translate(-50%,-50%)", width: thumbnail ? 60 : 110, height: thumbnail ? 60 : 110, borderRadius: "50%", background: tokens.accent, opacity: 0.06, filter: "blur(15px)", pointerEvents: "none" }}/>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 700, color: tokens.text }}>{data.nom || "NEON"}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 700, color: tokens.text }}>{data.nom || "NEON"}</span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>{data.slogan}</div>}
+            </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, color: tokens.accent, letterSpacing: "0.12em" }}>WALLIO</span>
           </div>
 
@@ -39,10 +42,8 @@ const template: CardTemplate = {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary }}>{data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
               <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</div>
             </div>
-            
           </div>
         </div>
       </div>

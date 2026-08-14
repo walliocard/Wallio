@@ -21,8 +21,11 @@ const template: CardTemplate = {
         <div style={{ position: "absolute", right: thumbnail ? "-2%" : "-3%", bottom: thumbnail ? "-5%" : "-8%", fontSize: thumbnail ? 50 : 90, fontWeight: 900, color: tokens.surface, lineHeight: 1, userSelect: "none", letterSpacing: -5 }}>{data.objectif_tampons}</div>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "7% 8%" : "8% 9%", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: tokens.text }}>{data.nom || "MONO"}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <span style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: tokens.text }}>{data.nom || "MONO"}</span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+            </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.2em", color: tokens.textTertiary }}>FIDÉLITÉ</span>
           </div>
 
@@ -34,8 +37,6 @@ const template: CardTemplate = {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons} — {data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
-            {!thumbnail && <QRBox size={30} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>}
           </div>
         </div>
       </div>

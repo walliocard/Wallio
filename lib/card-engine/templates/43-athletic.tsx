@@ -21,8 +21,11 @@ const template: CardTemplate = {
         <div style={{ position: "absolute", top: 0, right: thumbnail ? "25%" : "30%", width: thumbnail ? 2 : 4, height: "100%", background: tokens.accent, transform: "skewX(-10deg)", opacity: 0.4 }}/>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: thumbnail ? 7 : 10, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: 1 }}>{data.nom || "ATHLETIC"}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <span style={{ fontSize: thumbnail ? 7 : 10, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: 1 }}>{data.nom || "ATHLETIC"}</span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, textTransform: "none" }}>{data.slogan}</div>}
+            </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary }}>WALLIO</span>
           </div>
 
@@ -43,9 +46,7 @@ const template: CardTemplate = {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{filled}/{data.objectif_tampons} — {data.nom_recompense.toUpperCase()}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
-            {!thumbnail && <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>}
+            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{data.nom_recompense.toUpperCase()}</div>
           </div>
         </div>
       </div>

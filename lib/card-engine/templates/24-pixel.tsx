@@ -34,8 +34,10 @@ const template: CardTemplate = {
           </div>
 
           {/* Nom */}
-          <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, color: tokens.text, letterSpacing: 2, textTransform: "uppercase" }}>{data.nom || "PLAYER 1"}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+          <div>
+            <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, color: tokens.text, letterSpacing: 2, textTransform: "uppercase" }}>{data.nom || "PLAYER 1"}</div>
+            {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+          </div>
 
           {/* Tampons pixels */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: thumbnail ? 2 : 4 }}>
@@ -48,8 +50,8 @@ const template: CardTemplate = {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textSecondary }}>{filled}P / {data.objectif_tampons}P — {data.nom_recompense.toUpperCase()}</div>
-            {!thumbnail && <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>}
+            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textSecondary }}>{data.nom_recompense.toUpperCase()}</div>
+            <div style={{ fontSize: thumbnail ? 5 : 7, fontWeight: 700, color: tokens.accent }}>{filled}P / {data.objectif_tampons}P</div>
           </div>
         </div>
       </div>

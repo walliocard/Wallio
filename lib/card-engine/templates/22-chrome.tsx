@@ -21,9 +21,12 @@ const template: CardTemplate = {
         <div style={{ position: "absolute", top: 0, left: "20%", right: "20%", height: "1px", background: `linear-gradient(90deg, transparent, ${tokens.accentSecondary}40, transparent)` }}/>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: thumbnail ? 8 : 12, fontWeight: 700, letterSpacing: 1, color: tokens.text, textTransform: "uppercase" }}>{data.nom || "CHROME"}</span>
-            <div style={{ width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: "50%", background: `radial-gradient(circle at 35% 35%, ${tokens.accentSecondary}, ${tokens.accent})`, opacity: 0.9 }}/>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <span style={{ fontSize: thumbnail ? 8 : 12, fontWeight: 700, letterSpacing: 1, color: tokens.text, textTransform: "uppercase" }}>{data.nom || "CHROME"}</span>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+            </div>
+            <div style={{ width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: "50%", background: `radial-gradient(circle at 35% 35%, ${tokens.accentSecondary}, ${tokens.accent})`, opacity: 0.9, flexShrink: 0 }}/>
           </div>
 
           <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="ring" tokens={tokens} size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}/>
@@ -31,10 +34,9 @@ const template: CardTemplate = {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.textTertiary }}>REWARD</div>
-              <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.textSecondary }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+              <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.textSecondary }}>{data.nom_recompense}</div>
             </div>
-            
+            <div style={{ fontSize: thumbnail ? 6 : 9, fontWeight: 600, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
           </div>
         </div>
       </div>

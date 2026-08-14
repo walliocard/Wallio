@@ -78,34 +78,34 @@ const template: CardTemplate = {
               {data.logo_url ? (
                 <img src={data.logo_url} alt="" style={{ width: thumbnail ? 16 : 26, height: thumbnail ? 16 : 26, borderRadius: 6, objectFit: "cover" }}/>
               ) : null}
-              <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 700, color: tokens.text }}>
-                {data.nom || "Établissement"}
-              </span>
+              <div>
+                <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 700, color: tokens.text }}>
+                  {data.nom || "Établissement"}
+                </span>
+                {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>{data.slogan}</div>}
+              </div>
             </div>
             <span style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.12em", color: tokens.textTertiary }}>WALLIO</span>
           </div>
 
           {/* Tampons bulles */}
-          <Stamps
+          <Stamps fillWidth={!thumbnail}
             total={data.objectif_tampons} filled={filled}
             style="circle" tokens={tokens}
             size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}
           />
 
-          {/* Zone QR + info */}
+          {/* Zone info */}
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.textTertiary }}>{data.nom_recompense}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
               <div style={{ fontSize: thumbnail ? 7 : 10, fontWeight: 600, color: tokens.text, marginTop: 2 }}>
                 {filled}/{data.objectif_tampons}
               </div>
             </div>
-            {!thumbnail && (
-              <div style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", padding: 4, borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)" }}>
-                <QRBox size={36} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={4}/>
-              </div>
-            )}
+            <div style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", padding: thumbnail ? "3px 8px" : "4px 12px", borderRadius: 20, border: "1px solid rgba(255,255,255,0.2)" }}>
+              <span style={{ fontSize: thumbnail ? 4 : 7, color: "rgba(255,255,255,0.8)", letterSpacing: "0.08em" }}>WALLIO</span>
+            </div>
           </div>
         </div>
       </div>
