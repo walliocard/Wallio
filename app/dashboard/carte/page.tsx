@@ -3,15 +3,13 @@
 import { useAuth } from "@/lib/auth-context";
 import { useRef, useState, useCallback } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { getDefaultTemplate, getTemplate } from "@/lib/card-engine/registry";
 import type { CardData } from "@/lib/card-engine/types";
 import CardDesigner from "@/components/card-designer/CardDesigner";
 
 export default function CartePage() {
   const { user, marchand } = useAuth();
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const defaultTemplate = getDefaultTemplate();
 
@@ -59,40 +57,32 @@ export default function CartePage() {
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    if (!file.type.startsWith("image/")) { alert("Fichier image requis"); return; }
+    if (!file.type.startsWith("image/")) return;
     setUploadingLogo(true);
     try {
-      const blob = await new Promise<Blob>((resolve, reject) => {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
         img.onload = () => {
           URL.revokeObjectURL(url);
-          const MAX = 400;
+          const MAX = 280;
           const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
           const canvas = document.createElement("canvas");
           canvas.width = Math.round(img.width * ratio);
           canvas.height = Math.round(img.height * ratio);
           canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob(b => b ? resolve(b) : reject(new Error("Canvas failed")), "image/jpeg", 0.85);
+          resolve(canvas.toDataURL("image/jpeg", 0.72));
         };
         img.onerror = reject;
         img.src = url;
       });
-      const r = storageRef(storage, `logos/${user.uid}.jpg`);
-      await uploadBytes(r, blob, { contentType: "image/jpeg" });
-      const url = await getDownloadURL(r);
-      set("logo_url", url);
-      await updateDoc(doc(db, "marchands", user.uid), { logo_url: url });
+      // Stocké directement en base64 dans Firestore (évite Firebase Storage)
+      set("logo_url", dataUrl);
+      await updateDoc(doc(db, "marchands", user.uid), { logo_url: dataUrl });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("unauthorized")) {
-        alert("Accès refusé Firebase Storage. Vérifier les règles Storage.");
-      } else {
-        alert(`Erreur upload : ${msg}`);
-      }
+      alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setUploadingLogo(false);
-      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
