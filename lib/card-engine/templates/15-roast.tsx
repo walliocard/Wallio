@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Design industriel, numéro de roast, étiquette produit artisanale.",
   categories: ["coffee", "street", "editorial"],
   palettes, defaultPaletteId: "black-cream",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const roastNum = String(Math.floor(Math.random() * 900) + 100).padStart(3, "0");
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", fontFamily: "'Helvetica Neue', Arial, sans-serif", overflow: "hidden" }}>
@@ -36,7 +39,7 @@ const template: CardTemplate = {
             {!thumbnail && data.logo_url && <img src={data.logo_url} alt="" style={{ width: 24, height: 24, objectFit: "cover", borderRadius: 2 }}/>}
           </div>
 
-          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="circle" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 4} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="circle" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 4} perRow={9}/>
 
           <div style={{ borderTop: `1px solid ${tokens.border}`, paddingTop: thumbnail ? 4 : 7 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

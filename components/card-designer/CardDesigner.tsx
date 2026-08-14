@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { CardTemplate, CardData, CardPalette } from "@/lib/card-engine/types";
+import type { CardTemplate, CardData, CardPalette, CardDimensions } from "@/lib/card-engine/types";
+import { FORMAT_RATIOS } from "@/lib/card-engine/types";
 import { getAllTemplates, getTemplatesByCategory } from "@/lib/card-engine/registry";
 
 const CATEGORIES = [
@@ -25,6 +26,7 @@ const CATEGORIES = [
 
 interface CardDesignerProps {
   data: CardData;
+  dims: CardDimensions;
   selectedTemplateId: string;
   selectedPaletteId: string;
   onSelectTemplate: (templateId: string, paletteId: string) => void;
@@ -32,7 +34,7 @@ interface CardDesignerProps {
 }
 
 export default function CardDesigner({
-  data, selectedTemplateId, selectedPaletteId,
+  data, dims, selectedTemplateId, selectedPaletteId,
   onSelectTemplate, onChangePalette,
 }: CardDesignerProps) {
   const [category, setCategory] = useState("all");
@@ -182,8 +184,8 @@ export default function CardDesigner({
         {selectedTemplate && selectedPalette && (
           <div style={{ width: "100%", maxWidth: 520 }}>
             {/* Carte */}
-            <div style={{ width: "100%", aspectRatio: "375/246", borderRadius: "16px 16px 0 0", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-              {selectedTemplate.render({ data, tokens: selectedPalette.tokens, palette: selectedPalette, thumbnail: false })}
+            <div style={{ width: "100%", aspectRatio: FORMAT_RATIOS[dims.format ?? "standard"], borderRadius: "16px 16px 0 0", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+              {selectedTemplate.render({ data, tokens: selectedPalette.tokens, palette: selectedPalette, thumbnail: false, dimensions: dims })}
             </div>
             {/* Extension QR */}
             <div style={{ width: "100%", background: selectedPalette.tokens.background, borderRadius: "0 0 16px 16px", borderTop: `1px solid ${selectedPalette.tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 0 12px", boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>

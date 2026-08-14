@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Objet physique premium, détails techniques, numéro de série.",
   categories: ["premium", "modern", "minimal"],
   palettes, defaultPaletteId: "silver-black",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const serial = `WL-${String(Math.floor(Math.random() * 9000) + 1000)}-${String(Math.floor(Math.random() * 90) + 10)}`;
     return (
       <div style={{ width: "100%", height: "100%", background: `linear-gradient(145deg, ${tokens.surface} 0%, ${tokens.background} 40%, ${tokens.surface} 100%)`, display: "flex", flexDirection: "column", fontFamily: "'Helvetica Neue', Arial, sans-serif", position: "relative", overflow: "hidden" }}>
@@ -41,7 +44,7 @@ const template: CardTemplate = {
             <div style={{ width: thumbnail ? 14 : 26, height: thumbnail ? 14 : 26, borderRadius: "50%", border: `${thumbnail ? 1.5 : 2.5}px solid ${tokens.borderStrong}`, background: tokens.surfaceSecondary, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <div style={{ width: thumbnail ? 5 : 9, height: thumbnail ? 5 : 9, borderRadius: "50%", background: tokens.accent }}/>
             </div>
-            <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 8 : 14} gap={thumbnail ? 2 : 3} perRow={9}/>
+            <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 8 : 14} gap={thumbnail ? 2 : 3} perRow={9}/>
           </div>
 
           <div style={{ borderTop: `1px solid ${tokens.border}`, paddingTop: thumbnail ? 4 : 7, display: "flex", justifyContent: "space-between", alignItems: "center" }}>

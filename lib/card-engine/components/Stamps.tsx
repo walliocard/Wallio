@@ -11,6 +11,7 @@ interface StampsProps {
   style: StampStyle;
   tokens: CardTokens;
   size?: number;
+  sizeOverride?: number; // remplace size en mode full (vient de CardDimensions.stampSize)
   gap?: number;
   perRow?: number;
   iconPath?: string;
@@ -82,8 +83,9 @@ function smartPerRow(total: number, desired: number): number {
 }
 
 export default function Stamps({
-  total, filled, style, tokens, size = 22, gap = 5, perRow = 9, iconPath, fillWidth = false,
+  total, filled, style, tokens, size = 22, sizeOverride, gap = 5, perRow = 9, iconPath, fillWidth = false,
 }: StampsProps) {
+  const effectiveSize = (fillWidth && sizeOverride != null) ? sizeOverride : size;
   const effectivePerRow = fillWidth ? smartPerRow(total, perRow) : perRow;
   const rows: number[][] = [];
   for (let i = 0; i < total; i += effectivePerRow) {
@@ -96,7 +98,7 @@ export default function Stamps({
         {rows.map((row, ri) => (
           <div key={ri} style={{ display: "flex", width: "100%", justifyContent: "space-evenly", alignItems: "center" }}>
             {row.map(i => (
-              <StampShape key={i} filled={i < filled} style={style} tokens={tokens} size={size} iconPath={iconPath}/>
+              <StampShape key={i} filled={i < filled} style={style} tokens={tokens} size={effectiveSize} iconPath={iconPath}/>
             ))}
           </div>
         ))}
@@ -109,7 +111,7 @@ export default function Stamps({
       {rows.map((row, ri) => (
         <div key={ri} style={{ display: "flex", alignItems: "center", gap, flexWrap: "nowrap" }}>
           {row.map(i => (
-            <StampShape key={i} filled={i < filled} style={style} tokens={tokens} size={size} iconPath={iconPath}/>
+            <StampShape key={i} filled={i < filled} style={style} tokens={tokens} size={effectiveSize} iconPath={iconPath}/>
           ))}
         </div>
       ))}

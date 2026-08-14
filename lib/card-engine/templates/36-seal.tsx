@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Grand badge central, sceau de qualité, récompense au centre.",
   categories: ["luxury", "premium", "coffee"],
   palettes, defaultPaletteId: "burgundy-gold",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const pct = (filled / data.objectif_tampons) * 100;
     const r = thumbnail ? 22 : 42;
     const circ = 2 * Math.PI * r;

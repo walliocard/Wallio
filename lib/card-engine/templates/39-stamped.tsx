@@ -12,8 +12,11 @@ const template: CardTemplate = {
   description: "Artisanal, imperfections simulées, marques d'encre, texture papier.",
   categories: ["retro", "coffee", "restaurant"],
   palettes, defaultPaletteId: "kraft-black",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Courier New', monospace", position: "relative", overflow: "hidden" }}>
         {/* Texture papier */}

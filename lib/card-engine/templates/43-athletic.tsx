@@ -12,8 +12,11 @@ const template: CardTemplate = {
   description: "Dynamique, chiffres géants, barres de progression, énergie pure.",
   categories: ["sport", "modern", "street"],
   palettes, defaultPaletteId: "black-lime",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const pct = Math.round((filled / data.objectif_tampons) * 100);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", position: "relative", fontFamily: "'Arial Black', 'Helvetica Neue', sans-serif", overflow: "hidden" }}>

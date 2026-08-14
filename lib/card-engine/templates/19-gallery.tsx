@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Espaces vides immenses, élément graphique central, QR quasi caché.",
   categories: ["minimal", "artistic", "editorial"],
   palettes, defaultPaletteId: "cream-black",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Helvetica Neue', Arial, sans-serif", position: "relative", overflow: "hidden" }}>
         {/* Élément graphique central — cercle vide */}
@@ -36,7 +39,7 @@ const template: CardTemplate = {
 
           {/* Bas — tampons points minuscules + QR */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 5 : 9} gap={thumbnail ? 2 : 4} perRow={10}/>
+            <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 5 : 9} gap={thumbnail ? 2 : 4} perRow={10}/>
             
           </div>
           <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary, marginTop: 4 }}>{data.nom_recompense}</div>

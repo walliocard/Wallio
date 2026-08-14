@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Club privé, monogramme, typographie serif, badge de fidélité.",
   categories: ["luxury", "premium", "barber"],
   palettes, defaultPaletteId: "navy-gold",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, serif", position: "relative", overflow: "hidden" }}>
         {/* Bordure dorée */}
@@ -54,7 +57,7 @@ const template: CardTemplate = {
           </div>
 
           {/* Tampons */}
-          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="badge" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={8}/>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="badge" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={8}/>
 
           {/* Footer */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

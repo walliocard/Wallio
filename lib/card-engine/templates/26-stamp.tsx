@@ -12,8 +12,11 @@ const template: CardTemplate = {
   description: "Passeport, cases visa, annotations administratives, QR = zone de contrôle.",
   categories: ["retro", "editorial", "artistic"],
   palettes, defaultPaletteId: "navy-cream",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", position: "relative", fontFamily: "'Courier New', monospace", overflow: "hidden" }}>
         {/* Bande verticale gauche — passeport */}

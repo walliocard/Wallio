@@ -1,11 +1,12 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useRef, useState, useCallback } from "react";
+import { useState } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getDefaultTemplate, getTemplate } from "@/lib/card-engine/registry";
-import type { CardData } from "@/lib/card-engine/types";
+import type { CardData, CardDimensions } from "@/lib/card-engine/types";
+import { FORMAT_RATIOS } from "@/lib/card-engine/types";
 import CardDesigner from "@/components/card-designer/CardDesigner";
 
 export default function CartePage() {
@@ -29,6 +30,9 @@ export default function CartePage() {
   const [saving, setSaving]             = useState(false);
   const [saved, setSaved]               = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [dims, setDims] = useState<CardDimensions>({ format: "standard" });
+  const setDim = <K extends keyof CardDimensions>(k: K, v: CardDimensions[K]) =>
+    setDims(d => ({ ...d, [k]: v }));
 
   if (!marchand || !user) return null;
 
@@ -134,6 +138,7 @@ export default function CartePage() {
         {tab === "designs" ? (
           <CardDesigner
             data={data}
+            dims={dims}
             selectedTemplateId={templateId}
             selectedPaletteId={paletteId}
             onSelectTemplate={(tid, pid) => { setTemplateId(tid); setPaletteId(pid); }}
@@ -147,8 +152,8 @@ export default function CartePage() {
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, gap: 0 }}>
               <div style={{ width: "100%", maxWidth: 460 }}>
                 {/* Carte */}
-                <div style={{ width: "100%", aspectRatio: "375/246", borderRadius: "16px 16px 0 0", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-                  {template.render({ data, tokens: palette.tokens, palette, thumbnail: false })}
+                <div style={{ width: "100%", aspectRatio: FORMAT_RATIOS[dims.format ?? "standard"], borderRadius: "16px 16px 0 0", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+                  {template.render({ data, tokens: palette.tokens, palette, thumbnail: false, dimensions: dims })}
                 </div>
                 {/* Extension QR */}
                 <div style={{ width: "100%", background: palette.tokens.background, borderRadius: "0 0 16px 16px", borderTop: `1px solid ${palette.tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 0 12px", boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
@@ -247,6 +252,46 @@ export default function CartePage() {
                         <div style={{ width: 12, height: 12, borderRadius: 3, background: p.tokens.stampActive }}/>
                       </div>
                       <span style={{ fontSize: 12, fontWeight: paletteId === p.id ? 600 : 500, color: paletteId === p.id ? "var(--accent)" : "var(--fg)" }}>{p.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </Section>
+
+              {/* Dimensions */}
+              <Section label="Dimensions">
+                {[
+                  { label: "Tampons", key: "stampSize" as const, min: 10, max: 40, step: 1, defaultVal: 20, unit: "px", format: (v: number) => `${v}px` },
+                  { label: "Nom", key: "nameScale" as const, min: 0.6, max: 1.8, step: 0.05, defaultVal: 1, unit: "×", format: (v: number) => `${v.toFixed(2)}×` },
+                  { label: "Récompense", key: "rewardScale" as const, min: 0.6, max: 1.8, step: 0.05, defaultVal: 1, unit: "×", format: (v: number) => `${v.toFixed(2)}×` },
+                ].map(({ label, key, min, max, step, defaultVal, format: fmt }) => (
+                  <Field key={key} label={`${label} — ${fmt(dims[key] as number ?? defaultVal)}`}>
+                    <input type="range" min={min} max={max} step={step}
+                      value={(dims[key] as number) ?? defaultVal}
+                      onChange={e => setDim(key, Number(e.target.value))}
+                      style={{ width: "100%", accentColor: "var(--accent)" }}/>
+                    <button onClick={() => setDim(key, undefined)} style={{ fontSize: 10, color: "var(--fg-tertiary)", background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 2 }}>
+                      Reset
+                    </button>
+                  </Field>
+                ))}
+              </Section>
+
+              {/* Format carte */}
+              <Section label="Format carte">
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {([
+                    { id: "standard", label: "Apple Wallet", sub: "375 × 246 — Store Card" },
+                    { id: "compact", label: "Apple Wallet Compact", sub: "375 × 160 — Coupon" },
+                    { id: "wide", label: "Google Wallet", sub: "375 × 125 — Hero banner" },
+                  ] as const).map(f => (
+                    <button key={f.id} onClick={() => setDim("format", f.id)} style={{
+                      display: "flex", flexDirection: "column", alignItems: "flex-start",
+                      padding: "8px 12px", borderRadius: 10, cursor: "pointer",
+                      background: dims.format === f.id ? "rgba(0,122,255,0.08)" : "transparent",
+                      border: `1px solid ${dims.format === f.id ? "var(--accent)" : "var(--border)"}`,
+                    }}>
+                      <span style={{ fontSize: 12, fontWeight: dims.format === f.id ? 600 : 500, color: dims.format === f.id ? "var(--accent)" : "var(--fg)" }}>{f.label}</span>
+                      <span style={{ fontSize: 10, color: "var(--fg-tertiary)", marginTop: 2 }}>{f.sub}</span>
                     </button>
                   ))}
                 </div>

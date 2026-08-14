@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Années 90, typographie bold, géométries colorées, étoiles.",
   categories: ["retro", "colorful", "street"],
   palettes, defaultPaletteId: "purple-lime",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Arial Black', 'Impact', sans-serif", position: "relative", overflow: "hidden" }}>
         {/* Formes géométriques 90s */}
@@ -34,7 +37,7 @@ const template: CardTemplate = {
             <span style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textSecondary, letterSpacing: "0.1em" }}>★ WALLIO ★</span>
           </div>
 
-          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="star" tokens={tokens} size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="star" tokens={tokens} size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>

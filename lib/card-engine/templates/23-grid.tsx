@@ -12,8 +12,11 @@ const template: CardTemplate = {
   description: "Interface digitale, police monospace, données, grille, terminal.",
   categories: ["modern", "editorial", "street"],
   palettes, defaultPaletteId: "black-green",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ts = new Date().toISOString().slice(0, 10);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Courier New', Courier, monospace", position: "relative", overflow: "hidden" }}>

@@ -16,6 +16,16 @@ export interface CardData {
   instagram?: string;
 }
 
+/* ── Dimensions personnalisées ── */
+export interface CardDimensions {
+  stampSize?: number;      // taille px des tampons en full (défaut template)
+  nameScale?: number;      // multiplicateur taille nom 0.6–2.0
+  sloganScale?: number;    // multiplicateur taille slogan 0.6–2.0
+  rewardScale?: number;    // multiplicateur taille récompense 0.6–2.0
+  paddingScale?: number;   // multiplicateur padding 0.5–1.5
+  format?: "standard" | "compact" | "wide"; // ratio carte
+}
+
 /* ── Design tokens — chaque palette instancie ces tokens ── */
 export interface CardTokens {
   background: string;
@@ -65,6 +75,13 @@ export interface RenderProps {
   data: CardData;
   tokens: CardTokens;
   palette: CardPalette;
-  /* true = miniature dans la galerie (peut simplifier le rendu) */
   thumbnail?: boolean;
+  dimensions?: CardDimensions;
 }
+
+/* ── Format → aspect ratio ── */
+export const FORMAT_RATIOS: Record<NonNullable<CardDimensions["format"]>, string> = {
+  standard: "375/246",   // Apple Wallet Store Card (ratio actuel)
+  compact:  "375/160",   // Apple Wallet Coupon / Boarding pass
+  wide:     "375/125",   // Google Wallet Loyalty Hero
+};

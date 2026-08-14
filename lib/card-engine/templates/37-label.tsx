@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Emballage premium, étiquette centrale, informations autour.",
   categories: ["coffee", "restaurant", "editorial"],
   palettes, defaultPaletteId: "kraft-black",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Helvetica Neue', Arial, sans-serif", position: "relative", overflow: "hidden" }}>
         {/* Texture fond */}
@@ -27,7 +30,7 @@ const template: CardTemplate = {
             {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", textAlign: "center" }}>{data.slogan}</div>}
           </div>
           <div style={{ height: "0.5px", width: "100%", background: tokens.borderStrong, opacity: 0.5 }}/>
-          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 2 : 4} perRow={8}/>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 2 : 4} perRow={8}/>
           <div style={{ height: "0.5px", width: "100%", background: tokens.borderStrong, opacity: 0.5 }}/>
           <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, textAlign: "center" }}>{filled}/{data.objectif_tampons} — {data.nom_recompense}</div>
         </div>

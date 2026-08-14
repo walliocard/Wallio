@@ -49,8 +49,11 @@ const template: CardTemplate = {
   categories: ["editorial", "modern", "minimal"],
   palettes,
   defaultPaletteId: "white-black-red",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{
         width: "100%", height: "100%", background: tokens.background,
@@ -87,8 +90,7 @@ const template: CardTemplate = {
             </span>
             {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
-          <Stamps
-            total={data.objectif_tampons} filled={filled}
+          <Stamps sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled}
             style="square" tokens={tokens}
             size={thumbnail ? 7 : 13} gap={thumbnail ? 2 : 4} perRow={9}
           />

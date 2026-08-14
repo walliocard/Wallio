@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Formes abstraites fluides, gradient sophistiqué, surface translucide.",
   categories: ["modern", "colorful", "premium"],
   palettes, defaultPaletteId: "blue-purple",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "-apple-system, sans-serif", position: "relative", overflow: "hidden" }}>
         {/* Formes fluides SVG */}
@@ -42,7 +45,7 @@ const template: CardTemplate = {
             <span style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.12em", color: tokens.textTertiary }}>WALLIO</span>
           </div>
 
-          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 3 : 5} perRow={10}/>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 3 : 5} perRow={10}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ background: tokens.surface, backdropFilter: "blur(10px)", borderRadius: thumbnail ? 6 : 10, padding: thumbnail ? "2px 6px" : "4px 10px", border: `1px solid ${tokens.border}` }}>

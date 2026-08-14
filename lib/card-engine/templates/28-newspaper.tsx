@@ -13,8 +13,11 @@ const template: CardTemplate = {
   description: "Journal, colonnes, serif, typographie historique. Aspect presse ancienne.",
   categories: ["retro", "editorial", "artistic"],
   palettes, defaultPaletteId: "paper-black",
-  render({ data, tokens, thumbnail }) {
+  render({ data, tokens, thumbnail, dimensions }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
+    const dims = dimensions;
+    const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
+    const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, 'Times New Roman', serif", position: "relative", overflow: "hidden" }}>
         {/* En-tête journal */}
@@ -39,7 +42,7 @@ const template: CardTemplate = {
             </div>
             <div>
               <div style={{ fontSize: thumbnail ? 4 : 5, color: tokens.textTertiary, marginBottom: thumbnail ? 2 : 4 }}>TAMPONS</div>
-              <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 5 : 9} gap={thumbnail ? 2 : 3} perRow={9}/>
+              <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 5 : 9} gap={thumbnail ? 2 : 3} perRow={9}/>
             </div>
             <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{filled}/{data.objectif_tampons} tampons</div>
           </div>
