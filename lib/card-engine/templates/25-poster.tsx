@@ -35,6 +35,7 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>
               {filled}/{data.objectif_tampons} — {data.nom_recompense.toUpperCase()}
             </div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             {!thumbnail && <QRBox size={26} bg={tokens.qrBackground} fg={tokens.background} radius={0}/>}
           </div>
         </div>

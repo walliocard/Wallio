@@ -112,6 +112,7 @@ const template: CardTemplate = {
           <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>
             {filled}/{data.objectif_tampons} — {data.nom_recompense}
           </div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
         </div>
 
         {/* Perforations bas */}

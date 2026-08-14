@@ -30,6 +30,7 @@ const template: CardTemplate = {
             <div>
               {data.logo_url ? <img src={data.logo_url} alt="" style={{ width: thumbnail ? 14 : 22, height: thumbnail ? 14 : 22, borderRadius: 3, objectFit: "cover" }}/> : null}
               <div style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 700, color: tokens.text, marginTop: 2 }}>{data.nom || "Oasis"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
             <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
           </div>

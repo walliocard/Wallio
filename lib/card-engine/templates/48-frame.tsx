@@ -102,6 +102,7 @@ const template: CardTemplate = {
               <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.1em", color: tokens.textTertiary }}>
                 {data.nom_recompense}
               </div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
               <div style={{ fontSize: thumbnail ? 6 : 9, fontWeight: 500, color: tokens.textSecondary, marginTop: 2 }}>
                 {filled} / {data.objectif_tampons}
               </div>

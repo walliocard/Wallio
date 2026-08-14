@@ -28,6 +28,7 @@ const template: CardTemplate = {
             <div>
               <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.08em", color: tokens.textTertiary, marginBottom: 2 }}>carte de fidélité —</div>
               <div style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 700, color: tokens.text }}>{data.nom || "Artisan"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
           </div>
 

@@ -31,6 +31,7 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 10 : 18, fontWeight: 900, color: tokens.text, textTransform: "uppercase", lineHeight: 0.95, marginTop: 2 }}>
               {data.nom || "FASHION"}
             </div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
           <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 6 : 11} gap={thumbnail ? 3 : 5} perRow={9}/>
           <div style={{ display: "flex", justifyContent: "space-between" }}>

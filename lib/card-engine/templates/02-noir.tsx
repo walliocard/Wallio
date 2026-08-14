@@ -94,6 +94,7 @@ const template: CardTemplate = {
           <div>
             <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.12em", color: tokens.textTertiary, marginBottom: 2 }}>RÉCOMPENSE</div>
             <div style={{ fontSize: thumbnail ? 7 : 10, color: tokens.accent }}>{data.nom_recompense}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
           {!thumbnail && (
             <QRBox size={34} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={2}/>

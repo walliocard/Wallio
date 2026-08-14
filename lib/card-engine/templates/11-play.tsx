@@ -28,7 +28,8 @@ const template: CardTemplate = {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: thumbnail ? 9 : 14, fontWeight: 800, color: tokens.text }}>{data.nom || "Play"}</span>
+            <div><span style={{ fontSize: thumbnail ? 9 : 14, fontWeight: 800, color: tokens.text }}>{data.nom || "Play"}</span>
+            {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>{data.slogan}</div>}</div>
             <div style={{ background: tokens.accent, borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px" }}>
               <span style={{ fontSize: thumbnail ? 4 : 7, fontWeight: 700, color: "#fff" }}>WALLIO</span>
             </div>

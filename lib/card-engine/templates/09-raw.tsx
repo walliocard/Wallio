@@ -82,6 +82,7 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 9 : 15, fontWeight: 900, textTransform: "uppercase", color: tokens.text, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
               {data.nom || "ÉTABLISSEMENT"}
             </div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
 
           {/* Tampons carrés */}

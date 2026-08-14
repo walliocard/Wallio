@@ -30,6 +30,7 @@ const template: CardTemplate = {
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.textTertiary }}>MAISON</div>
               <div style={{ fontSize: thumbnail ? 5 : 7, fontStyle: "italic", color: tokens.textSecondary }}>{data.nom || "Tailor"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
           </div>
 

@@ -24,8 +24,11 @@ const template: CardTemplate = {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div style={{ fontSize: thumbnail ? 10 : 18, fontWeight: 900, color: "#FFFFFF", textTransform: "uppercase", lineHeight: 0.9, letterSpacing: -1 }}>
-              {(data.nom || "ENERGY").slice(0, 7)}
+            <div>
+              <div style={{ fontSize: thumbnail ? 10 : 18, fontWeight: 900, color: "#FFFFFF", textTransform: "uppercase", lineHeight: 0.9, letterSpacing: -1 }}>
+                {(data.nom || "ENERGY").slice(0, 7)}
+              </div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: "rgba(255,255,255,0.6)", marginTop: 3, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal" }}>{data.slogan}</div>}
             </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, color: "rgba(255,255,255,0.5)", letterSpacing: "0.1em" }}>WALLIO</span>
           </div>

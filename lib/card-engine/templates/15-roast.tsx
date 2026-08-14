@@ -31,6 +31,7 @@ const template: CardTemplate = {
             <div>
               <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.18em", color: tokens.textTertiary, marginBottom: 2 }}>ROASTERY</div>
               <div style={{ fontSize: thumbnail ? 9 : 15, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: -0.5 }}>{data.nom || "Roast"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
             {!thumbnail && data.logo_url && <img src={data.logo_url} alt="" style={{ width: 24, height: 24, objectFit: "cover", borderRadius: 2 }}/>}
           </div>

@@ -21,6 +21,7 @@ const template: CardTemplate = {
         <div style={{ borderBottom: `${thumbnail ? 1.5 : 2.5}px solid ${tokens.text}`, borderTop: `${thumbnail ? 0.5 : 1}px solid ${tokens.text}`, padding: thumbnail ? "2px 5%" : "3px 6%", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div style={{ fontSize: thumbnail ? 5 : 8, letterSpacing: "0.08em", color: tokens.textTertiary }}>Vol. I</div>
           <div style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.text, fontStyle: "italic" }}>{data.nom || "La Gazette"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textTertiary }}>WALLIO</div>
         </div>
 

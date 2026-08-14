@@ -29,6 +29,7 @@ const template: CardTemplate = {
             <div>
               <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.2em", color: tokens.accent, marginBottom: 2 }}>THE</div>
               <div style={{ fontSize: thumbnail ? 9 : 14, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: 1 }}>{data.nom || "BARBER"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
             <div style={{ border: `1px solid ${tokens.borderStrong}`, borderRadius: thumbnail ? 4 : 6, padding: thumbnail ? "2px 5px" : "3px 8px" }}>
               <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.12em", color: tokens.textSecondary }}>LOYALTY</div>

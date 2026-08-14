@@ -27,6 +27,7 @@ const template: CardTemplate = {
             <div>
               {data.logo_url && <img src={data.logo_url} alt="" style={{ width: thumbnail ? 14 : 22, height: thumbnail ? 14 : 22, borderRadius: "50%", objectFit: "cover", border: `1px solid ${tokens.accent}`, marginBottom: 3 }}/>}
               <div style={{ fontSize: thumbnail ? 7 : 11, fontStyle: "italic", fontWeight: 400, color: tokens.text, letterSpacing: "0.04em" }}>{data.nom || "Velvet"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
               <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>

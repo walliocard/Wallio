@@ -159,22 +159,6 @@ export default function CartePage() {
                 <div style={{ width: "100%", aspectRatio: "375/246", borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
                   {template.render({ data, tokens: palette.tokens, palette, thumbnail: false })}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <div style={{ width: "80%", height: 1, background: palette.tokens.border }}/>
-                  <div style={{
-                    width: "80%", background: palette.tokens.background,
-                    borderRadius: "0 0 16px 16px", padding: "14px 0 12px",
-                    display: "flex", flexDirection: "column", alignItems: "center",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
-                  }}>
-                    <div style={{ width: 60, height: 60, background: "#fff", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 8, color: "#666" }}>QR Code</span>
-                    </div>
-                    <p style={{ fontSize: 8, marginTop: 8, letterSpacing: "0.1em", color: palette.tokens.textTertiary }}>
-                      VOTRE CARTE · WALLIO
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
 

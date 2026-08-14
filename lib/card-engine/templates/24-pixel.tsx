@@ -35,6 +35,7 @@ const template: CardTemplate = {
 
           {/* Nom */}
           <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, color: tokens.text, letterSpacing: 2, textTransform: "uppercase" }}>{data.nom || "PLAYER 1"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
 
           {/* Tampons pixels */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: thumbnail ? 2 : 4 }}>
