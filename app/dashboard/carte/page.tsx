@@ -1,64 +1,57 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
-
-const ICONES = ["☕","🌸","✂️","🍕","🍣","💇","💪","🛒","🌿","⭐","🎯","🏆","🎁","💈","🧁"];
-
-const PALETTES = [
-  { label: "Noir",     p: "#0A0A0A", s: "#1A1A1A" },
-  { label: "Marine",   p: "#0D2240", s: "#1A3A6E" },
-  { label: "Bordeaux", p: "#5C0F1F", s: "#8A1A30" },
-  { label: "Forêt",    p: "#0F3020", s: "#1A5E3A" },
-  { label: "Bleu",     p: "#005CC4", s: "#0070F3" },
-  { label: "Ardoise",  p: "#2C3E50", s: "#3D5166" },
-  { label: "Sable",    p: "#F5ECD5", s: "#EBD9BB" },
-  { label: "Blanc",    p: "#FFFFFF", s: "#F4F4F4" },
-];
-
-function isLight(hex: string): boolean {
-  const h = hex.replace("#", "");
-  if (h.length < 6) return false;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return (r * 299 + g * 587 + b * 114) / 1000 > 145;
-}
+import { getDefaultTemplate, getTemplate } from "@/lib/card-engine/registry";
+import type { CardData } from "@/lib/card-engine/types";
+import CardDesigner from "@/components/card-designer/CardDesigner";
 
 export default function CartePage() {
   const { user, marchand } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [config, setConfig] = useState({
-    nom:                marchand?.nom || "",
-    icone_tampons:      marchand?.icone_tampons || "⭐",
-    couleur_principale: marchand?.couleur_principale || "#0A0A0A",
-    couleur_secondaire: marchand?.couleur_secondaire || "#1A1A1A",
-    objectif_tampons:   marchand?.objectif_tampons || 10,
-    nom_recompense:     marchand?.nom_recompense || "Récompense offerte",
-    logo_url:           (marchand?.logo_url as string) || "",
+  const defaultTemplate = getDefaultTemplate();
+
+  const [data, setData] = useState<CardData>({
+    nom:              marchand?.nom || "",
+    logo_url:         marchand?.logo_url || "",
+    tampons:          0,
+    objectif_tampons: marchand?.objectif_tampons || 10,
+    nom_recompense:   marchand?.nom_recompense || "Récompense offerte",
+    slogan:           marchand?.slogan || "",
+    wallet_id:        "",
   });
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+
+  const [templateId, setTemplateId]     = useState(marchand?.template_id || defaultTemplate.id);
+  const [paletteId,  setPaletteId]      = useState(marchand?.palette_id  || defaultTemplate.defaultPaletteId);
+  const [tab, setTab]                   = useState<"designs" | "infos">("designs");
+  const [saving, setSaving]             = useState(false);
+  const [saved, setSaved]               = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
   if (!marchand || !user) return null;
 
-  const set = <K extends keyof typeof config>(k: K, v: typeof config[K]) =>
-    setConfig(c => ({ ...c, [k]: v }));
+  const template = getTemplate(templateId) ?? defaultTemplate;
+  const palette  = template.palettes.find(p => p.id === paletteId) ?? template.palettes[0];
 
-  const light = isLight(config.couleur_principale);
-  const fg = light ? "#0A0A0A" : "#FFFFFF";
-  const fgMuted = light ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)";
-  const fgLabel = light ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)";
-  const divider = light ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)";
+  const set = <K extends keyof CardData>(k: K, v: CardData[K]) =>
+    setData(d => ({ ...d, [k]: v }));
 
   async function sauvegarder() {
     setSaving(true);
-    await updateDoc(doc(db, "marchands", user!.uid), { ...config, updated_at: serverTimestamp() });
+    await updateDoc(doc(db, "marchands", user!.uid), {
+      nom:              data.nom,
+      slogan:           data.slogan,
+      objectif_tampons: data.objectif_tampons,
+      nom_recompense:   data.nom_recompense,
+      logo_url:         data.logo_url,
+      template_id:      templateId,
+      palette_id:       paletteId,
+      updated_at:       serverTimestamp(),
+    });
     setSaving(false); setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   }
@@ -66,312 +59,235 @@ export default function CartePage() {
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    if (!file.type.startsWith("image/")) { alert("Fichier image requis"); return; }
     setUploadingLogo(true);
     try {
-      const r = storageRef(storage, `logos/${user.uid}`);
-      await uploadBytes(r, file);
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const MAX = 400;
+          const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * ratio);
+          canvas.height = Math.round(img.height * ratio);
+          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error("Canvas failed")), "image/jpeg", 0.85);
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+      const r = storageRef(storage, `logos/${user.uid}.jpg`);
+      await uploadBytes(r, blob, { contentType: "image/jpeg" });
       const url = await getDownloadURL(r);
       set("logo_url", url);
       await updateDoc(doc(db, "marchands", user.uid), { logo_url: url });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("unauthorized")) {
+        alert("Accès refusé Firebase Storage. Vérifier les règles Storage.");
+      } else {
+        alert(`Erreur upload : ${msg}`);
+      }
     } finally {
       setUploadingLogo(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
-  // Sample data for preview
-  const PREVIEW_TAMPONS = Math.min(Math.floor(config.objectif_tampons * 0.6), config.objectif_tampons);
-
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10">
+    <div style={{ height: "calc(100vh - 0px)", display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
-      <div className="mb-6">
-        <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
-          Carte de fidélité
-        </p>
-        <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Ma carte</h1>
+      <div style={{
+        padding: "16px 24px", borderBottom: "1px solid var(--border)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: "var(--glass-bg)", backdropFilter: "blur(20px)", flexShrink: 0,
+      }}>
+        <div>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-tertiary)" }}>
+            Carte de fidélité
+          </p>
+          <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: -0.5, color: "var(--fg)", marginTop: 2 }}>
+            Ma carte
+          </h1>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4, background: "var(--glass-bg)", border: "1px solid var(--border)", borderRadius: 10, padding: 3 }}>
+          {(["designs", "infos"] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{
+              padding: "6px 14px", borderRadius: 7, fontSize: 12, fontWeight: 500,
+              background: tab === t ? "var(--accent)" : "transparent",
+              color: tab === t ? "white" : "var(--fg-secondary)",
+              border: "none", cursor: "pointer",
+            }}>
+              {t === "designs" ? "Designs" : "Personnaliser"}
+            </button>
+          ))}
+        </div>
+
+        {/* Save */}
+        <button onClick={sauvegarder} disabled={saving} style={{
+          padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+          background: saved ? "#34C759" : "var(--accent)", color: "white",
+          border: "none", cursor: "pointer",
+          boxShadow: "0 4px 14px rgba(0,122,255,0.25)",
+        }}>
+          {saving ? "…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
+        </button>
       </div>
 
-      <div className="lg:grid lg:grid-cols-2 lg:gap-10 lg:items-start">
+      {/* Contenu principal */}
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        {tab === "designs" ? (
+          <CardDesigner
+            data={data}
+            selectedTemplateId={templateId}
+            selectedPaletteId={paletteId}
+            onSelectTemplate={(tid, pid) => { setTemplateId(tid); setPaletteId(pid); }}
+            onChangePalette={setPaletteId}
+          />
+        ) : (
+          /* ── Onglet Personnaliser ── */
+          <div style={{ display: "flex", height: "100%", gap: 0 }}>
 
-        {/* ── Preview Apple Wallet ── */}
-        <div className="mb-8 lg:mb-0 lg:sticky lg:top-10">
-          <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
-            Aperçu Apple Wallet
-          </p>
-
-          {/* iPhone frame hint */}
-          <div className="rounded-[32px] p-3 inline-block w-full"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", boxShadow: "var(--shadow-lg)" }}>
-
-            {/* Card */}
-            <div className="rounded-[22px] overflow-hidden select-none"
-              style={{
-                background: config.couleur_principale,
-                boxShadow: `0 16px 48px ${config.couleur_principale}66`,
-              }}>
-
-              {/* Header row */}
-              <div className="flex items-center gap-3 px-5 py-4"
-                style={{ borderBottom: `1px solid ${divider}` }}>
-                {/* Logo */}
-                <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
-                  style={{ background: fgMuted }}>
-                  {config.logo_url ? (
-                    <img src={config.logo_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-[16px] font-bold" style={{ color: config.couleur_principale }}>
-                      {(config.nom?.[0] || "W").toUpperCase()}
-                    </span>
-                  )}
+            {/* Preview sticky */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, gap: 16 }}>
+              <div style={{ width: "100%", maxWidth: 460 }}>
+                <div style={{ width: "100%", aspectRatio: "375/246", borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+                  {template.render({ data, tokens: palette.tokens, palette, thumbnail: false })}
                 </div>
-                <span className="flex-1 text-[14px] font-semibold truncate" style={{ color: fg }}>
-                  {config.nom || "Nom de l'établissement"}
-                </span>
-                <span className="text-[9px] font-bold px-2 py-1 rounded-full"
-                  style={{ background: divider, color: fgMuted, letterSpacing: "0.08em" }}>
-                  WALLIO
-                </span>
-              </div>
-
-              {/* Stamps area */}
-              <div className="px-5 pt-5 pb-4">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {Array.from({ length: Math.min(config.objectif_tampons, 12) }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] transition-all"
-                      style={{
-                        background: i < PREVIEW_TAMPONS ? fg : divider,
-                        fontSize: i < PREVIEW_TAMPONS ? 13 : 0,
-                      }}
-                    >
-                      {i < PREVIEW_TAMPONS ? config.icone_tampons : ""}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ width: "80%", height: 1, background: palette.tokens.border }}/>
+                  <div style={{
+                    width: "80%", background: palette.tokens.background,
+                    borderRadius: "0 0 16px 16px", padding: "14px 0 12px",
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+                  }}>
+                    <div style={{ width: 60, height: 60, background: "#fff", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 8, color: "#666" }}>QR Code</span>
                     </div>
+                    <p style={{ fontSize: 8, marginTop: 8, letterSpacing: "0.1em", color: palette.tokens.textTertiary }}>
+                      VOTRE CARTE · WALLIO
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Panel droit */}
+            <div style={{
+              width: 300, borderLeft: "1px solid var(--border)",
+              overflowY: "auto", padding: "20px 18px",
+              display: "flex", flexDirection: "column", gap: 20,
+            }}>
+
+              {/* Logo */}
+              <Section label="Logo">
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <div style={{
+                    width: 52, height: 52, borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    overflow: "hidden", flexShrink: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    background: "var(--glass-bg)",
+                  }}>
+                    {data.logo_url
+                      ? <img src={data.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+                      : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="1.5" strokeLinecap="round">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                          <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    }
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload}/>
+                    <button onClick={() => fileRef.current?.click()} disabled={uploadingLogo} style={{
+                      width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
+                      background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer",
+                    }}>
+                      {uploadingLogo ? "Upload…" : data.logo_url ? "Changer" : "Ajouter un logo"}
+                    </button>
+                    {data.logo_url && (
+                      <button onClick={() => set("logo_url", "")} style={{ width: "100%", marginTop: 4, padding: "5px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
+                        Supprimer
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </Section>
+
+              {/* Infos */}
+              <Section label="Informations">
+                <Field label="Nom de l'établissement">
+                  <TextInput value={data.nom} onChange={v => set("nom", v)} placeholder="Café du Centre"/>
+                </Field>
+                <Field label="Slogan (optionnel)">
+                  <TextInput value={data.slogan || ""} onChange={v => set("slogan", v)} placeholder="Le meilleur café de la ville"/>
+                </Field>
+              </Section>
+
+              {/* Récompense */}
+              <Section label="Récompense">
+                <Field label="Description">
+                  <TextInput value={data.nom_recompense} onChange={v => set("nom_recompense", v)} placeholder="1 café offert"/>
+                </Field>
+                <Field label={`Tampons nécessaires — ${data.objectif_tampons}`}>
+                  <input type="range" min={5} max={20} value={data.objectif_tampons}
+                    onChange={e => set("objectif_tampons", Number(e.target.value))}
+                    style={{ width: "100%", accentColor: "var(--accent)" }}/>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    {[5,6,8,10,12,15,20].map(n => (
+                      <button key={n} onClick={() => set("objectif_tampons", n)} style={{
+                        fontSize: 10, padding: "2px 5px", borderRadius: 5,
+                        background: data.objectif_tampons === n ? "var(--accent)" : "var(--glass-bg)",
+                        border: "1px solid var(--border)",
+                        color: data.objectif_tampons === n ? "white" : "var(--fg-tertiary)",
+                        cursor: "pointer",
+                      }}>{n}</button>
+                    ))}
+                  </div>
+                </Field>
+              </Section>
+
+              {/* Palettes */}
+              <Section label="Palette de couleurs">
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {template.palettes.map(p => (
+                    <button key={p.id} onClick={() => setPaletteId(p.id)} style={{
+                      display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
+                      borderRadius: 10,
+                      background: paletteId === p.id ? "var(--glass-bg)" : "transparent",
+                      border: `1px solid ${paletteId === p.id ? "var(--accent)" : "var(--border)"}`,
+                      cursor: "pointer",
+                    }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 6, background: p.tokens.background, border: "1px solid rgba(0,0,0,0.1)", flexShrink: 0 }}/>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <div style={{ width: 12, height: 12, borderRadius: 3, background: p.tokens.accent }}/>
+                        <div style={{ width: 12, height: 12, borderRadius: 3, background: p.tokens.stampActive }}/>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--fg)" }}>{p.name}</span>
+                    </button>
                   ))}
-                  {config.objectif_tampons > 12 && (
-                    <span className="text-[11px] self-center" style={{ color: fgMuted }}>
-                      +{config.objectif_tampons - 12}
-                    </span>
-                  )}
                 </div>
+              </Section>
 
-                {/* Fields */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: fgLabel }}>
-                      Tampons
-                    </p>
-                    <p className="text-[20px] font-semibold leading-none" style={{ color: fg }}>
-                      {PREVIEW_TAMPONS}
-                      <span className="text-[13px] font-normal" style={{ color: fgMuted }}>
-                        /{config.objectif_tampons}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: fgLabel }}>
-                      Récompense
-                    </p>
-                    <p className="text-[13px] font-medium leading-tight" style={{ color: fg }}>
-                      {config.nom_recompense || "—"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* QR code hint */}
-              <div className="px-5 py-3.5 flex items-center justify-center gap-0.5"
-                style={{ borderTop: `1px solid ${divider}` }}>
-                {[3,1,4,2,3,1,2,4,1,3,2,1,4,2,3,1,2].map((h, i) => (
-                  <div key={i} className="rounded-[1px]"
-                    style={{ width: 2, height: h * 4, background: fg, opacity: 0.5 }} />
-                ))}
-                <div className="mx-2 w-12 h-12 flex-shrink-0"
-                  style={{ background: divider, borderRadius: 4 }}>
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="grid grid-cols-3 gap-0.5 p-1">
-                      {Array.from({length: 9}).map((_,i) => (
-                        <div key={i} className="rounded-[1px]"
-                          style={{ width: 3, height: 3, background: i !== 4 ? fg : "transparent", opacity: 0.6 }} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                {[2,4,1,3,2,4,1,2,3,1,4,2,1,3,2,4,1].map((h, i) => (
-                  <div key={i} className="rounded-[1px]"
-                    style={{ width: 2, height: h * 4, background: fg, opacity: 0.5 }} />
-                ))}
-              </div>
             </div>
           </div>
-
-          <p className="text-[12px] mt-3 text-center" style={{ color: "var(--fg-tertiary)" }}>
-            Aperçu indicatif — la carte réelle sera générée lors de l&apos;ajout dans Apple Wallet
-          </p>
-        </div>
-
-        {/* ── Éditeur ── */}
-        <div className="space-y-6">
-
-          {/* Logo */}
-          <Field label="Logo de l'établissement">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                {config.logo_url ? (
-                  <img src={config.logo_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span style={{ color: "var(--fg-tertiary)", fontSize: 22 }}>📷</span>
-                )}
-              </div>
-              <div className="flex-1">
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoUpload}
-                />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploadingLogo}
-                  className="w-full py-2.5 rounded-2xl text-[13px] font-medium"
-                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-                >
-                  {uploadingLogo ? "Upload…" : config.logo_url ? "Changer le logo" : "Ajouter un logo"}
-                </button>
-                {config.logo_url && (
-                  <button
-                    onClick={() => set("logo_url", "")}
-                    className="w-full mt-1.5 py-1.5 rounded-xl text-[12px]"
-                    style={{ color: "#FF3B30" }}
-                  >
-                    Supprimer
-                  </button>
-                )}
-              </div>
-            </div>
-          </Field>
-
-          {/* Palette */}
-          <Field label="Couleur de la carte">
-            <div className="grid grid-cols-4 gap-2 mb-3">
-              {PALETTES.map(palette => (
-                <button
-                  key={palette.label}
-                  onClick={() => { set("couleur_principale", palette.p); set("couleur_secondaire", palette.s); }}
-                  className="rounded-2xl overflow-hidden"
-                  style={{
-                    outline: config.couleur_principale === palette.p ? `2px solid var(--accent)` : "none",
-                    outlineOffset: 2,
-                  }}
-                >
-                  <div className="h-10 w-full" style={{ background: palette.p }} />
-                  <div className="py-1 text-[10px] font-medium" style={{ background: "var(--glass-bg)", color: "var(--fg-tertiary)" }}>
-                    {palette.label}
-                  </div>
-                </button>
-              ))}
-            </div>
-            {/* Custom pickers */}
-            <div className="grid grid-cols-2 gap-2">
-              {([["couleur_principale", "Principale"], ["couleur_secondaire", "Secondaire"]] as const).map(([key, label]) => (
-                <div key={key} className="rounded-2xl p-3 flex items-center gap-3"
-                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                  <div className="relative flex-shrink-0">
-                    <div className="w-8 h-8 rounded-xl" style={{ background: config[key] }} />
-                    <input
-                      type="color"
-                      value={config[key]}
-                      onChange={e => set(key, e.target.value)}
-                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-[10px]" style={{ color: "var(--fg-tertiary)" }}>{label}</p>
-                    <p className="text-[11px] font-mono" style={{ color: "var(--fg)" }}>{config[key]}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Field>
-
-          {/* Nom */}
-          <Field label="Nom de l'établissement">
-            <input
-              type="text"
-              value={config.nom}
-              onChange={e => set("nom", e.target.value)}
-              placeholder="Ex : Café du Centre"
-              className="w-full px-4 py-3.5 rounded-2xl text-[14px] outline-none"
-              style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-              onBlur={e => (e.target.style.borderColor = "var(--border)")}
-            />
-          </Field>
-
-          {/* Récompense */}
-          <Field label="Nom de la récompense">
-            <input
-              type="text"
-              value={config.nom_recompense}
-              onChange={e => set("nom_recompense", e.target.value)}
-              placeholder="Ex : 1 café offert"
-              className="w-full px-4 py-3.5 rounded-2xl text-[14px] outline-none"
-              style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-              onBlur={e => (e.target.style.borderColor = "var(--border)")}
-            />
-          </Field>
-
-          {/* Objectif */}
-          <Field label={`Nombre de tampons — ${config.objectif_tampons}`}>
-            <input
-              type="range" min={3} max={20} value={config.objectif_tampons}
-              onChange={e => set("objectif_tampons", Number(e.target.value))}
-              className="w-full mt-1" style={{ accentColor: "var(--accent)" }}
-            />
-            <div className="flex justify-between mt-1">
-              <span className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>3</span>
-              <span className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>20</span>
-            </div>
-          </Field>
-
-          {/* Icône */}
-          <Field label="Icône des tampons">
-            <div className="flex flex-wrap gap-2">
-              {ICONES.map(ic => (
-                <button
-                  key={ic}
-                  onClick={() => set("icone_tampons", ic)}
-                  className="w-11 h-11 rounded-2xl text-xl flex items-center justify-center transition-all duration-150"
-                  style={{
-                    background: config.icone_tampons === ic ? "var(--accent)" : "var(--glass-bg)",
-                    border: `1px solid ${config.icone_tampons === ic ? "var(--accent)" : "var(--border)"}`,
-                    transform: config.icone_tampons === ic ? "scale(1.08)" : "scale(1)",
-                  }}
-                >
-                  {ic}
-                </button>
-              ))}
-            </div>
-          </Field>
-
-          {/* Save */}
-          <button
-            onClick={sauvegarder}
-            disabled={saving}
-            className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
-            style={{
-              background: saved ? "#34C759" : "var(--accent)",
-              boxShadow: "0 4px 20px rgba(0,122,255,0.2)",
-            }}
-          >
-            {saving ? "Sauvegarde…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
-          </button>
-        </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-tertiary)", marginBottom: 10 }}>{label}</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{children}</div>
     </div>
   );
 }
@@ -379,10 +295,24 @@ export default function CartePage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[11px] font-semibold uppercase tracking-widest mb-2.5" style={{ color: "var(--fg-tertiary)" }}>
-        {label}
-      </label>
+      <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginBottom: 5 }}>{label}</p>
       {children}
     </div>
+  );
+}
+
+function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return (
+    <input
+      type="text" value={value} placeholder={placeholder}
+      onChange={e => onChange(e.target.value)}
+      style={{
+        width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 13,
+        background: "var(--glass-bg)", border: "1px solid var(--border)",
+        color: "var(--fg)", outline: "none",
+      }}
+      onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+      onBlur={e => (e.target.style.borderColor = "var(--border)")}
+    />
   );
 }

@@ -6,6 +6,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
+import WallioLogo from "@/components/WallioLogo";
 
 type Stats = {
   total: number;
@@ -66,13 +67,19 @@ export default function AccueilPage() {
     <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-5xl">
 
       {/* Header */}
-      <div className="mb-8">
-        <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
-          Tableau de bord
-        </p>
-        <h1 className="text-[28px] lg:text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
-          {marchand.nom}
-        </h1>
+      <div className="mb-8 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+          style={{ background: "linear-gradient(135deg,#EDE8FF 0%,#F0F0FF 100%)" }}>
+          <WallioLogo size={38} />
+        </div>
+        <div>
+          <p className="text-[12px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: "var(--fg-tertiary)" }}>
+            Tableau de bord
+          </p>
+          <h1 className="text-[28px] lg:text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
+            {marchand.nom}
+          </h1>
+        </div>
       </div>
 
       {/* Stats grid — 2 col mobile, 4 col desktop */}

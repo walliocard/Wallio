@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import WallioLogo from "@/components/WallioLogo";
 
 type Marchand = {
   id: string;
@@ -402,11 +403,17 @@ export default function AdminPage() {
       <div className="max-w-6xl mx-auto relative">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Administration</h1>
-            <p className="text-[15px] mt-1" style={{ color: "var(--fg-secondary)" }}>
-              {actifs} marchand{actifs !== 1 ? "s" : ""} actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "linear-gradient(135deg,#EDE8FF 0%,#F0F0FF 100%)" }}>
+              <WallioLogo size={36} />
+            </div>
+            <div>
+              <h1 className="text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Administration</h1>
+              <p className="text-[15px] mt-1" style={{ color: "var(--fg-secondary)" }}>
+                {actifs} marchand{actifs !== 1 ? "s" : ""} actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
+              </p>
+            </div>
           </div>
           <button onClick={logout}
             className="text-[13px] px-4 py-2 rounded-xl"

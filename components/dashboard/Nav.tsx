@@ -6,6 +6,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Icons } from "./icons";
 import type { Marchand } from "@/lib/loyalty";
+import WallioLogo from "@/components/WallioLogo";
 
 const NAV = [
   { href: "/dashboard",           label: "Accueil",  Icon: Icons.Home },
@@ -39,11 +40,9 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           className="flex items-center h-16 px-4 lg:px-5 flex-shrink-0 gap-3"
           style={{ borderBottom: "1px solid var(--border)" }}
         >
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-[15px] text-white"
-            style={{ background: "var(--accent)" }}
-          >
-            W
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#EDE8FF 0%,#F0F0FF 100%)" }}>
+            <WallioLogo size={26} />
           </div>
           <span className="hidden lg:block font-semibold text-[15px] tracking-tight" style={{ color: "var(--fg)" }}>
             Wallio

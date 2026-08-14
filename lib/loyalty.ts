@@ -18,6 +18,10 @@ export type Marchand = {
   anti_doublon_delai: number;
   fuseau_horaire: string;
   nfc_id?: string;
+  logo_url?: string;
+  slogan?: string;
+  template_id?: string;
+  palette_id?: string;
 };
 
 export type Client = {
