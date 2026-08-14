@@ -28,7 +28,7 @@ const template: CardTemplate = {
             <span style={{ fontSize: thumbnail ? 8 : 12, fontWeight: 600, color: tokens.text }}>{data.nom || "Coast"}</span>
             <span style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.12em", color: tokens.textTertiary }}>WALLIO</span>
           </div>
-          <Stamps total={data.objectif_tampons} filled={filled} style="circle" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="circle" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={9}/>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textSecondary }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
             {!thumbnail && <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: 8, padding: 3 }}><QRBox size={30} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={4}/></div>}

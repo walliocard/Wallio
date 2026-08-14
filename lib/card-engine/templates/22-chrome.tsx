@@ -26,7 +26,7 @@ const template: CardTemplate = {
             <div style={{ width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: "50%", background: `radial-gradient(circle at 35% 35%, ${tokens.accentSecondary}, ${tokens.accent})`, opacity: 0.9 }}/>
           </div>
 
-          <Stamps total={data.objectif_tampons} filled={filled} style="ring" tokens={tokens} size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="ring" tokens={tokens} size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>

@@ -35,7 +35,7 @@ const template: CardTemplate = {
 
           {/* Tampons boutons */}
           <div style={{ display: "flex", flexDirection: "column", gap: thumbnail ? 3 : 5 }}>
-            <Stamps total={data.objectif_tampons} filled={filled} style="ring" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={9}/>
+            <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="ring" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={9}/>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>

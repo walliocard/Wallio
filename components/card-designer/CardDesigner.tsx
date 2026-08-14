@@ -191,60 +191,6 @@ export default function CardDesigner({
               {selectedTemplate.render({ data, tokens: selectedPalette.tokens, palette: selectedPalette, thumbnail: false })}
             </div>
 
-            {/* Extension QR */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div style={{ width: "85%", height: "1px", background: `${selectedPalette.tokens.border}`, margin: "0 auto" }}/>
-              <div style={{
-                width: "85%",
-                background: selectedPalette.tokens.background,
-                borderRadius: "0 0 16px 16px",
-                display: "flex", flexDirection: "column", alignItems: "center",
-                padding: "16px 0 14px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-              }}>
-                <div style={{
-                  width: 72, height: 72, background: "#FFFFFF",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  borderRadius: 6,
-                }}>
-                  <svg width="64" height="64" viewBox="0 0 200 200">
-                    {/* QR simplified */}
-                    <rect width="200" height="200" fill="#fff"/>
-                    <rect x="10" y="10" width="70" height="70" rx="6" fill="#000"/>
-                    <rect x="20" y="20" width="50" height="50" rx="3" fill="#fff"/>
-                    <rect x="30" y="30" width="30" height="30" rx="2" fill="#000"/>
-                    <rect x="120" y="10" width="70" height="70" rx="6" fill="#000"/>
-                    <rect x="130" y="20" width="50" height="50" rx="3" fill="#fff"/>
-                    <rect x="140" y="30" width="30" height="30" rx="2" fill="#000"/>
-                    <rect x="10" y="120" width="70" height="70" rx="6" fill="#000"/>
-                    <rect x="20" y="130" width="50" height="50" rx="3" fill="#fff"/>
-                    <rect x="30" y="140" width="30" height="30" rx="2" fill="#000"/>
-                    <rect x="100" y="100" width="10" height="10" fill="#000"/>
-                    <rect x="115" y="100" width="10" height="10" fill="#000"/>
-                    <rect x="130" y="105" width="10" height="10" fill="#000"/>
-                    <rect x="145" y="100" width="10" height="10" fill="#000"/>
-                    <rect x="160" y="110" width="10" height="10" fill="#000"/>
-                    <rect x="100" y="115" width="10" height="10" fill="#000"/>
-                    <rect x="120" y="120" width="10" height="10" fill="#000"/>
-                    <rect x="140" y="115" width="10" height="10" fill="#000"/>
-                    <rect x="160" y="125" width="10" height="10" fill="#000"/>
-                    <rect x="100" y="130" width="15" height="10" fill="#000"/>
-                    <rect x="125" y="135" width="10" height="10" fill="#000"/>
-                    <rect x="145" y="130" width="25" height="10" fill="#000"/>
-                    <rect x="100" y="145" width="10" height="10" fill="#000"/>
-                    <rect x="120" y="150" width="15" height="10" fill="#000"/>
-                    <rect x="150" y="145" width="10" height="10" fill="#000"/>
-                    <rect x="170" y="150" width="10" height="10" fill="#000"/>
-                    <rect x="100" y="160" width="25" height="10" fill="#000"/>
-                    <rect x="140" y="165" width="10" height="10" fill="#000"/>
-                    <rect x="160" y="160" width="20" height="10" fill="#000"/>
-                  </svg>
-                </div>
-                <p style={{ fontSize: 9, marginTop: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: selectedPalette.tokens.textTertiary }}>
-                  Votre carte · Wallio
-                </p>
-              </div>
-            </div>
           </div>
         )}
 

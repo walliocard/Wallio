@@ -40,7 +40,7 @@ const template: CardTemplate = {
             <div style={{ width: thumbnail ? 14 : 26, height: thumbnail ? 14 : 26, borderRadius: "50%", border: `${thumbnail ? 1.5 : 2.5}px solid ${tokens.borderStrong}`, background: tokens.surfaceSecondary, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <div style={{ width: thumbnail ? 5 : 9, height: thumbnail ? 5 : 9, borderRadius: "50%", background: tokens.accent }}/>
             </div>
-            <Stamps total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 8 : 14} gap={thumbnail ? 2 : 3} perRow={9}/>
+            <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 8 : 14} gap={thumbnail ? 2 : 3} perRow={9}/>
           </div>
 
           <div style={{ borderTop: `1px solid ${tokens.border}`, paddingTop: thumbnail ? 4 : 7, display: "flex", justifyContent: "space-between", alignItems: "center" }}>

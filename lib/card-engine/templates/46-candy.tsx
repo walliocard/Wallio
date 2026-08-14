@@ -34,7 +34,7 @@ const template: CardTemplate = {
             </div>
           </div>
 
-          <Stamps total={data.objectif_tampons} filled={filled} style="circle" tokens={tokens} size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="circle" tokens={tokens} size={thumbnail ? 10 : 18} gap={thumbnail ? 3 : 5} perRow={9}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ background: tokens.surface, borderRadius: 20, padding: thumbnail ? "3px 8px" : "4px 14px" }}>

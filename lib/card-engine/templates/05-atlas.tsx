@@ -31,7 +31,7 @@ const template: CardTemplate = {
             </div>
             {data.slogan && !thumbnail && <div style={{ fontSize: 9, color: tokens.textSecondary, fontStyle: "italic" }}>{data.slogan}</div>}
           </div>
-          <Stamps total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 3 : 5} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 3 : 5} perRow={9}/>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary }}>{data.nom_recompense}</div>

@@ -32,7 +32,7 @@ const template: CardTemplate = {
               {data.nom || "FASHION"}
             </div>
           </div>
-          <Stamps total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 6 : 11} gap={thumbnail ? 3 : 5} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 6 : 11} gap={thumbnail ? 3 : 5} perRow={9}/>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textSecondary }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
             {!thumbnail && <QRBox size={28} bg={tokens.qrBackground} fg={tokens.qrForeground} radius={0}/>}

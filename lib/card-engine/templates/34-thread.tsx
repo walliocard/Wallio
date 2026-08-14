@@ -42,7 +42,7 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
           </div>
 
-          <Stamps total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 4 : 7} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 4 : 7} perRow={9}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ fontSize: thumbnail ? 5 : 7, fontWeight: 300, color: tokens.textSecondary, letterSpacing: "0.04em" }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>

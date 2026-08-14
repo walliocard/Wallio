@@ -28,7 +28,7 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 9 : 15, fontWeight: 700, color: tokens.text, letterSpacing: "0.06em", textTransform: "uppercase" }}>{data.nom || "The Press"}</div>
           </div>
 
-          <Stamps total={data.objectif_tampons} filled={filled} style="badge" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={8}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="badge" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={8}/>
 
           {/* Pied de page */}
           <div style={{ borderTop: `${thumbnail ? 0.5 : 1}px solid ${tokens.borderStrong}`, paddingTop: thumbnail ? 3 : 5, display: "flex", justifyContent: "space-between", alignItems: "center" }}>

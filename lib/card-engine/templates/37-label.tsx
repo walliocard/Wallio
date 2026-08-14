@@ -24,7 +24,7 @@ const template: CardTemplate = {
         <div style={{ background: tokens.surface, border: `1.5px solid ${tokens.borderStrong}`, padding: thumbnail ? "6% 8%" : "8% 10%", display: "flex", flexDirection: "column", gap: thumbnail ? 4 : 8, alignItems: "center", width: "75%", position: "relative", zIndex: 1 }}>
           <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.2em", color: tokens.textTertiary }}>{(data.nom || "LABEL").toUpperCase()}</div>
           <div style={{ height: "0.5px", width: "100%", background: tokens.borderStrong, opacity: 0.5 }}/>
-          <Stamps total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 2 : 4} perRow={8}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 2 : 4} perRow={8}/>
           <div style={{ height: "0.5px", width: "100%", background: tokens.borderStrong, opacity: 0.5 }}/>
           <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, textAlign: "center" }}>{filled}/{data.objectif_tampons} — {data.nom_recompense}</div>
         </div>

@@ -13,6 +13,7 @@ interface StampsProps {
   gap?: number;
   perRow?: number;
   iconPath?: string;
+  fillWidth?: boolean;
 }
 
 function StampShape({
@@ -127,12 +128,29 @@ function StampShape({
 }
 
 export default function Stamps({
-  total, filled, style, tokens, size = 22, gap = 5, perRow = 9, iconPath,
+  total, filled, style, tokens, size = 22, gap = 5, perRow = 9, iconPath, fillWidth = false,
 }: StampsProps) {
   const rows: number[][] = [];
   for (let i = 0; i < total; i += perRow) {
     rows.push(Array.from({ length: Math.min(perRow, total - i) }, (_, j) => i + j));
   }
+
+  if (fillWidth) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap, width: "100%" }}>
+        {rows.map((row, ri) => (
+          <div key={ri} style={{ display: "grid", gridTemplateColumns: `repeat(${row.length}, 1fr)`, gap, width: "100%" }}>
+            {row.map(i => (
+              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", aspectRatio: "1" }}>
+                <StampShape filled={i < filled} style={style} tokens={tokens} size={size} iconPath={iconPath}/>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap }}>
       {rows.map((row, ri) => (

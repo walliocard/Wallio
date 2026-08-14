@@ -38,7 +38,7 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
           </div>
 
-          <Stamps total={data.objectif_tampons} filled={filled} style="diamond" tokens={tokens} size={thumbnail ? 8 : 14} gap={thumbnail ? 3 : 6} perRow={9}/>
+          <Stamps fillWidth={!thumbnail} total={data.objectif_tampons} filled={filled} style="diamond" tokens={tokens} size={thumbnail ? 8 : 14} gap={thumbnail ? 3 : 6} perRow={9}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, fontStyle: "italic" }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
