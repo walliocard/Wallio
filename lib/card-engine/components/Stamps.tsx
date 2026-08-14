@@ -1,5 +1,43 @@
 import type { CardTokens } from "../types";
 
+/* Stamp qui remplit sa cellule (utilisé en mode fillWidth) */
+function FillStampShape({ filled, style, tokens, iconPath }: {
+  filled: boolean; style: StampStyle; tokens: CardTokens; iconPath?: string;
+}) {
+  const bg = filled ? tokens.stampActive : tokens.stampInactive;
+  const fg = filled ? tokens.stampActiveIcon : tokens.stampInactive;
+  const base: React.CSSProperties = { width: "78%", height: "78%", flexShrink: 0 };
+
+  switch (style) {
+    case "dot":
+      return <div style={{ ...base, width: "50%", height: "50%", borderRadius: "50%", background: bg }}/>;
+    case "square":
+      return <div style={{ ...base, background: bg }}/>;
+    case "rounded":
+      return <div style={{ ...base, borderRadius: "22%", background: bg }}/>;
+    case "diamond":
+      return <div style={{ ...base, width: "65%", height: "65%", background: bg, transform: "rotate(45deg)" }}/>;
+    case "ring":
+      return <div style={{ ...base, borderRadius: "50%", border: `2px solid ${filled ? tokens.stampActive : tokens.stampInactive}`, background: filled ? `${tokens.stampActive}22` : "transparent" }}/>;
+    case "stripe":
+      return <div style={{ width: "90%", height: "35%", borderRadius: 4, background: bg }}/>;
+    case "star":
+      return (
+        <svg width="78%" height="78%" viewBox="0 0 24 24" style={{ display: "block" }}>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill={filled ? tokens.stampActive : tokens.stampInactive}/>
+        </svg>
+      );
+    case "badge":
+      return (
+        <div style={{ ...base, borderRadius: "18%", background: bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {filled && <svg width="55%" height="55%" viewBox="0 0 24 24" fill="none" stroke={fg} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>}
+        </div>
+      );
+    default: // circle
+      return <div style={{ ...base, borderRadius: "50%", background: bg }}/>;
+  }
+}
+
 export type StampStyle =
   | "circle" | "square" | "rounded" | "dot" | "number"
   | "diamond" | "star" | "stripe" | "ring" | "badge";
@@ -146,10 +184,10 @@ export default function Stamps({
     return (
       <div style={{ display: "flex", flexDirection: "column", gap, width: "100%" }}>
         {rows.map((row, ri) => (
-          <div key={ri} style={{ display: "grid", gridTemplateColumns: `repeat(${row.length}, 1fr)`, gap, width: "100%" }}>
+          <div key={ri} style={{ display: "grid", gridTemplateColumns: `repeat(${row.length}, 1fr)`, gap, width: "100%", alignItems: "center" }}>
             {row.map(i => (
-              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", aspectRatio: "1" }}>
-                <StampShape filled={i < filled} style={style} tokens={tokens} size={size} iconPath={iconPath}/>
+              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", aspectRatio: "1", minWidth: 0 }}>
+                <FillStampShape filled={i < filled} style={style} tokens={tokens} iconPath={iconPath}/>
               </div>
             ))}
           </div>
