@@ -289,7 +289,7 @@ export default function CarteComptoirPage() {
     }
     const link = document.createElement("a");
     const label = format === "chevaleret" ? "chevaleret" : "carte-comptoir";
-    link.download = `wallio-${label}-${template}-${marchand.nom?.replace(/\s+/g, "-").toLowerCase() || "enseigne"}.png`;
+    link.download = `wallio-${label}-${template}-${marchand?.nom?.replace(/\s+/g, "-").toLowerCase() || "enseigne"}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
     setDownloading(false);

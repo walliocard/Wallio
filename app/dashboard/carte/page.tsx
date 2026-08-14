@@ -16,17 +16,17 @@ export default function CartePage() {
   const defaultTemplate = getDefaultTemplate();
 
   const [data, setData] = useState<CardData>({
-    nom:              marchand?.nom || "",
-    logo_url:         marchand?.logo_url || "",
+    nom:              (marchand?.nom as string) || "",
+    logo_url:         (marchand?.logo_url as string) || "",
     tampons:          0,
-    objectif_tampons: marchand?.objectif_tampons || 10,
-    nom_recompense:   marchand?.nom_recompense || "Récompense offerte",
-    slogan:           marchand?.slogan || "",
+    objectif_tampons: (marchand?.objectif_tampons as number) || 10,
+    nom_recompense:   (marchand?.nom_recompense as string) || "Récompense offerte",
+    slogan:           (marchand?.slogan as string) || "",
     wallet_id:        "",
   });
 
-  const [templateId, setTemplateId]     = useState(marchand?.template_id || defaultTemplate.id);
-  const [paletteId,  setPaletteId]      = useState(marchand?.palette_id  || defaultTemplate.defaultPaletteId);
+  const [templateId, setTemplateId]     = useState((marchand?.template_id as string) || defaultTemplate.id);
+  const [paletteId,  setPaletteId]      = useState((marchand?.palette_id as string)  || defaultTemplate.defaultPaletteId);
   const [tab, setTab]                   = useState<"designs" | "infos">("designs");
   const [saving, setSaving]             = useState(false);
   const [saved, setSaved]               = useState(false);
