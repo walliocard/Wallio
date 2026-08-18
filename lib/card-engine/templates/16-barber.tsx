@@ -88,7 +88,7 @@ const template: CardTemplate = {
         <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
             total={data.objectif_tampons} filled={filled}
-            style="badge" tokens={tokens}
+            style={(dims?.stampStyle ?? "badge")} tokens={tokens}
             size={thumbnail ? 9 : 18} gap={thumbnail ? 3 : 5} perRow={8}
           />
         </div>

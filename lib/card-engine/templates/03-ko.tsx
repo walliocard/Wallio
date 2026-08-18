@@ -117,7 +117,7 @@ const template: CardTemplate = {
           {/* TAMPONS — dots subtils */}
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
             total={data.objectif_tampons} filled={filled}
-            style="dot" tokens={tokens}
+            style={(dims?.stampStyle ?? "dot")} tokens={tokens}
             size={thumbnail ? 6 : 11} gap={thumbnail ? 3 : 5} perRow={10}
           />
 

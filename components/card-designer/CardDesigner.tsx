@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import type { CardTemplate, CardData, CardPalette, CardDimensions } from "@/lib/card-engine/types";
 import { FORMAT_RATIOS } from "@/lib/card-engine/types";
 import { getAllTemplates, getTemplatesByCategory } from "@/lib/card-engine/registry";
+import WallioQR from "@/components/WallioQR";
 
 const CATEGORIES = [
   { id: "all",       label: "Tous" },
@@ -27,6 +28,7 @@ const CATEGORIES = [
 interface CardDesignerProps {
   data: CardData;
   dims: CardDimensions;
+  uid: string;
   selectedTemplateId: string;
   selectedPaletteId: string;
   onSelectTemplate: (templateId: string, paletteId: string) => void;
@@ -34,7 +36,7 @@ interface CardDesignerProps {
 }
 
 export default function CardDesigner({
-  data, dims, selectedTemplateId, selectedPaletteId,
+  data, dims, uid, selectedTemplateId, selectedPaletteId,
   onSelectTemplate, onChangePalette,
 }: CardDesignerProps) {
   const [category, setCategory] = useState("all");
@@ -187,14 +189,12 @@ export default function CardDesigner({
             <div style={{ width: "100%", aspectRatio: FORMAT_RATIOS[dims.format ?? "standard"], borderRadius: "16px 16px 0 0", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
               {selectedTemplate.render({ data, tokens: selectedPalette.tokens, palette: selectedPalette, thumbnail: false, dimensions: dims })}
             </div>
-            {/* Extension QR */}
+            {/* Extension QR — unique par marchand */}
             {(() => {
               const qr = dims.qrSize ?? 56;
               return (
                 <div style={{ width: "100%", background: selectedPalette.tokens.background, borderRadius: "0 0 16px 16px", borderTop: `1px solid ${selectedPalette.tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", padding: `${Math.round(qr * 0.25)}px 0`, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
-                  <div style={{ width: qr, height: qr, background: "#fff", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width={qr - 8} height={qr - 8} viewBox="0 0 200 200"><rect width="200" height="200" fill="#fff"/><rect x="10" y="10" width="70" height="70" rx="6" fill="#000"/><rect x="20" y="20" width="50" height="50" rx="3" fill="#fff"/><rect x="30" y="30" width="30" height="30" rx="2" fill="#000"/><rect x="120" y="10" width="70" height="70" rx="6" fill="#000"/><rect x="130" y="20" width="50" height="50" rx="3" fill="#fff"/><rect x="140" y="30" width="30" height="30" rx="2" fill="#000"/><rect x="10" y="120" width="70" height="70" rx="6" fill="#000"/><rect x="20" y="130" width="50" height="50" rx="3" fill="#fff"/><rect x="30" y="140" width="30" height="30" rx="2" fill="#000"/><rect x="100" y="100" width="10" height="10" fill="#000"/><rect x="120" y="105" width="10" height="10" fill="#000"/><rect x="140" y="100" width="10" height="10" fill="#000"/><rect x="100" y="120" width="15" height="10" fill="#000"/><rect x="130" y="125" width="20" height="10" fill="#000"/><rect x="100" y="140" width="10" height="10" fill="#000"/><rect x="125" y="145" width="15" height="10" fill="#000"/><rect x="150" y="140" width="20" height="10" fill="#000"/></svg>
-                  </div>
+                  <WallioQR uid={uid} size={qr} fg={selectedPalette.tokens.qrForeground} bg={selectedPalette.tokens.qrBackground}/>
                   <p style={{ fontSize: 9, marginTop: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: selectedPalette.tokens.textTertiary }}>Votre carte · Wallio</p>
                 </div>
               );

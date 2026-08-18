@@ -121,7 +121,7 @@ const template: CardTemplate = {
         {/* Tampons */}
         <div style={{ zIndex: 1 }}>
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled}
-            style="circle" tokens={tokens}
+            style={(dims?.stampStyle ?? "circle")} tokens={tokens}
             size={thumbnail ? 11 : 20} gap={thumbnail ? 3 : 5} perRow={9}
           />
         </div>

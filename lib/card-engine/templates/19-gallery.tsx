@@ -84,7 +84,7 @@ const template: CardTemplate = {
           {/* Tampons dots minuscules */}
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
             total={data.objectif_tampons} filled={filled}
-            style="dot" tokens={tokens}
+            style={(dims?.stampStyle ?? "dot")} tokens={tokens}
             size={thumbnail ? 5 : 10} gap={thumbnail ? 2 : 4} perRow={10}
           />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
