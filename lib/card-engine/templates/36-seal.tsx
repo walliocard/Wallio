@@ -23,19 +23,40 @@ const template: CardTemplate = {
     const pct = (filled / data.objectif_tampons) * 100;
     const r = thumbnail ? 22 : 42;
     const circ = 2 * Math.PI * r;
-    return (
-      <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, serif", position: "relative", overflow: "hidden" }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "5% 6%" : "6% 7%", alignItems: "center" }}>
-          {/* Header */}
-          <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div>
-              <div style={{ fontSize: thumbnail ? 6 : ns(9), fontStyle: "italic", color: tokens.text }}>{data.nom || "Seal"}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>{data.slogan}</div>}
-            </div>
-            <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
-          </div>
 
-          {/* Badge central avec anneau de progression */}
+    return (
+      <div style={{
+        width: "100%", height: "100%",
+        background: tokens.background,
+        display: "flex", flexDirection: "column",
+        fontFamily: "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Ornement — luxury opacity 0.04 */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.01) 3px, rgba(255,255,255,0.01) 6px)` }}/>
+
+        {/* HEADER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: thumbnail ? "6% 7% 3%" : "7% 8% 4%", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
+            {data.logo_url ? (
+              <img src={data.logo_url} alt="" style={{ width: logoSz, height: logoSz, borderRadius: thumbnail ? 5 : 8, objectFit: "cover" }}/>
+            ) : (
+              <div style={{ width: logoSz, height: logoSz, borderRadius: thumbnail ? 5 : 8, background: tokens.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.stampActiveIcon }}>{(data.nom[0] || "W").toUpperCase()}</span>
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 600, color: tokens.text, letterSpacing: -0.3, lineHeight: 1.2 }}>{data.nom || "Établissement"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 2 }}>{data.slogan}</div>}
+            </div>
+          </div>
+          <div style={{ background: `${tokens.accent}18`, backdropFilter: "blur(8px)", borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", border: `1px solid ${tokens.accent}25`, flexShrink: 0 }}>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+          </div>
+        </div>
+
+        {/* BADGE CENTRAL avec anneau de progression */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
           <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width={(r + 8) * 2} height={(r + 8) * 2} style={{ position: "absolute", transform: "rotate(-90deg)" }}>
               <circle cx={r + 8} cy={r + 8} r={r} fill="none" stroke={tokens.border} strokeWidth={thumbnail ? 2.5 : 4}/>
@@ -43,14 +64,19 @@ const template: CardTemplate = {
             </svg>
             <div style={{ width: r * 1.5, height: r * 1.5, borderRadius: "50%", background: tokens.surface, border: `1px solid ${tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, position: "relative", zIndex: 1 }}>
               <div style={{ fontSize: thumbnail ? 12 : 22, fontWeight: 700, color: tokens.accent, lineHeight: 1 }}>{filled}</div>
-              <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{data.objectif_tampons} tampons</div>
+              <div style={{ fontSize: thumbnail ? 4 : ss(6), color: tokens.textTertiary }}>{data.objectif_tampons} tampons</div>
             </div>
           </div>
+        </div>
 
-          {/* Footer */}
-          <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : rs(7), color: tokens.textSecondary, fontStyle: "italic" }}>{data.nom_recompense}</div>
-            <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary }}>REWARD</div>
+        {/* FOOTER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", padding: thumbnail ? "3% 7% 6%" : "4% 8% 7%", position: "relative", zIndex: 1 }}>
+          <div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textTertiary, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 2 }}>Récompense</div>
+            <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.text }}>{data.nom_recompense}</div>
+          </div>
+          <div style={{ background: `${tokens.accent}15`, backdropFilter: "blur(8px)", borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px", border: `1px solid ${tokens.accent}20` }}>
+            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
           </div>
         </div>
       </div>

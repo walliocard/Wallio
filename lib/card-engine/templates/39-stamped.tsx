@@ -1,5 +1,6 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
+import Stamps from "../components/Stamps";
 
 const palettes: CardPalette[] = [
   { id: "kraft-black", name: "Kraft / Black", tokens: { background: "#E8D8A8", surface: "#D8C890", surfaceSecondary: "#C8B878", text: "#0A0804", textSecondary: "#2A2010", textTertiary: "#6A5830", accent: "#0A0804", accentSecondary: "#2A2010", stampActive: "#0A0804", stampActiveIcon: "#E8D8A8", stampInactive: "#D8C890", border: "#C0A858", borderStrong: "#A08838", qrBackground: "#FFFFFF", qrForeground: "#0A0804", rewardBackground: "#D8C890" } },
@@ -19,40 +20,54 @@ const template: CardTemplate = {
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
+
     return (
-      <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Courier New', monospace", position: "relative", overflow: "hidden" }}>
-        {/* Texture papier */}
-        <div style={{ position: "absolute", inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`, opacity: 0.4 }}/>
+      <div style={{
+        width: "100%", height: "100%",
+        background: tokens.background,
+        display: "flex", flexDirection: "column",
+        fontFamily: "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Tampon circulaire en fond — editorial opacity 0.06 */}
+        <div style={{ position: "absolute", right: thumbnail ? "3%" : "5%", top: "50%", transform: "translateY(-50%) rotate(-8deg)", width: thumbnail ? 35 : 65, height: thumbnail ? 35 : 65, borderRadius: "50%", border: `${thumbnail ? 2 : 3}px solid ${tokens.accent}`, opacity: 0.06, pointerEvents: "none" }}/>
 
-        {/* Tampon circulaire en fond — imperfection */}
-        <div style={{ position: "absolute", right: thumbnail ? "3%" : "5%", top: "50%", transform: "translateY(-50%) rotate(-8deg)", width: thumbnail ? 35 : logoSz, height: thumbnail ? 35 : logoSz, borderRadius: "50%", border: `${thumbnail ? 2 : 3}px solid ${tokens.accent}`, opacity: 0.08 }}/>
-
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "7% 8%" : "8% 9%", position: "relative", zIndex: 1 }}>
-          {/* En-tête manuscrit */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        {/* HEADER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: thumbnail ? "6% 7% 3%" : "7% 8% 4%", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
+            {data.logo_url ? (
+              <img src={data.logo_url} alt="" style={{ width: logoSz, height: logoSz, borderRadius: thumbnail ? 5 : 8, objectFit: "cover" }}/>
+            ) : (
+              <div style={{ width: logoSz, height: logoSz, borderRadius: thumbnail ? 5 : 8, background: tokens.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.stampActiveIcon }}>{(data.nom[0] || "W").toUpperCase()}</span>
+              </div>
+            )}
             <div>
-              <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.08em", color: tokens.textTertiary, marginBottom: 2 }}>carte de fidélité —</div>
-              <div style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 700, color: tokens.text }}>{data.nom || "Artisan"}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+              <div style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 600, color: tokens.text, letterSpacing: -0.3, lineHeight: 1.2 }}>{data.nom || "Établissement"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 2 }}>{data.slogan}</div>}
             </div>
           </div>
-
-          {/* Tampons encre */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: thumbnail ? 3 : 6 }}>
-            {Array.from({ length: data.objectif_tampons }).map((_, i) => {
-              const on = i < filled;
-              const rotate = (Math.sin(i * 7.3) * 12);
-              return (
-                <div key={i} style={{ width: thumbnail ? 10 : 18, height: thumbnail ? 10 : 18, borderRadius: "50%", border: `${thumbnail ? 1 : 1.5}px solid ${on ? tokens.accent : tokens.border}`, background: on ? `${tokens.accent}30` : "transparent", flexShrink: 0, transform: `rotate(${rotate}deg)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {on && <div style={{ width: thumbnail ? 4 : 8, height: thumbnail ? 4 : 8, borderRadius: "50%", background: tokens.accent, opacity: 0.6 }}/>}
-                </div>
-              );
-            })}
+          <div style={{ background: `${tokens.accent}18`, backdropFilter: "blur(8px)", borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", border: `1px solid ${tokens.accent}25`, flexShrink: 0 }}>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
           </div>
+        </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : rs(7), color: tokens.textSecondary }}>{filled}/{data.objectif_tampons} · {data.nom_recompense}</div>
-            
+        {/* TAMPONS */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+            total={data.objectif_tampons} filled={filled}
+            style="circle" tokens={tokens}
+            size={thumbnail ? 9 : 20} gap={thumbnail ? 3 : 6} perRow={9}/>
+        </div>
+
+        {/* FOOTER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", padding: thumbnail ? "3% 7% 6%" : "4% 8% 7%", position: "relative", zIndex: 1 }}>
+          <div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textTertiary, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 2 }}>Récompense</div>
+            <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.text }}>{data.nom_recompense}</div>
+          </div>
+          <div style={{ background: `${tokens.accent}15`, backdropFilter: "blur(8px)", borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px", border: `1px solid ${tokens.accent}20` }}>
+            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
           </div>
         </div>
       </div>

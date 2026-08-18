@@ -1,5 +1,6 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
+import Stamps from "../components/Stamps";
 
 const palettes: CardPalette[] = [
   { id: "black-green", name: "Black / Green", tokens: { background: "#080808", surface: "#101010", surfaceSecondary: "#181818", text: "#00FF41", textSecondary: "#00AA2C", textTertiary: "#005516", accent: "#00FF41", accentSecondary: "#00CC33", stampActive: "#00FF41", stampActiveIcon: "#080808", stampInactive: "#181818", border: "#181818", borderStrong: "#282828", qrBackground: "#FFFFFF", qrForeground: "#080808", rewardBackground: "#101010" } },
@@ -19,44 +20,58 @@ const template: CardTemplate = {
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
-    const px = thumbnail ? 3 : 5;
+
     return (
-      <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Courier New', monospace", position: "relative", overflow: "hidden", imageRendering: "pixelated" }}>
-        {/* Grille pixel */}
-        <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(${tokens.border} 1px, transparent 1px), linear-gradient(90deg, ${tokens.border} 1px, transparent 1px)`, backgroundSize: `${px * 4}px ${px * 4}px`, opacity: 0.3 }}/>
+      <div style={{
+        width: "100%", height: "100%",
+        background: tokens.background,
+        display: "flex", flexDirection: "column",
+        fontFamily: "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Grille pixel — retro opacity 0.08 */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: `linear-gradient(${tokens.accent}10 1px, transparent 1px), linear-gradient(90deg, ${tokens.accent}10 1px, transparent 1px)`,
+          backgroundSize: `${thumbnail ? 8 : 14}px ${thumbnail ? 8 : 14}px`,
+        }}/>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
-          {/* Header pixel art */}
-          <div style={{ display: "flex", gap: 2 }}>
-            {["INSERT", "COIN"].map((word, wi) => (
-              <div key={wi} style={{ display: "flex", gap: 1 }}>
-                {word.split("").map((ch, ci) => (
-                  <span key={ci} style={{ fontSize: thumbnail ? 4 : 6, color: tokens.accent, fontFamily: "monospace", letterSpacing: 0 }}>{ch}</span>
-                ))}
-                <span style={{ width: thumbnail ? 4 : logoSz }}/>
+        {/* HEADER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: thumbnail ? "6% 7% 3%" : "7% 8% 4%", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
+            {data.logo_url ? (
+              <img src={data.logo_url} alt="" style={{ width: logoSz, height: logoSz, borderRadius: 0, objectFit: "cover" }}/>
+            ) : (
+              <div style={{ width: logoSz, height: logoSz, background: tokens.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.stampActiveIcon }}>{(data.nom[0] || "W").toUpperCase()}</span>
               </div>
-            ))}
+            )}
+            <div>
+              <div style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 700, color: tokens.text, letterSpacing: 1, lineHeight: 1.2 }}>{data.nom || "PLAYER 1"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 2 }}>{data.slogan}</div>}
+            </div>
           </div>
+          <div style={{ background: `${tokens.accent}18`, backdropFilter: "blur(8px)", borderRadius: 4, padding: thumbnail ? "1px 5px" : "2px 8px", border: `1px solid ${tokens.accent}30`, flexShrink: 0 }}>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+          </div>
+        </div>
 
-          {/* Nom */}
+        {/* TAMPONS */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+            total={data.objectif_tampons} filled={filled}
+            style="badge" tokens={tokens}
+            size={thumbnail ? 9 : 20} gap={thumbnail ? 3 : 6} perRow={9}/>
+        </div>
+
+        {/* FOOTER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", padding: thumbnail ? "3% 7% 6%" : "4% 8% 7%", position: "relative", zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: thumbnail ? 7 : ns(11), fontWeight: 700, color: tokens.text, letterSpacing: 2, textTransform: "uppercase" }}>{data.nom || "PLAYER 1"}</div>
-            {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textTertiary, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 2 }}>Récompense</div>
+            <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.text }}>{data.nom_recompense}</div>
           </div>
-
-          {/* Tampons pixels */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: thumbnail ? 2 : 4 }}>
-            {Array.from({ length: data.objectif_tampons }).map((_, i) => {
-              const on = i < filled;
-              return (
-                <div key={i} style={{ width: thumbnail ? 7 : 13, height: thumbnail ? 7 : 13, background: on ? tokens.stampActive : tokens.stampInactive, flexShrink: 0, imageRendering: "pixelated" }}/>
-              );
-            })}
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textSecondary }}>{data.nom_recompense.toUpperCase()}</div>
-            <div style={{ fontSize: thumbnail ? 5 : ss(7), fontWeight: 700, color: tokens.accent }}>{filled}P / {data.objectif_tampons}P</div>
+          <div style={{ background: `${tokens.accent}15`, backdropFilter: "blur(8px)", borderRadius: 4, padding: thumbnail ? "2px 5px" : "4px 10px", border: `1px solid ${tokens.accent}25` }}>
+            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
           </div>
         </div>
       </div>

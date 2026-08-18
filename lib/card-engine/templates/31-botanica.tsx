@@ -20,35 +20,62 @@ const template: CardTemplate = {
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
+
     return (
-      <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, serif", position: "relative", overflow: "hidden" }}>
-        {/* Ornement botanique SVG */}
-        <svg style={{ position: "absolute", right: thumbnail ? "2%" : "3%", top: "50%", transform: "translateY(-50%)", opacity: 0.12 }} width={thumbnail ? 35 : 65} height={thumbnail ? 90 : 170} viewBox="0 0 65 170" fill="none">
-          <line x1="32" y1="0" x2="32" y2="170" stroke={tokens.accent} strokeWidth="1"/>
-          <path d="M32 30 C10 20 5 40 15 50 C25 60 32 50 32 50" fill={tokens.accent}/>
-          <path d="M32 30 C54 20 59 40 49 50 C39 60 32 50 32 50" fill={tokens.accent}/>
-          <path d="M32 70 C10 60 5 80 15 90 C25 100 32 90 32 90" fill={tokens.accent}/>
-          <path d="M32 70 C54 60 59 80 49 90 C39 100 32 90 32 90" fill={tokens.accent}/>
-          <path d="M32 110 C18 100 15 118 22 125 C29 132 32 125 32 125" fill={tokens.accent}/>
-          <path d="M32 110 C46 100 49 118 42 125 C35 132 32 125 32 125" fill={tokens.accent}/>
+      <div style={{
+        width: "100%", height: "100%",
+        background: tokens.background,
+        display: "flex", flexDirection: "column",
+        fontFamily: "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Ornement botanique SVG — nature opacity 0.09 */}
+        <svg style={{ position: "absolute", right: thumbnail ? "2%" : "3%", top: "50%", transform: "translateY(-50%)", opacity: 0.09, pointerEvents: "none" }} width={thumbnail ? 30 : 55} height={thumbnail ? 75 : 145} viewBox="0 0 55 145" fill="none">
+          <line x1="27" y1="0" x2="27" y2="145" stroke={tokens.accent} strokeWidth="1"/>
+          <path d="M27 25 C8 15 4 34 12 43 C20 52 27 43 27 43" fill={tokens.accent}/>
+          <path d="M27 25 C46 15 50 34 42 43 C34 52 27 43 27 43" fill={tokens.accent}/>
+          <path d="M27 65 C8 55 4 74 12 83 C20 92 27 83 27 83" fill={tokens.accent}/>
+          <path d="M27 65 C46 55 50 74 42 83 C34 92 27 83 27 83" fill={tokens.accent}/>
+          <path d="M27 105 C14 95 12 112 18 118 C24 124 27 118 27 118" fill={tokens.accent}/>
+          <path d="M27 105 C40 95 42 112 36 118 C30 124 27 118 27 118" fill={tokens.accent}/>
         </svg>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: thumbnail ? 7 : ns(11), fontStyle: "italic", fontWeight: 600, color: tokens.text }}>{data.nom || "Botanica"}</div>
-            {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 3 }}>
-              <div style={{ height: "0.5px", width: thumbnail ? 10 : logoSz, background: tokens.accent, opacity: 0.5 }}/>
-              <div style={{ width: 3, height: 3, borderRadius: "50%", background: tokens.accent, opacity: 0.6 }}/>
-              <div style={{ height: "0.5px", width: thumbnail ? 10 : 18, background: tokens.accent, opacity: 0.5 }}/>
+        {/* HEADER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: thumbnail ? "6% 7% 3%" : "7% 8% 4%", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
+            {data.logo_url ? (
+              <img src={data.logo_url} alt="" style={{ width: logoSz, height: logoSz, borderRadius: thumbnail ? 5 : 8, objectFit: "cover" }}/>
+            ) : (
+              <div style={{ width: logoSz, height: logoSz, borderRadius: thumbnail ? 5 : 8, background: tokens.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.stampActiveIcon }}>{(data.nom[0] || "W").toUpperCase()}</span>
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 600, color: tokens.text, letterSpacing: -0.3, lineHeight: 1.2 }}>{data.nom || "Établissement"}</div>
+              {data.slogan && !thumbnail && <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 2 }}>{data.slogan}</div>}
             </div>
           </div>
+          <div style={{ background: `${tokens.accent}18`, backdropFilter: "blur(8px)", borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", border: `1px solid ${tokens.accent}25`, flexShrink: 0 }}>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+          </div>
+        </div>
 
-          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="star" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={9}/>
+        {/* TAMPONS */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+            total={data.objectif_tampons} filled={filled}
+            style="star" tokens={tokens}
+            size={thumbnail ? 9 : 20} gap={thumbnail ? 3 : 6} perRow={9}/>
+        </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : rs(7), color: tokens.textTertiary, fontStyle: "italic" }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
-            
+        {/* FOOTER */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", padding: thumbnail ? "3% 7% 6%" : "4% 8% 7%", position: "relative", zIndex: 1 }}>
+          <div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textTertiary, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 2 }}>Récompense</div>
+            <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.text }}>{data.nom_recompense}</div>
+          </div>
+          <div style={{ background: `${tokens.accent}15`, backdropFilter: "blur(8px)", borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px", border: `1px solid ${tokens.accent}20` }}>
+            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
           </div>
         </div>
       </div>
