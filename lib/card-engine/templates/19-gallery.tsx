@@ -20,6 +20,7 @@ const template: CardTemplate = {
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
+    const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
 
     return (
       <div style={{
@@ -32,7 +33,7 @@ const template: CardTemplate = {
         {/* Élément graphique central — cercles concentriques très subtils */}
         <div style={{
           position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-          width: thumbnail ? 50 : logoSz, height: thumbnail ? 50 : logoSz,
+          width: thumbnail ? 50 : 300, height: thumbnail ? 50 : 300,
           borderRadius: "50%", border: `1px solid ${tokens.border}`, opacity: 0.4,
         }}/>
         <div style={{
@@ -44,7 +45,7 @@ const template: CardTemplate = {
         {/* HEADER */}
         <div style={{
           display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-          padding: thumbnail ? "7% 8% 3%" : "8% 9% 4%",
+          padding: thumbnail ? "7% 8% 3%" : `${8*fmtV}% 9% ${4*fmtV}%`,
           position: "relative", zIndex: 1,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
@@ -77,7 +78,7 @@ const template: CardTemplate = {
         {/* TAMPONS + FOOTER */}
         <div style={{
           display: "flex", flexDirection: "column", gap: thumbnail ? 4 : 8,
-          padding: thumbnail ? "3% 8% 7%" : "4% 9% 8%",
+          padding: thumbnail ? "3% 8% 7%" : `${4*fmtV}% 9% ${8*fmtV}%`,
           position: "relative", zIndex: 1,
         }}>
           {/* Tampons dots minuscules */}
@@ -95,7 +96,7 @@ const template: CardTemplate = {
               borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
               border: `1px solid ${tokens.accent}18`,
             }}>
-              <span style={{ fontSize: thumbnail ? 5 : 10, fontWeight: 600, color: tokens.accent }}>
+              <span style={{ fontSize: thumbnail ? 5 : ss(10), fontWeight: 600, color: tokens.accent }}>
                 {filled}/{data.objectif_tampons}
               </span>
             </div>

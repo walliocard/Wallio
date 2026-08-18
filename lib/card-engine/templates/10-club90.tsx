@@ -20,6 +20,7 @@ const template: CardTemplate = {
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
+    const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
 
     return (
       <div style={{
@@ -30,13 +31,13 @@ const template: CardTemplate = {
         position: "relative", overflow: "hidden",
       }}>
         {/* Formes géométriques 90s — très subtiles */}
-        <div style={{ position: "absolute", top: thumbnail ? -8 : -15, right: thumbnail ? -8 : -15, width: thumbnail ? 30 : logoSz, height: thumbnail ? 30 : logoSz, borderRadius: "50%", background: tokens.accent, opacity: 0.15 }}/>
+        <div style={{ position: "absolute", top: thumbnail ? -8 : -15, right: thumbnail ? -8 : -15, width: thumbnail ? 30 : 180, height: thumbnail ? 30 : 180, borderRadius: "50%", background: tokens.accent, opacity: 0.15 }}/>
         <div style={{ position: "absolute", bottom: thumbnail ? 15 : 30, left: thumbnail ? -5 : -10, width: thumbnail ? 20 : 40, height: thumbnail ? 20 : 40, background: tokens.accentSecondary, opacity: 0.1, transform: "rotate(45deg)" }}/>
 
         {/* HEADER */}
         <div style={{
           display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-          padding: thumbnail ? "6% 7% 3%" : "7% 8% 4%",
+          padding: thumbnail ? "6% 7% 3%" : `${7*fmtV}% 8% ${4*fmtV}%`,
           position: "relative", zIndex: 1,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
@@ -44,7 +45,7 @@ const template: CardTemplate = {
               <img src={data.logo_url} alt="" style={{ width: thumbnail ? 16 : logoSz, height: thumbnail ? 16 : logoSz, borderRadius: thumbnail ? 5 : 8, objectFit: "cover" }}/>
             ) : (
               <div style={{
-                width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: thumbnail ? 5 : 8,
+                width: thumbnail ? 16 : logoSz, height: thumbnail ? 16 : logoSz, borderRadius: thumbnail ? 5 : 8,
                 background: tokens.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}>
                 <span style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 900, color: tokens.stampActiveIcon }}>
@@ -85,7 +86,7 @@ const template: CardTemplate = {
         {/* FOOTER */}
         <div style={{
           display: "flex", justifyContent: "space-between", alignItems: "flex-end",
-          padding: thumbnail ? "3% 7% 6%" : "4% 8% 7%",
+          padding: thumbnail ? "3% 7% 6%" : `${4*fmtV}% 8% ${7*fmtV}%`,
           position: "relative", zIndex: 1,
         }}>
           <div>
@@ -101,7 +102,7 @@ const template: CardTemplate = {
             borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
             border: `1px solid ${tokens.accent}30`,
           }}>
-            <span style={{ fontSize: thumbnail ? 7 : 13, fontWeight: 900, color: tokens.accent }}>
+            <span style={{ fontSize: thumbnail ? 7 : ss(13), fontWeight: 900, color: tokens.accent }}>
               {filled}/{data.objectif_tampons}
             </span>
           </div>

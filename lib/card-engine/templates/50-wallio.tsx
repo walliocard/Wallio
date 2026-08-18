@@ -56,6 +56,7 @@ const template: CardTemplate = {
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
+    const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
     const pct = (filled / data.objectif_tampons) * 100;
     const isDark = tokens.background === "#111113";
 
@@ -74,7 +75,7 @@ const template: CardTemplate = {
         <div style={{
           position: "absolute", right: thumbnail ? "-8%" : "-12%", top: "50%",
           transform: "translateY(-50%)",
-          width: thumbnail ? 60 : logoSz, height: thumbnail ? 60 : logoSz, borderRadius: "50%",
+          width: thumbnail ? 60 : 360, height: thumbnail ? 60 : 360, borderRadius: "50%",
           border: `1px solid ${tokens.border}`,
           pointerEvents: "none",
         }}/>
@@ -93,7 +94,7 @@ const template: CardTemplate = {
               <img src={data.logo_url} alt="" style={{ width: thumbnail ? 18 : logoSz, height: thumbnail ? 18 : logoSz, borderRadius: 8, objectFit: "cover" }}/>
             ) : (
               <div style={{
-                width: thumbnail ? 18 : 28, height: thumbnail ? 18 : 28, borderRadius: 8,
+                width: thumbnail ? 18 : logoSz, height: thumbnail ? 18 : logoSz, borderRadius: 8,
                 background: `linear-gradient(135deg, ${tokens.accent}, ${tokens.accentSecondary})`,
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
@@ -137,7 +138,7 @@ const template: CardTemplate = {
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 6 : rs(9), color: tokens.textTertiary }}>{data.nom_recompense}</div>
-              <div style={{ fontSize: thumbnail ? 7 : 10, fontWeight: 600, color: tokens.textSecondary, marginTop: 1 }}>
+              <div style={{ fontSize: thumbnail ? 7 : ss(10), fontWeight: 600, color: tokens.textSecondary, marginTop: 1 }}>
                 {filled}/{data.objectif_tampons}
               </div>
             </div>

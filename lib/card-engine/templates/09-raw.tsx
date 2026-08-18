@@ -56,6 +56,7 @@ const template: CardTemplate = {
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
+    const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
 
     return (
       <div style={{
@@ -128,7 +129,7 @@ const template: CardTemplate = {
               borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
               border: `1px solid ${tokens.accent}30`,
             }}>
-              <span style={{ fontSize: thumbnail ? 6 : 12, fontWeight: 900, color: tokens.accent }}>
+              <span style={{ fontSize: thumbnail ? 6 : ss(12), fontWeight: 900, color: tokens.accent }}>
                 {filled}/{data.objectif_tampons}
               </span>
             </div>
