@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
 
     return (
       <div style={{
@@ -41,7 +43,7 @@ const template: CardTemplate = {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
             {data.logo_url ? (
-              <img src={data.logo_url} alt="" style={{ width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: "50%", objectFit: "cover", border: `1px solid ${tokens.accent}50` }}/>
+              <img src={data.logo_url} alt="" style={{ width: thumbnail ? 16 : logoSz, height: thumbnail ? 16 : logoSz, borderRadius: "50%", objectFit: "cover", border: `1px solid ${tokens.accent}50` }}/>
             ) : (
               <div style={{
                 width: thumbnail ? 18 : 30, height: thumbnail ? 18 : 30, borderRadius: "50%",

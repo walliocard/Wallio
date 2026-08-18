@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Impact', 'Arial Black', sans-serif", position: "relative", overflow: "hidden" }}>
         {/* Éclair SVG fond */}
@@ -40,9 +42,9 @@ const template: CardTemplate = {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ background: tokens.accent, borderRadius: thumbnail ? 4 : 6, padding: thumbnail ? "2px 6px" : "4px 10px" }}>
-              <span style={{ fontSize: thumbnail ? 5 : 8, fontWeight: 900, color: tokens.background }}>{data.nom_recompense.toUpperCase()}</span>
+              <span style={{ fontSize: thumbnail ? 5 : rs(8), fontWeight: 900, color: tokens.background }}>{data.nom_recompense.toUpperCase()}</span>
             </div>
-            <div style={{ fontSize: thumbnail ? 6 : 10, fontWeight: 900, color: "rgba(255,255,255,0.7)" }}>{filled}/{data.objectif_tampons}</div>
+            <div style={{ fontSize: thumbnail ? 6 : ss(10), fontWeight: 900, color: "rgba(255,255,255,0.7)" }}>{filled}/{data.objectif_tampons}</div>
           </div>
         </div>
       </div>

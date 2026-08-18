@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Helvetica Neue', Arial, sans-serif", position: "relative", overflow: "hidden" }}>
         {/* Texture fond */}
@@ -26,13 +28,13 @@ const template: CardTemplate = {
         {/* Étiquette centrale */}
         <div style={{ background: tokens.surface, border: `1.5px solid ${tokens.borderStrong}`, padding: thumbnail ? "6% 8%" : "8% 10%", display: "flex", flexDirection: "column", gap: thumbnail ? 4 : 8, alignItems: "center", width: "75%", position: "relative", zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.2em", color: tokens.textTertiary, textAlign: "center" }}>{(data.nom || "LABEL").toUpperCase()}</div>
+            <div style={{ fontSize: thumbnail ? 4 : ns(6), letterSpacing: "0.2em", color: tokens.textTertiary, textAlign: "center" }}>{(data.nom || "LABEL").toUpperCase()}</div>
             {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", textAlign: "center" }}>{data.slogan}</div>}
           </div>
           <div style={{ height: "0.5px", width: "100%", background: tokens.borderStrong, opacity: 0.5 }}/>
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="rounded" tokens={tokens} size={thumbnail ? 7 : 13} gap={thumbnail ? 2 : 4} perRow={8}/>
           <div style={{ height: "0.5px", width: "100%", background: tokens.borderStrong, opacity: 0.5 }}/>
-          <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, textAlign: "center" }}>{filled}/{data.objectif_tampons} — {data.nom_recompense}</div>
+          <div style={{ fontSize: thumbnail ? 5 : rs(7), color: tokens.textSecondary, textAlign: "center" }}>{filled}/{data.objectif_tampons} — {data.nom_recompense}</div>
         </div>
 
         {/* QR coin bas droite */}

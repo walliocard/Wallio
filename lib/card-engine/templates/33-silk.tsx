@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: `linear-gradient(135deg, ${tokens.background} 0%, ${tokens.surface} 100%)`, display: "flex", flexDirection: "column", fontFamily: "-apple-system, 'Helvetica Neue', sans-serif", position: "relative", overflow: "hidden" }}>
         {/* Forme fluide décorative */}
@@ -29,7 +31,7 @@ const template: CardTemplate = {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.2em", color: tokens.textTertiary, marginBottom: 2 }}>BEAUTÉ & BIEN-ÊTRE</div>
-              <div style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 300, color: tokens.text, letterSpacing: 1 }}>{data.nom || "Silk"}</div>
+              <div style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 300, color: tokens.text, letterSpacing: 1 }}>{data.nom || "Silk"}</div>
               {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
             <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
@@ -40,13 +42,13 @@ const template: CardTemplate = {
             {Array.from({ length: data.objectif_tampons }).map((_, i) => {
               const on = i < filled;
               return (
-                <div key={i} style={{ width: thumbnail ? 7 : 13, height: thumbnail ? 9 : 17, borderRadius: `${thumbnail ? 4 : 7}px ${thumbnail ? 4 : 7}px ${thumbnail ? 4 : 7}px 0`, background: on ? tokens.stampActive : tokens.stampInactive, transform: "rotate(-15deg)", flexShrink: 0 }}/>
+                <div key={i} style={{ width: thumbnail ? 7 : logoSz, height: thumbnail ? 9 : logoSz, borderRadius: `${thumbnail ? 4 : 7}px ${thumbnail ? 4 : 7}px ${thumbnail ? 4 : 7}px 0`, background: on ? tokens.stampActive : tokens.stampInactive, transform: "rotate(-15deg)", flexShrink: 0 }}/>
               );
             })}
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, fontWeight: 300, letterSpacing: 0.5 }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
+            <div style={{ fontSize: thumbnail ? 5 : rs(8), color: tokens.textTertiary, fontWeight: 300, letterSpacing: 0.5 }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
             
           </div>
         </div>

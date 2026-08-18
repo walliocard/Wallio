@@ -18,35 +18,102 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
-    return (
-      <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Arial Black', 'Helvetica Neue', sans-serif", position: "relative", overflow: "hidden" }}>
-        {/* Lignes horizontales décoratives */}
-        {[20, 35, 50].map((pct, i) => (
-          <div key={i} style={{ position: "absolute", top: `${pct}%`, left: 0, right: 0, height: "1px", background: tokens.border, opacity: i === 1 ? 0.8 : 0.4 }}/>
-        ))}
-        {/* Bande accent */}
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: thumbnail ? 3 : 5, background: tokens.accent }}/>
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "8% 7%" : "9% 8%", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    return (
+      <div style={{
+        width: "100%", height: "100%",
+        background: tokens.background,
+        display: "flex", flexDirection: "column",
+        fontFamily: "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Bande accent haut — signature barber */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: thumbnail ? 3 : logoSz, background: tokens.accent }}/>
+
+        {/* Lignes horizontales décoratives subtiles */}
+        {[20, 50].map((pct, i) => (
+          <div key={i} style={{
+            position: "absolute", top: `${pct}%`, left: 0, right: 0,
+            height: "0.5px", background: tokens.border, opacity: 0.3,
+          }}/>
+        ))}
+
+        {/* HEADER */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+          padding: thumbnail ? "9% 7% 3%" : "10% 8% 4%",
+          position: "relative", zIndex: 1,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
+            {data.logo_url ? (
+              <img src={data.logo_url} alt="" style={{ width: thumbnail ? 16 : logoSz, height: thumbnail ? 16 : logoSz, borderRadius: thumbnail ? 5 : 8, objectFit: "cover" }}/>
+            ) : (
+              <div style={{
+                width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: thumbnail ? 5 : 8,
+                background: tokens.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <span style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 900, color: tokens.stampActiveIcon }}>
+                  {(data.nom[0] || "W").toUpperCase()}
+                </span>
+              </div>
+            )}
             <div>
-              <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.2em", color: tokens.accent, marginBottom: 2 }}>THE</div>
-              <div style={{ fontSize: thumbnail ? 9 : 14, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: 1 }}>{data.nom || "BARBER"}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
-            </div>
-            <div style={{ border: `1px solid ${tokens.borderStrong}`, borderRadius: thumbnail ? 4 : 6, padding: thumbnail ? "2px 5px" : "3px 8px" }}>
-              <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.12em", color: tokens.textSecondary }}>LOYALTY</div>
+              <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.18em", color: tokens.accent, textTransform: "uppercase", marginBottom: 2, fontWeight: 600 }}>
+                THE
+              </div>
+              <div style={{ fontSize: thumbnail ? 9 : ns(15), fontWeight: 900, color: tokens.text, letterSpacing: 1, textTransform: "uppercase", lineHeight: 1 }}>
+                {data.nom || "BARBER"}
+              </div>
+              {data.slogan && !thumbnail && (
+                <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 3 }}>
+                  {data.slogan}
+                </div>
+              )}
             </div>
           </div>
+          {/* Badge LOYALTY pill */}
+          <div style={{
+            background: `${tokens.accent}18`, backdropFilter: "blur(8px)",
+            borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px",
+            border: `1px solid ${tokens.accent}30`, flexShrink: 0,
+          }}>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+          </div>
+        </div>
 
-          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="badge" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={8}/>
+        {/* TAMPONS — badge style barber */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+            total={data.objectif_tampons} filled={filled}
+            style="badge" tokens={tokens}
+            size={thumbnail ? 9 : 18} gap={thumbnail ? 3 : 5} perRow={8}
+          />
+        </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div>
-              <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.accent }}>NEXT REWARD</div>
-              <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.text }}>{data.nom_recompense}</div>
+        {/* FOOTER */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "flex-end",
+          padding: thumbnail ? "3% 7% 6%" : "4% 8% 7%",
+          position: "relative", zIndex: 1,
+        }}>
+          <div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.accent, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2, fontWeight: 600 }}>
+              NEXT REWARD
             </div>
-            <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 900, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
+            <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.text }}>
+              {data.nom_recompense}
+            </div>
+          </div>
+          <div style={{
+            background: `${tokens.accent}18`, backdropFilter: "blur(8px)",
+            borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
+            border: `1px solid ${tokens.accent}28`,
+          }}>
+            <span style={{ fontSize: thumbnail ? 6 : 12, fontWeight: 900, color: tokens.accent }}>
+              {filled}/{data.objectif_tampons}
+            </span>
           </div>
         </div>
       </div>

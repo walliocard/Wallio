@@ -54,6 +54,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const memberNum = "0042";
     return (
       <div style={{
@@ -65,7 +67,7 @@ const template: CardTemplate = {
         {/* Perforations simulées haut */}
         <div style={{ position: "absolute", top: thumbnail ? 4 : 7, left: 0, right: 0, display: "flex", gap: thumbnail ? 5 : 8, justifyContent: "center" }}>
           {Array.from({ length: thumbnail ? 20 : 35 }).map((_, i) => (
-            <div key={i} style={{ width: thumbnail ? 3 : 5, height: thumbnail ? 3 : 5, borderRadius: "50%", background: tokens.surface }}/>
+            <div key={i} style={{ width: thumbnail ? 3 : logoSz, height: thumbnail ? 3 : logoSz, borderRadius: "50%", background: tokens.surface }}/>
           ))}
         </div>
 

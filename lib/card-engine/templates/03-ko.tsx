@@ -54,6 +54,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
 
     return (
       <div style={{
@@ -103,7 +105,7 @@ const template: CardTemplate = {
             </div>
             {/* Symbole circulaire KŌ */}
             <div style={{
-              width: thumbnail ? 14 : 22, height: thumbnail ? 14 : 22,
+              width: thumbnail ? 14 : logoSz, height: thumbnail ? 14 : logoSz,
               borderRadius: "50%", border: `1px solid ${tokens.border}`,
               display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
             }}>

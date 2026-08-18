@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Courier New', 'Courier', monospace", position: "relative", overflow: "hidden" }}>
         {/* Cadre letterpress */}
@@ -28,7 +30,7 @@ const template: CardTemplate = {
           {/* En-tête typographique */}
           <div style={{ borderBottom: `${thumbnail ? 0.5 : 1}px solid ${tokens.borderStrong}`, paddingBottom: thumbnail ? 3 : 5 }}>
             <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.25em", color: tokens.textTertiary, marginBottom: 2 }}>CARTE DE FIDÉLITÉ</div>
-            <div style={{ fontSize: thumbnail ? 9 : 15, fontWeight: 700, color: tokens.text, letterSpacing: "0.06em", textTransform: "uppercase" }}>{data.nom || "The Press"}</div>
+            <div style={{ fontSize: thumbnail ? 9 : ns(15), fontWeight: 700, color: tokens.text, letterSpacing: "0.06em", textTransform: "uppercase" }}>{data.nom || "The Press"}</div>
               {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
 
@@ -37,10 +39,10 @@ const template: CardTemplate = {
           {/* Pied de page */}
           <div style={{ borderTop: `${thumbnail ? 0.5 : 1}px solid ${tokens.borderStrong}`, paddingTop: thumbnail ? 3 : 5, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary }}>{filled}/{data.objectif_tampons} POINTS</div>
-              <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.text, marginTop: 1 }}>{data.nom_recompense.toUpperCase()}</div>
+              <div style={{ fontSize: thumbnail ? 3 : ss(5), letterSpacing: "0.15em", color: tokens.textTertiary }}>{filled}/{data.objectif_tampons} POINTS</div>
+              <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.text, marginTop: 1 }}>{data.nom_recompense.toUpperCase()}</div>
             </div>
-            <div style={{ fontSize: thumbnail ? 6 : 10, fontWeight: 700, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
+            <div style={{ fontSize: thumbnail ? 6 : ss(10), fontWeight: 700, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
           </div>
         </div>
 

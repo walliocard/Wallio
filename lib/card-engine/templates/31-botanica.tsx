@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, serif", position: "relative", overflow: "hidden" }}>
         {/* Ornement botanique SVG */}
@@ -33,10 +35,10 @@ const template: CardTemplate = {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: thumbnail ? 7 : 11, fontStyle: "italic", fontWeight: 600, color: tokens.text }}>{data.nom || "Botanica"}</div>
+            <div style={{ fontSize: thumbnail ? 7 : ns(11), fontStyle: "italic", fontWeight: 600, color: tokens.text }}>{data.nom || "Botanica"}</div>
             {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, marginTop: 3 }}>
-              <div style={{ height: "0.5px", width: thumbnail ? 10 : 18, background: tokens.accent, opacity: 0.5 }}/>
+              <div style={{ height: "0.5px", width: thumbnail ? 10 : logoSz, background: tokens.accent, opacity: 0.5 }}/>
               <div style={{ width: 3, height: 3, borderRadius: "50%", background: tokens.accent, opacity: 0.6 }}/>
               <div style={{ height: "0.5px", width: thumbnail ? 10 : 18, background: tokens.accent, opacity: 0.5 }}/>
             </div>
@@ -45,7 +47,7 @@ const template: CardTemplate = {
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="star" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 5} perRow={9}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textTertiary, fontStyle: "italic" }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
+            <div style={{ fontSize: thumbnail ? 5 : rs(7), color: tokens.textTertiary, fontStyle: "italic" }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
             
           </div>
         </div>

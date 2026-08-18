@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, serif", position: "relative", overflow: "hidden" }}>
         {/* Texture velours — micro-motif diagonal */}
@@ -28,8 +30,8 @@ const template: CardTemplate = {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
-              {data.logo_url && <img src={data.logo_url} alt="" style={{ width: thumbnail ? 14 : 22, height: thumbnail ? 14 : 22, borderRadius: "50%", objectFit: "cover", border: `1px solid ${tokens.accent}`, marginBottom: 3 }}/>}
-              <div style={{ fontSize: thumbnail ? 7 : 11, fontStyle: "italic", fontWeight: 400, color: tokens.text, letterSpacing: "0.04em" }}>{data.nom || "Velvet"}</div>
+              {data.logo_url && <img src={data.logo_url} alt="" style={{ width: thumbnail ? 14 : logoSz, height: thumbnail ? 14 : logoSz, borderRadius: "50%", objectFit: "cover", border: `1px solid ${tokens.accent}`, marginBottom: 3 }}/>}
+              <div style={{ fontSize: thumbnail ? 7 : ns(11), fontStyle: "italic", fontWeight: 400, color: tokens.text, letterSpacing: "0.04em" }}>{data.nom || "Velvet"}</div>
               {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
@@ -43,7 +45,7 @@ const template: CardTemplate = {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.12em", color: tokens.textTertiary, marginBottom: 1 }}>RÉCOMPENSE</div>
-              <div style={{ fontSize: thumbnail ? 5 : 7, fontStyle: "italic", color: tokens.accent }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
+              <div style={{ fontSize: thumbnail ? 5 : rs(7), fontStyle: "italic", color: tokens.accent }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
             </div>
             
           </div>

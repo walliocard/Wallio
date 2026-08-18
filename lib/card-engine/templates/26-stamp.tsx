@@ -17,10 +17,12 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", position: "relative", fontFamily: "'Courier New', monospace", overflow: "hidden" }}>
         {/* Bande verticale gauche — passeport */}
-        <div style={{ width: thumbnail ? 18 : 32, background: tokens.text, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", padding: "6% 0", flexShrink: 0 }}>
+        <div style={{ width: thumbnail ? 18 : logoSz, background: tokens.text, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", padding: "6% 0", flexShrink: 0 }}>
           <div style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.background, opacity: 0.7 }}>PASSEPORT FIDÉLITÉ</div>
           
           <div style={{ fontSize: thumbnail ? 4 : 5, color: tokens.background, opacity: 0.5, letterSpacing: "0.1em" }}>WALLIO</div>
@@ -30,7 +32,7 @@ const template: CardTemplate = {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "5% 5%" : "6% 6%" }}>
           <div>
             <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.textTertiary }}>NOM DU TITULAIRE</div>
-            <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, color: tokens.text }}>{data.nom || "ÉTABLISSEMENT"}</div>
+            <div style={{ fontSize: thumbnail ? 7 : ns(11), fontWeight: 700, color: tokens.text }}>{data.nom || "ÉTABLISSEMENT"}</div>
             {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
 
@@ -47,8 +49,8 @@ const template: CardTemplate = {
           </div>
 
           <div>
-            <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.12em", color: tokens.textTertiary }}>AVANTAGE: {data.nom_recompense.toUpperCase()}</div>
-            <div style={{ fontSize: thumbnail ? 4 : 5, color: tokens.textTertiary, opacity: 0.5, marginTop: 2 }}>TAMPONS: {filled}/{data.objectif_tampons}</div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), letterSpacing: "0.12em", color: tokens.textTertiary }}>AVANTAGE: {data.nom_recompense.toUpperCase()}</div>
+            <div style={{ fontSize: thumbnail ? 4 : ss(5), color: tokens.textTertiary, opacity: 0.5, marginTop: 2 }}>TAMPONS: {filled}/{data.objectif_tampons}</div>
           </div>
         </div>
       </div>

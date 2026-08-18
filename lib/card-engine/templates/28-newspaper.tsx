@@ -18,13 +18,15 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "Georgia, 'Times New Roman', serif", position: "relative", overflow: "hidden" }}>
         {/* En-tête journal */}
         <div style={{ borderBottom: `${thumbnail ? 1.5 : 2.5}px solid ${tokens.text}`, borderTop: `${thumbnail ? 0.5 : 1}px solid ${tokens.text}`, padding: thumbnail ? "2px 5%" : "3px 6%", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ fontSize: thumbnail ? 5 : 8, letterSpacing: "0.08em", color: tokens.textTertiary }}>Vol. I</div>
-            <div style={{ fontSize: thumbnail ? 7 : 12, fontWeight: 700, color: tokens.text, fontStyle: "italic" }}>{data.nom || "La Gazette"}</div>
+            <div style={{ fontSize: thumbnail ? 7 : ns(12), fontWeight: 700, color: tokens.text, fontStyle: "italic" }}>{data.nom || "La Gazette"}</div>
             <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textTertiary }}>WALLIO</div>
           </div>
           {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, textAlign: "center", paddingBottom: 2, fontStyle: "italic" }}>{data.slogan}</div>}
@@ -44,7 +46,7 @@ const template: CardTemplate = {
               <div style={{ fontSize: thumbnail ? 4 : 5, color: tokens.textTertiary, marginBottom: thumbnail ? 2 : 4 }}>TAMPONS</div>
               <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 5 : 9} gap={thumbnail ? 2 : 3} perRow={9}/>
             </div>
-            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{filled}/{data.objectif_tampons} tampons</div>
+            <div style={{ fontSize: thumbnail ? 4 : ss(6), color: tokens.textTertiary }}>{filled}/{data.objectif_tampons} tampons</div>
           </div>
 
           {/* Colonne 2 — score */}

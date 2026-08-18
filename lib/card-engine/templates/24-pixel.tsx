@@ -17,6 +17,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const px = thumbnail ? 3 : 5;
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Courier New', monospace", position: "relative", overflow: "hidden", imageRendering: "pixelated" }}>
@@ -31,14 +33,14 @@ const template: CardTemplate = {
                 {word.split("").map((ch, ci) => (
                   <span key={ci} style={{ fontSize: thumbnail ? 4 : 6, color: tokens.accent, fontFamily: "monospace", letterSpacing: 0 }}>{ch}</span>
                 ))}
-                <span style={{ width: thumbnail ? 4 : 6 }}/>
+                <span style={{ width: thumbnail ? 4 : logoSz }}/>
               </div>
             ))}
           </div>
 
           {/* Nom */}
           <div>
-            <div style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 700, color: tokens.text, letterSpacing: 2, textTransform: "uppercase" }}>{data.nom || "PLAYER 1"}</div>
+            <div style={{ fontSize: thumbnail ? 7 : ns(11), fontWeight: 700, color: tokens.text, letterSpacing: 2, textTransform: "uppercase" }}>{data.nom || "PLAYER 1"}</div>
             {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
           </div>
 
@@ -53,8 +55,8 @@ const template: CardTemplate = {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textSecondary }}>{data.nom_recompense.toUpperCase()}</div>
-            <div style={{ fontSize: thumbnail ? 5 : 7, fontWeight: 700, color: tokens.accent }}>{filled}P / {data.objectif_tampons}P</div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textSecondary }}>{data.nom_recompense.toUpperCase()}</div>
+            <div style={{ fontSize: thumbnail ? 5 : ss(7), fontWeight: 700, color: tokens.accent }}>{filled}P / {data.objectif_tampons}P</div>
           </div>
         </div>
       </div>

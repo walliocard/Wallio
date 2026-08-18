@@ -54,6 +54,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const frameW = thumbnail ? 1 : 1.5;
     const frameMargin = thumbnail ? "4%" : "5%";
     return (
@@ -76,14 +78,14 @@ const template: CardTemplate = {
             { bottom: -frameW, left: -frameW, borderBottom: `${frameW*2.5}px solid ${tokens.borderStrong}`, borderLeft: `${frameW*2.5}px solid ${tokens.borderStrong}` },
             { bottom: -frameW, right: -frameW, borderBottom: `${frameW*2.5}px solid ${tokens.borderStrong}`, borderRight: `${frameW*2.5}px solid ${tokens.borderStrong}` },
           ].map((style, i) => (
-            <div key={i} style={{ position: "absolute", width: thumbnail ? 8 : 14, height: thumbnail ? 8 : 14, ...style }}/>
+            <div key={i} style={{ position: "absolute", width: thumbnail ? 8 : logoSz, height: thumbnail ? 8 : logoSz, ...style }}/>
           ))}
 
           {/* Header */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
               {data.logo_url ? (
-                <img src={data.logo_url} alt="" style={{ width: thumbnail ? 14 : 22, height: thumbnail ? 14 : 22, objectFit: "cover" }}/>
+                <img src={data.logo_url} alt="" style={{ width: thumbnail ? 14 : logoSz, height: thumbnail ? 14 : logoSz, objectFit: "cover" }}/>
               ) : null}
               <div>
                 <span style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: tokens.text }}>

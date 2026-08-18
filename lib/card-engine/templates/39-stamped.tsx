@@ -17,20 +17,22 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Courier New', monospace", position: "relative", overflow: "hidden" }}>
         {/* Texture papier */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`, opacity: 0.4 }}/>
 
         {/* Tampon circulaire en fond — imperfection */}
-        <div style={{ position: "absolute", right: thumbnail ? "3%" : "5%", top: "50%", transform: "translateY(-50%) rotate(-8deg)", width: thumbnail ? 35 : 65, height: thumbnail ? 35 : 65, borderRadius: "50%", border: `${thumbnail ? 2 : 3}px solid ${tokens.accent}`, opacity: 0.08 }}/>
+        <div style={{ position: "absolute", right: thumbnail ? "3%" : "5%", top: "50%", transform: "translateY(-50%) rotate(-8deg)", width: thumbnail ? 35 : logoSz, height: thumbnail ? 35 : logoSz, borderRadius: "50%", border: `${thumbnail ? 2 : 3}px solid ${tokens.accent}`, opacity: 0.08 }}/>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "7% 8%" : "8% 9%", position: "relative", zIndex: 1 }}>
           {/* En-tête manuscrit */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.08em", color: tokens.textTertiary, marginBottom: 2 }}>carte de fidélité —</div>
-              <div style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 700, color: tokens.text }}>{data.nom || "Artisan"}</div>
+              <div style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 700, color: tokens.text }}>{data.nom || "Artisan"}</div>
               {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
           </div>
@@ -49,7 +51,7 @@ const template: CardTemplate = {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons} · {data.nom_recompense}</div>
+            <div style={{ fontSize: thumbnail ? 5 : rs(7), color: tokens.textSecondary }}>{filled}/{data.objectif_tampons} · {data.nom_recompense}</div>
             
           </div>
         </div>

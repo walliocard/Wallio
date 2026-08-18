@@ -17,12 +17,14 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "'Courier New', monospace", position: "relative", overflow: "hidden" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%" }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <div>
-              <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{">"} {(data.nom || "RUNNER").toUpperCase()}</div>
+              <div style={{ fontSize: thumbnail ? 4 : ns(6), color: tokens.textTertiary }}>{">"} {(data.nom || "RUNNER").toUpperCase()}</div>
               <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.accent, fontWeight: 700 }}>LOYALTY RUN</div>
               {data.slogan && !thumbnail && <div style={{ fontSize: 7, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>// {data.slogan}</div>}
             </div>
@@ -33,12 +35,12 @@ const template: CardTemplate = {
 
           {/* Checkpoints */}
           <div>
-            <div style={{ fontSize: thumbnail ? 4 : 5, color: tokens.textTertiary, marginBottom: thumbnail ? 3 : 6 }}>CHECKPOINTS [{filled}/{data.objectif_tampons}]</div>
+            <div style={{ fontSize: thumbnail ? 4 : ss(5), color: tokens.textTertiary, marginBottom: thumbnail ? 3 : 6 }}>CHECKPOINTS [{filled}/{data.objectif_tampons}]</div>
             <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 2 : 3 }}>
               {Array.from({ length: data.objectif_tampons }).map((_, i) => {
                 const on = i < filled;
                 return (
-                  <div key={i} style={{ flex: 1, height: thumbnail ? 3 : 5, background: on ? tokens.accent : tokens.stampInactive, borderRadius: 1 }}/>
+                  <div key={i} style={{ flex: 1, height: thumbnail ? 3 : logoSz, background: on ? tokens.accent : tokens.stampInactive, borderRadius: 1 }}/>
                 );
               })}
             </div>
@@ -59,7 +61,7 @@ const template: CardTemplate = {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>REWARD: {data.nom_recompense.toUpperCase()}</div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textTertiary }}>REWARD: {data.nom_recompense.toUpperCase()}</div>
           </div>
         </div>
       </div>

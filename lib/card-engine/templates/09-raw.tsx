@@ -54,6 +54,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
 
     return (
       <div style={{
@@ -65,7 +67,7 @@ const template: CardTemplate = {
       }}>
         {/* Bande verticale accent — signature RAW */}
         <div style={{
-          width: thumbnail ? 4 : 8, background: tokens.accent, flexShrink: 0,
+          width: thumbnail ? 4 : logoSz, background: tokens.accent, flexShrink: 0,
         }}/>
 
         {/* Numéro géant en fond — opacity très subtile */}

@@ -54,6 +54,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const pct = (filled / data.objectif_tampons) * 100;
     const isDark = tokens.background === "#111113";
 
@@ -72,7 +74,7 @@ const template: CardTemplate = {
         <div style={{
           position: "absolute", right: thumbnail ? "-8%" : "-12%", top: "50%",
           transform: "translateY(-50%)",
-          width: thumbnail ? 60 : 110, height: thumbnail ? 60 : 110, borderRadius: "50%",
+          width: thumbnail ? 60 : logoSz, height: thumbnail ? 60 : logoSz, borderRadius: "50%",
           border: `1px solid ${tokens.border}`,
           pointerEvents: "none",
         }}/>
@@ -88,7 +90,7 @@ const template: CardTemplate = {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {data.logo_url ? (
-              <img src={data.logo_url} alt="" style={{ width: thumbnail ? 18 : 28, height: thumbnail ? 18 : 28, borderRadius: 8, objectFit: "cover" }}/>
+              <img src={data.logo_url} alt="" style={{ width: thumbnail ? 18 : logoSz, height: thumbnail ? 18 : logoSz, borderRadius: 8, objectFit: "cover" }}/>
             ) : (
               <div style={{
                 width: thumbnail ? 18 : 28, height: thumbnail ? 18 : 28, borderRadius: 8,
@@ -99,7 +101,7 @@ const template: CardTemplate = {
               </div>
             )}
             <div>
-              <span style={{ fontSize: thumbnail ? 8 : 13, fontWeight: 600, color: tokens.text, letterSpacing: -0.3 }}>{data.nom || "Wallio"}</span>
+              <span style={{ fontSize: thumbnail ? 8 : ns(13), fontWeight: 600, color: tokens.text, letterSpacing: -0.3 }}>{data.nom || "Wallio"}</span>
               {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>{data.slogan}</div>}
             </div>
           </div>
@@ -134,7 +136,7 @@ const template: CardTemplate = {
           </div>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
-              <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.textTertiary }}>{data.nom_recompense}</div>
+              <div style={{ fontSize: thumbnail ? 6 : rs(9), color: tokens.textTertiary }}>{data.nom_recompense}</div>
               <div style={{ fontSize: thumbnail ? 7 : 10, fontWeight: 600, color: tokens.textSecondary, marginTop: 1 }}>
                 {filled}/{data.objectif_tampons}
               </div>

@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
 
     return (
       <div style={{
@@ -28,7 +30,7 @@ const template: CardTemplate = {
         position: "relative", overflow: "hidden",
       }}>
         {/* Formes géométriques 90s — très subtiles */}
-        <div style={{ position: "absolute", top: thumbnail ? -8 : -15, right: thumbnail ? -8 : -15, width: thumbnail ? 30 : 55, height: thumbnail ? 30 : 55, borderRadius: "50%", background: tokens.accent, opacity: 0.15 }}/>
+        <div style={{ position: "absolute", top: thumbnail ? -8 : -15, right: thumbnail ? -8 : -15, width: thumbnail ? 30 : logoSz, height: thumbnail ? 30 : logoSz, borderRadius: "50%", background: tokens.accent, opacity: 0.15 }}/>
         <div style={{ position: "absolute", bottom: thumbnail ? 15 : 30, left: thumbnail ? -5 : -10, width: thumbnail ? 20 : 40, height: thumbnail ? 20 : 40, background: tokens.accentSecondary, opacity: 0.1, transform: "rotate(45deg)" }}/>
 
         {/* HEADER */}
@@ -39,7 +41,7 @@ const template: CardTemplate = {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: thumbnail ? 5 : 10 }}>
             {data.logo_url ? (
-              <img src={data.logo_url} alt="" style={{ width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: thumbnail ? 5 : 8, objectFit: "cover" }}/>
+              <img src={data.logo_url} alt="" style={{ width: thumbnail ? 16 : logoSz, height: thumbnail ? 16 : logoSz, borderRadius: thumbnail ? 5 : 8, objectFit: "cover" }}/>
             ) : (
               <div style={{
                 width: thumbnail ? 16 : 28, height: thumbnail ? 16 : 28, borderRadius: thumbnail ? 5 : 8,

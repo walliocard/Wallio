@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const pct = (filled / data.objectif_tampons) * 100;
     const r = thumbnail ? 22 : 42;
     const circ = 2 * Math.PI * r;
@@ -27,7 +29,7 @@ const template: CardTemplate = {
           {/* Header */}
           <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
-              <div style={{ fontSize: thumbnail ? 6 : 9, fontStyle: "italic", color: tokens.text }}>{data.nom || "Seal"}</div>
+              <div style={{ fontSize: thumbnail ? 6 : ns(9), fontStyle: "italic", color: tokens.text }}>{data.nom || "Seal"}</div>
               {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400 }}>{data.slogan}</div>}
             </div>
             <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
@@ -47,7 +49,7 @@ const template: CardTemplate = {
 
           {/* Footer */}
           <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textSecondary, fontStyle: "italic" }}>{data.nom_recompense}</div>
+            <div style={{ fontSize: thumbnail ? 5 : rs(7), color: tokens.textSecondary, fontStyle: "italic" }}>{data.nom_recompense}</div>
             <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary }}>REWARD</div>
           </div>
         </div>

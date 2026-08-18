@@ -18,6 +18,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const dotCount = 8;
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "-apple-system, 'Helvetica Neue', sans-serif", position: "relative", overflow: "hidden" }}>
@@ -40,7 +42,7 @@ const template: CardTemplate = {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
               <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.18em", color: tokens.textTertiary, marginBottom: 2 }}>FIDÉLITÉ</div>
-              <div style={{ fontSize: thumbnail ? 8 : 12, fontWeight: 300, color: tokens.text, letterSpacing: "0.02em" }}>{data.nom || "Thread"}</div>
+              <div style={{ fontSize: thumbnail ? 8 : ns(12), fontWeight: 300, color: tokens.text, letterSpacing: "0.02em" }}>{data.nom || "Thread"}</div>
               {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
             </div>
             <div style={{ fontSize: thumbnail ? 3 : 5, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
@@ -49,7 +51,7 @@ const template: CardTemplate = {
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="dot" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 4 : 7} perRow={9}/>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 5 : 7, fontWeight: 300, color: tokens.textSecondary, letterSpacing: "0.04em" }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
+            <div style={{ fontSize: thumbnail ? 5 : rs(7), fontWeight: 300, color: tokens.textSecondary, letterSpacing: "0.04em" }}>{data.nom_recompense} · {filled}/{data.objectif_tampons}</div>
             
           </div>
         </div>

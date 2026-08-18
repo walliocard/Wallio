@@ -18,36 +18,85 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
-    const roastNum = String(Math.floor(Math.random() * 900) + 100).padStart(3, "0");
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
+
     return (
-      <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", fontFamily: "'Helvetica Neue', Arial, sans-serif", overflow: "hidden" }}>
-        {/* Bande latérale gauche */}
-        <div style={{ width: thumbnail ? 14 : 24, background: tokens.surface, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", padding: "8% 0", flexShrink: 0, borderRight: `1px solid ${tokens.border}` }}>
-          <div style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</div>
-          <div style={{ width: thumbnail ? 5 : 8, height: thumbnail ? 5 : 8, borderRadius: "50%", border: `1px solid ${tokens.accent}` }}/>
-          <div style={{ writingMode: "vertical-rl", fontSize: thumbnail ? 4 : 6, letterSpacing: "0.12em", color: tokens.accent }}>#{roastNum}</div>
+      <div style={{
+        width: "100%", height: "100%",
+        background: tokens.background,
+        display: "flex",
+        fontFamily: "-apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Bande latérale gauche — style roastery industriel */}
+        <div style={{
+          width: thumbnail ? 14 : logoSz, background: tokens.surface,
+          display: "flex", flexDirection: "column", alignItems: "center",
+          justifyContent: "space-between", padding: "8% 0", flexShrink: 0,
+          borderRight: `1px solid ${tokens.border}`,
+        }}>
+          <div style={{
+            writingMode: "vertical-rl", transform: "rotate(180deg)",
+            fontSize: thumbnail ? 4 : 6, letterSpacing: "0.12em", color: tokens.textTertiary,
+          }}>WALLIO</div>
+          <div style={{
+            width: thumbnail ? 5 : 8, height: thumbnail ? 5 : 8, borderRadius: "50%",
+            border: `1px solid ${tokens.accent}50`,
+          }}/>
+          <div style={{
+            writingMode: "vertical-rl", fontSize: thumbnail ? 4 : 6,
+            letterSpacing: "0.1em", color: tokens.accent, opacity: 0.7,
+          }}>ROAST</div>
         </div>
 
         {/* Contenu */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 5%" : "7% 6%" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 5%" : "7% 6%", position: "relative", zIndex: 1 }}>
+          {/* HEADER */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
-              <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.18em", color: tokens.textTertiary, marginBottom: 2 }}>ROASTERY</div>
-              <div style={{ fontSize: thumbnail ? 9 : 15, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: -0.5 }}>{data.nom || "Roast"}</div>
-              {data.slogan && !thumbnail && <div style={{ fontSize: thumbnail ? 5 : 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, letterSpacing: "normal", textTransform: "none" }}>{data.slogan}</div>}
+              <div style={{ fontSize: thumbnail ? 5 : 7, letterSpacing: "0.16em", color: tokens.textTertiary, marginBottom: 2, textTransform: "uppercase" }}>ROASTERY</div>
+              <div style={{ fontSize: thumbnail ? 9 : ns(16), fontWeight: 900, color: tokens.text, letterSpacing: -0.5, textTransform: "uppercase", lineHeight: 1 }}>
+                {data.nom || "Roast"}
+              </div>
+              {data.slogan && !thumbnail && (
+                <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 3 }}>
+                  {data.slogan}
+                </div>
+              )}
             </div>
-            {!thumbnail && data.logo_url && <img src={data.logo_url} alt="" style={{ width: 24, height: 24, objectFit: "cover", borderRadius: 2 }}/>}
+            {data.logo_url && !thumbnail && (
+              <img src={data.logo_url} alt="" style={{ width: 24, height: 24, objectFit: "cover", borderRadius: thumbnail ? 5 : 8 }}/>
+            )}
           </div>
 
-          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled} style="circle" tokens={tokens} size={thumbnail ? 9 : 16} gap={thumbnail ? 3 : 4} perRow={9}/>
+          {/* TAMPONS */}
+          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+            total={data.objectif_tampons} filled={filled}
+            style="circle" tokens={tokens}
+            size={thumbnail ? 8 : 18} gap={thumbnail ? 3 : 4} perRow={9}
+          />
 
-          <div style={{ borderTop: `1px solid ${tokens.border}`, paddingTop: thumbnail ? 4 : 7 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary }}>REWARD</div>
-                <div style={{ fontSize: thumbnail ? 6 : 9, color: tokens.textSecondary }}>{data.nom_recompense}</div>
+          {/* FOOTER */}
+          <div style={{
+            borderTop: `1px solid ${tokens.border}`,
+            paddingTop: thumbnail ? 4 : 7,
+            display: "flex", justifyContent: "space-between", alignItems: "flex-end",
+          }}>
+            <div>
+              <div style={{ fontSize: thumbnail ? 4 : rs(6), letterSpacing: "0.08em", color: tokens.accent, textTransform: "uppercase", marginBottom: 2 }}>REWARD</div>
+              <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.textSecondary }}>
+                {data.nom_recompense}
               </div>
-              <div style={{ fontSize: thumbnail ? 6 : 10, fontWeight: 700, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
+            </div>
+            <div style={{
+              background: `${tokens.accent}18`, backdropFilter: "blur(8px)",
+              borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
+              border: `1px solid ${tokens.accent}28`,
+            }}>
+              <span style={{ fontSize: thumbnail ? 6 : 11, fontWeight: 700, color: tokens.accent }}>
+                {filled}/{data.objectif_tampons}
+              </span>
             </div>
           </div>
         </div>

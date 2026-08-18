@@ -17,16 +17,18 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const pct = Math.round((filled / data.objectif_tampons) * 100);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", position: "relative", fontFamily: "'Arial Black', 'Helvetica Neue', sans-serif", overflow: "hidden" }}>
         {/* Bande diagonale accent */}
-        <div style={{ position: "absolute", top: 0, right: thumbnail ? "25%" : "30%", width: thumbnail ? 2 : 4, height: "100%", background: tokens.accent, transform: "skewX(-10deg)", opacity: 0.4 }}/>
+        <div style={{ position: "absolute", top: 0, right: thumbnail ? "25%" : "30%", width: thumbnail ? 2 : logoSz, height: "100%", background: tokens.accent, transform: "skewX(-10deg)", opacity: 0.4 }}/>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: thumbnail ? "6% 7%" : "7% 8%", position: "relative", zIndex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
-              <span style={{ fontSize: thumbnail ? 7 : 10, fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: 1 }}>{data.nom || "ATHLETIC"}</span>
+              <span style={{ fontSize: thumbnail ? 7 : ns(10), fontWeight: 900, color: tokens.text, textTransform: "uppercase", letterSpacing: 1 }}>{data.nom || "ATHLETIC"}</span>
               {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic", fontWeight: 400, textTransform: "none" }}>{data.slogan}</div>}
             </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.1em", color: tokens.textTertiary }}>WALLIO</span>
@@ -49,7 +51,7 @@ const template: CardTemplate = {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ fontSize: thumbnail ? 4 : 6, color: tokens.textTertiary }}>{data.nom_recompense.toUpperCase()}</div>
+            <div style={{ fontSize: thumbnail ? 4 : rs(6), color: tokens.textTertiary }}>{data.nom_recompense.toUpperCase()}</div>
           </div>
         </div>
       </div>

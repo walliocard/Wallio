@@ -17,6 +17,8 @@ const template: CardTemplate = {
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
+    const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
+    const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     return (
       <div style={{ width: "100%", height: "100%", background: tokens.background, display: "flex", flexDirection: "column", fontFamily: "-apple-system, 'Helvetica Neue', sans-serif", position: "relative", overflow: "hidden" }}>
         {/* Trait de pinceau SVG en fond */}
@@ -28,7 +30,7 @@ const template: CardTemplate = {
           {/* Haut — nom + wallio */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
-              <span style={{ fontSize: thumbnail ? 7 : 11, fontWeight: 300, color: tokens.text, letterSpacing: 2 }}>{data.nom || "INK"}</span>
+              <span style={{ fontSize: thumbnail ? 7 : ns(11), fontWeight: 300, color: tokens.text, letterSpacing: 2 }}>{data.nom || "INK"}</span>
               {data.slogan && !thumbnail && <div style={{ fontSize: 8, color: tokens.textTertiary, marginTop: 2, fontStyle: "italic" }}>{data.slogan}</div>}
             </div>
             <span style={{ fontSize: thumbnail ? 4 : 6, letterSpacing: "0.15em", color: tokens.textTertiary }}>WALLIO</span>
@@ -39,7 +41,7 @@ const template: CardTemplate = {
             {Array.from({ length: data.objectif_tampons }).map((_, i) => {
               const on = i < filled;
               return (
-                <div key={i} style={{ width: thumbnail ? 10 : 18, height: thumbnail ? 10 : 18, borderRadius: "50%", border: `1px solid ${on ? tokens.stampActive : tokens.border}`, background: on ? `${tokens.stampActive}20` : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div key={i} style={{ width: thumbnail ? 10 : logoSz, height: thumbnail ? 10 : logoSz, borderRadius: "50%", border: `1px solid ${on ? tokens.stampActive : tokens.border}`, background: on ? `${tokens.stampActive}20` : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {on && <div style={{ width: thumbnail ? 4 : 8, height: thumbnail ? 4 : 8, borderRadius: "50%", background: tokens.stampActive }}/>}
                 </div>
               );
@@ -49,8 +51,8 @@ const template: CardTemplate = {
           {/* Bas */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
-              <div style={{ fontSize: thumbnail ? 5 : 7, color: tokens.textTertiary, letterSpacing: 1 }}>{data.nom_recompense}</div>
-              <div style={{ fontSize: thumbnail ? 6 : 9, fontWeight: 500, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
+              <div style={{ fontSize: thumbnail ? 5 : rs(7), color: tokens.textTertiary, letterSpacing: 1 }}>{data.nom_recompense}</div>
+              <div style={{ fontSize: thumbnail ? 6 : ss(9), fontWeight: 500, color: tokens.textSecondary }}>{filled}/{data.objectif_tampons}</div>
             </div>
           </div>
         </div>
