@@ -21,6 +21,9 @@ export default function CartePage() {
   const [fgColor, setFgColor] = useState<string>((marchand?.apple_fg_color as string) || "#FFFFFF");
   const [labelAuto, setLabelAuto] = useState<boolean>(!(marchand?.apple_label_color));
   const [labelColor, setLabelColor] = useState<string>((marchand?.apple_label_color as string) || "rgba(255,255,255,0.55)");
+  const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || "Tampons");
+  const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || "Récompense");
+  const [memberLabel, setMemberLabel] = useState<string>((marchand?.apple_member_label as string) || "Membre");
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -46,6 +49,9 @@ export default function CartePage() {
       apple_bg_color: bgColor,
       apple_fg_color: fgAuto ? null : fgColor,
       apple_label_color: labelAuto ? null : labelColor,
+      apple_primary_label: primaryLabel,
+      apple_reward_label: rewardLabel,
+      apple_member_label: memberLabel,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -142,6 +148,9 @@ export default function CartePage() {
             rewardName={recompense}
             clientPrenom="Prénom"
             clientNom="Nom"
+            primaryLabel={primaryLabel}
+            rewardLabel={rewardLabel}
+            memberLabel={memberLabel}
           />
 
           <p style={{ fontSize: 11, color: "var(--fg-tertiary)", textAlign: "center", maxWidth: 340 }}>
@@ -334,6 +343,37 @@ export default function CartePage() {
             </Field>
           </Section>
 
+          {/* Labels des champs */}
+          <Section label="Labels des champs">
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
+              Texte affiché au-dessus de chaque valeur — imposé en majuscules par Apple.
+            </p>
+
+            <Field label="Champ principal (tampons)">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {["Tampons","Points","Visites","Passages","Cafés","Soins","Séances"].map(v => (
+                  <Chip key={v} label={v} active={primaryLabel === v} onClick={() => setPrimaryLabel(v)}/>
+                ))}
+              </div>
+            </Field>
+
+            <Field label="Récompense">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {["Récompense","Cadeau","Offre","Avantage","Bonus","Surprise"].map(v => (
+                  <Chip key={v} label={v} active={rewardLabel === v} onClick={() => setRewardLabel(v)}/>
+                ))}
+              </div>
+            </Field>
+
+            <Field label="Membre">
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {["Membre","Client","Titulaire","Fidèle","Nom"].map(v => (
+                  <Chip key={v} label={v} active={memberLabel === v} onClick={() => setMemberLabel(v)}/>
+                ))}
+              </div>
+            </Field>
+          </Section>
+
           {/* Récompense */}
           <Section label="Récompense">
             <Field label="Description">
@@ -466,6 +506,20 @@ function ColorRow({ label, value, onChange, presets }: {
         ))}
       </div>
     </div>
+  );
+}
+
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: active ? 600 : 400,
+      background: active ? "var(--accent)" : "var(--glass-bg)",
+      color: active ? "white" : "var(--fg-secondary)",
+      border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
+      cursor: "pointer",
+    }}>
+      {label}
+    </button>
   );
 }
 

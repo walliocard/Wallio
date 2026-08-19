@@ -18,15 +18,17 @@ export interface AppleWalletCardProps {
   stripContent?: React.ReactNode;
   stripUrl?: string;
   backgroundColor: string;
-  /** foregroundColor Apple Wallet — auto si non fourni */
   foregroundColor?: string;
-  /** labelColor Apple Wallet — auto si non fourni */
   labelColor?: string;
   stampsCurrent: number;
   stampsObjective: number;
   rewardName: string;
   clientPrenom?: string;
   clientNom?: string;
+  /** Labels personnalisables (texte affiché au-dessus des valeurs) */
+  primaryLabel?: string;
+  rewardLabel?: string;
+  memberLabel?: string;
 }
 
 export default function AppleWalletCard({
@@ -42,6 +44,9 @@ export default function AppleWalletCard({
   rewardName,
   clientPrenom = "Prénom",
   clientNom = "Nom",
+  primaryLabel = "Tampons",
+  rewardLabel = "Récompense",
+  memberLabel = "Membre",
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -142,7 +147,7 @@ export default function AppleWalletCard({
             marginBottom: 5,
           }}
         >
-          Tampons
+          {primaryLabel}
         </div>
         <div
           style={{
@@ -178,7 +183,7 @@ export default function AppleWalletCard({
               marginBottom: 3,
             }}
           >
-            Récompense
+            {rewardLabel}
           </div>
           <div
             style={{
@@ -203,7 +208,7 @@ export default function AppleWalletCard({
               marginBottom: 3,
             }}
           >
-            Membre
+            {memberLabel}
           </div>
           <div
             style={{
