@@ -24,6 +24,8 @@ export default function CartePage() {
   const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || "Tampons");
   const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || "Récompense");
   const [memberLabel, setMemberLabel] = useState<string>((marchand?.apple_member_label as string) || "Membre");
+  const [description, setDescription] = useState<string>((marchand?.apple_description as string) || "");
+  const [backInfo, setBackInfo] = useState<string>((marchand?.apple_back_info as string) || "");
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -52,6 +54,8 @@ export default function CartePage() {
       apple_primary_label: primaryLabel,
       apple_reward_label: rewardLabel,
       apple_member_label: memberLabel,
+      apple_description: description,
+      apple_back_info: backInfo,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -370,25 +374,28 @@ export default function CartePage() {
               Texte affiché au-dessus de chaque valeur — imposé en majuscules par Apple.
             </p>
 
-            <Field label="Champ principal (tampons)">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {["Tampons","Points","Visites","Passages","Cafés","Soins","Séances"].map(v => (
+            <Field label="Champ principal">
+              <TextInput value={primaryLabel} onChange={setPrimaryLabel} placeholder="Tampons"/>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
+                {["Tampons","Points","Visites","Cafés","Soins","Séances","Passages"].map(v => (
                   <Chip key={v} label={v} active={primaryLabel === v} onClick={() => setPrimaryLabel(v)}/>
                 ))}
               </div>
             </Field>
 
-            <Field label="Récompense">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            <Field label="Label récompense">
+              <TextInput value={rewardLabel} onChange={setRewardLabel} placeholder="Récompense"/>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
                 {["Récompense","Cadeau","Offre","Avantage","Bonus","Surprise"].map(v => (
                   <Chip key={v} label={v} active={rewardLabel === v} onClick={() => setRewardLabel(v)}/>
                 ))}
               </div>
             </Field>
 
-            <Field label="Membre">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {["Membre","Client","Titulaire","Fidèle","Nom"].map(v => (
+            <Field label="Label membre">
+              <TextInput value={memberLabel} onChange={setMemberLabel} placeholder="Membre"/>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
+                {["Membre","Client","Titulaire","Fidèle","Abonné","Nom"].map(v => (
                   <Chip key={v} label={v} active={memberLabel === v} onClick={() => setMemberLabel(v)}/>
                 ))}
               </div>
@@ -415,6 +422,32 @@ export default function CartePage() {
                   }}>{n}</button>
                 ))}
               </div>
+            </Field>
+          </Section>
+
+          {/* Dos de la carte */}
+          <Section label="Dos de la carte">
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
+              Visible quand le client retourne sa carte dans Wallet.
+            </p>
+            <Field label="Description (nom dans la liste Wallet)">
+              <TextInput value={description} onChange={setDescription} placeholder={`Fidélité ${nom || "Établissement"}`}/>
+            </Field>
+            <Field label="Message / infos (dos de carte)">
+              <textarea
+                value={backInfo}
+                onChange={e => setBackInfo(e.target.value)}
+                placeholder="Présentez votre carte à chaque visite pour gagner vos tampons. Valable dans tous nos établissements."
+                rows={3}
+                style={{
+                  width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 12,
+                  background: "var(--glass-bg)", border: "1px solid var(--border)",
+                  color: "var(--fg)", outline: "none", resize: "vertical",
+                  fontFamily: "inherit", lineHeight: 1.5, boxSizing: "border-box",
+                }}
+                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                onBlur={e => (e.target.style.borderColor = "var(--border)")}
+              />
             </Field>
           </Section>
 
