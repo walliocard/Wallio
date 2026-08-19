@@ -55,7 +55,7 @@ const template: CardTemplate = {
               {data.slogan && !thumbnail && <div style={{ fontSize: rs(8), color: tokens.textTertiary, marginTop: 2 }}>{data.slogan}</div>}
             </div>
           </div>
-          <div style={{ background: tokens.accent, borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", flexShrink: 0 }}>
+          <div style={{ background: tokens.accent, borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: "#FFFFFF" }}>WALLIO</span>
           </div>
         </div>
@@ -91,7 +91,9 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.text }}>{data.nom_recompense}</div>
           </div>
           <div style={{ background: `${tokens.accent}18`, backdropFilter: "blur(8px)", borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px", border: `1px solid ${tokens.accent}30` }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, lineHeight: 1, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
+            </div>
           </div>
         
             {/* Titulaire */}

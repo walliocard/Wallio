@@ -51,7 +51,7 @@ const template: CardTemplate = {
               {data.slogan && !thumbnail && <div style={{ fontSize: rs(8), color: "rgba(255,255,255,0.6)", marginTop: 2 }}>{data.slogan}</div>}
             </div>
           </div>
-          <div style={{ background: `${tokens.accent}25`, backdropFilter: "blur(8px)", borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", border: `1px solid ${tokens.accent}40`, flexShrink: 0 }}>
+          <div style={{ background: `${tokens.accent}25`, backdropFilter: "blur(8px)", borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", border: `1px solid ${tokens.accent}40`, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", lineHeight: 1, color: tokens.accent }}>WALLIO</span>
           </div>
         </div>
@@ -87,7 +87,9 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 700, color: "#FFFFFF" }}>{data.nom_recompense}</div>
           </div>
           <div style={{ background: tokens.accent, backdropFilter: "blur(8px)", borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px" }}>
-            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 900, color: tokens.stampActiveIcon }}>{filled}/{data.objectif_tampons}</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 900, lineHeight: 1, color: tokens.stampActiveIcon }}>{filled}/{data.objectif_tampons}</span>
+            </div>
           </div>
         
             {/* Titulaire */}

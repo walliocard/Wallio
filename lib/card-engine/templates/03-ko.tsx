@@ -152,9 +152,11 @@ const template: CardTemplate = {
               borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
               border: `1px solid ${tokens.accent}20`,
             }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ fontSize: thumbnail ? 5 : ss(10), fontWeight: 700, color: tokens.accent }}>
                 {filled}/{data.objectif_tampons}
               </span>
+              </div>
 
               {!thumbnail && (
                 <div style={{ marginTop: 6 }}>

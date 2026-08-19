@@ -59,7 +59,7 @@ const template: CardTemplate = {
             <div style={{
               background: `${tokens.accent}15`, backdropFilter: "blur(8px)",
               borderRadius: 20, padding: thumbnail ? "1px 4px" : "2px 7px",
-              border: `1px solid ${tokens.accent}22`, display: "inline-block", marginTop: 3,
+              border: `1px solid ${tokens.accent}22`, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 3,
             }}>
               <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", lineHeight: 1, color: tokens.accent }}>WALLIO</span>
             </div>
@@ -105,9 +105,11 @@ const template: CardTemplate = {
             borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
             border: `1px solid ${tokens.accent}20`,
           }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: thumbnail ? 5 : ss(10), fontWeight: 700, color: tokens.accent }}>
               {filled}/{data.objectif_tampons}
             </span>
+            </div>
 
             {!thumbnail && (
               <div style={{ marginTop: 6 }}>

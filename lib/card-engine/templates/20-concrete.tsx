@@ -128,9 +128,11 @@ const template: CardTemplate = {
             borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
             border: `1px solid ${tokens.accent}20`, opacity: 1,
           }}>
-            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, lineHeight: 1, color: tokens.accent }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, lineHeight: 1, color: tokens.accent }}>
               {filled}/{data.objectif_tampons}
             </span>
+            </div>
           </div>
         
             {/* Titulaire */}
