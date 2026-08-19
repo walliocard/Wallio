@@ -57,7 +57,8 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 14 : (dims?.logoSize ?? 22);
     const fmtV = dims?.format === "compact" ? 0.8 : dims?.format === "wide" ? 0.6 : 1;
-    const photoH = dims?.format === "wide" ? "22%" : dims?.format === "compact" ? "30%" : "38%";
+    const defaultPhotoH = dims?.format === "wide" ? 22 : dims?.format === "compact" ? 30 : 38;
+    const photoH = `${dims?.photoHeight ?? defaultPhotoH}%`;
 
     return (
       <div style={{

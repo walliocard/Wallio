@@ -251,7 +251,9 @@ export default function CartePage() {
 
               {/* Photo de couverture — template VISTA et futurs */}
               <Section label="Photo de couverture">
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+
+                  {/* Aperçu */}
                   {data.photo_url ? (
                     <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", aspectRatio: "3/1", border: "1px solid var(--border)" }}>
                       <img src={data.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
@@ -261,19 +263,39 @@ export default function CartePage() {
                       <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>Aucune photo</span>
                     </div>
                   )}
+
+                  {/* Boutons upload + supprimer */}
                   <div style={{ display: "flex", gap: 6 }}>
-                    <label style={{ flex: 1, padding: "7px 0", borderRadius: 10, fontSize: 12, fontWeight: 500, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: uploadingPhoto ? "wait" : "pointer", textAlign: "center" }}>
+                    <label style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: uploadingPhoto ? "wait" : "pointer", textAlign: "center" }}>
                       <input type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoUpload} disabled={uploadingPhoto}/>
-                      {uploadingPhoto ? "Upload…" : data.photo_url ? "Changer" : "Ajouter une photo"}
+                      {uploadingPhoto ? "Upload…" : data.photo_url ? "Changer la photo" : "Ajouter une photo"}
                     </label>
                     {data.photo_url && (
-                      <button onClick={() => set("photo_url", "")} style={{ padding: "7px 12px", borderRadius: 10, fontSize: 12, background: "none", border: "1px solid var(--border)", color: "#FF3B30", cursor: "pointer" }}>
-                        ×
+                      <button
+                        onClick={() => { set("photo_url", ""); updateDoc(doc(db, "marchands", user!.uid), { photo_url: "" }); }}
+                        style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", color: "#FF3B30", cursor: "pointer" }}
+                      >
+                        Supprimer
                       </button>
                     )}
                   </div>
+
+                  {/* Slider hauteur */}
+                  <Field label={`Hauteur de la photo — ${dims.photoHeight ?? 38}%`}>
+                    <input
+                      type="range" min={20} max={60} step={2}
+                      value={dims.photoHeight ?? 38}
+                      onChange={e => setDim("photoHeight", Number(e.target.value))}
+                      style={{ width: "100%", accentColor: "var(--accent)" }}
+                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Compact 20%</span>
+                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Grande 60%</span>
+                    </div>
+                  </Field>
+
                   <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: 0 }}>
-                    Utilisée par le template VISTA. Format paysage recommandé.
+                    Format paysage recommandé (ex : 1200×400px).
                   </p>
                 </div>
               </Section>
