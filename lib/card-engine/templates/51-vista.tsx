@@ -98,12 +98,13 @@ const template: CardTemplate = {
 
           {/* Badge WALLIO top-right sur la photo */}
           <div style={{
-            position: "absolute", top: thumbnail ? 4 : 8, right: thumbnail ? 5 : 8,
-            background: "rgba(0,0,0,0.38)", backdropFilter: "blur(10px)",
-            borderRadius: 20, padding: thumbnail ? "1px 4px" : "2px 7px",
-            border: "1px solid rgba(255,255,255,0.18)",
+            position: "absolute", top: thumbnail ? 5 : 10, right: thumbnail ? 6 : 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.42)",
+            borderRadius: 100, padding: thumbnail ? "2px 5px" : "4px 10px",
+            border: "1px solid rgba(255,255,255,0.22)",
           }}>
-            <span style={{ fontSize: thumbnail ? 4 : 5.5, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(255,255,255,0.88)" }}>
+            <span style={{ fontSize: thumbnail ? 5 : 8, fontWeight: 700, letterSpacing: "0.08em", lineHeight: 1, color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap" }}>
               WALLIO
             </span>
           </div>
