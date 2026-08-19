@@ -253,6 +253,33 @@ export default function CartePage() {
             </div>
           </Section>
 
+          {/* Thèmes dégradés */}
+          <Section label="Thèmes dégradés">
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
+              1 clic = couleur de fond + bannière dégradée générée automatiquement
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {GRADIENT_THEMES.map(t => (
+                <button
+                  key={t.name}
+                  title={t.name}
+                  onClick={() => {
+                    setBgColor(t.bg);
+                    const strip = generateGradientStrip(t.from, t.to, t.angle ?? 135);
+                    setStripUrl(strip);
+                    updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip, apple_bg_color: t.bg });
+                  }}
+                  style={{
+                    width: 44, height: 28, borderRadius: 8, padding: 0, cursor: "pointer",
+                    background: `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
+                    border: bgColor === t.bg ? "2px solid var(--accent)" : "1px solid rgba(255,255,255,0.1)",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                  }}
+                />
+              ))}
+            </div>
+          </Section>
+
           {/* Couleurs */}
           <Section label="Couleurs de la carte">
 
@@ -262,26 +289,20 @@ export default function CartePage() {
               value={bgColor}
               onChange={setBgColor}
               presets={[
-                // Noirs & sombres
-                "#0A0A0A","#1C1C1E","#2C2C2E","#1A1A2E",
-                // Matcha & nature
-                "#2D3A2D","#3A4A32","#4A6741","#5C7A52",
-                // Terres & épices
-                "#3A2A1C","#4A3020","#6B3A2A","#8B4513",
-                // Bleus & marines
-                "#0D1B2A","#1C2A3A","#1A2744","#0F2952",
-                // Bordeaux & profonds
-                "#2A1018","#3A1020","#4A1428","#2A0A1C",
-                // Pastels épurés
-                "#F5F0E8","#EDE8DC","#F0E8D4","#E8F0EC",
-                // Matcha clair & sage
-                "#D4E8D0","#C8DCC4","#B5C9A8","#A8C49A",
-                // Rose poudré & blush
-                "#F0D8D0","#E8CCC4","#D4B8B0","#C4A09A",
-                // Lavande & lilas
-                "#D8D0E8","#CCC4DC","#BEB4D0","#E8D8F0",
-                // Crème & ivoire
-                "#FAF8F5","#F8F4EC","#F2EDE4","#FFFFFF",
+                "#0A0A0A","#1C1C1E","#2C2C2E","#3A3A3C",
+                "#1A1A2E","#16213E","#0F3460","#1B262C",
+                "#2D3A2D","#3A4A32","#1A2E1A","#0D2B1A",
+                "#3A2A1C","#4A3020","#2E1A0E","#1C0E05",
+                "#2A1018","#3A1020","#4A0E28","#2E0A20",
+                "#1C1C3A","#2A2050","#1A0E3A","#0E0A2E",
+                "#F5F0E8","#EDE8DC","#FAF8F5","#FFFFFF",
+                "#F0EBE3","#E8E0D5","#DDD5C8","#D4CBBC",
+                "#D4E8D0","#C8DCC4","#E8F4E4","#F0F8EC",
+                "#F0D8D0","#E8CCC4","#F8EAE5","#FFF0EB",
+                "#D8D0E8","#CCC4DC","#EDE8F8","#F5F0FF",
+                "#D4E4F0","#C4D8EC","#E4EFF8","#EDF5FF",
+                "#F8F4E8","#F4EDD8","#FFF8E8","#FFFBF0",
+                "#E8F0F4","#D8E8F0","#C8DCE8","#B8D0E0",
               ]}
             />
 
@@ -409,6 +430,44 @@ export default function CartePage() {
       </div>
     </div>
   );
+}
+
+// ── Gradient themes ──────────────────────────────────
+
+const GRADIENT_THEMES = [
+  { name: "Minuit",      from: "#1A1A2E", to: "#0A0A0A",   bg: "#0A0A0A",   angle: 160 },
+  { name: "Cosmos",      from: "#2A1654", to: "#0A0A1A",   bg: "#0A0A1A",   angle: 135 },
+  { name: "Océan nuit",  from: "#0F3460", to: "#0A0A1A",   bg: "#0A0A1A",   angle: 145 },
+  { name: "Forêt",       from: "#1A3A1A", to: "#0A1A0A",   bg: "#0A1A0A",   angle: 150 },
+  { name: "Matcha",      from: "#4A6741", to: "#2D3A2D",   bg: "#2D3A2D",   angle: 135 },
+  { name: "Espresso",    from: "#4A3020", to: "#1C0E05",   bg: "#1C0E05",   angle: 140 },
+  { name: "Bordeaux",    from: "#6B1A30", to: "#2A0A14",   bg: "#2A0A14",   angle: 135 },
+  { name: "Prune",       from: "#4A1A6B", to: "#1A0A2E",   bg: "#1A0A2E",   angle: 135 },
+  { name: "Aurore",      from: "#6B2A4A", to: "#2A0A1A",   bg: "#2A0A1A",   angle: 125 },
+  { name: "Ardoise",     from: "#3A4A5A", to: "#1A2A3A",   bg: "#1A2A3A",   angle: 155 },
+  { name: "Ivoire",      from: "#FFFFFF", to: "#F0EBE3",   bg: "#F0EBE3",   angle: 160 },
+  { name: "Crème",       from: "#FFFBF0", to: "#F4EDD8",   bg: "#F4EDD8",   angle: 135 },
+  { name: "Blush",       from: "#FFE8E0", to: "#F0D8D0",   bg: "#F0D8D0",   angle: 135 },
+  { name: "Sage clair",  from: "#E8F4E4", to: "#D4E8D0",   bg: "#D4E8D0",   angle: 145 },
+  { name: "Lavande",     from: "#EDE8F8", to: "#D8D0E8",   bg: "#D8D0E8",   angle: 135 },
+  { name: "Ciel",        from: "#EDF5FF", to: "#D4E4F0",   bg: "#D4E4F0",   angle: 150 },
+];
+
+function generateGradientStrip(from: string, to: string, angle: number): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = 750; canvas.height = 288;
+  const ctx = canvas.getContext("2d")!;
+  const rad = (angle * Math.PI) / 180;
+  const x1 = 375 - Math.cos(rad) * 375;
+  const y1 = 144 - Math.sin(rad) * 144;
+  const x2 = 375 + Math.cos(rad) * 375;
+  const y2 = 144 + Math.sin(rad) * 144;
+  const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+  grad.addColorStop(0, from);
+  grad.addColorStop(1, to);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 750, 288);
+  return canvas.toDataURL("image/jpeg", 0.92);
 }
 
 // ── Color helpers ─────────────────────────────────────
