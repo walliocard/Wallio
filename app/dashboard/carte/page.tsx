@@ -21,6 +21,15 @@ export default function CartePage() {
   const [fgColor, setFgColor] = useState<string>((marchand?.apple_fg_color as string) || "#FFFFFF");
   const [labelAuto, setLabelAuto] = useState<boolean>(!(marchand?.apple_label_color));
   const [labelColor, setLabelColor] = useState<string>((marchand?.apple_label_color as string) || "rgba(255,255,255,0.55)");
+  // Strip editor
+  const [stripFrom, setStripFrom] = useState<string>("");
+  const [stripTo, setStripTo]   = useState<string>("");
+  const [stripAngle, setStripAngle] = useState<number>(135);
+  const [stripText, setStripText]   = useState<string>("");
+  const [stripTextSize, setStripTextSize] = useState<"s"|"m"|"l">("m");
+  const [stripTextColor, setStripTextColor] = useState<string>("#FFFFFF");
+  const [stripTextPos, setStripTextPos] = useState<"bl"|"bc"|"br"|"c">("bl");
+
   const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || "Tampons");
   const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || "Récompense");
   const [memberLabel, setMemberLabel] = useState<string>((marchand?.apple_member_label as string) || "Membre");
@@ -257,31 +266,122 @@ export default function CartePage() {
             </div>
           </Section>
 
-          {/* Thèmes dégradés */}
-          <Section label="Thèmes dégradés">
+          {/* Éditeur bannière dégradée */}
+          <Section label="Éditeur bannière">
+
+            {/* Thèmes */}
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-              1 clic = couleur de fond + bannière dégradée générée automatiquement
+              Choisir un thème dégradé
             </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {GRADIENT_THEMES.map(t => (
-                <button
-                  key={t.name}
-                  title={t.name}
-                  onClick={() => {
-                    setBgColor(t.bg);
-                    const strip = generateGradientStrip(t.from, t.to, t.angle ?? 135);
-                    setStripUrl(strip);
-                    updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip, apple_bg_color: t.bg });
-                  }}
-                  style={{
-                    width: 44, height: 28, borderRadius: 8, padding: 0, cursor: "pointer",
-                    background: `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
-                    border: bgColor === t.bg ? "2px solid var(--accent)" : "1px solid rgba(255,255,255,0.1)",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                  }}
-                />
+                <button key={t.name} title={t.name} onClick={() => {
+                  const angle = t.angle ?? 135;
+                  setStripFrom(t.from); setStripTo(t.to); setStripAngle(angle);
+                  setBgColor(t.bg);
+                  const strip = buildStrip(t.from, t.to, angle, stripText, stripTextColor, stripTextSize, stripTextPos);
+                  setStripUrl(strip);
+                  updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip, apple_bg_color: t.bg });
+                }} style={{
+                  width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
+                  background: `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
+                  border: stripFrom === t.from && stripTo === t.to ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.2)",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
+                  flexShrink: 0,
+                }}/>
               ))}
             </div>
+
+            {/* Texte sur la bannière */}
+            <Field label="Texte sur la bannière">
+              <TextInput value={stripText} onChange={setStripText} placeholder="Nom, slogan, accroche…"/>
+            </Field>
+
+            {stripText && (
+              <>
+                {/* Taille */}
+                <Field label="Taille du texte">
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {(["s","m","l"] as const).map(s => (
+                      <button key={s} onClick={() => setStripTextSize(s)} style={{
+                        flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                        background: stripTextSize === s ? "var(--accent)" : "var(--glass-bg)",
+                        color: stripTextSize === s ? "white" : "var(--fg-secondary)",
+                        border: `1px solid ${stripTextSize === s ? "var(--accent)" : "var(--border)"}`,
+                        cursor: "pointer",
+                      }}>
+                        {s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+
+                {/* Couleur texte */}
+                <Field label="Couleur du texte">
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    {["#FFFFFF","#000000","#F5F0E8","#FFD60A","#00F5A0"].map(c => (
+                      <button key={c} onClick={() => setStripTextColor(c)} style={{
+                        width: 28, height: 28, borderRadius: 8, background: c, padding: 0, cursor: "pointer",
+                        border: stripTextColor === c ? "2px solid var(--accent)" : "1px solid var(--border)",
+                        boxShadow: c === "#FFFFFF" ? "inset 0 0 0 1px rgba(0,0,0,0.1)" : undefined,
+                      }}/>
+                    ))}
+                    <input type="color" value={/^#[0-9a-f]{6}$/i.test(stripTextColor) ? stripTextColor : "#ffffff"}
+                      onChange={e => setStripTextColor(e.target.value)}
+                      style={{ width: 28, height: 28, borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", padding: 2 }}
+                    />
+                  </div>
+                </Field>
+
+                {/* Position */}
+                <Field label="Position du texte">
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5 }}>
+                    {([
+                      { k: "bl", label: "↙ Bas gauche" },
+                      { k: "bc", label: "↓ Bas centre" },
+                      { k: "br", label: "↘ Bas droite" },
+                      { k: "c",  label: "⊕ Centré" },
+                    ] as const).map(({ k, label }) => (
+                      <button key={k} onClick={() => setStripTextPos(k)} style={{
+                        padding: "5px 3px", borderRadius: 8, fontSize: 10, fontWeight: stripTextPos === k ? 600 : 400,
+                        background: stripTextPos === k ? "var(--accent)" : "var(--glass-bg)",
+                        color: stripTextPos === k ? "white" : "var(--fg-secondary)",
+                        border: `1px solid ${stripTextPos === k ? "var(--accent)" : "var(--border)"}`,
+                        cursor: "pointer",
+                      }}>{label}</button>
+                    ))}
+                  </div>
+                </Field>
+              </>
+            )}
+
+            {/* Actions */}
+            {(stripFrom || stripUrl) && (
+              <div style={{ display: "flex", gap: 8 }}>
+                {stripFrom && (
+                  <button onClick={() => {
+                    const strip = buildStrip(stripFrom, stripTo, stripAngle, stripText, stripTextColor, stripTextSize, stripTextPos);
+                    setStripUrl(strip);
+                    updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip });
+                  }} style={{
+                    flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                    background: "var(--glass-bg)", border: "1px solid var(--border)",
+                    color: "var(--fg)", cursor: "pointer",
+                  }}>
+                    ↺ Régénérer
+                  </button>
+                )}
+                {stripUrl && (
+                  <button onClick={() => downloadStrip(stripUrl, `wallio-strip-${nom || "carte"}.jpg`)} style={{
+                    flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                    background: "var(--glass-bg)", border: "1px solid var(--border)",
+                    color: "var(--fg)", cursor: "pointer",
+                  }}>
+                    ⬇ Télécharger
+                  </button>
+                )}
+              </div>
+            )}
           </Section>
 
           {/* Couleurs */}
@@ -486,21 +586,54 @@ const GRADIENT_THEMES = [
   { name: "Ciel",        from: "#EDF5FF", to: "#D4E4F0",   bg: "#D4E4F0",   angle: 150 },
 ];
 
-function generateGradientStrip(from: string, to: string, angle: number): string {
+function buildStrip(
+  from: string, to: string, angle: number,
+  text = "", textColor = "#FFFFFF",
+  textSize: "s"|"m"|"l" = "m",
+  textPos: "bl"|"bc"|"br"|"c" = "bl",
+): string {
+  const W = 750, H = 288;
   const canvas = document.createElement("canvas");
-  canvas.width = 750; canvas.height = 288;
+  canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d")!;
+
+  // Dégradé
   const rad = (angle * Math.PI) / 180;
-  const x1 = 375 - Math.cos(rad) * 375;
-  const y1 = 144 - Math.sin(rad) * 144;
-  const x2 = 375 + Math.cos(rad) * 375;
-  const y2 = 144 + Math.sin(rad) * 144;
-  const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+  const cx = W / 2, cy = H / 2;
+  const grad = ctx.createLinearGradient(
+    cx - Math.cos(rad) * W / 2, cy - Math.sin(rad) * H / 2,
+    cx + Math.cos(rad) * W / 2, cy + Math.sin(rad) * H / 2,
+  );
   grad.addColorStop(0, from);
   grad.addColorStop(1, to);
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 750, 288);
+  ctx.fillRect(0, 0, W, H);
+
+  // Texte
+  if (text) {
+    const sz = textSize === "s" ? 36 : textSize === "m" ? 54 : 76;
+    ctx.font = `700 ${sz}px -apple-system, "Helvetica Neue", sans-serif`;
+    ctx.fillStyle = textColor;
+    const pad = 44;
+    const align = textPos === "bc" ? "center" : textPos === "br" ? "right" : "left";
+    ctx.textAlign = align;
+    const x = textPos === "bl" ? pad : textPos === "bc" ? W / 2 : textPos === "br" ? W - pad : W / 2;
+    const y = textPos === "c" ? H / 2 + sz * 0.35 : H - pad;
+    ctx.fillText(text, x, y);
+  }
+
   return canvas.toDataURL("image/jpeg", 0.92);
+}
+
+function downloadStrip(dataUrl: string, filename: string) {
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = filename;
+  a.click();
+}
+
+function generateGradientStrip(from: string, to: string, angle: number): string {
+  return buildStrip(from, to, angle);
 }
 
 // ── Color helpers ─────────────────────────────────────
