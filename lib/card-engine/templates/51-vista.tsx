@@ -84,14 +84,7 @@ const template: CardTemplate = {
             <div style={{
               width: "100%", height: "100%",
               background: `linear-gradient(135deg, ${tokens.accent}55 0%, ${tokens.accentSecondary}40 60%, ${tokens.accent}20 100%)`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              {!thumbnail && (
-                <span style={{ fontSize: 9, letterSpacing: "0.14em", color: `${tokens.text}45`, fontWeight: 600, textTransform: "uppercase" }}>
-                  Photo de couverture
-                </span>
-              )}
-            </div>
+            }}/>
           )}
 
           {/* Dégradé bas — fondu vers le background */}
