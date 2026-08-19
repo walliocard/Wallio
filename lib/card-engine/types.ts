@@ -49,6 +49,8 @@ export interface CardDimensions {
   qrSize?: number;
   format?: "standard" | "compact" | "wide";
   photoHeight?: number;
+  photoPositionX?: number;
+  photoPositionY?: number;
 }
 
 /* ── Design tokens ── */

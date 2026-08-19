@@ -75,7 +75,10 @@ const template: CardTemplate = {
             <img
               src={data.photo_url}
               alt=""
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              style={{
+                width: "100%", height: "100%", objectFit: "cover", display: "block",
+                objectPosition: `${dims?.photoPositionX ?? 50}% ${dims?.photoPositionY ?? 50}%`,
+              }}
             />
           ) : (
             <div style={{

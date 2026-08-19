@@ -281,7 +281,7 @@ export default function CartePage() {
                   </div>
 
                   {/* Slider hauteur */}
-                  <Field label={`Hauteur de la photo — ${dims.photoHeight ?? 38}%`}>
+                  <Field label={`Hauteur — ${dims.photoHeight ?? 38}%`}>
                     <input
                       type="range" min={20} max={60} step={2}
                       value={dims.photoHeight ?? 38}
@@ -289,8 +289,35 @@ export default function CartePage() {
                       style={{ width: "100%", accentColor: "var(--accent)" }}
                     />
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Compact 20%</span>
-                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Grande 60%</span>
+                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>20%</span>
+                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>60%</span>
+                    </div>
+                  </Field>
+
+                  {/* Cadrage vertical + horizontal */}
+                  <Field label={`Cadrage vertical — ${dims.photoPositionY ?? 50}%`}>
+                    <input
+                      type="range" min={0} max={100} step={5}
+                      value={dims.photoPositionY ?? 50}
+                      onChange={e => setDim("photoPositionY", Number(e.target.value))}
+                      style={{ width: "100%", accentColor: "var(--accent)" }}
+                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Haut</span>
+                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Bas</span>
+                    </div>
+                  </Field>
+
+                  <Field label={`Cadrage horizontal — ${dims.photoPositionX ?? 50}%`}>
+                    <input
+                      type="range" min={0} max={100} step={5}
+                      value={dims.photoPositionX ?? 50}
+                      onChange={e => setDim("photoPositionX", Number(e.target.value))}
+                      style={{ width: "100%", accentColor: "var(--accent)" }}
+                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Gauche</span>
+                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Droite</span>
                     </div>
                   </Field>
 
