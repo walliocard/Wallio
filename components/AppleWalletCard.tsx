@@ -78,13 +78,19 @@ export default function AppleWalletCard({
     >
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 12px" }}>
-        {logoUrl && (
-          <img
-            src={logoUrl}
-            alt=""
-            style={{ height: 38, maxWidth: 110, objectFit: "contain", borderRadius: 6, flexShrink: 0 }}
-          />
-        )}
+        {/* Zone logo — toujours visible */}
+        <div style={{
+          height: 38, minWidth: 38, maxWidth: 110, flexShrink: 0,
+          borderRadius: 8,
+          border: logoUrl ? "none" : `1.5px dashed ${dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
+          overflow: "hidden",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          {logoUrl
+            ? <img src={logoUrl} alt="" style={{ height: 38, maxWidth: 110, objectFit: "contain", display: "block" }}/>
+            : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          }
+        </div>
         {logoText && (
           <span style={{
             fontSize: 15, fontWeight: 600, color: fg,
@@ -96,19 +102,29 @@ export default function AppleWalletCard({
         )}
       </div>
 
-      {/* ── Strip zone (375 × 144 pt — Apple spec) ── */}
-      {(stripContent || stripUrl) && (
-        <div style={{ width: 375, height: 144, overflow: "hidden", position: "relative", flexShrink: 0 }}>
-          {stripContent ? (
-            /* Template en mode strip natif 375×144 */
-            <div style={{ width: 375, height: 144, flexShrink: 0 }}>
-              {stripContent}
-            </div>
-          ) : (
-            <img src={stripUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
-          )}
-        </div>
-      )}
+      {/* ── Strip zone — toujours visible (375 × 144 pt) ── */}
+      <div style={{ width: 375, height: 144, overflow: "hidden", position: "relative", flexShrink: 0 }}>
+        {stripUrl ? (
+          <img src={stripUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+        ) : stripContent ? (
+          <div style={{ width: 375, height: 144, flexShrink: 0 }}>{stripContent}</div>
+        ) : (
+          /* Placeholder bannière */
+          <div style={{
+            width: "100%", height: "100%",
+            border: `1.5px dashed ${dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)"}`,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            gap: 8,
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"} strokeWidth="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span style={{ fontSize: 11, color: dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)", letterSpacing: "0.04em" }}>
+              Bannière
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* ── Primary field ── */}
       <div
