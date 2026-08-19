@@ -252,7 +252,28 @@ export default function CartePage() {
               label="Fond"
               value={bgColor}
               onChange={setBgColor}
-              presets={["#0A0A0A","#1C1C1E","#1A1A2E","#0D1B2A","#1C3A5C","#3A1C1C","#2C1654","#1C3A1C","#FFFFFF","#F2F2F7","#EEF3FF","#FFF9F0"]}
+              presets={[
+                // Noirs & sombres
+                "#0A0A0A","#1C1C1E","#2C2C2E","#1A1A2E",
+                // Matcha & nature
+                "#2D3A2D","#3A4A32","#4A6741","#5C7A52",
+                // Terres & épices
+                "#3A2A1C","#4A3020","#6B3A2A","#8B4513",
+                // Bleus & marines
+                "#0D1B2A","#1C2A3A","#1A2744","#0F2952",
+                // Bordeaux & profonds
+                "#2A1018","#3A1020","#4A1428","#2A0A1C",
+                // Pastels épurés
+                "#F5F0E8","#EDE8DC","#F0E8D4","#E8F0EC",
+                // Matcha clair & sage
+                "#D4E8D0","#C8DCC4","#B5C9A8","#A8C49A",
+                // Rose poudré & blush
+                "#F0D8D0","#E8CCC4","#D4B8B0","#C4A09A",
+                // Lavande & lilas
+                "#D8D0E8","#CCC4DC","#BEB4D0","#E8D8F0",
+                // Crème & ivoire
+                "#FAF8F5","#F8F4EC","#F2EDE4","#FFFFFF",
+              ]}
             />
 
             {/* Texte */}
@@ -263,7 +284,11 @@ export default function CartePage() {
               </div>
               {!fgAuto && (
                 <ColorRow value={fgColor} onChange={setFgColor}
-                  presets={["#FFFFFF","#F5F5F5","#0A0A0A","#1C1C1E","#FFD60A","#FF6B35","#00F5A0","#BF5AF2"]}
+                  presets={[
+                    "#FFFFFF","#F5F0E8","#EDE8DC","#0A0A0A",
+                    "#4A6741","#C4958A","#8B7355","#BF5AF2",
+                    "#FFD60A","#FF6B35","#00C896","#007AFF",
+                  ]}
                 />
               )}
               {fgAuto && (
@@ -284,7 +309,11 @@ export default function CartePage() {
               </div>
               {!labelAuto && (
                 <ColorRow value={labelColor} onChange={setLabelColor}
-                  presets={["rgba(255,255,255,0.55)","rgba(255,255,255,0.35)","rgba(0,0,0,0.42)","rgba(0,0,0,0.28)","#FF6B35","#FFD60A","#00F5A0","#BF5AF2"]}
+                  presets={[
+                    "rgba(255,255,255,0.55)","rgba(255,255,255,0.38)","rgba(0,0,0,0.42)","rgba(0,0,0,0.28)",
+                    "#7B9E5F","#C4958A","#8B7355","#9A8FA0",
+                    "#FFD60A","#FF6B35","#00C896","#007AFF",
+                  ]}
                 />
               )}
               {labelAuto && (

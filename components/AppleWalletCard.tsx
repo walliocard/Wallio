@@ -123,23 +123,6 @@ export default function AppleWalletCard({
           </span>
         </div>
 
-        {/* Header field (top-right — imposé par Apple) */}
-        <div style={{ textAlign: "right", flexShrink: 0, paddingLeft: 12 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: fg }}>
-            Wallio
-          </div>
-          <div
-            style={{
-              fontSize: 10,
-              color: labelClr,
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-              marginTop: 1,
-            }}
-          >
-            Fidélité
-          </div>
-        </div>
       </div>
 
       {/* ── Strip zone (375 × 144 pt — Apple spec) ── */}

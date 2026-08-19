@@ -57,14 +57,7 @@ export function generatePassJson(input: PassInput): object {
 
     // Type storeCard = carte fidélité (Apple Wallet)
     storeCard: {
-      // Champ haut-droite (1 max)
-      headerFields: [
-        {
-          key: "brand",
-          label: "Fidélité",
-          value: "Wallio",
-        },
-      ],
+      headerFields: [],
 
       // Champ principal (le plus visible — grand texte)
       primaryFields: [
