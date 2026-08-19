@@ -15,11 +15,13 @@ function relativeLuminance(hex: string): number {
 export interface AppleWalletCardProps {
   logoUrl?: string;
   logoText: string;
-  /** Élément React rendu comme strip (design du template coupé à 375×144) */
   stripContent?: React.ReactNode;
-  /** Fallback image statique si pas de stripContent */
   stripUrl?: string;
   backgroundColor: string;
+  /** foregroundColor Apple Wallet — auto si non fourni */
+  foregroundColor?: string;
+  /** labelColor Apple Wallet — auto si non fourni */
+  labelColor?: string;
   stampsCurrent: number;
   stampsObjective: number;
   rewardName: string;
@@ -33,6 +35,8 @@ export default function AppleWalletCard({
   stripContent,
   stripUrl,
   backgroundColor,
+  foregroundColor,
+  labelColor,
   stampsCurrent,
   stampsObjective,
   rewardName,
@@ -43,8 +47,8 @@ export default function AppleWalletCard({
 
   const bg = /^#[0-9a-f]{6}$/i.test(backgroundColor) ? backgroundColor : "#1C1C1E";
   const dark = relativeLuminance(bg) < 0.35;
-  const fg = dark ? "#FFFFFF" : "#000000";
-  const labelClr = dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.42)";
+  const fg = foregroundColor ?? (dark ? "#FFFFFF" : "#000000");
+  const labelClr = labelColor ?? (dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.42)");
   const sep = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)";
 
   useEffect(() => {

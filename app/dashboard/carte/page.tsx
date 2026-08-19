@@ -1,73 +1,51 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getAllTemplates, getDefaultTemplate } from "@/lib/card-engine/registry";
-import type { CardData, CardDimensions } from "@/lib/card-engine/types";
 import AppleWalletCard from "@/components/AppleWalletCard";
 
 export default function CartePage() {
   const { user, marchand } = useAuth();
 
-  const allTemplates = useMemo(() => getAllTemplates(), []);
-  const defaultTpl = getDefaultTemplate();
-
-  const objectifInit = (marchand?.objectif_tampons as number) || 10;
-
-  // Calcul du template/palette initial pour le fallback couleur de fond
-  const initTemplateId = (marchand?.template_id as string) || defaultTpl.id;
-  const initTemplate = allTemplates.find(t => t.id === initTemplateId) ?? allTemplates[0];
-  const initPaletteId = (marchand?.palette_id as string) || initTemplate.defaultPaletteId;
-  const initPalette = initTemplate.palettes.find(p => p.id === initPaletteId) ?? initTemplate.palettes[0];
-
-  const [templateId, setTemplateId] = useState<string>(initTemplateId);
-  const [paletteId, setPaletteId] = useState<string>(initPaletteId);
   const [nom, setNom] = useState<string>((marchand?.nom as string) || "");
   const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
+  const [stripUrl, setStripUrl] = useState<string>((marchand?.strip_url as string) || "");
   const [recompense, setRecompense] = useState<string>((marchand?.nom_recompense as string) || "");
-  const [objectif, setObjectif] = useState<number>(objectifInit);
-  // apple_bg_color = champ dédié, fallback sur la couleur du template (jamais couleur_principale)
-  const [bgColor, setBgColor] = useState<string>((marchand?.apple_bg_color as string) || initPalette.tokens.background);
-  const [tab, setTab] = useState<"designs" | "infos">("designs");
+  const [objectif, setObjectif] = useState<number>((marchand?.objectif_tampons as number) || 10);
+
+  // Couleurs Apple Wallet — 3 champs officiels
+  const [bgColor, setBgColor] = useState<string>((marchand?.apple_bg_color as string) || "#1C1C1E");
+  const [fgAuto, setFgAuto] = useState<boolean>(!(marchand?.apple_fg_color));
+  const [fgColor, setFgColor] = useState<string>((marchand?.apple_fg_color as string) || "#FFFFFF");
+  const [labelAuto, setLabelAuto] = useState<boolean>(!(marchand?.apple_label_color));
+  const [labelColor, setLabelColor] = useState<string>((marchand?.apple_label_color as string) || "rgba(255,255,255,0.55)");
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [category, setCategory] = useState("all");
+  const [uploadingStrip, setUploadingStrip] = useState(false);
 
   if (!marchand || !user) return null;
 
-  const template = allTemplates.find(t => t.id === templateId) ?? allTemplates[0];
-  const palette = template.palettes.find(p => p.id === paletteId) ?? template.palettes[0];
   const stampsCurrent = Math.round(objectif * 0.6);
 
-  const cardData: CardData = {
-    nom,
-    logo_url: logoUrl,
-    tampons: stampsCurrent,
-    objectif_tampons: objectif,
-    nom_recompense: recompense,
-    mode: (marchand?.mode_recompense as "cyclique" | "progressif") || "cyclique",
-    client_prenom: "Prénom",
-    client_nom: "Nom",
-  };
-
-  const dims: CardDimensions = { format: "standard" };
-
-  // Strip = template rendu en mode strip (375×144 natif, décoratifs + identité marchand)
-  const stripContent = template.render({ data: cardData, tokens: palette.tokens, palette, thumbnail: false, dimensions: dims, strip: true });
+  // Couleurs effectives (auto ou manuelles)
+  const effectiveFg = fgAuto ? autoFg(bgColor) : fgColor;
+  const effectiveLabel = labelAuto ? autoLabel(bgColor) : labelColor;
 
   async function sauvegarder() {
     setSaving(true);
     await updateDoc(doc(db, "marchands", user!.uid), {
       nom,
       logo_url: logoUrl,
+      strip_url: stripUrl,
       nom_recompense: recompense,
       objectif_tampons: objectif,
-      template_id: templateId,
-      palette_id: paletteId,
       apple_bg_color: bgColor,
+      apple_fg_color: fgAuto ? null : fgColor,
+      apple_label_color: labelAuto ? null : labelColor,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -80,7 +58,7 @@ export default function CartePage() {
     if (!file || !user || !file.type.startsWith("image/")) return;
     setUploadingLogo(true);
     try {
-      const dataUrl = await resizeImage(file, 280);
+      const dataUrl = await resizeImage(file, 320);
       setLogoUrl(dataUrl);
       await updateDoc(doc(db, "marchands", user.uid), { logo_url: dataUrl });
     } catch (err: unknown) {
@@ -90,22 +68,21 @@ export default function CartePage() {
     }
   }
 
-  const categories = [
-    { id: "all", label: "Tous" },
-    { id: "minimal", label: "Minimal" },
-    { id: "premium", label: "Premium" },
-    { id: "coffee", label: "Café" },
-    { id: "restaurant", label: "Resto" },
-    { id: "beauty", label: "Beauté" },
-    { id: "barber", label: "Barber" },
-    { id: "sport", label: "Sport" },
-    { id: "colorful", label: "Coloré" },
-    { id: "retro", label: "Rétro" },
-  ];
-
-  const filtered = category === "all"
-    ? allTemplates
-    : allTemplates.filter(t => t.categories.includes(category as Parameters<typeof t.categories.includes>[0]));
+  async function handleStripUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user || !file.type.startsWith("image/")) return;
+    setUploadingStrip(true);
+    try {
+      // Strip Apple Wallet @2x : 750×288px
+      const dataUrl = await cropResizeImage(file, 750, 288);
+      setStripUrl(dataUrl);
+      await updateDoc(doc(db, "marchands", user.uid), { strip_url: dataUrl });
+    } catch (err: unknown) {
+      alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setUploadingStrip(false);
+    }
+  }
 
   return (
     <div style={{ height: "calc(100vh - 0px)", display: "flex", flexDirection: "column" }}>
@@ -114,12 +91,8 @@ export default function CartePage() {
       <div style={{
         padding: "14px 24px",
         borderBottom: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        background: "var(--glass-bg)",
-        backdropFilter: "blur(20px)",
-        flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: "var(--glass-bg)", backdropFilter: "blur(20px)", flexShrink: 0,
       }}>
         <div>
           <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-tertiary)" }}>
@@ -129,21 +102,6 @@ export default function CartePage() {
             Ma carte
           </h1>
         </div>
-
-        {/* Tabs */}
-        <div style={{ display: "flex", gap: 4, background: "var(--glass-bg)", border: "1px solid var(--border)", borderRadius: 10, padding: 3 }}>
-          {(["designs", "infos"] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{
-              padding: "6px 14px", borderRadius: 7, fontSize: 12, fontWeight: 500,
-              background: tab === t ? "var(--accent)" : "transparent",
-              color: tab === t ? "white" : "var(--fg-secondary)",
-              border: "none", cursor: "pointer",
-            }}>
-              {t === "designs" ? "Designs" : "Personnaliser"}
-            </button>
-          ))}
-        </div>
-
         <button onClick={sauvegarder} disabled={saving} style={{
           padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
           background: saved ? "#34C759" : "var(--accent)", color: "white",
@@ -157,23 +115,15 @@ export default function CartePage() {
       {/* ── Contenu ── */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-        {/* Preview Apple Wallet — toujours visible */}
+        {/* ── Preview ── */}
         <div style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 32,
-          gap: 14,
-          background: "var(--bg)",
-          overflowY: "auto",
+          flex: 1, display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: 32, gap: 14, background: "var(--bg)", overflowY: "auto",
         }}>
           <div style={{
-            padding: "5px 16px",
-            background: "var(--glass-bg)",
-            border: "1px solid var(--border)",
-            borderRadius: 20,
+            padding: "5px 16px", background: "var(--glass-bg)",
+            border: "1px solid var(--border)", borderRadius: 20,
           }}>
             <p style={{ fontSize: 11, color: "var(--fg-tertiary)", letterSpacing: "0.04em" }}>
               Aperçu fidèle · iPhone · Apple Wallet
@@ -183,8 +133,10 @@ export default function CartePage() {
           <AppleWalletCard
             logoUrl={logoUrl}
             logoText={nom}
-            stripContent={stripContent}
+            stripUrl={stripUrl || undefined}
             backgroundColor={bgColor}
+            foregroundColor={effectiveFg}
+            labelColor={effectiveLabel}
             stampsCurrent={stampsCurrent}
             stampsObjective={objectif}
             rewardName={recompense}
@@ -193,271 +145,223 @@ export default function CartePage() {
           />
 
           <p style={{ fontSize: 11, color: "var(--fg-tertiary)", textAlign: "center", maxWidth: 340 }}>
-            Le design apparaît dans la bannière — la mise en page des champs est imposée par Apple.
+            Bannière libre · Couleurs personnalisables · Structure imposée par Apple
           </p>
         </div>
 
         {/* ── Panel droit ── */}
         <div style={{
-          width: 320,
-          borderLeft: "1px solid var(--border)",
-          overflowY: "auto",
-          display: "flex",
-          flexDirection: "column",
-          flexShrink: 0,
+          width: 300, borderLeft: "1px solid var(--border)",
+          overflowY: "auto", padding: "20px 18px",
+          display: "flex", flexDirection: "column", gap: 22, flexShrink: 0,
         }}>
 
-          {tab === "designs" ? (
-            /* ── Onglet Designs ── */
-            <div style={{ padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
-
-              {/* Filtre catégories */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {categories.map(c => (
-                  <button key={c.id} onClick={() => setCategory(c.id)} style={{
-                    padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
-                    background: category === c.id ? "var(--accent)" : "var(--glass-bg)",
-                    color: category === c.id ? "white" : "var(--fg-secondary)",
-                    border: `1px solid ${category === c.id ? "var(--accent)" : "var(--border)"}`,
-                    cursor: "pointer",
-                  }}>
-                    {c.label}
+          {/* Logo */}
+          <Section label="Logo">
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <label style={{
+                width: 52, height: 52, borderRadius: 12,
+                border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "var(--glass-bg)", cursor: uploadingLogo ? "wait" : "pointer",
+              }}>
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
+                {logoUrl
+                  ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }}/>
+                  : <CameraIcon/>
+                }
+              </label>
+              <div style={{ flex: 1 }}>
+                <label style={{
+                  display: "block", width: "100%", padding: "8px 0", borderRadius: 10,
+                  fontSize: 12, fontWeight: 500, background: "var(--glass-bg)",
+                  border: "1px solid var(--border)", color: "var(--fg)",
+                  cursor: uploadingLogo ? "wait" : "pointer", textAlign: "center",
+                }}>
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
+                  {uploadingLogo ? "Upload…" : logoUrl ? "Changer" : "Ajouter"}
+                </label>
+                {logoUrl && (
+                  <button onClick={() => setLogoUrl("")} style={{ width: "100%", marginTop: 4, padding: "5px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
+                    Supprimer
                   </button>
-                ))}
+                )}
               </div>
+            </div>
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
+              Affiché en haut à gauche · max 160×50pt
+            </p>
+          </Section>
 
-              {/* Grille templates */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
-                {filtered.map(tpl => {
-                  const pal = tpl.palettes.find(p => p.id === (tpl.id === templateId ? paletteId : tpl.defaultPaletteId)) ?? tpl.palettes[0];
-                  const selected = tpl.id === templateId;
-                  return (
-                    <button
-                      key={tpl.id}
-                      onClick={() => { setTemplateId(tpl.id); setPaletteId(pal.id); }}
-                      style={{
-                        padding: 0, border: `2px solid ${selected ? "var(--accent)" : "transparent"}`,
-                        borderRadius: 12, overflow: "hidden", cursor: "pointer",
-                        boxShadow: selected ? "0 0 0 3px rgba(0,122,255,0.15)" : "none",
-                        background: "none",
-                        position: "relative",
-                      }}
-                    >
-                      {/* Miniature : template rendu à 375×246, scalé à 144×94 */}
-                      <div style={{
-                        width: 144, height: 94,
-                        overflow: "hidden",
-                        position: "relative",
-                      }}>
-                        <div style={{
-                          width: 375, height: 246,
-                          transform: "scale(0.384)",
-                          transformOrigin: "top left",
-                          pointerEvents: "none",
-                        }}>
-                          {tpl.render({ data: cardData, tokens: pal.tokens, palette: pal, thumbnail: true })}
-                        </div>
-                      </div>
-                      {/* Nom du template */}
-                      <div style={{
-                        position: "absolute", bottom: 0, left: 0, right: 0,
-                        padding: "12px 6px 5px",
-                        background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.7))",
-                        textAlign: "center",
-                      }}>
-                        <span style={{ fontSize: 9, fontWeight: 600, color: "#fff", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                          {tpl.name}
-                        </span>
-                      </div>
-                      {selected && (
-                        <div style={{
-                          position: "absolute", top: 5, right: 5,
-                          width: 18, height: 18, borderRadius: "50%",
-                          background: "var(--accent)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          <span style={{ fontSize: 10, color: "white" }}>✓</span>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
+          {/* Bannière */}
+          <Section label="Bannière (strip image)">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {stripUrl ? (
+                <div style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "375/144", border: "1px solid var(--border)", position: "relative" }}>
+                  <img src={stripUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+                </div>
+              ) : (
+                <label style={{
+                  borderRadius: 10, aspectRatio: "375/144",
+                  border: "2px dashed var(--border)",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  background: "var(--glass-bg)", cursor: uploadingStrip ? "wait" : "pointer", gap: 6,
+                }}>
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleStripUpload} disabled={uploadingStrip}/>
+                  {uploadingStrip ? (
+                    <span style={{ fontSize: 12, color: "var(--fg-tertiary)" }}>Upload…</span>
+                  ) : (
+                    <>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="1.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>Photo ou design du marchand</span>
+                    </>
+                  )}
+                </label>
+              )}
+              <div style={{ display: "flex", gap: 6 }}>
+                <label style={{
+                  flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
+                  background: "var(--glass-bg)", border: "1px solid var(--border)",
+                  color: "var(--fg)", cursor: uploadingStrip ? "wait" : "pointer", textAlign: "center",
+                }}>
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleStripUpload} disabled={uploadingStrip}/>
+                  {uploadingStrip ? "Upload…" : stripUrl ? "Changer" : "Importer"}
+                </label>
+                {stripUrl && (
+                  <button
+                    onClick={() => { setStripUrl(""); updateDoc(doc(db, "marchands", user!.uid), { strip_url: "" }); }}
+                    style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", color: "#FF3B30", cursor: "pointer" }}
+                  >
+                    Suppr.
+                  </button>
+                )}
               </div>
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: 0 }}>
+                Format paysage large · min 750×288px · recadrage auto
+              </p>
+            </div>
+          </Section>
 
-              {/* Palettes du template sélectionné */}
-              {template.palettes.length > 1 && (
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-tertiary)", marginBottom: 8 }}>
-                    Palette — {template.name}
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {template.palettes.map(p => (
-                      <button key={p.id} onClick={() => setPaletteId(p.id)} style={{
-                        display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
-                        borderRadius: 10, cursor: "pointer",
-                        background: paletteId === p.id ? "rgba(0,122,255,0.08)" : "transparent",
-                        border: `1px solid ${paletteId === p.id ? "var(--accent)" : "var(--border)"}`,
-                      }}>
-                        <div style={{ width: 20, height: 20, borderRadius: 5, background: p.tokens.background, border: "1px solid rgba(128,128,128,0.3)", flexShrink: 0 }}/>
-                        <div style={{ display: "flex", gap: 3 }}>
-                          <div style={{ width: 10, height: 10, borderRadius: 3, background: p.tokens.accent }}/>
-                          <div style={{ width: 10, height: 10, borderRadius: 3, background: p.tokens.stampActive }}/>
-                        </div>
-                        <span style={{ fontSize: 12, fontWeight: paletteId === p.id ? 600 : 500, color: paletteId === p.id ? "var(--accent)" : "var(--fg)" }}>{p.name}</span>
-                      </button>
-                    ))}
-                  </div>
+          {/* Couleurs */}
+          <Section label="Couleurs de la carte">
+
+            {/* Fond */}
+            <ColorRow
+              label="Fond"
+              value={bgColor}
+              onChange={setBgColor}
+              presets={["#0A0A0A","#1C1C1E","#1A1A2E","#0D1B2A","#1C3A5C","#3A1C1C","#2C1654","#1C3A1C","#FFFFFF","#F2F2F7","#EEF3FF","#FFF9F0"]}
+            />
+
+            {/* Texte */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>Texte principal</span>
+                <Toggle label="Auto" active={fgAuto} onToggle={() => setFgAuto(v => !v)}/>
+              </div>
+              {!fgAuto && (
+                <ColorRow value={fgColor} onChange={setFgColor}
+                  presets={["#FFFFFF","#F5F5F5","#0A0A0A","#1C1C1E","#FFD60A","#FF6B35","#00F5A0","#BF5AF2"]}
+                />
+              )}
+              {fgAuto && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, background: effectiveFg, border: "1px solid var(--border)" }}/>
+                  <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>
+                    {effectiveFg === "#FFFFFF" ? "Blanc" : "Noir"} — calculé depuis le fond
+                  </span>
                 </div>
               )}
             </div>
 
-          ) : (
-            /* ── Onglet Personnaliser ── */
-            <div style={{ padding: "16px 14px", display: "flex", flexDirection: "column", gap: 20 }}>
-
-              {/* Logo */}
-              <Section label="Logo">
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <label style={{
-                    width: 52, height: 52, borderRadius: 12,
-                    border: "1px solid var(--border)", overflow: "hidden",
-                    flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "var(--glass-bg)", cursor: uploadingLogo ? "wait" : "pointer",
-                  }}>
-                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
-                    {logoUrl
-                      ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
-                      : <CameraIcon />
-                    }
-                  </label>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: "block", width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: uploadingLogo ? "wait" : "pointer", textAlign: "center" }}>
-                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
-                      {uploadingLogo ? "Upload…" : logoUrl ? "Changer" : "Ajouter"}
-                    </label>
-                    {logoUrl && (
-                      <button onClick={() => setLogoUrl("")} style={{ width: "100%", marginTop: 4, padding: "5px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
-                        Supprimer
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
-                  Affiché en haut à gauche · max 160×50pt
-                </p>
-              </Section>
-
-              {/* Infos */}
-              <Section label="Informations">
-                <Field label="Nom de l'établissement">
-                  <TextInput value={nom} onChange={setNom} placeholder="Café du Centre"/>
-                </Field>
-              </Section>
-
-              {/* Récompense */}
-              <Section label="Récompense">
-                <Field label="Description">
-                  <TextInput value={recompense} onChange={setRecompense} placeholder="1 café offert"/>
-                </Field>
-                <Field label={`Tampons nécessaires — ${objectif}`}>
-                  <input type="range" min={5} max={20} value={objectif}
-                    onChange={e => setObjectif(Number(e.target.value))}
-                    style={{ width: "100%", accentColor: "var(--accent)" }}/>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                    {[5, 6, 8, 10, 12, 15, 20].map(n => (
-                      <button key={n} onClick={() => setObjectif(n)} style={{
-                        fontSize: 10, padding: "2px 5px", borderRadius: 5,
-                        background: objectif === n ? "var(--accent)" : "var(--glass-bg)",
-                        border: "1px solid var(--border)",
-                        color: objectif === n ? "white" : "var(--fg-tertiary)",
-                        cursor: "pointer",
-                      }}>{n}</button>
-                    ))}
-                  </div>
-                </Field>
-              </Section>
-
-              {/* Couleur de fond */}
-              <Section label="Couleur de fond de la carte">
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
-                  Indépendante du design — s&apos;applique au header, aux champs et à la zone QR.
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <input
-                    type="color"
-                    value={/^#[0-9a-f]{6}$/i.test(bgColor) ? bgColor : "#1c1c1e"}
-                    onChange={e => setBgColor(e.target.value)}
-                    style={{ width: 52, height: 40, borderRadius: 10, border: "1px solid var(--border)", cursor: "pointer", padding: 3, background: "none" }}
-                  />
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", margin: 0 }}>{bgColor.toUpperCase()}</p>
-                    <p style={{ fontSize: 11, color: "var(--fg-tertiary)", margin: "2px 0 0" }}>
-                      Texte {isDarkBg(bgColor) ? "blanc" : "noir"} auto
-                    </p>
-                  </div>
-                </div>
-
-                {/* Presets */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {[
-                    "#0A0A0A", "#1C1C1E", "#1A1A2E", "#0D1B2A",
-                    "#1C3A5C", "#3A1C1C", "#1C3A1C", "#2C1654",
-                    "#FFFFFF", "#F2F2F7", "#EEF3FF", "#FFF9F0",
-                  ].map(c => (
-                    <button key={c} onClick={() => setBgColor(c)} style={{
-                      width: 28, height: 28, borderRadius: 8,
-                      background: c,
-                      border: bgColor === c ? "2px solid var(--accent)" : "1px solid var(--border)",
-                      cursor: "pointer", padding: 0,
-                      boxShadow: c === "#FFFFFF" ? "inset 0 0 0 1px rgba(0,0,0,0.1)" : undefined,
-                    }}/>
-                  ))}
-                </div>
-
-                {/* Sync depuis le design */}
-                <button
-                  onClick={() => setBgColor(palette.tokens.background)}
-                  style={{
-                    padding: "7px 12px", borderRadius: 10, fontSize: 11, fontWeight: 500,
-                    background: "var(--glass-bg)", border: "1px solid var(--border)",
-                    color: "var(--fg-secondary)", cursor: "pointer", textAlign: "left",
-                    display: "flex", alignItems: "center", gap: 8,
-                  }}
-                >
-                  <div style={{ width: 14, height: 14, borderRadius: 4, background: palette.tokens.background, border: "1px solid rgba(128,128,128,0.3)", flexShrink: 0 }}/>
-                  Utiliser la couleur du design sélectionné
-                </button>
-              </Section>
-
-              {/* Note Apple Wallet */}
-              <div style={{
-                padding: "12px 14px", borderRadius: 12,
-                background: "rgba(0,122,255,0.06)",
-                border: "1px solid rgba(0,122,255,0.15)",
-              }}>
-                <p style={{ fontSize: 11, color: "var(--fg-secondary)", margin: 0, lineHeight: 1.6 }}>
-                  <strong style={{ color: "var(--accent)" }}>Génération .pkpass</strong><br/>
-                  Structure prête · En attente du certificat Apple Developer.
-                </p>
+            {/* Labels */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>Labels</span>
+                <Toggle label="Auto" active={labelAuto} onToggle={() => setLabelAuto(v => !v)}/>
               </div>
+              {!labelAuto && (
+                <ColorRow value={labelColor} onChange={setLabelColor}
+                  presets={["rgba(255,255,255,0.55)","rgba(255,255,255,0.35)","rgba(0,0,0,0.42)","rgba(0,0,0,0.28)","#FF6B35","#FFD60A","#00F5A0","#BF5AF2"]}
+                />
+              )}
+              {labelAuto && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, background: effectiveLabel, border: "1px solid var(--border)" }}/>
+                  <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>
+                    Automatique — {isDarkBg(bgColor) ? "blanc 55%" : "noir 42%"}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+          </Section>
+
+          {/* Infos */}
+          <Section label="Informations">
+            <Field label="Nom de l'établissement">
+              <TextInput value={nom} onChange={setNom} placeholder="Café du Centre"/>
+            </Field>
+          </Section>
+
+          {/* Récompense */}
+          <Section label="Récompense">
+            <Field label="Description">
+              <TextInput value={recompense} onChange={setRecompense} placeholder="1 café offert"/>
+            </Field>
+            <Field label={`Tampons nécessaires — ${objectif}`}>
+              <input type="range" min={5} max={20} value={objectif}
+                onChange={e => setObjectif(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--accent)" }}/>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                {[5,6,8,10,12,15,20].map(n => (
+                  <button key={n} onClick={() => setObjectif(n)} style={{
+                    fontSize: 10, padding: "2px 5px", borderRadius: 5,
+                    background: objectif === n ? "var(--accent)" : "var(--glass-bg)",
+                    border: "1px solid var(--border)",
+                    color: objectif === n ? "white" : "var(--fg-tertiary)",
+                    cursor: "pointer",
+                  }}>{n}</button>
+                ))}
+              </div>
+            </Field>
+          </Section>
+
+          {/* Note */}
+          <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(0,122,255,0.06)", border: "1px solid rgba(0,122,255,0.15)" }}>
+            <p style={{ fontSize: 11, color: "var(--fg-secondary)", margin: 0, lineHeight: 1.6 }}>
+              <strong style={{ color: "var(--accent)" }}>Génération .pkpass</strong><br/>
+              Structure prête · En attente du certificat Apple Developer.
+            </p>
+          </div>
+
         </div>
       </div>
     </div>
   );
 }
 
-// ── Helpers ──────────────────────────────────────────
+// ── Color helpers ─────────────────────────────────────
 
 function isDarkBg(hex: string): boolean {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return true;
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
-  const lin = (c: number) => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) < 0.35;
+  const r = parseInt(hex.slice(1,3),16)/255;
+  const g = parseInt(hex.slice(3,5),16)/255;
+  const b = parseInt(hex.slice(5,7),16)/255;
+  const lin = (c: number) => c <= 0.03928 ? c/12.92 : ((c+0.055)/1.055)**2.4;
+  return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b) < 0.35;
 }
+
+function autoFg(bg: string): string {
+  return isDarkBg(bg) ? "#FFFFFF" : "#000000";
+}
+
+function autoLabel(bg: string): string {
+  return isDarkBg(bg) ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.42)";
+}
+
+// ── Image helpers ─────────────────────────────────────
 
 async function resizeImage(file: File, maxW: number): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -465,17 +369,94 @@ async function resizeImage(file: File, maxW: number): Promise<string> {
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const ratio = Math.min(maxW / img.width, 1);
-      const w = Math.round(img.width * ratio);
-      const h = Math.round(img.height * ratio);
+      const ratio = Math.min(maxW/img.width,1);
       const canvas = document.createElement("canvas");
-      canvas.width = w; canvas.height = h;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL("image/jpeg", 0.82));
+      canvas.width = Math.round(img.width*ratio);
+      canvas.height = Math.round(img.height*ratio);
+      canvas.getContext("2d")!.drawImage(img,0,0,canvas.width,canvas.height);
+      resolve(canvas.toDataURL("image/jpeg",0.85));
     };
     img.onerror = reject;
     img.src = url;
   });
+}
+
+async function cropResizeImage(file: File, targetW: number, targetH: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const targetRatio = targetW / targetH;
+      const imgRatio = img.width / img.height;
+      let sx=0, sy=0, sw=img.width, sh=img.height;
+      if (imgRatio > targetRatio) {
+        sw = Math.round(img.height * targetRatio);
+        sx = Math.round((img.width - sw) / 2);
+      } else {
+        sh = Math.round(img.width / targetRatio);
+        sy = Math.round((img.height - sh) / 2);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = targetW; canvas.height = targetH;
+      canvas.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+      resolve(canvas.toDataURL("image/jpeg", 0.88));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// ── UI Components ─────────────────────────────────────
+
+function ColorRow({ label, value, onChange, presets }: {
+  label?: string; value: string; onChange: (v: string) => void; presets: string[];
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {label && <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>{label}</span>}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <input type="color"
+          value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#000000"}
+          onChange={e => onChange(e.target.value)}
+          style={{ width: 36, height: 30, borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", padding: 2, background: "none" }}
+        />
+        <span style={{ fontSize: 11, fontWeight: 500, color: "var(--fg)", fontFamily: "monospace" }}>
+          {/^#[0-9a-f]{6}$/i.test(value) ? value.toUpperCase() : value}
+        </span>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+        {presets.map(c => (
+          <button key={c} onClick={() => onChange(c)} style={{
+            width: 22, height: 22, borderRadius: 6,
+            background: c,
+            border: value === c ? "2px solid var(--accent)" : "1px solid var(--border)",
+            cursor: "pointer", padding: 0,
+            boxShadow: (c === "#FFFFFF" || c === "#F2F2F7" || c === "#F5F5F5") ? "inset 0 0 0 1px rgba(0,0,0,0.08)" : undefined,
+          }}/>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Toggle({ label, active, onToggle }: { label: string; active: boolean; onToggle: () => void }) {
+  return (
+    <button onClick={onToggle} style={{
+      display: "flex", alignItems: "center", gap: 5,
+      padding: "3px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600,
+      background: active ? "rgba(0,122,255,0.1)" : "var(--glass-bg)",
+      border: `1px solid ${active ? "rgba(0,122,255,0.3)" : "var(--border)"}`,
+      color: active ? "var(--accent)" : "var(--fg-tertiary)",
+      cursor: "pointer",
+    }}>
+      <div style={{
+        width: 8, height: 8, borderRadius: "50%",
+        background: active ? "var(--accent)" : "var(--fg-tertiary)",
+      }}/>
+      {label}
+    </button>
+  );
 }
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
@@ -498,14 +479,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
-    <input
-      type="text" value={value} placeholder={placeholder}
+    <input type="text" value={value} placeholder={placeholder}
       onChange={e => onChange(e.target.value)}
-      style={{
-        width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 13,
-        background: "var(--glass-bg)", border: "1px solid var(--border)",
-        color: "var(--fg)", outline: "none", boxSizing: "border-box",
-      }}
+      style={{ width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 13, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none", boxSizing: "border-box" }}
       onFocus={e => (e.target.style.borderColor = "var(--accent)")}
       onBlur={e => (e.target.style.borderColor = "var(--border)")}
     />
@@ -515,8 +491,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
 function CameraIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="1.5" strokeLinecap="round">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-      <circle cx="12" cy="13" r="4"/>
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
     </svg>
   );
 }
