@@ -16,13 +16,20 @@ export default function CartePage() {
 
   const objectifInit = (marchand?.objectif_tampons as number) || 10;
 
-  const [templateId, setTemplateId] = useState<string>((marchand?.template_id as string) || defaultTpl.id);
-  const [paletteId, setPaletteId] = useState<string>((marchand?.palette_id as string) || defaultTpl.defaultPaletteId);
+  // Calcul du template/palette initial pour le fallback couleur de fond
+  const initTemplateId = (marchand?.template_id as string) || defaultTpl.id;
+  const initTemplate = allTemplates.find(t => t.id === initTemplateId) ?? allTemplates[0];
+  const initPaletteId = (marchand?.palette_id as string) || initTemplate.defaultPaletteId;
+  const initPalette = initTemplate.palettes.find(p => p.id === initPaletteId) ?? initTemplate.palettes[0];
+
+  const [templateId, setTemplateId] = useState<string>(initTemplateId);
+  const [paletteId, setPaletteId] = useState<string>(initPaletteId);
   const [nom, setNom] = useState<string>((marchand?.nom as string) || "");
   const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
   const [recompense, setRecompense] = useState<string>((marchand?.nom_recompense as string) || "");
   const [objectif, setObjectif] = useState<number>(objectifInit);
-  const [bgColor, setBgColor] = useState<string>((marchand?.couleur_principale as string) || "#1C1C1E");
+  // apple_bg_color = champ dédié, fallback sur la couleur du template (jamais couleur_principale)
+  const [bgColor, setBgColor] = useState<string>((marchand?.apple_bg_color as string) || initPalette.tokens.background);
   const [tab, setTab] = useState<"designs" | "infos">("designs");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -60,7 +67,7 @@ export default function CartePage() {
       objectif_tampons: objectif,
       template_id: templateId,
       palette_id: paletteId,
-      couleur_principale: bgColor,
+      apple_bg_color: bgColor,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
