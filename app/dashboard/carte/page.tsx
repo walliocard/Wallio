@@ -474,32 +474,24 @@ export default function CartePage() {
               Texte affiché au-dessus de chaque valeur — imposé en majuscules par Apple.
             </p>
 
-            <Field label="Champ principal">
-              <TextInput value={primaryLabel} onChange={setPrimaryLabel} placeholder="Tampons"/>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
-                {["Tampons","Points","Visites","Cafés","Soins","Séances","Passages"].map(v => (
-                  <Chip key={v} label={v} active={primaryLabel === v} onClick={() => setPrimaryLabel(v)}/>
-                ))}
-              </div>
-            </Field>
-
-            <Field label="Label récompense">
-              <TextInput value={rewardLabel} onChange={setRewardLabel} placeholder="Récompense"/>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
-                {["Récompense","Cadeau","Offre","Avantage","Bonus","Surprise"].map(v => (
-                  <Chip key={v} label={v} active={rewardLabel === v} onClick={() => setRewardLabel(v)}/>
-                ))}
-              </div>
-            </Field>
-
-            <Field label="Label membre">
-              <TextInput value={memberLabel} onChange={setMemberLabel} placeholder="Membre"/>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
-                {["Membre","Client","Titulaire","Fidèle","Abonné","Nom"].map(v => (
-                  <Chip key={v} label={v} active={memberLabel === v} onClick={() => setMemberLabel(v)}/>
-                ))}
-              </div>
-            </Field>
+            <LabelField
+              label="Champ principal"
+              value={primaryLabel}
+              onChange={setPrimaryLabel}
+              suggestions={["Tampons","Points","Visites","Cafés","Soins","Séances","Passages"]}
+            />
+            <LabelField
+              label="Récompense"
+              value={rewardLabel}
+              onChange={setRewardLabel}
+              suggestions={["Récompense","Cadeau","Offre","Avantage","Bonus","Surprise"]}
+            />
+            <LabelField
+              label="Membre"
+              value={memberLabel}
+              onChange={setMemberLabel}
+              suggestions={["Membre","Client","Titulaire","Fidèle","Abonné","Nom"]}
+            />
           </Section>
 
           {/* Récompense */}
@@ -728,6 +720,36 @@ function ColorRow({ label, value, onChange, presets }: {
             cursor: "pointer", padding: 0,
             boxShadow: (c === "#FFFFFF" || c === "#F2F2F7" || c === "#F5F5F5") ? "inset 0 0 0 1px rgba(0,0,0,0.08)" : undefined,
           }}/>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LabelField({ label, value, onChange, suggestions }: {
+  label: string; value: string; onChange: (v: string) => void; suggestions: string[];
+}) {
+  return (
+    <div>
+      <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginBottom: 6 }}>{label}</p>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={`Ex: ${suggestions[0]}, ${suggestions[1]}…`}
+        style={{
+          width: "100%", padding: "9px 12px", borderRadius: 10, fontSize: 13,
+          background: "var(--glass-bg)", border: "1.5px solid var(--accent)",
+          color: "var(--fg)", outline: "none", boxSizing: "border-box",
+          fontWeight: 500,
+        }}
+      />
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
+        <span style={{ fontSize: 10, color: "var(--fg-tertiary)", alignSelf: "center", marginRight: 2 }}>
+          Suggestions :
+        </span>
+        {suggestions.map(v => (
+          <Chip key={v} label={v} active={value === v} onClick={() => onChange(v)}/>
         ))}
       </div>
     </div>
