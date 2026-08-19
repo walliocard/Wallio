@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -50,7 +51,7 @@ const template: CardTemplate = {
   categories: ["colorful", "modern", "street"],
   palettes,
   defaultPaletteId: "blue-purple",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -58,6 +59,21 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} viewBox="0 0 375 144" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id={`wg-strip-${tokens.accent}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={tokens.accent} stopOpacity="0.45"/>
+              <stop offset="100%" stopColor={tokens.accentSecondary} stopOpacity="0.3"/>
+            </linearGradient>
+          </defs>
+          <path d="M-20 100 C80 60 200 120 375 70 L375 0 L-20 0 Z" fill={`url(#wg-strip-${tokens.accent})`}/>
+          <path d="M-20 130 C100 90 250 140 395 100 L395 144 L-20 144 Z" fill={tokens.accentSecondary} fillOpacity="0.12"/>
+        </svg>
+      ),
+    });
 
     return (
       <div style={{

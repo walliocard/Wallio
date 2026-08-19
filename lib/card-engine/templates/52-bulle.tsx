@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
 
@@ -49,7 +50,7 @@ const template: CardTemplate = {
   categories: ["colorful", "beauty", "restaurant", "nature"],
   palettes,
   defaultPaletteId: "lavender-plum",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -57,6 +58,19 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 14 : (dims?.logoSize ?? 26);
     const fmtV = dims?.format === "compact" ? 0.78 : dims?.format === "wide" ? 0.58 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} viewBox="0 0 375 144" preserveAspectRatio="none">
+          <ellipse cx="320" cy="18" rx="80" ry="32" fill={tokens.accent} opacity="0.18" transform="rotate(-15 320 18)"/>
+          <ellipse cx="55" cy="122" rx="60" ry="26" fill={tokens.accentSecondary} opacity="0.14" transform="rotate(20 55 122)"/>
+          <circle cx="280" cy="100" r="18" fill={tokens.accentSecondary} opacity="0.12"/>
+          <circle cx="310" cy="118" r="10" fill={tokens.accent} opacity="0.15"/>
+          <circle cx="50" cy="40" r="12" fill={tokens.accent} opacity="0.12"/>
+          <circle cx="30" cy="60" r="7" fill={tokens.accentSecondary} opacity="0.18"/>
+        </svg>
+      ),
+    });
 
     return (
       <div style={{

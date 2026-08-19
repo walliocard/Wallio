@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Beige, sable, architecture désertique. Typographie serif élégante.",
   categories: ["premium", "restaurant", "nature"],
   palettes, defaultPaletteId: "sand-black",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -22,6 +23,17 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <>
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "35%", background: tokens.surface, opacity: 0.6 }}/>
+          <svg style={{ position: "absolute", top: "26%", left: 0, right: 0 }} width="100%" height={26} viewBox="0 0 375 26" preserveAspectRatio="none">
+            <path d="M0 0 L375 13 L375 26 L0 26 Z" fill={tokens.background}/>
+          </svg>
+        </>
+      ),
+    });
 
     return (
       <div style={{

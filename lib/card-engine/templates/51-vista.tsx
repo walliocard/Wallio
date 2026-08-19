@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
 
@@ -49,7 +50,7 @@ const template: CardTemplate = {
   categories: ["restaurant", "beauty", "premium", "modern"],
   palettes,
   defaultPaletteId: "dark-glass",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -59,6 +60,17 @@ const template: CardTemplate = {
     const fmtV = dims?.format === "compact" ? 0.8 : dims?.format === "wide" ? 0.6 : 1;
     const defaultPhotoH = dims?.format === "wide" ? 22 : dims?.format === "compact" ? 30 : 38;
     const photoH = `${dims?.photoHeight ?? defaultPhotoH}%`;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: data.photo_url ? (
+        <>
+          <img src={data.photo_url} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: `${dims?.photoPositionX ?? 50}% ${dims?.photoPositionY ?? 50}%` }}/>
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to right, ${tokens.background}CC 0%, transparent 60%)` }}/>
+        </>
+      ) : (
+        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${tokens.accent}55 0%, ${tokens.accentSecondary}40 60%, ${tokens.accent}20 100%)` }}/>
+      ),
+    });
 
     return (
       <div style={{

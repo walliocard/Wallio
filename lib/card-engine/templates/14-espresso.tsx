@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -50,7 +51,7 @@ const template: CardTemplate = {
   categories: ["coffee", "premium", "modern"],
   palettes,
   defaultPaletteId: "espresso-cream",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -58,6 +59,20 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <>
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: logoSz, background: tokens.accent, opacity: 0.8 }}/>
+          <div style={{ position: "absolute", right: "6%", top: "12%", opacity: 0.08 }}>
+            <svg width={55} height={75} viewBox="0 0 55 75" fill="none">
+              <ellipse cx="27" cy="37" rx="24" ry="34" stroke={tokens.text} strokeWidth="1.5"/>
+              <path d="M27 6 C27 6 10 25 27 37 S27 68 27 68" stroke={tokens.text} strokeWidth="1.5"/>
+            </svg>
+          </div>
+        </>
+      ),
+    });
 
     return (
       <div style={{

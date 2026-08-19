@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Soleil, cercles rayonnants, couleurs chaudes méditerranéennes.",
   categories: ["restaurant", "colorful", "nature"],
   palettes, defaultPaletteId: "yellow-terracotta",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -22,6 +23,20 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <svg style={{ position: "absolute", right: "-8%", top: "50%", transform: "translateY(-50%)", opacity: 0.12, pointerEvents: "none" }} width={110} height={110} viewBox="0 0 110 110" fill="none">
+          <circle cx="55" cy="55" r="25" fill={tokens.accent}/>
+          {Array.from({ length: 8 }).map((_, i) => {
+            const angle = (i * 45) * Math.PI / 180;
+            const x1 = 55 + 30 * Math.cos(angle); const y1 = 55 + 30 * Math.sin(angle);
+            const x2 = 55 + 48 * Math.cos(angle); const y2 = 55 + 48 * Math.sin(angle);
+            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={tokens.accent} strokeWidth="3" strokeLinecap="round"/>;
+          })}
+        </svg>
+      ),
+    });
 
     return (
       <div style={{

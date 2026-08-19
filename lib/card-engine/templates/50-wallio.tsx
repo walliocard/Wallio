@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -50,7 +51,7 @@ const template: CardTemplate = {
   categories: ["minimal", "premium", "modern"],
   palettes,
   defaultPaletteId: "wallio-light",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -60,6 +61,18 @@ const template: CardTemplate = {
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
     const pct = (filled / data.objectif_tampons) * 100;
     const isDark = tokens.background === "#111113";
+
+    if (strip) return renderStrip(data, tokens, {
+      background: isDark
+        ? `radial-gradient(ellipse at 80% 20%, rgba(10,132,255,0.12) 0%, transparent 60%), ${tokens.background}`
+        : tokens.background,
+      decoratives: (
+        <>
+          <div style={{ position: "absolute", right: "-12%", top: "50%", transform: "translateY(-50%)", width: 360, height: 360, borderRadius: "50%", border: `1px solid ${tokens.border}`, pointerEvents: "none" }}/>
+          <div style={{ position: "absolute", right: "-5%", top: "50%", transform: "translateY(-50%)", width: 74, height: 74, borderRadius: "50%", border: `1px solid ${tokens.borderStrong}`, pointerEvents: "none" }}/>
+        </>
+      ),
+    });
 
     return (
       <div style={{

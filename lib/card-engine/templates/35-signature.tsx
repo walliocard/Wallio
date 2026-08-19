@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Initiales géantes en arrière-plan, monogramme comme motif principal.",
   categories: ["luxury", "premium", "editorial"],
   palettes, defaultPaletteId: "navy-gold",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -23,6 +24,14 @@ const template: CardTemplate = {
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
     const initials = (data.nom || "WL").split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+          <span style={{ fontSize: 130, fontWeight: 700, color: tokens.accent, opacity: 0.05, letterSpacing: -5, userSelect: "none" }}>{initials}</span>
+        </div>
+      ),
+    });
 
     return (
       <div style={{

@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Pastels doux, formes rondes, typographie bubbly, bonbons.",
   categories: ["colorful", "beauty", "modern"],
   palettes, defaultPaletteId: "pink-lavender",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -22,6 +23,16 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <>
+          <div style={{ position: "absolute", left: "80%", top: "-5%", width: 76, height: 76, borderRadius: "50%", background: tokens.surface, transform: "translate(-50%,-50%)" }}/>
+          <div style={{ position: "absolute", left: "10%", top: "80%", width: 56, height: 56, borderRadius: "50%", background: tokens.surfaceSecondary, transform: "translate(-50%,-50%)" }}/>
+          <div style={{ position: "absolute", left: "60%", top: "88%", width: 40, height: 40, borderRadius: "50%", background: tokens.surface, transform: "translate(-50%,-50%)" }}/>
+        </>
+      ),
+    });
 
     return (
       <div style={{

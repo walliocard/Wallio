@@ -1,130 +1,80 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getDefaultTemplate, getTemplate } from "@/lib/card-engine/registry";
+import { getAllTemplates, getDefaultTemplate } from "@/lib/card-engine/registry";
 import type { CardData, CardDimensions } from "@/lib/card-engine/types";
-import { FORMAT_RATIOS } from "@/lib/card-engine/types";
-import type { StampStyle } from "@/lib/card-engine/components/Stamps";
-import CardDesigner from "@/components/card-designer/CardDesigner";
-import WallioQR from "@/components/WallioQR";
+import AppleWalletCard from "@/components/AppleWalletCard";
 
 export default function CartePage() {
   const { user, marchand } = useAuth();
 
-  const defaultTemplate = getDefaultTemplate();
+  const allTemplates = useMemo(() => getAllTemplates(), []);
+  const defaultTpl = getDefaultTemplate();
 
-  const objectifInitial = (marchand?.objectif_tampons as number) || 10;
-  const [data, setData] = useState<CardData>({
-    nom:              (marchand?.nom as string) || "",
-    logo_url:         (marchand?.logo_url as string) || "",
-    photo_url:        (marchand?.photo_url as string) || "",
-    tampons:          Math.round(objectifInitial * 0.6),
-    objectif_tampons: objectifInitial,
-    nom_recompense:   (marchand?.nom_recompense as string) || "Récompense offerte",
-    mode:             (marchand?.mode_recompense as "cyclique" | "progressif") || "cyclique",
-    paliers:          marchand?.paliers || undefined,
-    palier_actuel:    0,
-    paliers_valides:  [],
-    slogan:           (marchand?.slogan as string) || "",
-    wallet_id:        "",
-    client_prenom:    "Prénom",
-    client_nom:       "Nom",
-  });
+  const objectifInit = (marchand?.objectif_tampons as number) || 10;
 
-  const [templateId, setTemplateId]     = useState((marchand?.template_id as string) || defaultTemplate.id);
-  const [paletteId,  setPaletteId]      = useState((marchand?.palette_id as string)  || defaultTemplate.defaultPaletteId);
-  const [tab, setTab]                   = useState<"designs" | "infos">("designs");
-  const [saving, setSaving]             = useState(false);
-  const [saved, setSaved]               = useState(false);
+  const [templateId, setTemplateId] = useState<string>((marchand?.template_id as string) || defaultTpl.id);
+  const [paletteId, setPaletteId] = useState<string>((marchand?.palette_id as string) || defaultTpl.defaultPaletteId);
+  const [nom, setNom] = useState<string>((marchand?.nom as string) || "");
+  const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
+  const [recompense, setRecompense] = useState<string>((marchand?.nom_recompense as string) || "");
+  const [objectif, setObjectif] = useState<number>(objectifInit);
+  const [bgColor, setBgColor] = useState<string>((marchand?.couleur_principale as string) || "#1C1C1E");
+  const [tab, setTab] = useState<"designs" | "infos">("designs");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [dims, setDims] = useState<CardDimensions>({ format: "standard" });
-  const setDim = <K extends keyof CardDimensions>(k: K, v: CardDimensions[K]) =>
-    setDims(d => ({ ...d, [k]: v }));
+  const [category, setCategory] = useState("all");
 
   if (!marchand || !user) return null;
 
-  const template = getTemplate(templateId) ?? defaultTemplate;
-  const palette  = template.palettes.find(p => p.id === paletteId) ?? template.palettes[0];
+  const template = allTemplates.find(t => t.id === templateId) ?? allTemplates[0];
+  const palette = template.palettes.find(p => p.id === paletteId) ?? template.palettes[0];
+  const stampsCurrent = Math.round(objectif * 0.6);
 
-  const set = <K extends keyof CardData>(k: K, v: CardData[K]) =>
-    setData(d => ({ ...d, [k]: v }));
+  const cardData: CardData = {
+    nom,
+    logo_url: logoUrl,
+    tampons: stampsCurrent,
+    objectif_tampons: objectif,
+    nom_recompense: recompense,
+    mode: (marchand?.mode_recompense as "cyclique" | "progressif") || "cyclique",
+    client_prenom: "Prénom",
+    client_nom: "Nom",
+  };
+
+  const dims: CardDimensions = { format: "standard" };
+
+  // Strip = template rendu en mode strip (375×144 natif, décoratifs + identité marchand)
+  const stripContent = template.render({ data: cardData, tokens: palette.tokens, palette, thumbnail: false, dimensions: dims, strip: true });
 
   async function sauvegarder() {
     setSaving(true);
     await updateDoc(doc(db, "marchands", user!.uid), {
-      nom:              data.nom,
-      slogan:           data.slogan,
-      objectif_tampons: data.objectif_tampons,
-      nom_recompense:   data.nom_recompense,
-      logo_url:         data.logo_url,
-      photo_url:        data.photo_url || "",
-      template_id:      templateId,
-      palette_id:       paletteId,
-      updated_at:       serverTimestamp(),
+      nom,
+      logo_url: logoUrl,
+      nom_recompense: recompense,
+      objectif_tampons: objectif,
+      template_id: templateId,
+      palette_id: paletteId,
+      couleur_principale: bgColor,
+      updated_at: serverTimestamp(),
     });
-    setSaving(false); setSaved(true);
+    setSaving(false);
+    setSaved(true);
     setTimeout(() => setSaved(false), 2500);
-  }
-
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (!file.type.startsWith("image/")) return;
-    setUploadingPhoto(true);
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        img.onload = () => {
-          URL.revokeObjectURL(url);
-          const TARGET_W = 750;
-          const ratio = Math.min(TARGET_W / img.width, 1);
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.round(img.width * ratio);
-          canvas.height = Math.round(img.height * ratio);
-          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL("image/jpeg", 0.78));
-        };
-        img.onerror = reject;
-        img.src = url;
-      });
-      set("photo_url", dataUrl);
-      await updateDoc(doc(db, "marchands", user.uid), { photo_url: dataUrl });
-    } catch (err: unknown) {
-      alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setUploadingPhoto(false);
-    }
   }
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (!file.type.startsWith("image/")) return;
+    if (!file || !user || !file.type.startsWith("image/")) return;
     setUploadingLogo(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        img.onload = () => {
-          URL.revokeObjectURL(url);
-          const MAX = 280;
-          const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.round(img.width * ratio);
-          canvas.height = Math.round(img.height * ratio);
-          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL("image/jpeg", 0.72));
-        };
-        img.onerror = reject;
-        img.src = url;
-      });
-      // Stocké directement en base64 dans Firestore (évite Firebase Storage)
-      set("logo_url", dataUrl);
+      const dataUrl = await resizeImage(file, 280);
+      setLogoUrl(dataUrl);
       await updateDoc(doc(db, "marchands", user.uid), { logo_url: dataUrl });
     } catch (err: unknown) {
       alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
@@ -133,20 +83,42 @@ export default function CartePage() {
     }
   }
 
+  const categories = [
+    { id: "all", label: "Tous" },
+    { id: "minimal", label: "Minimal" },
+    { id: "premium", label: "Premium" },
+    { id: "coffee", label: "Café" },
+    { id: "restaurant", label: "Resto" },
+    { id: "beauty", label: "Beauté" },
+    { id: "barber", label: "Barber" },
+    { id: "sport", label: "Sport" },
+    { id: "colorful", label: "Coloré" },
+    { id: "retro", label: "Rétro" },
+  ];
+
+  const filtered = category === "all"
+    ? allTemplates
+    : allTemplates.filter(t => t.categories.includes(category as Parameters<typeof t.categories.includes>[0]));
+
   return (
     <div style={{ height: "calc(100vh - 0px)", display: "flex", flexDirection: "column" }}>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div style={{
-        padding: "16px 24px", borderBottom: "1px solid var(--border)",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "var(--glass-bg)", backdropFilter: "blur(20px)", flexShrink: 0,
+        padding: "14px 24px",
+        borderBottom: "1px solid var(--border)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(20px)",
+        flexShrink: 0,
       }}>
         <div>
           <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-tertiary)" }}>
-            Carte de fidélité
+            Carte Apple Wallet
           </p>
-          <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: -0.5, color: "var(--fg)", marginTop: 2 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, letterSpacing: -0.5, color: "var(--fg)", marginTop: 1 }}>
             Ma carte
           </h1>
         </div>
@@ -165,7 +137,6 @@ export default function CartePage() {
           ))}
         </div>
 
-        {/* Save */}
         <button onClick={sauvegarder} disabled={saving} style={{
           padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
           background: saved ? "#34C759" : "var(--accent)", color: "white",
@@ -176,183 +147,222 @@ export default function CartePage() {
         </button>
       </div>
 
-      {/* Contenu principal */}
-      <div style={{ flex: 1, overflow: "hidden" }}>
-        {tab === "designs" ? (
-          <CardDesigner
-            data={data}
-            dims={dims}
-            uid={user.uid}
-            selectedTemplateId={templateId}
-            selectedPaletteId={paletteId}
-            onSelectTemplate={(tid, pid) => { setTemplateId(tid); setPaletteId(pid); }}
-            onChangePalette={setPaletteId}
-          />
-        ) : (
-          /* ── Onglet Personnaliser ── */
-          <div style={{ display: "flex", height: "100%", gap: 0 }}>
+      {/* ── Contenu ── */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-            {/* Preview sticky */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, gap: 0 }}>
-              <div style={{ width: "100%", maxWidth: 460 }}>
-                {/* Carte */}
-                <div style={{ width: "100%", aspectRatio: FORMAT_RATIOS[dims.format ?? "standard"], borderRadius: "16px 16px 0 0", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-                  {template.render({ data, tokens: palette.tokens, palette, thumbnail: false, dimensions: dims })}
-                </div>
-                {/* Extension QR — vrai QR unique */}
-                {(() => {
-                  const qr = dims.qrSize ?? 56;
-                  return (
-                    <div style={{ width: "100%", background: palette.tokens.background, borderRadius: "0 0 16px 16px", borderTop: `1px solid ${palette.tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", padding: `${Math.round(qr * 0.25)}px 0`, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
-                      <WallioQR uid={user.uid} size={qr} fg={palette.tokens.qrForeground} bg={palette.tokens.qrBackground}/>
-                      <p style={{ fontSize: 9, marginTop: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: palette.tokens.textTertiary }}>Votre carte · Wallio</p>
-                    </div>
-                  );
-                })()}
+        {/* Preview Apple Wallet — toujours visible */}
+        <div style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 32,
+          gap: 14,
+          background: "var(--bg)",
+          overflowY: "auto",
+        }}>
+          <div style={{
+            padding: "5px 16px",
+            background: "var(--glass-bg)",
+            border: "1px solid var(--border)",
+            borderRadius: 20,
+          }}>
+            <p style={{ fontSize: 11, color: "var(--fg-tertiary)", letterSpacing: "0.04em" }}>
+              Aperçu fidèle · iPhone · Apple Wallet
+            </p>
+          </div>
+
+          <AppleWalletCard
+            logoUrl={logoUrl}
+            logoText={nom}
+            stripContent={stripContent}
+            backgroundColor={bgColor}
+            stampsCurrent={stampsCurrent}
+            stampsObjective={objectif}
+            rewardName={recompense}
+            clientPrenom="Prénom"
+            clientNom="Nom"
+          />
+
+          <p style={{ fontSize: 11, color: "var(--fg-tertiary)", textAlign: "center", maxWidth: 340 }}>
+            Le design apparaît dans la bannière — la mise en page des champs est imposée par Apple.
+          </p>
+        </div>
+
+        {/* ── Panel droit ── */}
+        <div style={{
+          width: 320,
+          borderLeft: "1px solid var(--border)",
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+          flexShrink: 0,
+        }}>
+
+          {tab === "designs" ? (
+            /* ── Onglet Designs ── */
+            <div style={{ padding: "16px 14px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+              {/* Filtre catégories */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {categories.map(c => (
+                  <button key={c.id} onClick={() => setCategory(c.id)} style={{
+                    padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500,
+                    background: category === c.id ? "var(--accent)" : "var(--glass-bg)",
+                    color: category === c.id ? "white" : "var(--fg-secondary)",
+                    border: `1px solid ${category === c.id ? "var(--accent)" : "var(--border)"}`,
+                    cursor: "pointer",
+                  }}>
+                    {c.label}
+                  </button>
+                ))}
               </div>
+
+              {/* Grille templates */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+                {filtered.map(tpl => {
+                  const pal = tpl.palettes.find(p => p.id === (tpl.id === templateId ? paletteId : tpl.defaultPaletteId)) ?? tpl.palettes[0];
+                  const selected = tpl.id === templateId;
+                  return (
+                    <button
+                      key={tpl.id}
+                      onClick={() => { setTemplateId(tpl.id); setPaletteId(pal.id); }}
+                      style={{
+                        padding: 0, border: `2px solid ${selected ? "var(--accent)" : "transparent"}`,
+                        borderRadius: 12, overflow: "hidden", cursor: "pointer",
+                        boxShadow: selected ? "0 0 0 3px rgba(0,122,255,0.15)" : "none",
+                        background: "none",
+                        position: "relative",
+                      }}
+                    >
+                      {/* Miniature : template rendu à 375×246, scalé à 144×94 */}
+                      <div style={{
+                        width: 144, height: 94,
+                        overflow: "hidden",
+                        position: "relative",
+                      }}>
+                        <div style={{
+                          width: 375, height: 246,
+                          transform: "scale(0.384)",
+                          transformOrigin: "top left",
+                          pointerEvents: "none",
+                        }}>
+                          {tpl.render({ data: cardData, tokens: pal.tokens, palette: pal, thumbnail: true })}
+                        </div>
+                      </div>
+                      {/* Nom du template */}
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0,
+                        padding: "12px 6px 5px",
+                        background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.7))",
+                        textAlign: "center",
+                      }}>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: "#fff", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          {tpl.name}
+                        </span>
+                      </div>
+                      {selected && (
+                        <div style={{
+                          position: "absolute", top: 5, right: 5,
+                          width: 18, height: 18, borderRadius: "50%",
+                          background: "var(--accent)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <span style={{ fontSize: 10, color: "white" }}>✓</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Palettes du template sélectionné */}
+              {template.palettes.length > 1 && (
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-tertiary)", marginBottom: 8 }}>
+                    Palette — {template.name}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {template.palettes.map(p => (
+                      <button key={p.id} onClick={() => setPaletteId(p.id)} style={{
+                        display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
+                        borderRadius: 10, cursor: "pointer",
+                        background: paletteId === p.id ? "rgba(0,122,255,0.08)" : "transparent",
+                        border: `1px solid ${paletteId === p.id ? "var(--accent)" : "var(--border)"}`,
+                      }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: p.tokens.background, border: "1px solid rgba(128,128,128,0.3)", flexShrink: 0 }}/>
+                        <div style={{ display: "flex", gap: 3 }}>
+                          <div style={{ width: 10, height: 10, borderRadius: 3, background: p.tokens.accent }}/>
+                          <div style={{ width: 10, height: 10, borderRadius: 3, background: p.tokens.stampActive }}/>
+                        </div>
+                        <span style={{ fontSize: 12, fontWeight: paletteId === p.id ? 600 : 500, color: paletteId === p.id ? "var(--accent)" : "var(--fg)" }}>{p.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Panel droit */}
-            <div style={{
-              width: 300, borderLeft: "1px solid var(--border)",
-              overflowY: "auto", padding: "20px 18px",
-              display: "flex", flexDirection: "column", gap: 20,
-            }}>
+          ) : (
+            /* ── Onglet Personnaliser ── */
+            <div style={{ padding: "16px 14px", display: "flex", flexDirection: "column", gap: 20 }}>
 
-              {/* Logo — label direct pour meilleure compat navigateur */}
+              {/* Logo */}
               <Section label="Logo">
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                   <label style={{
                     width: 52, height: 52, borderRadius: 12,
-                    border: "1px solid var(--border)",
-                    overflow: "hidden", flexShrink: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "1px solid var(--border)", overflow: "hidden",
+                    flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
                     background: "var(--glass-bg)", cursor: uploadingLogo ? "wait" : "pointer",
                   }}>
                     <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
-                    {data.logo_url
-                      ? <img src={data.logo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
-                      : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    {logoUrl
+                      ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+                      : <CameraIcon />
                     }
                   </label>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: "block", width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: uploadingLogo ? "wait" : "pointer", textAlign: "center" }}>
                       <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
-                      {uploadingLogo ? "Upload…" : data.logo_url ? "Changer" : "Upload…"}
+                      {uploadingLogo ? "Upload…" : logoUrl ? "Changer" : "Ajouter"}
                     </label>
-                    {data.logo_url && (
-                      <button onClick={() => set("logo_url", "")} style={{ width: "100%", marginTop: 4, padding: "5px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
+                    {logoUrl && (
+                      <button onClick={() => setLogoUrl("")} style={{ width: "100%", marginTop: 4, padding: "5px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
                         Supprimer
                       </button>
                     )}
                   </div>
                 </div>
-              </Section>
-
-              {/* Photo de couverture — template VISTA et futurs */}
-              <Section label="Photo de couverture">
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-
-                  {/* Aperçu */}
-                  {data.photo_url ? (
-                    <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", aspectRatio: "3/1", border: "1px solid var(--border)" }}>
-                      <img src={data.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
-                    </div>
-                  ) : (
-                    <div style={{ borderRadius: 10, aspectRatio: "3/1", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--glass-bg)" }}>
-                      <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>Aucune photo</span>
-                    </div>
-                  )}
-
-                  {/* Boutons upload + supprimer */}
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <label style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: uploadingPhoto ? "wait" : "pointer", textAlign: "center" }}>
-                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoUpload} disabled={uploadingPhoto}/>
-                      {uploadingPhoto ? "Upload…" : data.photo_url ? "Changer la photo" : "Ajouter une photo"}
-                    </label>
-                    {data.photo_url && (
-                      <button
-                        onClick={() => { set("photo_url", ""); updateDoc(doc(db, "marchands", user!.uid), { photo_url: "" }); }}
-                        style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", color: "#FF3B30", cursor: "pointer" }}
-                      >
-                        Supprimer
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Slider hauteur */}
-                  <Field label={`Hauteur — ${dims.photoHeight ?? 38}%`}>
-                    <input
-                      type="range" min={20} max={60} step={2}
-                      value={dims.photoHeight ?? 38}
-                      onChange={e => setDim("photoHeight", Number(e.target.value))}
-                      style={{ width: "100%", accentColor: "var(--accent)" }}
-                    />
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>20%</span>
-                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>60%</span>
-                    </div>
-                  </Field>
-
-                  {/* Cadrage vertical + horizontal */}
-                  <Field label={`Cadrage vertical — ${dims.photoPositionY ?? 50}%`}>
-                    <input
-                      type="range" min={0} max={100} step={5}
-                      value={dims.photoPositionY ?? 50}
-                      onChange={e => setDim("photoPositionY", Number(e.target.value))}
-                      style={{ width: "100%", accentColor: "var(--accent)" }}
-                    />
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Haut</span>
-                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Bas</span>
-                    </div>
-                  </Field>
-
-                  <Field label={`Cadrage horizontal — ${dims.photoPositionX ?? 50}%`}>
-                    <input
-                      type="range" min={0} max={100} step={5}
-                      value={dims.photoPositionX ?? 50}
-                      onChange={e => setDim("photoPositionX", Number(e.target.value))}
-                      style={{ width: "100%", accentColor: "var(--accent)" }}
-                    />
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Gauche</span>
-                      <span style={{ fontSize: 9, color: "var(--fg-tertiary)" }}>Droite</span>
-                    </div>
-                  </Field>
-
-                  <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: 0 }}>
-                    Format paysage recommandé (ex : 1200×400px).
-                  </p>
-                </div>
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
+                  Affiché en haut à gauche · max 160×50pt
+                </p>
               </Section>
 
               {/* Infos */}
               <Section label="Informations">
                 <Field label="Nom de l'établissement">
-                  <TextInput value={data.nom} onChange={v => set("nom", v)} placeholder="Café du Centre"/>
-                </Field>
-                <Field label="Slogan (optionnel)">
-                  <TextInput value={data.slogan || ""} onChange={v => set("slogan", v)} placeholder="Le meilleur café de la ville"/>
+                  <TextInput value={nom} onChange={setNom} placeholder="Café du Centre"/>
                 </Field>
               </Section>
 
               {/* Récompense */}
               <Section label="Récompense">
                 <Field label="Description">
-                  <TextInput value={data.nom_recompense} onChange={v => set("nom_recompense", v)} placeholder="1 café offert"/>
+                  <TextInput value={recompense} onChange={setRecompense} placeholder="1 café offert"/>
                 </Field>
-                <Field label={`Tampons nécessaires — ${data.objectif_tampons}`}>
-                  <input type="range" min={5} max={20} value={data.objectif_tampons}
-                    onChange={e => set("objectif_tampons", Number(e.target.value))}
+                <Field label={`Tampons nécessaires — ${objectif}`}>
+                  <input type="range" min={5} max={20} value={objectif}
+                    onChange={e => setObjectif(Number(e.target.value))}
                     style={{ width: "100%", accentColor: "var(--accent)" }}/>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    {[5,6,8,10,12,15,20].map(n => (
-                      <button key={n} onClick={() => set("objectif_tampons", n)} style={{
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                    {[5, 6, 8, 10, 12, 15, 20].map(n => (
+                      <button key={n} onClick={() => setObjectif(n)} style={{
                         fontSize: 10, padding: "2px 5px", borderRadius: 5,
-                        background: data.objectif_tampons === n ? "var(--accent)" : "var(--glass-bg)",
+                        background: objectif === n ? "var(--accent)" : "var(--glass-bg)",
                         border: "1px solid var(--border)",
-                        color: data.objectif_tampons === n ? "white" : "var(--fg-tertiary)",
+                        color: objectif === n ? "white" : "var(--fg-tertiary)",
                         cursor: "pointer",
                       }}>{n}</button>
                     ))}
@@ -360,141 +370,105 @@ export default function CartePage() {
                 </Field>
               </Section>
 
-              {/* Palettes */}
-              <Section label="Palette de couleurs">
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {template.palettes.map(p => (
-                    <button key={p.id} onClick={() => setPaletteId(p.id)} style={{
-                      display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
-                      borderRadius: 10,
-                      background: paletteId === p.id ? "rgba(0,122,255,0.08)" : "transparent",
-                      border: `1px solid ${paletteId === p.id ? "var(--accent)" : "var(--border)"}`,
-                      cursor: "pointer",
-                    }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 6, background: p.tokens.background, border: "1px solid rgba(128,128,128,0.3)", flexShrink: 0 }}/>
-                      <div style={{ display: "flex", gap: 3 }}>
-                        <div style={{ width: 12, height: 12, borderRadius: 3, background: p.tokens.accent }}/>
-                        <div style={{ width: 12, height: 12, borderRadius: 3, background: p.tokens.stampActive }}/>
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: paletteId === p.id ? 600 : 500, color: paletteId === p.id ? "var(--accent)" : "var(--fg)" }}>{p.name}</span>
-                    </button>
-                  ))}
+              {/* Couleur de fond */}
+              <Section label="Couleur de fond de la carte">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
+                  Indépendante du design — s&apos;applique au header, aux champs et à la zone QR.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <input
+                    type="color"
+                    value={/^#[0-9a-f]{6}$/i.test(bgColor) ? bgColor : "#1c1c1e"}
+                    onChange={e => setBgColor(e.target.value)}
+                    style={{ width: 52, height: 40, borderRadius: 10, border: "1px solid var(--border)", cursor: "pointer", padding: 3, background: "none" }}
+                  />
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", margin: 0 }}>{bgColor.toUpperCase()}</p>
+                    <p style={{ fontSize: 11, color: "var(--fg-tertiary)", margin: "2px 0 0" }}>
+                      Texte {isDarkBg(bgColor) ? "blanc" : "noir"} auto
+                    </p>
+                  </div>
                 </div>
-              </Section>
 
-              {/* Style des tampons */}
-              <Section label="Style des tampons">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
-                  {([
-                    { style: "circle",  label: "Cercle",   preview: "●" },
-                    { style: "rounded", label: "Arrondi",  preview: "▣" },
-                    { style: "square",  label: "Carré",    preview: "■" },
-                    { style: "dot",     label: "Point",    preview: "•" },
-                    { style: "diamond", label: "Diamant",  preview: "◆" },
-                    { style: "star",    label: "Étoile",   preview: "★" },
-                    { style: "ring",    label: "Anneau",   preview: "○" },
-                    { style: "badge",   label: "Badge",    preview: "✓" },
-                    { style: "stripe",  label: "Barre",    preview: "▬" },
-                  ] as { style: StampStyle; label: string; preview: string }[]).map(({ style: s, label, preview }) => {
-                    const active = (dims.stampStyle ?? null) === s;
-                    return (
-                      <button key={s} onClick={() => setDim("stampStyle", active ? undefined : s)} style={{
-                        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                        padding: "8px 4px", borderRadius: 10, cursor: "pointer",
-                        background: active ? "rgba(0,122,255,0.1)" : "var(--glass-bg)",
-                        border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
-                      }}>
-                        <span style={{ fontSize: 20, lineHeight: 1, color: active ? "var(--accent)" : "var(--fg-secondary)" }}>{preview}</span>
-                        <span style={{ fontSize: 9, fontWeight: active ? 600 : 400, color: active ? "var(--accent)" : "var(--fg-tertiary)" }}>{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {dims.stampStyle && (
-                  <button onClick={() => setDim("stampStyle", undefined)} style={{ fontSize: 10, color: "var(--fg-tertiary)", background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 2 }}>
-                    Reset (style du template)
-                  </button>
-                )}
-              </Section>
-
-              {/* Dimensions */}
-              <Section label="Dimensions des éléments">
-                {([
-                  { label: "Logo", key: "logoSize",    min: 16, max: 56,  step: 2,    def: 28, fmt: (v: number) => `${v}px` },
-                  { label: "Nom", key: "nameScale",    min: 0.6, max: 2,  step: 0.05, def: 1,  fmt: (v: number) => `${v.toFixed(2)}×` },
-                  { label: "Tampons", key: "stampSize",min: 8,  max: 48,  step: 1,    def: 20, fmt: (v: number) => `${v}px` },
-                  { label: "Récompense", key: "rewardScale", min: 0.6, max: 2, step: 0.05, def: 1, fmt: (v: number) => `${v.toFixed(2)}×` },
-                  { label: "Compteur", key: "scoreScale", min: 0.6, max: 2, step: 0.05, def: 1, fmt: (v: number) => `${v.toFixed(2)}×` },
-                  { label: "QR code", key: "qrSize",   min: 32, max: 100, step: 4,    def: 56, fmt: (v: number) => `${v}px` },
-                ] as { label: string; key: keyof typeof dims; min: number; max: number; step: number; def: number; fmt: (v: number) => string }[]).map(({ label, key, min, max, step, def, fmt }) => (
-                  <Field key={key} label={`${label} — ${fmt((dims[key] as number) ?? def)}`}>
-                    <input type="range" min={min} max={max} step={step}
-                      value={(dims[key] as number) ?? def}
-                      onChange={e => setDim(key, Number(e.target.value))}
-                      style={{ width: "100%", accentColor: "var(--accent)" }}/>
-                    <button onClick={() => setDim(key, undefined)} style={{ fontSize: 10, color: "var(--fg-tertiary)", background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 2 }}>
-                      Reset
-                    </button>
-                  </Field>
-                ))}
-              </Section>
-
-              {/* Format carte */}
-              <Section label="Format carte">
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {([
-                    { id: "standard", label: "Apple Wallet", sub: "375 × 246 — Store Card" },
-                    { id: "compact", label: "Apple Wallet Compact", sub: "375 × 160 — Coupon" },
-                    { id: "wide", label: "Google Wallet", sub: "375 × 125 — Hero banner" },
-                  ] as const).map(f => (
-                    <button key={f.id} onClick={() => setDim("format", f.id)} style={{
-                      display: "flex", flexDirection: "column", alignItems: "flex-start",
-                      padding: "8px 12px", borderRadius: 10, cursor: "pointer",
-                      background: dims.format === f.id ? "rgba(0,122,255,0.08)" : "transparent",
-                      border: `1px solid ${dims.format === f.id ? "var(--accent)" : "var(--border)"}`,
-                    }}>
-                      <span style={{ fontSize: 12, fontWeight: dims.format === f.id ? 600 : 500, color: dims.format === f.id ? "var(--accent)" : "var(--fg)" }}>{f.label}</span>
-                      <span style={{ fontSize: 10, color: "var(--fg-tertiary)", marginTop: 2 }}>{f.sub}</span>
-                    </button>
-                  ))}
-                </div>
-              </Section>
-
-              {/* Couleurs libres */}
-              <Section label="Couleurs personnalisées">
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginTop: -6 }}>Remplace la palette sélectionnée</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* Presets */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {[
-                    { label: "Fond", key: "background" as const },
-                    { label: "Accent / tampons", key: "accent" as const },
-                    { label: "Texte", key: "text" as const },
-                  ].map(({ label, key }) => (
-                    <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 12, color: "var(--fg)" }}>{label}</span>
-                      <input
-                        type="color"
-                        value={palette.tokens[key] || "#000000"}
-                        onChange={e => {
-                          const newTokens = { ...palette.tokens, [key]: e.target.value };
-                          if (key === "accent") newTokens.accentSecondary = e.target.value;
-                          if (key === "accent") newTokens.stampActive = e.target.value;
-                          const idx = template.palettes.findIndex(p => p.id === paletteId);
-                          if (idx >= 0) template.palettes[idx] = { ...template.palettes[idx], tokens: newTokens };
-                          setPaletteId(p => p); // force re-render
-                        }}
-                        style={{ width: 36, height: 28, borderRadius: 6, border: "1px solid var(--border)", cursor: "pointer", padding: 2 }}
-                      />
-                    </div>
+                    "#0A0A0A", "#1C1C1E", "#1A1A2E", "#0D1B2A",
+                    "#1C3A5C", "#3A1C1C", "#1C3A1C", "#2C1654",
+                    "#FFFFFF", "#F2F2F7", "#EEF3FF", "#FFF9F0",
+                  ].map(c => (
+                    <button key={c} onClick={() => setBgColor(c)} style={{
+                      width: 28, height: 28, borderRadius: 8,
+                      background: c,
+                      border: bgColor === c ? "2px solid var(--accent)" : "1px solid var(--border)",
+                      cursor: "pointer", padding: 0,
+                      boxShadow: c === "#FFFFFF" ? "inset 0 0 0 1px rgba(0,0,0,0.1)" : undefined,
+                    }}/>
                   ))}
                 </div>
+
+                {/* Sync depuis le design */}
+                <button
+                  onClick={() => setBgColor(palette.tokens.background)}
+                  style={{
+                    padding: "7px 12px", borderRadius: 10, fontSize: 11, fontWeight: 500,
+                    background: "var(--glass-bg)", border: "1px solid var(--border)",
+                    color: "var(--fg-secondary)", cursor: "pointer", textAlign: "left",
+                    display: "flex", alignItems: "center", gap: 8,
+                  }}
+                >
+                  <div style={{ width: 14, height: 14, borderRadius: 4, background: palette.tokens.background, border: "1px solid rgba(128,128,128,0.3)", flexShrink: 0 }}/>
+                  Utiliser la couleur du design sélectionné
+                </button>
               </Section>
 
+              {/* Note Apple Wallet */}
+              <div style={{
+                padding: "12px 14px", borderRadius: 12,
+                background: "rgba(0,122,255,0.06)",
+                border: "1px solid rgba(0,122,255,0.15)",
+              }}>
+                <p style={{ fontSize: 11, color: "var(--fg-secondary)", margin: 0, lineHeight: 1.6 }}>
+                  <strong style={{ color: "var(--accent)" }}>Génération .pkpass</strong><br/>
+                  Structure prête · En attente du certificat Apple Developer.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+// ── Helpers ──────────────────────────────────────────
+
+function isDarkBg(hex: string): boolean {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return true;
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const lin = (c: number) => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) < 0.35;
+}
+
+async function resizeImage(file: File, maxW: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const ratio = Math.min(maxW / img.width, 1);
+      const w = Math.round(img.width * ratio);
+      const h = Math.round(img.height * ratio);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
 }
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
@@ -523,10 +497,19 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       style={{
         width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 13,
         background: "var(--glass-bg)", border: "1px solid var(--border)",
-        color: "var(--fg)", outline: "none",
+        color: "var(--fg)", outline: "none", boxSizing: "border-box",
       }}
       onFocus={e => (e.target.style.borderColor = "var(--accent)")}
       onBlur={e => (e.target.style.borderColor = "var(--border)")}
     />
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
   );
 }

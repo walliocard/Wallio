@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
 
@@ -49,13 +50,21 @@ const template: CardTemplate = {
   categories: ["colorful", "street", "restaurant", "modern"],
   palettes,
   defaultPaletteId: "pink-cobalt",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const rs = (n: number) => thumbnail ? n : Math.round(n * (dims?.rewardScale ?? 1));
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 13 : (dims?.logoSize ?? 22);
     const fmtV = dims?.format === "compact" ? 0.80 : dims?.format === "wide" ? 0.60 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <div style={{ position: "absolute", right: "-2%", bottom: "12%", fontSize: 80, fontWeight: 900, color: `${tokens.text}08`, lineHeight: 1, letterSpacing: -4, userSelect: "none", pointerEvents: "none", textTransform: "uppercase" as const }}>
+          ★
+        </div>
+      ),
+    });
 
     // Taille du nom : adapté selon la longueur
     const nomLen = (data.nom || "ÉTABLISSEMENT").length;

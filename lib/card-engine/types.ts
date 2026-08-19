@@ -104,6 +104,7 @@ export interface RenderProps {
   palette: CardPalette;
   thumbnail?: boolean;
   dimensions?: CardDimensions;
+  strip?: boolean;
 }
 
 /* ── Format → aspect ratio ── */

@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Institut, beauté, soie. Formes fluides, typographie fine, drops comme tampons.",
   categories: ["beauty", "luxury", "minimal"],
   palettes, defaultPaletteId: "nude-burgundy",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -22,6 +23,15 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      background: `linear-gradient(135deg, ${tokens.background} 0%, ${tokens.surface} 100%)`,
+      decoratives: (
+        <svg style={{ position: "absolute", right: "-8%", bottom: "15%", opacity: 0.1, pointerEvents: "none" }} width={90} height={90} viewBox="0 0 90 90" fill="none">
+          <path d="M45 5 C72 0 90 22 88 50 C86 78 62 90 38 87 C14 84 0 62 4 36 C8 10 18 10 45 5Z" fill={tokens.accent}/>
+        </svg>
+      ),
+    });
 
     return (
       <div style={{

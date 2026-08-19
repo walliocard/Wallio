@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Années 90, typographie bold, géométries colorées, étoiles.",
   categories: ["retro", "colorful", "street"],
   palettes, defaultPaletteId: "purple-lime",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -22,6 +23,15 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <>
+          <div style={{ position: "absolute", top: -15, right: -15, width: 180, height: 180, borderRadius: "50%", background: tokens.accent, opacity: 0.15 }}/>
+          <div style={{ position: "absolute", bottom: 30, left: -10, width: 40, height: 40, background: tokens.accentSecondary, opacity: 0.1, transform: "rotate(45deg)" }}/>
+        </>
+      ),
+    });
 
     return (
       <div style={{

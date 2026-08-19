@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Points de broderie, lignes fines cousues, élégance artisanale textile.",
   categories: ["luxury", "beauty", "editorial"],
   palettes, defaultPaletteId: "ivory-sage",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -23,6 +24,25 @@ const template: CardTemplate = {
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
     const dotCount = 8;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <>
+          <svg style={{ position: "absolute", top: 0, left: 0, right: 0, width: "100%" }} height={11} viewBox="0 0 375 11" preserveAspectRatio="none">
+            {Array.from({ length: dotCount }).map((_, i) => (
+              <circle key={i} cx={24 + i * 47} cy="5.5" r={2.5} fill={tokens.accent} opacity="0.4"/>
+            ))}
+            <line x1="0" y1="5.5" x2="375" y2="5.5" stroke={tokens.accent} strokeWidth="0.5" strokeOpacity="0.2" strokeDasharray="4 6"/>
+          </svg>
+          <svg style={{ position: "absolute", bottom: 0, left: 0, right: 0, width: "100%" }} height={11} viewBox="0 0 375 11" preserveAspectRatio="none">
+            {Array.from({ length: dotCount }).map((_, i) => (
+              <circle key={i} cx={24 + i * 47} cy="5.5" r={2.5} fill={tokens.accent} opacity="0.4"/>
+            ))}
+            <line x1="0" y1="5.5" x2="375" y2="5.5" stroke={tokens.accent} strokeWidth="0.5" strokeOpacity="0.2" strokeDasharray="4 6"/>
+          </svg>
+        </>
+      ),
+    });
 
     return (
       <div style={{

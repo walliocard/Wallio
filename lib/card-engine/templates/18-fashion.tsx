@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Magazine de mode, typographie immense, composition asymétrique.",
   categories: ["editorial", "luxury", "beauty"],
   palettes, defaultPaletteId: "black-white",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -22,6 +23,17 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <>
+          <div style={{ position: "absolute", bottom: "-15%", left: "-5%", fontSize: 80, fontWeight: 900, color: tokens.surface, lineHeight: 1, letterSpacing: -3, userSelect: "none", textTransform: "uppercase" as const, pointerEvents: "none" }}>
+            {(data.nom || "FA").slice(0, 2)}
+          </div>
+          <div style={{ position: "absolute", right: 32, top: 0, bottom: 0, width: 2.5, background: tokens.accent, opacity: 0.6 }}/>
+        </>
+      ),
+    });
 
     return (
       <div style={{

@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Grand badge central, sceau de qualité, récompense au centre.",
   categories: ["luxury", "premium", "coffee"],
   palettes, defaultPaletteId: "burgundy-gold",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -25,6 +26,12 @@ const template: CardTemplate = {
     const pct = (filled / data.objectif_tampons) * 100;
     const r = thumbnail ? 22 : 42;
     const circ = 2 * Math.PI * r;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.01) 3px, rgba(255,255,255,0.01) 6px)` }}/>
+      ),
+    });
 
     return (
       <div style={{

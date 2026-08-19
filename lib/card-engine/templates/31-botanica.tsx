@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Feuilles très fines, ornements symétriques, serif élégante.",
   categories: ["nature", "luxury", "beauty"],
   palettes, defaultPaletteId: "forest-cream",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -22,6 +23,18 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <svg style={{ position: "absolute", right: "3%", top: "50%", transform: "translateY(-50%)", opacity: 0.09, pointerEvents: "none" }} width={55} height={145} viewBox="0 0 55 145" fill="none">
+          <line x1="27" y1="0" x2="27" y2="145" stroke={tokens.accent} strokeWidth="1"/>
+          <path d="M27 25 C8 15 4 34 12 43 C20 52 27 43 27 43" fill={tokens.accent}/>
+          <path d="M27 25 C46 15 50 34 42 43 C34 52 27 43 27 43" fill={tokens.accent}/>
+          <path d="M27 65 C8 55 4 74 12 83 C20 92 27 83 27 83" fill={tokens.accent}/>
+          <path d="M27 65 C46 55 50 74 42 83 C34 92 27 83 27 83" fill={tokens.accent}/>
+        </svg>
+      ),
+    });
 
     return (
       <div style={{

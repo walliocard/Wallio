@@ -1,4 +1,5 @@
 import type { CardTemplate, CardPalette } from "../types";
+import { renderStrip } from "../strip";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
 import ProgressiveStamps from "../components/ProgressiveStamps";
@@ -14,7 +15,7 @@ const template: CardTemplate = {
   description: "Formes abstraites fluides, gradient sophistiqué, surface translucide.",
   categories: ["modern", "colorful", "premium"],
   palettes, defaultPaletteId: "blue-purple",
-  render({ data, tokens, thumbnail, dimensions }) {
+  render({ data, tokens, thumbnail, dimensions, strip }) {
     const filled = Math.round(data.objectif_tampons * 0.6);
     const dims = dimensions;
     const ns = (n: number) => thumbnail ? n : Math.round(n * (dims?.nameScale ?? 1));
@@ -22,6 +23,25 @@ const template: CardTemplate = {
     const ss = (n: number) => thumbnail ? n : Math.round(n * (dims?.scoreScale ?? 1));
     const logoSz = thumbnail ? 16 : (dims?.logoSize ?? 28);
     const fmtV = dims?.format === "compact" ? 0.68 : dims?.format === "wide" ? 0.52 : 1;
+
+    if (strip) return renderStrip(data, tokens, {
+      decoratives: (
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} viewBox="0 0 375 144" preserveAspectRatio="none">
+          <defs>
+            <radialGradient id="fg-strip-1" cx="70%" cy="30%">
+              <stop offset="0%" stopColor={tokens.accent} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={tokens.accentSecondary} stopOpacity="0"/>
+            </radialGradient>
+            <radialGradient id="fg-strip-2" cx="20%" cy="80%">
+              <stop offset="0%" stopColor={tokens.accentSecondary} stopOpacity="0.18"/>
+              <stop offset="100%" stopColor={tokens.accent} stopOpacity="0"/>
+            </radialGradient>
+          </defs>
+          <path d="M200 -20 C300 10 350 60 280 110 C210 160 100 140 50 100 C0 60 40 0 200 -20Z" fill="url(#fg-strip-1)"/>
+          <path d="M-30 70 C20 30 100 10 150 50 C200 90 180 140 100 144 C20 144 -80 110 -30 70Z" fill="url(#fg-strip-2)"/>
+        </svg>
+      ),
+    });
 
     return (
       <div style={{
