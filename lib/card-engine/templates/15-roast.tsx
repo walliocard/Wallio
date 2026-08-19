@@ -1,6 +1,7 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
+import ProgressiveStamps from "../components/ProgressiveStamps";
 
 const palettes: CardPalette[] = [
   { id: "black-cream", name: "Black / Cream", tokens: { background: "#0C0A08", surface: "#1A1614", surfaceSecondary: "#2A2420", text: "#F0E8D8", textSecondary: "#C0A878", textTertiary: "#6A5A3A", accent: "#C0A878", accentSecondary: "#E0C898", stampActive: "#F0E8D8", stampActiveIcon: "#0C0A08", stampInactive: "#2A2420", border: "#2A2420", borderStrong: "#3A3028", qrBackground: "#F0E8D8", qrForeground: "#0C0A08", rewardBackground: "#1A1614" } },
@@ -72,11 +73,24 @@ const template: CardTemplate = {
           </div>
 
           {/* TAMPONS */}
-          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
-            total={data.objectif_tampons} filled={filled}
-            style={(dims?.stampStyle ?? "circle")} tokens={tokens}
-            size={thumbnail ? 8 : 18} gap={thumbnail ? 3 : 4} perRow={9}
-          />
+          {data.mode === "progressif" && data.paliers ? (
+            <ProgressiveStamps
+              paliers={data.paliers}
+              palier_actuel={data.palier_actuel ?? 0}
+              paliers_valides={data.paliers_valides ?? []}
+              tampons={data.tampons}
+              tokens={tokens}
+              stampStyle={dims?.stampStyle}
+              stampSize={dims?.stampSize}
+              thumbnail={thumbnail}
+            />
+          ) : (
+            <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+              total={data.objectif_tampons} filled={filled}
+              style={(dims?.stampStyle ?? "circle")} tokens={tokens}
+              size={thumbnail ? 8 : 18} gap={thumbnail ? 3 : 4} perRow={9}
+            />
+          )}
 
           {/* FOOTER */}
           <div style={{
@@ -95,9 +109,18 @@ const template: CardTemplate = {
               borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
               border: `1px solid ${tokens.accent}28`,
             }}>
-              <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, color: tokens.accent }}>
+              <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, lineHeight: 1, color: tokens.accent }}>
                 {filled}/{data.objectif_tampons}
               </span>
+
+              {!thumbnail && (
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontSize: 5, letterSpacing: "0.12em", color: tokens.textTertiary, textTransform: "uppercase" as const, marginBottom: 1 }}>Titulaire</div>
+                  <div style={{ fontSize: ss(9), fontWeight: 600, color: tokens.text }}>
+                    {data.client_prenom ? `${data.client_prenom} ${data.client_nom || ""}`.trim() : "Prénom Nom"}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

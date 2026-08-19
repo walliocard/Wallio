@@ -1,6 +1,7 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
+import ProgressiveStamps from "../components/ProgressiveStamps";
 
 const palettes: CardPalette[] = [
   {
@@ -115,11 +116,24 @@ const template: CardTemplate = {
           </div>
 
           {/* TAMPONS — dots subtils */}
-          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
-            total={data.objectif_tampons} filled={filled}
-            style={(dims?.stampStyle ?? "dot")} tokens={tokens}
-            size={thumbnail ? 6 : 11} gap={thumbnail ? 3 : 5} perRow={10}
-          />
+          {data.mode === "progressif" && data.paliers ? (
+            <ProgressiveStamps
+              paliers={data.paliers}
+              palier_actuel={data.palier_actuel ?? 0}
+              paliers_valides={data.paliers_valides ?? []}
+              tampons={data.tampons}
+              tokens={tokens}
+              stampStyle={dims?.stampStyle}
+              stampSize={dims?.stampSize}
+              thumbnail={thumbnail}
+            />
+          ) : (
+            <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
+              total={data.objectif_tampons} filled={filled}
+              style={(dims?.stampStyle ?? "dot")} tokens={tokens}
+              size={thumbnail ? 6 : 11} gap={thumbnail ? 3 : 5} perRow={10}
+            />
+          )}
 
           {/* FOOTER */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
@@ -141,6 +155,15 @@ const template: CardTemplate = {
               <span style={{ fontSize: thumbnail ? 5 : ss(10), fontWeight: 700, color: tokens.accent }}>
                 {filled}/{data.objectif_tampons}
               </span>
+
+              {!thumbnail && (
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontSize: 5, letterSpacing: "0.12em", color: tokens.textTertiary, textTransform: "uppercase" as const, marginBottom: 1 }}>Titulaire</div>
+                  <div style={{ fontSize: ss(9), fontWeight: 600, color: tokens.text }}>
+                    {data.client_prenom ? `${data.client_prenom} ${data.client_nom || ""}`.trim() : "Prénom Nom"}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

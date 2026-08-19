@@ -1,6 +1,7 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
+import ProgressiveStamps from "../components/ProgressiveStamps";
 
 const palettes: CardPalette[] = [
   { id: "cream-navy", name: "Cream / Navy", tokens: { background: "#F5F0E8", surface: "#E8E0D0", surfaceSecondary: "#D8D0BC", text: "#0E1E3A", textSecondary: "#2A3E6A", textTertiary: "#7A8EAA", accent: "#0E1E3A", accentSecondary: "#2A3E6A", stampActive: "#0E1E3A", stampActiveIcon: "#F5F0E8", stampInactive: "#D8D0BC", border: "#C8C0A8", borderStrong: "#A8A088", qrBackground: "#FFFFFF", qrForeground: "#0E1E3A", rewardBackground: "#E8E0D0" } },
@@ -60,19 +61,35 @@ const template: CardTemplate = {
               borderRadius: 20, padding: thumbnail ? "1px 4px" : "2px 7px",
               border: `1px solid ${tokens.accent}22`, display: "inline-block", marginTop: 3,
             }}>
-              <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+              <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", lineHeight: 1, color: tokens.accent }}>WALLIO</span>
             </div>
           </div>
         </div>
 
         {/* TAMPONS — rings boutons couture */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 10%" : "0 12%", position: "relative", zIndex: 1 }}>
+                  {/* Mode progressif */}
+          {data.mode === "progressif" && data.paliers ? (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+              <ProgressiveStamps
+                paliers={data.paliers}
+                palier_actuel={data.palier_actuel ?? 0}
+                paliers_valides={data.paliers_valides ?? []}
+                tampons={data.tampons}
+                tokens={tokens}
+                stampStyle={dims?.stampStyle}
+                stampSize={dims?.stampSize}
+                thumbnail={thumbnail}
+              />
+            </div>
+          ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 10%" : "0 12%", position: "relative", zIndex: 1 }}>
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
             total={data.objectif_tampons} filled={filled}
             style={(dims?.stampStyle ?? "ring")} tokens={tokens}
             size={thumbnail ? 9 : 18} gap={thumbnail ? 3 : 5} perRow={9}
           />
         </div>
+          )}
 
         {/* FOOTER */}
         <div style={{
@@ -91,6 +108,15 @@ const template: CardTemplate = {
             <span style={{ fontSize: thumbnail ? 5 : ss(10), fontWeight: 700, color: tokens.accent }}>
               {filled}/{data.objectif_tampons}
             </span>
+
+            {!thumbnail && (
+              <div style={{ marginTop: 6 }}>
+                <div style={{ fontSize: 5, letterSpacing: "0.12em", color: tokens.textTertiary, textTransform: "uppercase" as const, marginBottom: 1 }}>Titulaire</div>
+                <div style={{ fontSize: ss(9), fontWeight: 600, color: tokens.text }}>
+                  {data.client_prenom ? `${data.client_prenom} ${data.client_nom || ""}`.trim() : "Prénom Nom"}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

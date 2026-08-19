@@ -1,5 +1,6 @@
 import type { CardTemplate } from "./types";
 
+import t51 from "./templates/51-vista";
 import t01 from "./templates/01-aura";
 import t02 from "./templates/02-noir";
 import t03 from "./templates/03-ko";
@@ -52,7 +53,7 @@ import t49 from "./templates/49-object";
 import t50 from "./templates/50-wallio";
 
 const REGISTRY: CardTemplate[] = [
-  t50,
+  t51, t50,
   t01, t02, t03, t04, t05, t06, t07, t08, t09, t10,
   t11, t12, t13, t14, t15, t16, t17, t18, t19, t20,
   t21, t22, t23, t24, t25, t26, t27, t28, t29, t30,

@@ -1,6 +1,7 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
+import ProgressiveStamps from "../components/ProgressiveStamps";
 
 const palettes: CardPalette[] = [
   { id: "burgundy-gold", name: "Burgundy / Gold", tokens: { background: "#2A0A10", surface: "#3E1018", surfaceSecondary: "#521424", text: "#F0E4C0", textSecondary: "#C8A030", textTertiary: "#685010", accent: "#C8A030", accentSecondary: "#E8C050", stampActive: "#C8A030", stampActiveIcon: "#2A0A10", stampInactive: "#521424", border: "#3E1018", borderStrong: "#6A2020", qrBackground: "#F0E4C0", qrForeground: "#2A0A10", rewardBackground: "#3E1018" } },
@@ -52,23 +53,38 @@ const template: CardTemplate = {
             </div>
           </div>
           <div style={{ background: `${tokens.accent}18`, backdropFilter: "blur(8px)", borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", border: `1px solid ${tokens.accent}25`, flexShrink: 0 }}>
-            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", lineHeight: 1, color: tokens.accent }}>WALLIO</span>
           </div>
         </div>
 
         {/* BADGE CENTRAL avec anneau de progression */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
-          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width={(r + 8) * 2} height={(r + 8) * 2} style={{ position: "absolute", transform: "rotate(-90deg)" }}>
-              <circle cx={r + 8} cy={r + 8} r={r} fill="none" stroke={tokens.border} strokeWidth={thumbnail ? 2.5 : 4}/>
-              <circle cx={r + 8} cy={r + 8} r={r} fill="none" stroke={tokens.accent} strokeWidth={thumbnail ? 2.5 : 4} strokeDasharray={`${circ * pct / 100} ${circ}`} strokeLinecap="round"/>
-            </svg>
-            <div style={{ width: r * 1.5, height: r * 1.5, borderRadius: "50%", background: tokens.surface, border: `1px solid ${tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, position: "relative", zIndex: 1 }}>
-              <div style={{ fontSize: thumbnail ? 12 : 22, fontWeight: 700, color: tokens.accent, lineHeight: 1 }}>{filled}</div>
-              <div style={{ fontSize: thumbnail ? 4 : ss(6), color: tokens.textTertiary }}>{data.objectif_tampons} tampons</div>
+        {data.mode === "progressif" && data.paliers ? (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+            <ProgressiveStamps
+              paliers={data.paliers}
+              palier_actuel={data.palier_actuel ?? 0}
+              paliers_valides={data.paliers_valides ?? []}
+              tampons={data.tampons}
+              tokens={tokens}
+              stampStyle={dims?.stampStyle}
+              stampSize={dims?.stampSize}
+              thumbnail={thumbnail}
+            />
+          </div>
+        ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width={(r + 8) * 2} height={(r + 8) * 2} style={{ position: "absolute", transform: "rotate(-90deg)" }}>
+                <circle cx={r + 8} cy={r + 8} r={r} fill="none" stroke={tokens.border} strokeWidth={thumbnail ? 2.5 : 4}/>
+                <circle cx={r + 8} cy={r + 8} r={r} fill="none" stroke={tokens.accent} strokeWidth={thumbnail ? 2.5 : 4} strokeDasharray={`${circ * pct / 100} ${circ}`} strokeLinecap="round"/>
+              </svg>
+              <div style={{ width: r * 1.5, height: r * 1.5, borderRadius: "50%", background: tokens.surface, border: `1px solid ${tokens.border}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, position: "relative", zIndex: 1 }}>
+                <div style={{ fontSize: thumbnail ? 12 : 22, fontWeight: 700, color: tokens.accent, lineHeight: 1 }}>{filled}</div>
+                <div style={{ fontSize: thumbnail ? 4 : ss(6), color: tokens.textTertiary }}>{data.objectif_tampons} tampons</div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* FOOTER */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", padding: thumbnail ? "3% 7% 6%" : `${4*fmtV}% 8% ${7*fmtV}%`, position: "relative", zIndex: 1 }}>
@@ -77,9 +93,19 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.text }}>{data.nom_recompense}</div>
           </div>
           <div style={{ background: `${tokens.accent}15`, backdropFilter: "blur(8px)", borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px", border: `1px solid ${tokens.accent}20` }}>
-            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
+            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, lineHeight: 1, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
           </div>
-        </div>
+        
+            {/* Titulaire */}
+            {!thumbnail && (
+              <div style={{ marginTop: thumbnail ? 3 : 6 }}>
+                <div style={{ fontSize: 5, letterSpacing: "0.12em", color: tokens.textTertiary, textTransform: "uppercase" as const, marginBottom: 1 }}>Titulaire</div>
+                <div style={{ fontSize: thumbnail ? 5 : ss(9), fontWeight: 600, color: tokens.text }}>
+                  {data.client_prenom ? `${data.client_prenom} ${data.client_nom || ""}`.trim() : "Prénom Nom"}
+                </div>
+              </div>
+            )}
+            </div>
       </div>
     );
   },

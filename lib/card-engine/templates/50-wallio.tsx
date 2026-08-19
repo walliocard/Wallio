@@ -1,6 +1,7 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
+import ProgressiveStamps from "../components/ProgressiveStamps";
 
 const palettes: CardPalette[] = [
   {
@@ -107,11 +108,12 @@ const template: CardTemplate = {
             </div>
           </div>
           <div style={{
-            padding: thumbnail ? "1px 4px" : "2px 8px", borderRadius: 20,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: thumbnail ? "1px 5px" : "3px 9px", borderRadius: 20,
             background: `linear-gradient(135deg, ${tokens.accent}22, ${tokens.accentSecondary}22)`,
             border: `1px solid ${tokens.accent}33`,
           }}>
-            <span style={{ fontSize: thumbnail ? 5 : 8, fontWeight: 700, letterSpacing: "0.1em",
+            <span style={{ fontSize: thumbnail ? 5 : 8, fontWeight: 700, letterSpacing: "0.1em", lineHeight: 1,
               background: `linear-gradient(135deg, ${tokens.accent}, ${tokens.accentSecondary})`,
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             }}>WALLIO</span>
@@ -120,30 +122,64 @@ const template: CardTemplate = {
 
         {/* Tampons */}
         <div style={{ zIndex: 1 }}>
-          <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled}
-            style={(dims?.stampStyle ?? "circle")} tokens={tokens}
-            size={thumbnail ? 11 : 20} gap={thumbnail ? 3 : 5} perRow={9}
-          />
+          {data.mode === "progressif" && data.paliers ? (
+            <ProgressiveStamps
+              paliers={data.paliers}
+              palier_actuel={data.palier_actuel ?? 0}
+              paliers_valides={data.paliers_valides ?? []}
+              tampons={data.tampons}
+              tokens={tokens}
+              stampStyle={dims?.stampStyle}
+              stampSize={dims?.stampSize}
+              thumbnail={thumbnail}
+            />
+          ) : (
+            <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined} total={data.objectif_tampons} filled={filled}
+              style={(dims?.stampStyle ?? "circle")} tokens={tokens}
+              size={thumbnail ? 11 : 20} gap={thumbnail ? 3 : 5} perRow={9}
+            />
+          )}
         </div>
 
-        {/* Progress + QR */}
+        {/* Progress + footer */}
         <div style={{ zIndex: 1 }}>
-          <div style={{ height: thumbnail ? 1.5 : 2, borderRadius: 1, background: tokens.border, overflow: "hidden", marginBottom: thumbnail ? 3 : 6 }}>
-            <div style={{
-              height: "100%", width: `${pct}%`,
-              background: `linear-gradient(90deg, ${tokens.accent}, ${tokens.accentSecondary})`,
-              borderRadius: 1, transition: "width 0.5s ease",
-            }}/>
-          </div>
+          {data.mode !== "progressif" && (
+            <div style={{ height: thumbnail ? 1.5 : 2, borderRadius: 1, background: tokens.border, overflow: "hidden", marginBottom: thumbnail ? 3 : 6 }}>
+              <div style={{
+                height: "100%", width: `${pct}%`,
+                background: `linear-gradient(90deg, ${tokens.accent}, ${tokens.accentSecondary})`,
+                borderRadius: 1,
+              }}/>
+            </div>
+          )}
+
+          {/* Récompense + score */}
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
-              <div style={{ fontSize: thumbnail ? 6 : rs(9), color: tokens.textTertiary }}>{data.nom_recompense}</div>
-              <div style={{ fontSize: thumbnail ? 7 : ss(10), fontWeight: 600, color: tokens.textSecondary, marginTop: 1 }}>
+              <div style={{ fontSize: thumbnail ? 6 : rs(9), color: tokens.textTertiary, lineHeight: 1.3 }}>
+                {data.nom_recompense}
+              </div>
+              <div style={{ fontSize: thumbnail ? 7 : ss(10), fontWeight: 600, color: tokens.textSecondary, marginTop: 1, lineHeight: 1 }}>
                 {filled}/{data.objectif_tampons}
               </div>
             </div>
-            
           </div>
+
+          {/* Titulaire — ligne dédiée, style carte bancaire */}
+          {!thumbnail && (
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              borderTop: `1px solid ${tokens.border}`,
+              marginTop: 6, paddingTop: 5,
+            }}>
+              <span style={{ fontSize: 7, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: tokens.textTertiary }}>
+                Titulaire
+              </span>
+              <span style={{ fontSize: ss(11), fontWeight: 600, color: tokens.text, letterSpacing: -0.2 }}>
+                {data.client_prenom ? `${data.client_prenom} ${data.client_nom || ""}`.trim() : "Prénom Nom"}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     );

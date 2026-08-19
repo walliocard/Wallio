@@ -1,13 +1,34 @@
 import type { ReactElement } from "react";
 
+/* ── Palier (mode progressif) ── */
+export interface Palier {
+  tampons: number;      // tampons nécessaires pour CE palier (depuis le précédent)
+  recompense: string;   // "Café offert"
+}
+
 /* ── Données marchand ── */
 export interface CardData {
   nom: string;
   slogan?: string;
   logo_url?: string;
-  tampons: number;
-  objectif_tampons: number;
-  nom_recompense: string;
+  tampons: number;           // tampons en cours (palier actuel ou total cyclique)
+  objectif_tampons: number;  // objectif du palier actuel (ou total cyclique)
+  nom_recompense: string;    // récompense du palier actuel
+
+  /* Mode progressif */
+  mode?: "cyclique" | "progressif";
+  paliers?: Palier[];                 // tous les paliers configurés
+  palier_actuel?: number;             // index 0-based du palier en cours
+  paliers_valides?: boolean[];        // paliers déjà réclamés
+
+  /* Photo de couverture horizontale */
+  photo_url?: string;
+
+  /* Client personnalisé */
+  client_prenom?: string;
+  client_nom?: string;
+
+  /* Divers */
   message_fidelite?: string;
   wallet_id?: string;
   adresse?: string;
@@ -18,18 +39,18 @@ export interface CardData {
 
 /* ── Dimensions personnalisées ── */
 export interface CardDimensions {
-  logoSize?: number;       // taille px du logo/avatar en full (défaut: 28)
-  nameScale?: number;      // multiplicateur taille nom 0.6–2.0
-  sloganScale?: number;    // multiplicateur taille slogan 0.6–2.0
-  stampSize?: number;      // taille px des tampons en full (défaut template)
-  stampStyle?: import("./components/Stamps").StampStyle; // override style tampon
-  rewardScale?: number;    // multiplicateur texte récompense 0.6–2.0
-  scoreScale?: number;     // multiplicateur compteur tampons ex: "6/10" 0.6–2.0
-  qrSize?: number;         // taille px du QR code dans l'extension (défaut: 56)
-  format?: "standard" | "compact" | "wide"; // ratio carte
+  logoSize?: number;
+  nameScale?: number;
+  sloganScale?: number;
+  stampSize?: number;
+  stampStyle?: import("./components/Stamps").StampStyle;
+  rewardScale?: number;
+  scoreScale?: number;
+  qrSize?: number;
+  format?: "standard" | "compact" | "wide";
 }
 
-/* ── Design tokens — chaque palette instancie ces tokens ── */
+/* ── Design tokens ── */
 export interface CardTokens {
   background: string;
   surface: string;
@@ -64,9 +85,9 @@ export type CardCategory =
 
 /* ── Template ── */
 export interface CardTemplate {
-  id: string;          // "01-aura"
-  name: string;        // "AURA"
-  subtitle: string;    // "Minimal Premium"
+  id: string;
+  name: string;
+  subtitle: string;
   description: string;
   categories: CardCategory[];
   palettes: CardPalette[];
@@ -84,7 +105,7 @@ export interface RenderProps {
 
 /* ── Format → aspect ratio ── */
 export const FORMAT_RATIOS: Record<NonNullable<CardDimensions["format"]>, string> = {
-  standard: "375/246",   // Apple Wallet Store Card (ratio actuel)
-  compact:  "375/160",   // Apple Wallet Coupon / Boarding pass
-  wide:     "375/125",   // Google Wallet Loyalty Hero
+  standard: "375/246",
+  compact:  "375/160",
+  wide:     "375/125",
 };

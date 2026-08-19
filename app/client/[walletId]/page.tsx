@@ -54,19 +54,30 @@ export default function ClientQrPage({ params }: { params: { walletId: string } 
   async function handleValiderRecompense() {
     if (!client || !marchand || validationEnCours) return;
     setValidationEnCours(true);
-    await validerRecompense(client.id, marchand);
+    const niveau = client.niveau ?? 0;
+    const paliers_valides = client.paliers_valides ?? [];
+    await validerRecompense(client.id, marchand, niveau, paliers_valides);
     setResult(null);
-    setClient(prev => prev ? {
-      ...prev,
-      tampons: marchand.mode_recompense === "cyclique" ? 0 : prev.tampons,
-      recompense_en_attente: false,
-    } : prev);
+    if (marchand.mode_recompense === "progressif") {
+      const newPaliersValides = [...paliers_valides];
+      newPaliersValides[niveau] = true;
+      setClient(prev => prev ? {
+        ...prev, tampons: 0, niveau: niveau + 1,
+        paliers_valides: newPaliersValides, recompense_en_attente: false,
+      } : prev);
+    } else {
+      setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
+    }
     setValidationEnCours(false);
   }
 
   async function handleAjuster(delta: number) {
     if (!client || !marchand || adjusting) return;
-    const next = Math.max(0, Math.min(client.tampons + delta, marchand.objectif_tampons));
+    const palierActuel = marchand.mode_recompense === "progressif" && marchand.paliers?.length
+      ? marchand.paliers[client.niveau ?? 0]
+      : null;
+    const maxTampons = palierActuel ? palierActuel.tampons : marchand.objectif_tampons;
+    const next = Math.max(0, Math.min(client.tampons + delta, maxTampons));
     setAdjusting(true);
     await setTampons(client.id, next);
     setClient(prev => prev ? { ...prev, tampons: next } : prev);
@@ -78,7 +89,10 @@ export default function ClientQrPage({ params }: { params: { walletId: string } 
   if (!user || !marchandAuth?.actif) return <Erreur message="Connectez-vous pour accéder à cette page." />;
   if (!client) return <Erreur message="Client introuvable pour cet établissement." />;
 
-  const objectif = marchand?.objectif_tampons || 10;
+  const estProgressif = marchand?.mode_recompense === "progressif" && !!marchand?.paliers?.length;
+  const palierActuel = estProgressif ? marchand!.paliers![client.niveau ?? 0] : null;
+  const objectif = palierActuel ? palierActuel.tampons : (marchand?.objectif_tampons || 10);
+  const nomRecompense = palierActuel ? palierActuel.recompense : (marchand?.nom_recompense || "");
   const pct = Math.min((client.tampons / objectif) * 100, 100);
   const restants = objectif - client.tampons;
 
@@ -147,12 +161,56 @@ export default function ClientQrPage({ params }: { params: { walletId: string } 
 
         {/* Tampons */}
         <div className="rounded-2xl p-5 mb-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+
+          {/* Roadmap paliers (mode progressif) */}
+          {estProgressif && marchand?.paliers && (
+            <div className="mb-4">
+              <div className="flex items-center gap-0 mb-2">
+                {marchand.paliers.map((p, i) => {
+                  const valide = client.paliers_valides?.[i] ?? false;
+                  const actuel = i === (client.niveau ?? 0);
+                  return (
+                    <div key={i} className="flex items-center flex-1 min-w-0">
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
+                          style={{
+                            background: valide ? "var(--accent)" : actuel ? "rgba(0,122,255,0.12)" : "var(--border)",
+                            border: `1.5px solid ${valide || actuel ? "var(--accent)" : "var(--border)"}`,
+                            color: valide ? "white" : actuel ? "var(--accent)" : "var(--fg-tertiary)",
+                          }}
+                        >
+                          {valide ? "✓" : i + 1}
+                        </div>
+                        <p className="text-[9px] mt-1 max-w-[50px] text-center truncate" style={{ color: valide ? "var(--accent)" : actuel ? "var(--fg-secondary)" : "var(--fg-tertiary)" }}>
+                          {p.recompense || `Palier ${i + 1}`}
+                        </p>
+                      </div>
+                      {i < marchand.paliers!.length - 1 && (
+                        <div className="flex-1 h-px mx-1" style={{ background: valide ? "var(--accent)" : "var(--border)" }} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {palierActuel ? (
+                <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
+                  Palier {(client.niveau ?? 0) + 1} sur {marchand.paliers.length}
+                </p>
+              ) : (
+                <p className="text-[12px] font-medium" style={{ color: "var(--accent)" }}>
+                  🏆 Fidélité complète — tous les paliers atteints
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-3">
             <p className="text-[15px] font-semibold" style={{ color: "var(--fg)" }}>
               {client.tampons} / {objectif} tampons
             </p>
             <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
-              {marchand?.icone_tampons} {marchand?.nom_recompense}
+              {marchand?.icone_tampons} {nomRecompense}
             </p>
           </div>
           <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "var(--border)" }}>
@@ -203,7 +261,7 @@ export default function ClientQrPage({ params }: { params: { walletId: string } 
               {result.type === "recompense"   && `🎁 ${result.nom_recompense} débloqué !`}
             </p>
             <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
-              {result.type === "ok" && restants > 0 && `${restants} tampon${restants > 1 ? "s" : ""} restant avant la récompense`}
+              {result.type === "ok" && result.objectif > result.tampons && `${result.objectif - result.tampons} tampon${result.objectif - result.tampons > 1 ? "s" : ""} restant avant la récompense`}
               {result.type === "anti_doublon" && `Prochain tampon dans ${formatTemps(result.secondes_restantes)}`}
               {result.type === "recompense" && "Validez la récompense pour continuer"}
             </p>

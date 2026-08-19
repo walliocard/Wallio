@@ -1,6 +1,7 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
+import ProgressiveStamps from "../components/ProgressiveStamps";
 
 const palettes: CardPalette[] = [
   {
@@ -121,13 +122,29 @@ const template: CardTemplate = {
         </div>
 
         {/* TAMPONS */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+                  {/* Mode progressif */}
+          {data.mode === "progressif" && data.paliers ? (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+              <ProgressiveStamps
+                paliers={data.paliers}
+                palier_actuel={data.palier_actuel ?? 0}
+                paliers_valides={data.paliers_valides ?? []}
+                tampons={data.tampons}
+                tokens={tokens}
+                stampStyle={dims?.stampStyle}
+                stampSize={dims?.stampSize}
+                thumbnail={thumbnail}
+              />
+            </div>
+          ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
             total={data.objectif_tampons} filled={filled}
             style={(dims?.stampStyle ?? "circle")} tokens={tokens}
             size={thumbnail ? 9 : 20} gap={thumbnail ? 3 : 6} perRow={9}
           />
         </div>
+          )}
 
         {/* FOOTER */}
         <div style={{
@@ -148,11 +165,21 @@ const template: CardTemplate = {
             borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px",
             border: "1px solid rgba(255,255,255,0.2)",
           }}>
-            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, color: tokens.accent }}>
+            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, lineHeight: 1, color: tokens.accent }}>
               {filled}/{data.objectif_tampons}
             </span>
           </div>
-        </div>
+        
+            {/* Titulaire */}
+            {!thumbnail && (
+              <div style={{ marginTop: thumbnail ? 3 : 6 }}>
+                <div style={{ fontSize: 5, letterSpacing: "0.12em", color: tokens.textTertiary, textTransform: "uppercase" as const, marginBottom: 1 }}>Titulaire</div>
+                <div style={{ fontSize: thumbnail ? 5 : ss(9), fontWeight: 600, color: tokens.text }}>
+                  {data.client_prenom ? `${data.client_prenom} ${data.client_nom || ""}`.trim() : "Prénom Nom"}
+                </div>
+              </div>
+            )}
+            </div>
       </div>
     );
   },

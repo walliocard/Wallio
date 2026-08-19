@@ -16,14 +16,22 @@ export default function CartePage() {
 
   const defaultTemplate = getDefaultTemplate();
 
+  const objectifInitial = (marchand?.objectif_tampons as number) || 10;
   const [data, setData] = useState<CardData>({
     nom:              (marchand?.nom as string) || "",
     logo_url:         (marchand?.logo_url as string) || "",
-    tampons:          0,
-    objectif_tampons: (marchand?.objectif_tampons as number) || 10,
+    photo_url:        (marchand?.photo_url as string) || "",
+    tampons:          Math.round(objectifInitial * 0.6),
+    objectif_tampons: objectifInitial,
     nom_recompense:   (marchand?.nom_recompense as string) || "Récompense offerte",
+    mode:             (marchand?.mode_recompense as "cyclique" | "progressif") || "cyclique",
+    paliers:          marchand?.paliers || undefined,
+    palier_actuel:    0,
+    paliers_valides:  [],
     slogan:           (marchand?.slogan as string) || "",
     wallet_id:        "",
+    client_prenom:    "Prénom",
+    client_nom:       "Nom",
   });
 
   const [templateId, setTemplateId]     = useState((marchand?.template_id as string) || defaultTemplate.id);
@@ -32,6 +40,7 @@ export default function CartePage() {
   const [saving, setSaving]             = useState(false);
   const [saved, setSaved]               = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [dims, setDims] = useState<CardDimensions>({ format: "standard" });
   const setDim = <K extends keyof CardDimensions>(k: K, v: CardDimensions[K]) =>
     setDims(d => ({ ...d, [k]: v }));
@@ -52,12 +61,44 @@ export default function CartePage() {
       objectif_tampons: data.objectif_tampons,
       nom_recompense:   data.nom_recompense,
       logo_url:         data.logo_url,
+      photo_url:        data.photo_url || "",
       template_id:      templateId,
       palette_id:       paletteId,
       updated_at:       serverTimestamp(),
     });
     setSaving(false); setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) return;
+    setUploadingPhoto(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const TARGET_W = 750;
+          const ratio = Math.min(TARGET_W / img.width, 1);
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * ratio);
+          canvas.height = Math.round(img.height * ratio);
+          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.78));
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+      set("photo_url", dataUrl);
+      await updateDoc(doc(db, "marchands", user.uid), { photo_url: dataUrl });
+    } catch (err: unknown) {
+      alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setUploadingPhoto(false);
+    }
   }
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -205,6 +246,35 @@ export default function CartePage() {
                       </button>
                     )}
                   </div>
+                </div>
+              </Section>
+
+              {/* Photo de couverture — template VISTA et futurs */}
+              <Section label="Photo de couverture">
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {data.photo_url ? (
+                    <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", aspectRatio: "3/1", border: "1px solid var(--border)" }}>
+                      <img src={data.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+                    </div>
+                  ) : (
+                    <div style={{ borderRadius: 10, aspectRatio: "3/1", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--glass-bg)" }}>
+                      <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>Aucune photo</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <label style={{ flex: 1, padding: "7px 0", borderRadius: 10, fontSize: 12, fontWeight: 500, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: uploadingPhoto ? "wait" : "pointer", textAlign: "center" }}>
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoUpload} disabled={uploadingPhoto}/>
+                      {uploadingPhoto ? "Upload…" : data.photo_url ? "Changer" : "Ajouter une photo"}
+                    </label>
+                    {data.photo_url && (
+                      <button onClick={() => set("photo_url", "")} style={{ padding: "7px 12px", borderRadius: 10, fontSize: 12, background: "none", border: "1px solid var(--border)", color: "#FF3B30", cursor: "pointer" }}>
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: 0 }}>
+                    Utilisée par le template VISTA. Format paysage recommandé.
+                  </p>
                 </div>
               </Section>
 

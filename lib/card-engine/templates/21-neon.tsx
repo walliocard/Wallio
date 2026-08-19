@@ -1,6 +1,7 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
+import ProgressiveStamps from "../components/ProgressiveStamps";
 
 const palettes: CardPalette[] = [
   { id: "purple-blue", name: "Purple / Blue", tokens: { background: "#08040E", surface: "#120818", surfaceSecondary: "#1C0C24", text: "#FFFFFF", textSecondary: "#B060FF", textTertiary: "#503060", accent: "#B060FF", accentSecondary: "#6080FF", stampActive: "#B060FF", stampActiveIcon: "#08040E", stampInactive: "#1C0C24", border: "#2C1840", borderStrong: "#503060", qrBackground: "#FFFFFF", qrForeground: "#08040E", rewardBackground: "#120818" } },
@@ -75,26 +76,41 @@ const template: CardTemplate = {
             borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px",
             border: `1px solid ${tokens.accent}40`, flexShrink: 0,
           }}>
-            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", lineHeight: 1, color: tokens.accent }}>WALLIO</span>
           </div>
         </div>
 
         {/* TAMPONS — points lumineux néon */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: thumbnail ? 4 : 7, width: "100%" }}>
-            {Array.from({ length: data.objectif_tampons }).map((_, i) => {
-              const on = i < filled;
-              return (
-                <div key={i} style={{
-                  width: thumbnail ? 7 : 14, height: thumbnail ? 7 : 14, borderRadius: "50%",
-                  background: on ? tokens.accent : tokens.stampInactive,
-                  boxShadow: on ? `0 0 ${thumbnail ? 5 : 10}px ${tokens.accent}80` : "none",
-                  flexShrink: 0,
-                }}/>
-              );
-            })}
+        {data.mode === "progressif" && data.paliers ? (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+            <ProgressiveStamps
+              paliers={data.paliers}
+              palier_actuel={data.palier_actuel ?? 0}
+              paliers_valides={data.paliers_valides ?? []}
+              tampons={data.tampons}
+              tokens={tokens}
+              stampStyle={dims?.stampStyle}
+              stampSize={dims?.stampSize}
+              thumbnail={thumbnail}
+            />
           </div>
-        </div>
+        ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: thumbnail ? 4 : 7, width: "100%" }}>
+              {Array.from({ length: data.objectif_tampons }).map((_, i) => {
+                const on = i < filled;
+                return (
+                  <div key={i} style={{
+                    width: thumbnail ? 7 : 14, height: thumbnail ? 7 : 14, borderRadius: "50%",
+                    background: on ? tokens.accent : tokens.stampInactive,
+                    boxShadow: on ? `0 0 ${thumbnail ? 5 : 10}px ${tokens.accent}80` : "none",
+                    flexShrink: 0,
+                  }}/>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* FOOTER */}
         <div style={{
@@ -119,7 +135,17 @@ const template: CardTemplate = {
               {filled}/{data.objectif_tampons}
             </span>
           </div>
-        </div>
+        
+            {/* Titulaire */}
+            {!thumbnail && (
+              <div style={{ marginTop: thumbnail ? 3 : 6 }}>
+                <div style={{ fontSize: 5, letterSpacing: "0.12em", color: tokens.textTertiary, textTransform: "uppercase" as const, marginBottom: 1 }}>Titulaire</div>
+                <div style={{ fontSize: thumbnail ? 5 : ss(9), fontWeight: 600, color: tokens.text }}>
+                  {data.client_prenom ? `${data.client_prenom} ${data.client_nom || ""}`.trim() : "Prénom Nom"}
+                </div>
+              </div>
+            )}
+            </div>
       </div>
     );
   },

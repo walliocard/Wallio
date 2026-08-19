@@ -12,12 +12,14 @@ type MarchandData = {
   objectif_tampons: number;
   nom_recompense: string;
   mode_recompense: "cyclique" | "progressif";
+  paliers?: Array<{ tampons: number; recompense: string }>;
   icone_tampons: string;
   couleur_principale: string;
   couleur_secondaire: string;
   anti_doublon_delai: number;
   fuseau_horaire: string;
   nfc_id?: string;
+  photo_url?: string;
   [key: string]: unknown;
 };
 

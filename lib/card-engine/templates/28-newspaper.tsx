@@ -1,6 +1,7 @@
 import type { CardTemplate, CardPalette } from "../types";
 import QRBox from "../components/QRBox";
 import Stamps from "../components/Stamps";
+import ProgressiveStamps from "../components/ProgressiveStamps";
 
 const palettes: CardPalette[] = [
   { id: "paper-black", name: "Paper / Black", tokens: { background: "#F4EED8", surface: "#E8DEC0", surfaceSecondary: "#D8CCA8", text: "#0A0804", textSecondary: "#2A2010", textTertiary: "#6A6048", accent: "#0A0804", accentSecondary: "#2A2010", stampActive: "#0A0804", stampActiveIcon: "#F4EED8", stampInactive: "#D8CCA8", border: "#C0B088", borderStrong: "#A09068", qrBackground: "#FFFFFF", qrForeground: "#0A0804", rewardBackground: "#E8DEC0" } },
@@ -52,17 +53,33 @@ const template: CardTemplate = {
             </div>
           </div>
           <div style={{ background: `${tokens.accent}18`, backdropFilter: "blur(8px)", borderRadius: 20, padding: thumbnail ? "1px 5px" : "2px 8px", border: `1px solid ${tokens.accent}25`, flexShrink: 0 }}>
-            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", color: tokens.accent }}>WALLIO</span>
+            <span style={{ fontSize: thumbnail ? 4 : 6, fontWeight: 700, letterSpacing: "0.1em", lineHeight: 1, color: tokens.accent }}>WALLIO</span>
           </div>
         </div>
 
         {/* TAMPONS */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+                  {/* Mode progressif */}
+          {data.mode === "progressif" && data.paliers ? (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
+              <ProgressiveStamps
+                paliers={data.paliers}
+                palier_actuel={data.palier_actuel ?? 0}
+                paliers_valides={data.paliers_valides ?? []}
+                tampons={data.tampons}
+                tokens={tokens}
+                stampStyle={dims?.stampStyle}
+                stampSize={dims?.stampSize}
+                thumbnail={thumbnail}
+              />
+            </div>
+          ) : (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", padding: thumbnail ? "0 7%" : "0 8%", position: "relative", zIndex: 1 }}>
           <Stamps fillWidth={!thumbnail} sizeOverride={!thumbnail ? dims?.stampSize : undefined}
             total={data.objectif_tampons} filled={filled}
             style={(dims?.stampStyle ?? "badge")} tokens={tokens}
             size={thumbnail ? 9 : 20} gap={thumbnail ? 3 : 6} perRow={9}/>
         </div>
+          )}
 
         {/* FOOTER */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", padding: thumbnail ? "3% 7% 6%" : `${4*fmtV}% 8% ${7*fmtV}%`, position: "relative", zIndex: 1 }}>
@@ -71,9 +88,19 @@ const template: CardTemplate = {
             <div style={{ fontSize: thumbnail ? 6 : rs(10), fontWeight: 600, color: tokens.text }}>{data.nom_recompense}</div>
           </div>
           <div style={{ background: `${tokens.accent}15`, backdropFilter: "blur(8px)", borderRadius: 12, padding: thumbnail ? "2px 5px" : "4px 10px", border: `1px solid ${tokens.accent}20` }}>
-            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
+            <span style={{ fontSize: thumbnail ? 6 : ss(11), fontWeight: 700, lineHeight: 1, color: tokens.accent }}>{filled}/{data.objectif_tampons}</span>
           </div>
-        </div>
+        
+            {/* Titulaire */}
+            {!thumbnail && (
+              <div style={{ marginTop: thumbnail ? 3 : 6 }}>
+                <div style={{ fontSize: 5, letterSpacing: "0.12em", color: tokens.textTertiary, textTransform: "uppercase" as const, marginBottom: 1 }}>Titulaire</div>
+                <div style={{ fontSize: thumbnail ? 5 : ss(9), fontWeight: 600, color: tokens.text }}>
+                  {data.client_prenom ? `${data.client_prenom} ${data.client_nom || ""}`.trim() : "Prénom Nom"}
+                </div>
+              </div>
+            )}
+            </div>
       </div>
     );
   },

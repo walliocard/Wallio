@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { genererNfcId } from "@/lib/loyalty";
+import { genererNfcId, type PalierConfig } from "@/lib/loyalty";
 
 const ANTI_DOUBLON = [
   { label: "15 minutes", value: 900 },
@@ -31,6 +31,9 @@ export default function ReglagesPage() {
     anti_doublon_delai: marchand?.anti_doublon_delai || 86400,
     fuseau_horaire:   marchand?.fuseau_horaire || Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
+  const [paliers, setPaliers] = useState<PalierConfig[]>(
+    marchand?.paliers?.length ? marchand.paliers : [{ tampons: 10, recompense: "" }]
+  );
   const [auto, setAuto] = useState({
     anniversaire_actif:     Boolean(autoRaw?.anniversaire?.actif),
     anniversaire_jours_avant: Number(autoRaw?.anniversaire?.jours_avant ?? 0),
@@ -51,6 +54,7 @@ export default function ReglagesPage() {
     setSaving(true);
     await updateDoc(doc(db, "marchands", user!.uid), {
       ...config,
+      ...(config.mode_recompense === "progressif" ? { paliers } : {}),
       automatisations: {
         anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant },
         relance: { actif: auto.relance_actif, delai_jours: auto.relance_delai_jours },
@@ -82,7 +86,7 @@ export default function ReglagesPage() {
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
 
         {/* Récompense */}
-        <Card title="Mode récompense">
+        <Card title="Mode récompense" className={config.mode_recompense === "progressif" ? "lg:col-span-2" : ""}>
           <div className="grid grid-cols-2 gap-2 mb-3">
             {(["cyclique", "progressif"] as const).map(mode => (
               <button
@@ -99,11 +103,63 @@ export default function ReglagesPage() {
               </button>
             ))}
           </div>
-          <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
+          <p className="text-[12px] mb-4" style={{ color: "var(--fg-tertiary)" }}>
             {config.mode_recompense === "cyclique"
               ? "Repart à zéro après chaque récompense"
               : "Paliers cumulatifs, jamais remis à zéro"}
           </p>
+
+          {/* ── Paliers (mode progressif) ── */}
+          {config.mode_recompense === "progressif" && (
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
+                Paliers
+              </p>
+              <div className="space-y-2 mb-3">
+                {paliers.map((p, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                      style={{ background: "var(--accent)" }}>
+                      {i + 1}
+                    </div>
+                    <input
+                      type="number"
+                      min={1}
+                      value={p.tampons}
+                      onChange={e => setPaliers(ps => ps.map((x, j) => j === i ? { ...x, tampons: Math.max(1, Number(e.target.value)) } : x))}
+                      className="w-16 px-2 py-2 rounded-xl text-[13px] text-center outline-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                    />
+                    <span className="text-[12px] flex-shrink-0" style={{ color: "var(--fg-tertiary)" }}>tampons →</span>
+                    <input
+                      type="text"
+                      placeholder="Récompense"
+                      value={p.recompense}
+                      onChange={e => setPaliers(ps => ps.map((x, j) => j === i ? { ...x, recompense: e.target.value } : x))}
+                      className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                    />
+                    {paliers.length > 1 && (
+                      <button
+                        onClick={() => setPaliers(ps => ps.filter((_, j) => j !== i))}
+                        className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 text-[15px]"
+                        style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30" }}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setPaliers(ps => [...ps, { tampons: (ps[ps.length - 1]?.tampons || 10), recompense: "" }])}
+                className="text-[13px] font-medium px-3 py-2 rounded-xl w-full"
+                style={{ background: "rgba(0,122,255,0.06)", color: "var(--accent)", border: "1px dashed var(--accent)" }}
+              >
+                + Ajouter un palier
+              </button>
+            </div>
+          )}
         </Card>
 
         {/* Anti-doublon */}
