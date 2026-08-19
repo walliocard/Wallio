@@ -76,21 +76,25 @@ export default function AppleWalletCard({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      {/* ── Header — logo marchand uniquement ── */}
-      {logoUrl && (
-        <div style={{ padding: "14px 16px 12px" }}>
+      {/* ── Header ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 12px" }}>
+        {logoUrl && (
           <img
             src={logoUrl}
             alt=""
-            style={{
-              height: 40,
-              maxWidth: 160,
-              objectFit: "contain",
-              display: "block",
-            }}
+            style={{ height: 38, maxWidth: 110, objectFit: "contain", borderRadius: 6, flexShrink: 0 }}
           />
-        </div>
-      )}
+        )}
+        {logoText && (
+          <span style={{
+            fontSize: 15, fontWeight: 600, color: fg,
+            letterSpacing: -0.2, overflow: "hidden",
+            textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
+            {logoText}
+          </span>
+        )}
+      </div>
 
       {/* ── Strip zone (375 × 144 pt — Apple spec) ── */}
       {(stripContent || stripUrl) && (
