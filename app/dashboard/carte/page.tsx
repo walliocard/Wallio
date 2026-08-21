@@ -5,6 +5,7 @@ import { useState } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import AppleWalletCard from "@/components/AppleWalletCard";
+import GoogleWalletCard from "@/components/GoogleWalletCard";
 
 export default function CartePage() {
   const { user, marchand } = useAuth();
@@ -29,12 +30,18 @@ export default function CartePage() {
   const [stripTextSize, setStripTextSize] = useState<"s"|"m"|"l">("m");
   const [stripTextColor, setStripTextColor] = useState<string>("#FFFFFF");
   const [stripTextPos, setStripTextPos] = useState<"bl"|"bc"|"br"|"c">("bl");
+  const [stripTextFont, setStripTextFont] = useState<"sans"|"serif"|"mono">("sans");
 
   const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || "Tampons");
   const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || "Récompense");
   const [memberLabel, setMemberLabel] = useState<string>((marchand?.apple_member_label as string) || "Membre");
   const [description, setDescription] = useState<string>((marchand?.apple_description as string) || "");
   const [backInfo, setBackInfo] = useState<string>((marchand?.apple_back_info as string) || "");
+
+  // Preview mode
+  const [previewMode, setPreviewMode] = useState<"full" | "compact" | "back">("full");
+  // Wallet type
+  const [walletType, setWalletType] = useState<"apple" | "google">("apple");
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -48,6 +55,11 @@ export default function CartePage() {
   // Couleurs effectives (auto ou manuelles)
   const effectiveFg = fgAuto ? autoFg(bgColor) : fgColor;
   const effectiveLabel = labelAuto ? autoLabel(bgColor) : labelColor;
+
+  // Vérificateur de contraste WCAG
+  const contrastRatioValue = contrastRatio(effectiveFg, bgColor);
+  const contrastLevel: "ok" | "weak" | "fail" =
+    contrastRatioValue >= 4.5 ? "ok" : contrastRatioValue >= 3 ? "weak" : "fail";
 
   async function sauvegarder() {
     setSaving(true);
@@ -103,6 +115,13 @@ export default function CartePage() {
     }
   }
 
+  function handleDownloadBanner() {
+    const dark = isDarkBg(bgColor);
+    const lightColor = dark ? lightenDarken(bgColor, 38) : lightenDarken(bgColor, -38);
+    const strip = buildStrip(lightColor, bgColor, 160);
+    downloadStrip(strip, `wallio-banner-${nom || "carte"}.jpg`);
+  }
+
   return (
     <div style={{ height: "calc(100vh - 0px)", display: "flex", flexDirection: "column" }}>
 
@@ -140,34 +159,94 @@ export default function CartePage() {
           alignItems: "center", justifyContent: "center",
           padding: 32, gap: 14, background: "var(--bg)", overflowY: "auto",
         }}>
+
+          {/* Toggle Apple / Google Wallet */}
+          <div style={{ display: "flex", gap: 6, background: "var(--glass-bg)", border: "1px solid var(--border)", borderRadius: 14, padding: 4 }}>
+            {(["apple", "google"] as const).map(wt => (
+              <button key={wt} onClick={() => setWalletType(wt)} style={{
+                padding: "6px 16px", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                background: walletType === wt ? "var(--accent)" : "transparent",
+                color: walletType === wt ? "white" : "var(--fg-tertiary)",
+                border: "none", cursor: "pointer", transition: "all 0.15s",
+              }}>
+                {wt === "apple" ? "Apple Wallet" : "Google Wallet"}
+              </button>
+            ))}
+          </div>
+
           <div style={{
             padding: "5px 16px", background: "var(--glass-bg)",
             border: "1px solid var(--border)", borderRadius: 20,
           }}>
             <p style={{ fontSize: 11, color: "var(--fg-tertiary)", letterSpacing: "0.04em" }}>
-              Aperçu fidèle · iPhone · Apple Wallet
+              Aperçu fidèle · iPhone · {walletType === "apple" ? "Apple Wallet" : "Google Wallet"}
             </p>
           </div>
 
-          <AppleWalletCard
-            logoUrl={logoUrl}
-            logoText={nom}
-            stripUrl={stripUrl || undefined}
-            backgroundColor={bgColor}
-            foregroundColor={effectiveFg}
-            labelColor={effectiveLabel}
-            stampsCurrent={stampsCurrent}
-            stampsObjective={objectif}
-            rewardName={recompense}
-            clientPrenom="Prénom"
-            clientNom="Nom"
-            primaryLabel={primaryLabel}
-            rewardLabel={rewardLabel}
-            memberLabel={memberLabel}
-          />
+          {/* Boutons de mode (Apple uniquement) */}
+          {walletType === "apple" && (
+            <div style={{ display: "flex", gap: 6 }}>
+              {([
+                { key: "full", label: "Complète" },
+                { key: "compact", label: "Liste" },
+                { key: "back", label: "Dos" },
+              ] as const).map(({ key, label }) => (
+                <button key={key} onClick={() => setPreviewMode(key)} style={{
+                  padding: "6px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600,
+                  background: previewMode === key ? "var(--accent)" : "var(--glass-bg)",
+                  color: previewMode === key ? "white" : "var(--fg-secondary)",
+                  border: `1px solid ${previewMode === key ? "var(--accent)" : "var(--border)"}`,
+                  cursor: "pointer",
+                }}>
+                  {key === "full" ? "📱 " : key === "compact" ? "☰ " : "↩ "}{label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {walletType === "apple" ? (
+            <AppleWalletCard
+              logoUrl={logoUrl}
+              logoText={nom}
+              stripUrl={stripUrl || undefined}
+              backgroundColor={bgColor}
+              foregroundColor={effectiveFg}
+              labelColor={effectiveLabel}
+              stampsCurrent={stampsCurrent}
+              stampsObjective={objectif}
+              rewardName={recompense}
+              clientPrenom="Prénom"
+              clientNom="Nom"
+              primaryLabel={primaryLabel}
+              rewardLabel={rewardLabel}
+              memberLabel={memberLabel}
+              previewUid={user.uid}
+              mode={previewMode}
+              backInfo={backInfo}
+              description={description}
+            />
+          ) : (
+            <GoogleWalletCard
+              logoUrl={logoUrl}
+              logoText={nom}
+              stripUrl={stripUrl || undefined}
+              backgroundColor={bgColor}
+              foregroundColor={effectiveFg}
+              labelColor={effectiveLabel}
+              stampsCurrent={stampsCurrent}
+              stampsObjective={objectif}
+              rewardName={recompense}
+              clientPrenom="Prénom"
+              clientNom="Nom"
+              primaryLabel={primaryLabel}
+              rewardLabel={rewardLabel}
+              memberLabel={memberLabel}
+              previewUid={user.uid}
+            />
+          )}
 
           <p style={{ fontSize: 11, color: "var(--fg-tertiary)", textAlign: "center", maxWidth: 340 }}>
-            Bannière libre · Couleurs personnalisables · Structure imposée par Apple
+            Bannière libre · Couleurs personnalisables · Structure imposée par {walletType === "apple" ? "Apple" : "Google"}
           </p>
         </div>
 
@@ -279,7 +358,7 @@ export default function CartePage() {
                   const angle = t.angle ?? 135;
                   setStripFrom(t.from); setStripTo(t.to); setStripAngle(angle);
                   setBgColor(t.bg);
-                  const strip = buildStrip(t.from, t.to, angle, stripText, stripTextColor, stripTextSize, stripTextPos);
+                  const strip = buildStrip(t.from, t.to, angle, stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont);
                   setStripUrl(strip);
                   updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip, apple_bg_color: t.bg });
                 }} style={{
@@ -311,6 +390,24 @@ export default function CartePage() {
                         cursor: "pointer",
                       }}>
                         {s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+
+                {/* Police */}
+                <Field label="Police">
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {(["sans", "serif", "mono"] as const).map(f => (
+                      <button key={f} onClick={() => setStripTextFont(f)} style={{
+                        flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 600,
+                        background: stripTextFont === f ? "var(--accent)" : "var(--glass-bg)",
+                        color: stripTextFont === f ? "white" : "var(--fg-secondary)",
+                        border: `1px solid ${stripTextFont === f ? "var(--accent)" : "var(--border)"}`,
+                        cursor: "pointer",
+                        fontFamily: f === "sans" ? "sans-serif" : f === "serif" ? "serif" : "monospace",
+                      }}>
+                        {f === "sans" ? "Sans" : f === "serif" ? "Serif" : "Mono"}
                       </button>
                     ))}
                   </div>
@@ -360,7 +457,7 @@ export default function CartePage() {
               <div style={{ display: "flex", gap: 8 }}>
                 {stripFrom && (
                   <button onClick={() => {
-                    const strip = buildStrip(stripFrom, stripTo, stripAngle, stripText, stripTextColor, stripTextSize, stripTextPos);
+                    const strip = buildStrip(stripFrom, stripTo, stripAngle, stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont);
                     setStripUrl(strip);
                     updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip });
                   }} style={{
@@ -409,6 +506,60 @@ export default function CartePage() {
                 "#E8F0F4","#D8E8F0","#C8DCE8","#B8D0E0",
               ]}
             />
+
+            {/* Bouton téléchargement bannière depuis palette */}
+            <button
+              onClick={handleDownloadBanner}
+              style={{
+                width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                background: "var(--glass-bg)", border: "1px solid var(--border)",
+                color: "var(--fg)", cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center", gap: 6,
+              }}
+            >
+              <span>⬇</span>
+              <span>Télécharger bannière</span>
+              <span style={{
+                display: "inline-block", width: 14, height: 14, borderRadius: 4,
+                background: bgColor, border: "1px solid var(--border)",
+                verticalAlign: "middle",
+              }}/>
+            </button>
+
+            {/* Vérificateur de contraste */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
+              borderRadius: 10, fontSize: 11, fontWeight: 500,
+              background: contrastLevel === "fail"
+                ? "rgba(255,59,48,0.08)"
+                : contrastLevel === "weak"
+                ? "rgba(255,159,10,0.08)"
+                : "rgba(52,199,89,0.08)",
+              border: `1px solid ${
+                contrastLevel === "fail"
+                  ? "rgba(255,59,48,0.25)"
+                  : contrastLevel === "weak"
+                  ? "rgba(255,159,10,0.25)"
+                  : "rgba(52,199,89,0.25)"
+              }`,
+            }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                background: contrastLevel === "fail" ? "#FF3B30" : contrastLevel === "weak" ? "#FF9F0A" : "#34C759",
+              }}/>
+              <span style={{
+                color: contrastLevel === "fail" ? "#FF3B30" : contrastLevel === "weak" ? "#FF9F0A" : "#34C759",
+              }}>
+                {contrastLevel === "fail"
+                  ? "Contraste insuffisant"
+                  : contrastLevel === "weak"
+                  ? "Contraste faible"
+                  : "Contraste OK"}
+              </span>
+              <span style={{ color: "var(--fg-tertiary)", marginLeft: "auto" }}>
+                {contrastRatioValue.toFixed(2)}:1
+              </span>
+            </div>
 
             {/* Texte */}
             <div>
@@ -583,6 +734,7 @@ function buildStrip(
   text = "", textColor = "#FFFFFF",
   textSize: "s"|"m"|"l" = "m",
   textPos: "bl"|"bc"|"br"|"c" = "bl",
+  font: "sans"|"serif"|"mono" = "sans",
 ): string {
   const W = 750, H = 288;
   const canvas = document.createElement("canvas");
@@ -604,7 +756,11 @@ function buildStrip(
   // Texte
   if (text) {
     const sz = textSize === "s" ? 36 : textSize === "m" ? 54 : 76;
-    ctx.font = `700 ${sz}px -apple-system, "Helvetica Neue", sans-serif`;
+    const fontFamily =
+      font === "serif" ? `Georgia, "Times New Roman", serif`
+      : font === "mono" ? `"Courier New", Courier, monospace`
+      : `-apple-system, "Helvetica Neue", sans-serif`;
+    ctx.font = `700 ${sz}px ${fontFamily}`;
     ctx.fillStyle = textColor;
     const pad = 44;
     const align = textPos === "bc" ? "center" : textPos === "br" ? "right" : "left";
@@ -624,9 +780,12 @@ function downloadStrip(dataUrl: string, filename: string) {
   a.click();
 }
 
+// Keep for potential future use
 function generateGradientStrip(from: string, to: string, angle: number): string {
   return buildStrip(from, to, angle);
 }
+// Suppress unused warning at module level
+void generateGradientStrip;
 
 // ── Color helpers ─────────────────────────────────────
 
@@ -645,6 +804,31 @@ function autoFg(bg: string): string {
 
 function autoLabel(bg: string): string {
   return isDarkBg(bg) ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.42)";
+}
+
+function relativeLuminance(hex: string): number {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return 0;
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const lin = (c: number) => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+function contrastRatio(hex1: string, hex2: string): number {
+  const L1 = relativeLuminance(hex1);
+  const L2 = relativeLuminance(hex2);
+  const lighter = Math.max(L1, L2);
+  const darker = Math.min(L1, L2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function lightenDarken(hex: string, amount: number): string {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex;
+  const r = Math.min(255, Math.max(0, parseInt(hex.slice(1, 3), 16) + amount));
+  const g = Math.min(255, Math.max(0, parseInt(hex.slice(3, 5), 16) + amount));
+  const b = Math.min(255, Math.max(0, parseInt(hex.slice(5, 7), 16) + amount));
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
 // ── Image helpers ─────────────────────────────────────
