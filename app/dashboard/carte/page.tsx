@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import AppleWalletCard from "@/components/AppleWalletCard";
@@ -42,6 +42,14 @@ export default function CartePage() {
   const [previewMode, setPreviewMode] = useState<"full" | "compact" | "back">("full");
   // Wallet type
   const [walletType, setWalletType] = useState<"apple" | "google">("apple");
+
+  // Auto-regen strip quand le texte ou ses options changent (gradient actif seulement)
+  useEffect(() => {
+    if (!stripFrom) return;
+    const strip = buildStrip(stripFrom, stripTo, stripAngle, stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont);
+    setStripUrl(strip);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stripText, stripTextSize, stripTextColor, stripTextPos, stripTextFont]);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -112,6 +120,16 @@ export default function CartePage() {
       alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setUploadingStrip(false);
+    }
+  }
+
+  // Changement bgColor manuel — met à jour le gradient si actif
+  function handleBgColorChange(color: string) {
+    setBgColor(color);
+    if (stripFrom) {
+      setStripTo(color);
+      const strip = buildStrip(stripFrom, color, stripAngle, stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont);
+      setStripUrl(strip);
     }
   }
 
@@ -488,22 +506,40 @@ export default function CartePage() {
             <ColorRow
               label="Fond"
               value={bgColor}
-              onChange={setBgColor}
+              onChange={handleBgColorChange}
               presets={[
-                "#0A0A0A","#1C1C1E","#2C2C2E","#3A3A3C",
-                "#1A1A2E","#16213E","#0F3460","#1B262C",
-                "#2D3A2D","#3A4A32","#1A2E1A","#0D2B1A",
-                "#3A2A1C","#4A3020","#2E1A0E","#1C0E05",
-                "#2A1018","#3A1020","#4A0E28","#2E0A20",
-                "#1C1C3A","#2A2050","#1A0E3A","#0E0A2E",
-                "#F5F0E8","#EDE8DC","#FAF8F5","#FFFFFF",
-                "#F0EBE3","#E8E0D5","#DDD5C8","#D4CBBC",
-                "#D4E8D0","#C8DCC4","#E8F4E4","#F0F8EC",
-                "#F0D8D0","#E8CCC4","#F8EAE5","#FFF0EB",
-                "#D8D0E8","#CCC4DC","#EDE8F8","#F5F0FF",
-                "#D4E4F0","#C4D8EC","#E4EFF8","#EDF5FF",
-                "#F8F4E8","#F4EDD8","#FFF8E8","#FFFBF0",
-                "#E8F0F4","#D8E8F0","#C8DCE8","#B8D0E0",
+                // Noirs & sombres
+                "#000000","#0A0A0A","#111111","#1C1C1E","#2C2C2E","#3A3A3C","#4A4A4C",
+                // Marines & nuits
+                "#0A0A1A","#1A1A2E","#16213E","#0F3460","#0A1628","#1B262C","#0D2137",
+                // Nature & matcha
+                "#0D1A0D","#1A2E1A","#2D3A2D","#3A4A32","#4A6741","#5C7A52","#6B8C5E",
+                // Terres & épices
+                "#1C0E05","#2E1A0E","#3A2A1C","#4A3020","#5C3A20","#6B4520","#8B5E2A",
+                // Bordeaux & rubis
+                "#1A0508","#2A0A14","#3A1020","#4A1428","#6B1A30","#8B2040","#A0284C",
+                // Violets & cosmos
+                "#0A0514","#1A0A28","#2A1040","#3A1A54","#4A1E6B","#5E2080","#7B2FA0",
+                // Bleu ardoise
+                "#0A1420","#142030","#1C2E40","#243C54","#2C4A6B","#345880","#3C6899",
+                // Verts forêt
+                "#051405","#0A1E0A","#142814","#1A3218","#20401E","#285228","#336633",
+                // Pastels épurés (clairs)
+                "#F5F0E8","#F0EBE3","#EDE8DC","#E8E0D5","#E4D8CC","#DDD5C8","#D4CBBC",
+                // Crème & ivoire
+                "#FFFBF5","#FAF8F5","#F8F4EF","#F5F0E8","#F2EDE0","#EEE8D8","#FFFFFF",
+                // Sage & menthe
+                "#E8F5E8","#D4ECD4","#C8DCC4","#B8CDB8","#A8C4A8","#98B898","#D4EAD0",
+                // Blush & rose poudré
+                "#FFF0EB","#FFE8E0","#F8D8D0","#F0C8BC","#E8B8A8","#D4A090","#C49080",
+                // Lavande & lilas
+                "#F5F0FF","#EDE8F8","#E0D8F5","#D0C8F0","#C0B8E8","#B0A8E0","#A098D8",
+                // Ciel & azur
+                "#EDF5FF","#E0EEFF","#D0E4FF","#C0D8FF","#B0CCFF","#A0C0FF","#90B4FF",
+                // Or & champagne
+                "#FFF8E8","#FFF0D0","#FFE8B8","#FFE0A0","#F5D480","#E8C860","#D4B040",
+                // Corail & terracotta
+                "#FFF0E8","#FFE4D4","#FFD4BC","#FFC4A4","#F0A888","#E08868","#D06848",
               ]}
             />
 

@@ -376,7 +376,7 @@ export default function AppleWalletCard({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          padding: "20px 0 26px",
+          padding: "24px 0 44px",
         }}
       >
         <div
