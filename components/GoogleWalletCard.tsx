@@ -50,13 +50,12 @@ export default function GoogleWalletCard({
 
   const bg = /^#[0-9a-f]{6}$/i.test(backgroundColor) ? backgroundColor : "#1C1C1E";
   const dark = relativeLuminance(bg) < 0.35;
-  const headerFg = foregroundColor ?? (dark ? "#FFFFFF" : "#000000");
-
-  // Zone blanche/claire en dessous
-  const bodyBg = "#FFFFFF";
-  const bodyFg = "#1C1C1E";
-  const bodyLabel = "rgba(60,60,67,0.55)";
-  const bodySep = "rgba(0,0,0,0.08)";
+  const fg = foregroundColor ?? (dark ? "#FFFFFF" : "#000000");
+  const headerFg = fg;
+  const bodyBg = bg;
+  const bodyFg = fg;
+  const bodyLabel = dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.45)";
+  const bodySep = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)";
 
   const qrUrl = previewUid
     ? `https://app.wallio.ma/client/${previewUid}`
