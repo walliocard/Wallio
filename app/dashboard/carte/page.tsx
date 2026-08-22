@@ -123,13 +123,14 @@ export default function CartePage() {
     }
   }
 
-  // Changement bgColor manuel — met à jour le gradient si actif
+  // Couleur unie sélectionnée → efface la bannière dégradée, carte devient unie
   function handleBgColorChange(color: string) {
     setBgColor(color);
     if (stripFrom) {
-      setStripTo(color);
-      const strip = buildStrip(stripFrom, color, stripAngle, stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont);
-      setStripUrl(strip);
+      setStripFrom("");
+      setStripTo("");
+      setStripUrl("");
+      updateDoc(doc(db, "marchands", user!.uid), { strip_url: "", apple_bg_color: color });
     }
   }
 
