@@ -1,11 +1,185 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 import AppleWalletCard from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
+
+// ── Full sector themes ────────────────────────────────
+interface FullTheme {
+  name: string;
+  emoji: string;
+  sector: string;
+  bgColor: string;
+  gradient: { from: string; to: string; angle: number } | null;
+  primaryLabel: string;
+  rewardLabel: string;
+  memberLabel: string;
+  stripText?: string;
+}
+
+const FULL_THEMES: FullTheme[] = [
+  {
+    name: "Café",
+    emoji: "☕",
+    sector: "café",
+    bgColor: "#1C0E05",
+    gradient: { from: "#4A3020", to: "#1C0E05", angle: 140 },
+    primaryLabel: "Cafés",
+    rewardLabel: "Récompense",
+    memberLabel: "Client",
+    stripText: "Votre café quotidien",
+  },
+  {
+    name: "Restaurant",
+    emoji: "🍽️",
+    sector: "restaurant",
+    bgColor: "#1A0508",
+    gradient: { from: "#6B1A30", to: "#2A0A14", angle: 135 },
+    primaryLabel: "Visites",
+    rewardLabel: "Cadeau",
+    memberLabel: "Membre",
+    stripText: "Bonne table, bonne humeur",
+  },
+  {
+    name: "Barber",
+    emoji: "💈",
+    sector: "barber",
+    bgColor: "#0A1420",
+    gradient: { from: "#2C4A6B", to: "#0A1420", angle: 155 },
+    primaryLabel: "Coupes",
+    rewardLabel: "Offre",
+    memberLabel: "Client",
+    stripText: "Style & élégance",
+  },
+  {
+    name: "Beauté",
+    emoji: "💄",
+    sector: "beauté",
+    bgColor: "#2A0A14",
+    gradient: { from: "#8B2040", to: "#2A0A14", angle: 125 },
+    primaryLabel: "Soins",
+    rewardLabel: "Cadeau",
+    memberLabel: "Membre",
+    stripText: "Beauté & bien-être",
+  },
+  {
+    name: "Spa",
+    emoji: "🧖",
+    sector: "spa",
+    bgColor: "#0D1A0D",
+    gradient: { from: "#4A6741", to: "#1A2E1A", angle: 150 },
+    primaryLabel: "Séances",
+    rewardLabel: "Soin offert",
+    memberLabel: "Abonné",
+    stripText: "Détente & sérénité",
+  },
+  {
+    name: "Sport",
+    emoji: "💪",
+    sector: "sport",
+    bgColor: "#0A0A1A",
+    gradient: { from: "#0F3460", to: "#0A0A1A", angle: 145 },
+    primaryLabel: "Passages",
+    rewardLabel: "Bonus",
+    memberLabel: "Adhérent",
+    stripText: "Performance & dépassement",
+  },
+  {
+    name: "Mode",
+    emoji: "👗",
+    sector: "mode",
+    bgColor: "#0A0A0A",
+    gradient: { from: "#1A1A2E", to: "#0A0A0A", angle: 160 },
+    primaryLabel: "Achats",
+    rewardLabel: "Remise",
+    memberLabel: "Fidèle",
+    stripText: "Style & tendances",
+  },
+  {
+    name: "Pâtisserie",
+    emoji: "🧁",
+    sector: "pâtisserie",
+    bgColor: "#2E1A0E",
+    gradient: { from: "#8B5E2A", to: "#2E1A0E", angle: 135 },
+    primaryLabel: "Douceurs",
+    rewardLabel: "Surprise",
+    memberLabel: "Gourmand",
+    stripText: "Saveurs & créations",
+  },
+  {
+    name: "Librairie",
+    emoji: "📚",
+    sector: "librairie",
+    bgColor: "#1A2E1A",
+    gradient: { from: "#5C7A52", to: "#1A2E1A", angle: 140 },
+    primaryLabel: "Livres",
+    rewardLabel: "Livre offert",
+    memberLabel: "Lecteur",
+    stripText: "Univers de mots",
+  },
+  {
+    name: "Pharmacie",
+    emoji: "💊",
+    sector: "pharmacie",
+    bgColor: "#0A1628",
+    gradient: { from: "#1B4A6B", to: "#0A1628", angle: 150 },
+    primaryLabel: "Points",
+    rewardLabel: "Avantage",
+    memberLabel: "Client",
+    stripText: "Votre santé, notre priorité",
+  },
+  {
+    name: "Hôtel",
+    emoji: "🏨",
+    sector: "hôtel",
+    bgColor: "#1C1C1E",
+    gradient: { from: "#3A3A3C", to: "#1C1C1E", angle: 160 },
+    primaryLabel: "Nuits",
+    rewardLabel: "Nuit offerte",
+    memberLabel: "Hôte",
+    stripText: "Confort & hospitalité",
+  },
+  {
+    name: "Wine Bar",
+    emoji: "🍷",
+    sector: "wine bar",
+    bgColor: "#2A0A14",
+    gradient: { from: "#6B1A30", to: "#1A0508", angle: 135 },
+    primaryLabel: "Verres",
+    rewardLabel: "Bouteille",
+    memberLabel: "Amateur",
+    stripText: "L'art de la dégustation",
+  },
+];
+
+// ── History snapshot ──────────────────────────────────
+interface Snapshot {
+  bgColor: string;
+  stripUrl: string;
+  stripFrom: string;
+  stripTo: string;
+  stripAngle: number;
+  logoUrl: string;
+  nom: string;
+  recompense: string;
+  primaryLabel: string;
+  rewardLabel: string;
+  memberLabel: string;
+  fgColor: string;
+  labelColor: string;
+}
+
+// ── AI palette type ───────────────────────────────────
+interface AIPalette {
+  name: string;
+  backgroundColor: string;
+  foregroundColor: string;
+  labelColor: string;
+}
 
 export default function CartePage() {
   const { user, marchand } = useAuth();
@@ -22,6 +196,7 @@ export default function CartePage() {
   const [fgColor, setFgColor] = useState<string>((marchand?.apple_fg_color as string) || "#FFFFFF");
   const [labelAuto, setLabelAuto] = useState<boolean>(!(marchand?.apple_label_color));
   const [labelColor, setLabelColor] = useState<string>((marchand?.apple_label_color as string) || "rgba(255,255,255,0.55)");
+
   // Strip editor
   const [stripFrom, setStripFrom] = useState<string>("");
   const [stripTo, setStripTo]   = useState<string>("");
@@ -31,6 +206,18 @@ export default function CartePage() {
   const [stripTextColor, setStripTextColor] = useState<string>("#FFFFFF");
   const [stripTextPos, setStripTextPos] = useState<"bl"|"bc"|"br"|"c">("bl");
   const [stripTextFont, setStripTextFont] = useState<"sans"|"serif"|"mono">("sans");
+
+  // Feature 5 — texte 2 lignes bannière
+  const [stripText2, setStripText2] = useState<string>("");
+  const [stripText2Size, setStripText2Size] = useState<"s"|"m"|"l">("s");
+
+  // Feature 4 — logo dans la bannière
+  const [stripIncludeLogo, setStripIncludeLogo] = useState<boolean>(false);
+
+  // Feature 6 — cadrage image uploadée
+  const [rawStripUrl, setRawStripUrl] = useState<string>("");
+  const [cropY, setCropY] = useState<number>(50);
+  const [isUploadedStrip, setIsUploadedStrip] = useState<boolean>(false);
 
   const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || "Tampons");
   const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || "Récompense");
@@ -43,22 +230,109 @@ export default function CartePage() {
   // Wallet type
   const [walletType, setWalletType] = useState<"apple" | "google">("apple");
 
-  // Auto-regen strip quand le texte ou ses options changent (gradient actif seulement)
+  // Feature 7 — preview états tampons
+  const [previewFill, setPreviewFill] = useState<number>(0.5);
+
+  const stampsCurrent = Math.round(objectif * previewFill);
+
+  // Feature 3 — undo history
+  const historyRef = useRef<Snapshot[]>([]);
+  const historyIndexRef = useRef<number>(-1);
+  const [canUndo, setCanUndo] = useState<boolean>(false);
+
+  function makeSnapshot(): Snapshot {
+    return { bgColor, stripUrl, stripFrom, stripTo, stripAngle, logoUrl, nom, recompense, primaryLabel, rewardLabel, memberLabel, fgColor, labelColor };
+  }
+
+  function pushHistory() {
+    const snap = makeSnapshot();
+    const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+    newHistory.push(snap);
+    if (newHistory.length > 20) newHistory.shift();
+    historyRef.current = newHistory;
+    historyIndexRef.current = newHistory.length - 1;
+    setCanUndo(historyIndexRef.current > 0);
+  }
+
+  function undo() {
+    if (historyIndexRef.current <= 0) return;
+    historyIndexRef.current -= 1;
+    const snap = historyRef.current[historyIndexRef.current];
+    setBgColor(snap.bgColor);
+    setStripUrl(snap.stripUrl);
+    setStripFrom(snap.stripFrom);
+    setStripTo(snap.stripTo);
+    setStripAngle(snap.stripAngle);
+    setLogoUrl(snap.logoUrl);
+    setNom(snap.nom);
+    setRecompense(snap.recompense);
+    setPrimaryLabel(snap.primaryLabel);
+    setRewardLabel(snap.rewardLabel);
+    setMemberLabel(snap.memberLabel);
+    setFgColor(snap.fgColor);
+    setLabelColor(snap.labelColor);
+    setCanUndo(historyIndexRef.current > 0);
+  }
+
+  // Feature 6 — recrop from rawStripUrl
+  const applyCrop = useCallback(async (rawUrl: string, y: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const targetW = 750, targetH = 288;
+        const targetRatio = targetW / targetH;
+        const imgRatio = img.width / img.height;
+        let sw = img.width, sh = img.height;
+        let sx = 0, sy = 0;
+        if (imgRatio > targetRatio) {
+          sw = Math.round(img.height * targetRatio);
+          sx = Math.round((img.width - sw) / 2);
+          sy = 0;
+        } else {
+          sh = Math.round(img.width / targetRatio);
+          // sy controlled by cropY 0=top 100=bottom
+          sy = Math.round((img.height - sh) * y / 100);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW; canvas.height = targetH;
+        canvas.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+        resolve(canvas.toDataURL("image/jpeg", 0.88));
+      };
+      img.onerror = reject;
+      img.src = rawUrl;
+    });
+  }, []);
+
+  // Regen when cropY changes on uploaded strip
+  useEffect(() => {
+    if (!rawStripUrl || !isUploadedStrip) return;
+    applyCrop(rawStripUrl, cropY).then(url => setStripUrl(url)).catch(() => {});
+  }, [cropY, rawStripUrl, isUploadedStrip, applyCrop]);
+
+  // Auto-regen strip when text or options change (gradient active only)
   useEffect(() => {
     if (!stripFrom) return;
-    const strip = buildStrip(stripFrom, stripTo, stripAngle, stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont);
-    setStripUrl(strip);
+    buildStrip(
+      stripFrom, stripTo, stripAngle,
+      stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
+      stripText2, stripText2Size,
+      stripIncludeLogo ? logoUrl : undefined
+    ).then(strip => setStripUrl(strip)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stripText, stripTextSize, stripTextColor, stripTextPos, stripTextFont]);
+  }, [stripText, stripTextSize, stripTextColor, stripTextPos, stripTextFont, stripText2, stripText2Size, stripIncludeLogo, logoUrl]);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingStrip, setUploadingStrip] = useState(false);
 
-  if (!marchand || !user) return null;
+  // Feature 2 — AI colors state
+  const [aiDescription, setAiDescription] = useState<string>("");
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+  const [aiPalettes, setAiPalettes] = useState<AIPalette[]>([]);
+  const [aiError, setAiError] = useState<string>("");
 
-  const stampsCurrent = Math.round(objectif * 0.6);
+  if (!marchand || !user) return null;
 
   // Couleurs effectives (auto ou manuelles)
   const effectiveFg = fgAuto ? autoFg(bgColor) : fgColor;
@@ -68,6 +342,13 @@ export default function CartePage() {
   const contrastRatioValue = contrastRatio(effectiveFg, bgColor);
   const contrastLevel: "ok" | "weak" | "fail" =
     contrastRatioValue >= 4.5 ? "ok" : contrastRatioValue >= 3 ? "weak" : "fail";
+
+  // Feature 8 — upload to Firebase Storage
+  async function uploadToStorage(dataUrl: string, path: string): Promise<string> {
+    const sRef = storageRef(storage, path);
+    await uploadString(sRef, dataUrl, "data_url");
+    return getDownloadURL(sRef);
+  }
 
   async function sauvegarder() {
     setSaving(true);
@@ -96,12 +377,22 @@ export default function CartePage() {
     const file = e.target.files?.[0];
     if (!file || !user || !file.type.startsWith("image/")) return;
     setUploadingLogo(true);
+    pushHistory();
     try {
       const dataUrl = await resizeImage(file, 320);
-      setLogoUrl(dataUrl);
-      await updateDoc(doc(db, "marchands", user.uid), { logo_url: dataUrl });
+      // Upload to Firebase Storage
+      const url = await uploadToStorage(dataUrl, `marchands/${user.uid}/logo.jpg`);
+      setLogoUrl(url);
+      await updateDoc(doc(db, "marchands", user.uid), { logo_url: url });
     } catch (err: unknown) {
-      alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
+      // Fallback to dataUrl if Storage fails
+      try {
+        const dataUrl = await resizeImage(file, 320);
+        setLogoUrl(dataUrl);
+        await updateDoc(doc(db, "marchands", user.uid), { logo_url: dataUrl });
+      } catch {
+        alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
+      }
     } finally {
       setUploadingLogo(false);
     }
@@ -111,11 +402,25 @@ export default function CartePage() {
     const file = e.target.files?.[0];
     if (!file || !user || !file.type.startsWith("image/")) return;
     setUploadingStrip(true);
+    pushHistory();
     try {
-      // Strip Apple Wallet @2x : 750×288px
-      const dataUrl = await cropResizeImage(file, 750, 288);
-      setStripUrl(dataUrl);
-      await updateDoc(doc(db, "marchands", user.uid), { strip_url: dataUrl });
+      // Store raw resized (maintain aspect) for cropping
+      const rawUrl = await resizeImageRaw(file, 1500);
+      setRawStripUrl(rawUrl);
+      setIsUploadedStrip(true);
+      setStripFrom(""); // clear gradient mode
+      setStripTo("");
+
+      const cropped = await applyCrop(rawUrl, cropY);
+      // Upload to Firebase Storage
+      let finalUrl: string;
+      try {
+        finalUrl = await uploadToStorage(cropped, `marchands/${user.uid}/strip.jpg`);
+      } catch {
+        finalUrl = cropped; // fallback
+      }
+      setStripUrl(finalUrl);
+      await updateDoc(doc(db, "marchands", user.uid), { strip_url: finalUrl });
     } catch (err: unknown) {
       alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -125,6 +430,7 @@ export default function CartePage() {
 
   // Couleur unie sélectionnée → efface la bannière dégradée, carte devient unie
   function handleBgColorChange(color: string) {
+    pushHistory();
     setBgColor(color);
     if (stripFrom) {
       setStripFrom("");
@@ -137,8 +443,69 @@ export default function CartePage() {
   function handleDownloadBanner() {
     const dark = isDarkBg(bgColor);
     const lightColor = dark ? lightenDarken(bgColor, 38) : lightenDarken(bgColor, -38);
-    const strip = buildStrip(lightColor, bgColor, 160);
-    downloadStrip(strip, `wallio-banner-${nom || "carte"}.jpg`);
+    buildStrip(lightColor, bgColor, 160).then(strip => {
+      downloadStrip(strip, `wallio-banner-${nom || "carte"}.jpg`);
+    }).catch(() => {});
+  }
+
+  // Feature 2 — AI color generation
+  async function handleAiGenerate() {
+    if (!aiDescription.trim()) return;
+    setAiLoading(true);
+    setAiError("");
+    setAiPalettes([]);
+    try {
+      const res = await fetch("/api/suggest-colors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: aiDescription }),
+      });
+      const data = await res.json() as AIPalette[] | { error: string };
+      if (!res.ok || "error" in data) {
+        setAiError(("error" in data ? data.error : "Erreur inconnue") as string);
+      } else {
+        setAiPalettes(data as AIPalette[]);
+      }
+    } catch (err: unknown) {
+      setAiError(err instanceof Error ? err.message : "Erreur réseau");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function applyAiPalette(palette: AIPalette) {
+    pushHistory();
+    setBgColor(palette.backgroundColor);
+    setFgAuto(false);
+    setFgColor(palette.foregroundColor);
+    setLabelAuto(false);
+    setLabelColor(palette.labelColor);
+  }
+
+  // Feature 9 — Google Wallet hero image adapter
+  async function handleAdaptForGoogle() {
+    if (!stripUrl) return;
+    // Create 430×172 canvas from existing strip
+    const img = new Image();
+    img.src = stripUrl;
+    await new Promise(resolve => { img.onload = resolve; });
+    const canvas = document.createElement("canvas");
+    canvas.width = 430; canvas.height = 172;
+    const ctx = canvas.getContext("2d")!;
+    const targetRatio = 430 / 172;
+    const imgRatio = img.width / img.height;
+    let sx = 0, sy = 0, sw = img.width, sh = img.height;
+    if (imgRatio > targetRatio) {
+      sw = Math.round(img.height * targetRatio);
+      sx = Math.round((img.width - sw) / 2);
+    } else {
+      sh = Math.round(img.width / targetRatio);
+      sy = Math.round((img.height - sh) / 2);
+    }
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 430, 172);
+    const adapted = canvas.toDataURL("image/jpeg", 0.88);
+    setStripUrl(adapted);
+    await updateDoc(doc(db, "marchands", user!.uid), { strip_url: adapted });
   }
 
   return (
@@ -159,14 +526,30 @@ export default function CartePage() {
             Ma carte
           </h1>
         </div>
-        <button onClick={sauvegarder} disabled={saving} style={{
-          padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
-          background: saved ? "#34C759" : "var(--accent)", color: "white",
-          border: "none", cursor: "pointer",
-          boxShadow: "0 4px 14px rgba(0,122,255,0.25)",
-        }}>
-          {saving ? "…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* Feature 3 — undo button */}
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            title="Annuler la dernière action"
+            style={{
+              padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+              background: "var(--glass-bg)", border: "1px solid var(--border)",
+              color: canUndo ? "var(--fg)" : "var(--fg-tertiary)",
+              cursor: canUndo ? "pointer" : "not-allowed", opacity: canUndo ? 1 : 0.5,
+            }}
+          >
+            ↩ Annuler
+          </button>
+          <button onClick={sauvegarder} disabled={saving} style={{
+            padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+            background: saved ? "#34C759" : "var(--accent)", color: "white",
+            border: "none", cursor: "pointer",
+            boxShadow: "0 4px 14px rgba(0,122,255,0.25)",
+          }}>
+            {saving ? "…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
+          </button>
+        </div>
       </div>
 
       {/* ── Contenu ── */}
@@ -223,6 +606,25 @@ export default function CartePage() {
             </div>
           )}
 
+          {/* Feature 7 — preview états tampons */}
+          <div style={{ display: "flex", gap: 6 }}>
+            {([
+              { fill: 0,   label: `Vide 0/${objectif}` },
+              { fill: 0.5, label: `Mi-chemin ${Math.round(objectif * 0.5)}/${objectif}` },
+              { fill: 1,   label: `Complet ${objectif}/${objectif}` },
+            ]).map(({ fill, label }) => (
+              <button key={fill} onClick={() => setPreviewFill(fill)} style={{
+                padding: "6px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600,
+                background: previewFill === fill ? "var(--accent)" : "var(--glass-bg)",
+                color: previewFill === fill ? "white" : "var(--fg-secondary)",
+                border: `1px solid ${previewFill === fill ? "var(--accent)" : "var(--border)"}`,
+                cursor: "pointer",
+              }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
           {walletType === "apple" ? (
             <AppleWalletCard
               logoUrl={logoUrl}
@@ -276,6 +678,149 @@ export default function CartePage() {
           display: "flex", flexDirection: "column", gap: 22, flexShrink: 0,
         }}>
 
+          {/* ── Feature 1 — Thèmes complets par secteur ── */}
+          <Section label="Thèmes par secteur">
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
+              Appliquer couleurs + dégradé + labels en 1 clic
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              {FULL_THEMES.map(theme => (
+                <button
+                  key={theme.name}
+                  onClick={async () => {
+                    pushHistory();
+                    setBgColor(theme.bgColor);
+                    setPrimaryLabel(theme.primaryLabel);
+                    setRewardLabel(theme.rewardLabel);
+                    setMemberLabel(theme.memberLabel);
+                    if (theme.gradient) {
+                      const { from, to, angle } = theme.gradient;
+                      setStripFrom(from);
+                      setStripTo(to);
+                      setStripAngle(angle);
+                      setIsUploadedStrip(false);
+                      setRawStripUrl("");
+                      const strip = await buildStrip(
+                        from, to, angle,
+                        theme.stripText || "", "#FFFFFF", "m", "bl", "sans",
+                        "", "s",
+                        undefined
+                      );
+                      setStripUrl(strip);
+                      if (theme.stripText) setStripText(theme.stripText);
+                      updateDoc(doc(db, "marchands", user!.uid), {
+                        strip_url: strip,
+                        apple_bg_color: theme.bgColor,
+                      });
+                    } else {
+                      setStripFrom("");
+                      setStripTo("");
+                      setStripUrl("");
+                      updateDoc(doc(db, "marchands", user!.uid), {
+                        strip_url: "",
+                        apple_bg_color: theme.bgColor,
+                      });
+                    }
+                  }}
+                  style={{
+                    padding: "8px 6px",
+                    borderRadius: 10,
+                    border: "1px solid var(--border)",
+                    background: theme.gradient
+                      ? `linear-gradient(${theme.gradient.angle}deg, ${theme.gradient.from}, ${theme.gradient.to})`
+                      : theme.bgColor,
+                    cursor: "pointer",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                    transition: "transform 0.1s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.03)")}
+                  onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+                >
+                  <span style={{ fontSize: 18 }}>{theme.emoji}</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 600,
+                    color: isDarkBg(theme.bgColor) ? "#FFFFFF" : "#000000",
+                    textShadow: isDarkBg(theme.bgColor) ? "0 1px 2px rgba(0,0,0,0.5)" : "none",
+                  }}>
+                    {theme.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </Section>
+
+          {/* ── Feature 2 — IA couleurs ── */}
+          <Section label="IA — Générer des couleurs">
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
+              Décrivez votre établissement pour obtenir 3 palettes suggérées
+            </p>
+            <textarea
+              value={aiDescription}
+              onChange={e => setAiDescription(e.target.value)}
+              placeholder="Ex : café chaleureux parisien, ambiance vintage, bois sombre..."
+              rows={2}
+              style={{
+                width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 12,
+                background: "var(--glass-bg)", border: "1px solid var(--border)",
+                color: "var(--fg)", outline: "none", resize: "vertical",
+                fontFamily: "inherit", lineHeight: 1.5, boxSizing: "border-box",
+              }}
+              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+              onBlur={e => (e.target.style.borderColor = "var(--border)")}
+            />
+            <button
+              onClick={handleAiGenerate}
+              disabled={aiLoading || !aiDescription.trim()}
+              style={{
+                width: "100%", padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                background: "var(--accent)", color: "white",
+                border: "none", cursor: aiLoading || !aiDescription.trim() ? "not-allowed" : "pointer",
+                opacity: aiLoading || !aiDescription.trim() ? 0.6 : 1,
+              }}
+            >
+              {aiLoading ? "Génération…" : "✨ Générer"}
+            </button>
+            {aiError && (
+              <div style={{
+                padding: "8px 12px", borderRadius: 10, fontSize: 11,
+                background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.25)",
+                color: "#FF3B30",
+              }}>
+                {aiError}
+              </div>
+            )}
+            {aiPalettes.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {aiPalettes.map((p, i) => (
+                  <button
+                    key={i}
+                    onClick={() => applyAiPalette(p)}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border)",
+                      background: p.backgroundColor,
+                      cursor: "pointer",
+                      display: "flex", flexDirection: "column", gap: 4, textAlign: "left",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    <span style={{ fontSize: 11, fontWeight: 600, color: p.foregroundColor }}>
+                      {p.name}
+                    </span>
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      <div style={{ width: 14, height: 14, borderRadius: 4, background: p.backgroundColor, border: "1px solid rgba(128,128,128,0.3)" }}/>
+                      <div style={{ width: 14, height: 14, borderRadius: 4, background: p.foregroundColor, border: "1px solid rgba(128,128,128,0.3)" }}/>
+                      <div style={{ width: 14, height: 14, borderRadius: 4, background: p.labelColor, border: "1px solid rgba(128,128,128,0.3)" }}/>
+                      <span style={{ fontSize: 10, color: p.labelColor }}>Cliquer pour appliquer</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </Section>
+
           {/* Logo */}
           <Section label="Logo">
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -309,7 +854,7 @@ export default function CartePage() {
               </div>
             </div>
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
-              Affiché en haut à gauche · max 160×50pt
+              Affiché en haut à gauche · max 160×50pt · Images stockées sur Firebase Storage
             </p>
           </Section>
 
@@ -351,13 +896,34 @@ export default function CartePage() {
                 </label>
                 {stripUrl && (
                   <button
-                    onClick={() => { setStripUrl(""); updateDoc(doc(db, "marchands", user!.uid), { strip_url: "" }); }}
+                    onClick={() => {
+                      setStripUrl(""); setRawStripUrl(""); setIsUploadedStrip(false);
+                      updateDoc(doc(db, "marchands", user!.uid), { strip_url: "" });
+                    }}
                     style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", color: "#FF3B30", cursor: "pointer" }}
                   >
                     Suppr.
                   </button>
                 )}
               </div>
+
+              {/* Feature 6 — slider cadrage vertical */}
+              {rawStripUrl && isUploadedStrip && (
+                <div>
+                  <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginBottom: 6 }}>
+                    Cadrage vertical — 0=Haut, 100=Bas
+                  </p>
+                  <input
+                    type="range" min={0} max={100} value={cropY}
+                    onChange={e => setCropY(Number(e.target.value))}
+                    style={{ width: "100%", accentColor: "var(--accent)" }}
+                  />
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--fg-tertiary)" }}>
+                    <span>Haut</span><span>{cropY}%</span><span>Bas</span>
+                  </div>
+                </div>
+              )}
+
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: 0 }}>
                 Format paysage large · min 750×288px · recadrage auto
               </p>
@@ -367,17 +933,24 @@ export default function CartePage() {
           {/* Éditeur bannière dégradée */}
           <Section label="Éditeur bannière">
 
-            {/* Thèmes */}
+            {/* Thèmes dégradés */}
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
               Choisir un thème dégradé
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {GRADIENT_THEMES.map(t => (
-                <button key={t.name} title={t.name} onClick={() => {
+                <button key={t.name} title={t.name} onClick={async () => {
+                  pushHistory();
                   const angle = t.angle ?? 135;
                   setStripFrom(t.from); setStripTo(t.to); setStripAngle(angle);
                   setBgColor(t.bg);
-                  const strip = buildStrip(t.from, t.to, angle, stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont);
+                  setIsUploadedStrip(false); setRawStripUrl("");
+                  const strip = await buildStrip(
+                    t.from, t.to, angle,
+                    stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
+                    stripText2, stripText2Size,
+                    stripIncludeLogo ? logoUrl : undefined
+                  );
                   setStripUrl(strip);
                   updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip, apple_bg_color: t.bg });
                 }} style={{
@@ -397,7 +970,7 @@ export default function CartePage() {
 
             {stripText && (
               <>
-                {/* Taille */}
+                {/* Taille texte 1 */}
                 <Field label="Taille du texte">
                   <div style={{ display: "flex", gap: 6 }}>
                     {(["s","m","l"] as const).map(s => (
@@ -413,6 +986,28 @@ export default function CartePage() {
                     ))}
                   </div>
                 </Field>
+
+                {/* Feature 5 — Sous-titre */}
+                <Field label="Sous-titre (ligne 2)">
+                  <TextInput value={stripText2} onChange={setStripText2} placeholder="Sous-titre, accroche…"/>
+                </Field>
+                {stripText2 && (
+                  <Field label="Taille du sous-titre">
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {(["s","m","l"] as const).map(s => (
+                        <button key={s} onClick={() => setStripText2Size(s)} style={{
+                          flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                          background: stripText2Size === s ? "var(--accent)" : "var(--glass-bg)",
+                          color: stripText2Size === s ? "white" : "var(--fg-secondary)",
+                          border: `1px solid ${stripText2Size === s ? "var(--accent)" : "var(--border)"}`,
+                          cursor: "pointer",
+                        }}>
+                          {s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                )}
 
                 {/* Police */}
                 <Field label="Police">
@@ -471,12 +1066,33 @@ export default function CartePage() {
               </>
             )}
 
+            {/* Feature 4 — Logo dans la bannière */}
+            {stripFrom && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  id="strip-include-logo"
+                  checked={stripIncludeLogo}
+                  onChange={e => setStripIncludeLogo(e.target.checked)}
+                  style={{ accentColor: "var(--accent)", width: 14, height: 14, cursor: "pointer" }}
+                />
+                <label htmlFor="strip-include-logo" style={{ fontSize: 12, color: "var(--fg)", cursor: "pointer" }}>
+                  Ajouter le logo dans la bannière
+                </label>
+              </div>
+            )}
+
             {/* Actions */}
             {(stripFrom || stripUrl) && (
               <div style={{ display: "flex", gap: 8 }}>
                 {stripFrom && (
-                  <button onClick={() => {
-                    const strip = buildStrip(stripFrom, stripTo, stripAngle, stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont);
+                  <button onClick={async () => {
+                    const strip = await buildStrip(
+                      stripFrom, stripTo, stripAngle,
+                      stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
+                      stripText2, stripText2Size,
+                      stripIncludeLogo ? logoUrl : undefined
+                    );
                     setStripUrl(strip);
                     updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip });
                   }} style={{
@@ -509,37 +1125,21 @@ export default function CartePage() {
               value={bgColor}
               onChange={handleBgColorChange}
               presets={[
-                // Noirs & sombres
                 "#000000","#0A0A0A","#111111","#1C1C1E","#2C2C2E","#3A3A3C","#4A4A4C",
-                // Marines & nuits
                 "#0A0A1A","#1A1A2E","#16213E","#0F3460","#0A1628","#1B262C","#0D2137",
-                // Nature & matcha
                 "#0D1A0D","#1A2E1A","#2D3A2D","#3A4A32","#4A6741","#5C7A52","#6B8C5E",
-                // Terres & épices
                 "#1C0E05","#2E1A0E","#3A2A1C","#4A3020","#5C3A20","#6B4520","#8B5E2A",
-                // Bordeaux & rubis
                 "#1A0508","#2A0A14","#3A1020","#4A1428","#6B1A30","#8B2040","#A0284C",
-                // Violets & cosmos
                 "#0A0514","#1A0A28","#2A1040","#3A1A54","#4A1E6B","#5E2080","#7B2FA0",
-                // Bleu ardoise
                 "#0A1420","#142030","#1C2E40","#243C54","#2C4A6B","#345880","#3C6899",
-                // Verts forêt
                 "#051405","#0A1E0A","#142814","#1A3218","#20401E","#285228","#336633",
-                // Pastels épurés (clairs)
                 "#F5F0E8","#F0EBE3","#EDE8DC","#E8E0D5","#E4D8CC","#DDD5C8","#D4CBBC",
-                // Crème & ivoire
                 "#FFFBF5","#FAF8F5","#F8F4EF","#F5F0E8","#F2EDE0","#EEE8D8","#FFFFFF",
-                // Sage & menthe
                 "#E8F5E8","#D4ECD4","#C8DCC4","#B8CDB8","#A8C4A8","#98B898","#D4EAD0",
-                // Blush & rose poudré
                 "#FFF0EB","#FFE8E0","#F8D8D0","#F0C8BC","#E8B8A8","#D4A090","#C49080",
-                // Lavande & lilas
                 "#F5F0FF","#EDE8F8","#E0D8F5","#D0C8F0","#C0B8E8","#B0A8E0","#A098D8",
-                // Ciel & azur
                 "#EDF5FF","#E0EEFF","#D0E4FF","#C0D8FF","#B0CCFF","#A0C0FF","#90B4FF",
-                // Or & champagne
                 "#FFF8E8","#FFF0D0","#FFE8B8","#FFE0A0","#F5D480","#E8C860","#D4B040",
-                // Corail & terracotta
                 "#FFF0E8","#FFE4D4","#FFD4BC","#FFC4A4","#F0A888","#E08868","#D06848",
               ]}
             />
@@ -605,7 +1205,7 @@ export default function CartePage() {
                 <Toggle label="Auto" active={fgAuto} onToggle={() => setFgAuto(v => !v)}/>
               </div>
               {!fgAuto && (
-                <ColorRow value={fgColor} onChange={setFgColor}
+                <ColorRow value={fgColor} onChange={v => { pushHistory(); setFgColor(v); }}
                   presets={[
                     "#FFFFFF","#F5F0E8","#EDE8DC","#0A0A0A",
                     "#4A6741","#C4958A","#8B7355","#BF5AF2",
@@ -630,7 +1230,7 @@ export default function CartePage() {
                 <Toggle label="Auto" active={labelAuto} onToggle={() => setLabelAuto(v => !v)}/>
               </div>
               {!labelAuto && (
-                <ColorRow value={labelColor} onChange={setLabelColor}
+                <ColorRow value={labelColor} onChange={v => { pushHistory(); setLabelColor(v); }}
                   presets={[
                     "rgba(255,255,255,0.55)","rgba(255,255,255,0.38)","rgba(0,0,0,0.42)","rgba(0,0,0,0.28)",
                     "#7B9E5F","#C4958A","#8B7355","#9A8FA0",
@@ -665,19 +1265,19 @@ export default function CartePage() {
             <LabelField
               label="Champ principal"
               value={primaryLabel}
-              onChange={setPrimaryLabel}
+              onChange={v => { pushHistory(); setPrimaryLabel(v); }}
               suggestions={["Tampons","Points","Visites","Cafés","Soins","Séances","Passages"]}
             />
             <LabelField
               label="Récompense"
               value={rewardLabel}
-              onChange={setRewardLabel}
+              onChange={v => { pushHistory(); setRewardLabel(v); }}
               suggestions={["Récompense","Cadeau","Offre","Avantage","Bonus","Surprise"]}
             />
             <LabelField
               label="Membre"
               value={memberLabel}
-              onChange={setMemberLabel}
+              onChange={v => { pushHistory(); setMemberLabel(v); }}
               suggestions={["Membre","Client","Titulaire","Fidèle","Abonné","Nom"]}
             />
           </Section>
@@ -705,31 +1305,69 @@ export default function CartePage() {
             </Field>
           </Section>
 
-          {/* Dos de la carte */}
-          <Section label="Dos de la carte">
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
-              Visible quand le client retourne sa carte dans Wallet.
-            </p>
-            <Field label="Description (nom dans la liste Wallet)">
-              <TextInput value={description} onChange={setDescription} placeholder={`Fidélité ${nom || "Établissement"}`}/>
-            </Field>
-            <Field label="Message / infos (dos de carte)">
-              <textarea
-                value={backInfo}
-                onChange={e => setBackInfo(e.target.value)}
-                placeholder="Présentez votre carte à chaque visite pour gagner vos tampons. Valable dans tous nos établissements."
-                rows={3}
-                style={{
-                  width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 12,
-                  background: "var(--glass-bg)", border: "1px solid var(--border)",
-                  color: "var(--fg)", outline: "none", resize: "vertical",
-                  fontFamily: "inherit", lineHeight: 1.5, boxSizing: "border-box",
-                }}
-                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-                onBlur={e => (e.target.style.borderColor = "var(--border)")}
-              />
-            </Field>
-          </Section>
+          {/* Dos de la carte — Apple uniquement */}
+          {walletType === "apple" && (
+            <Section label="Dos de la carte">
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
+                Visible quand le client retourne sa carte dans Wallet.
+              </p>
+              <Field label="Description (nom dans la liste Wallet)">
+                <TextInput value={description} onChange={setDescription} placeholder={`Fidélité ${nom || "Établissement"}`}/>
+              </Field>
+              <Field label="Message / infos (dos de carte)">
+                <textarea
+                  value={backInfo}
+                  onChange={e => setBackInfo(e.target.value)}
+                  placeholder="Présentez votre carte à chaque visite pour gagner vos tampons. Valable dans tous nos établissements."
+                  rows={3}
+                  style={{
+                    width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 12,
+                    background: "var(--glass-bg)", border: "1px solid var(--border)",
+                    color: "var(--fg)", outline: "none", resize: "vertical",
+                    fontFamily: "inherit", lineHeight: 1.5, boxSizing: "border-box",
+                  }}
+                  onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                  onBlur={e => (e.target.style.borderColor = "var(--border)")}
+                />
+              </Field>
+            </Section>
+          )}
+
+          {/* Feature 9 — Google Wallet section spécifique */}
+          {walletType === "google" && (
+            <Section label="Google Wallet — Options">
+              <div style={{
+                padding: "10px 12px", borderRadius: 10, fontSize: 11,
+                background: "rgba(66,133,244,0.06)", border: "1px solid rgba(66,133,244,0.2)",
+                color: "var(--fg-secondary)", lineHeight: 1.6,
+              }}>
+                <strong style={{ color: "#4285F4" }}>Google Wallet</strong> utilise Roboto — même contrainte de police qu&apos;Apple. Structure imposée par Google.
+              </div>
+
+              <Field label="Programme de fidélité">
+                <TextInput value={nom} onChange={setNom} placeholder="Nom du programme"/>
+              </Field>
+
+              {/* Hero image 430×172 */}
+              {stripUrl && (
+                <div>
+                  <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginBottom: 6 }}>
+                    Hero image Google Wallet : 430×172px (vs 375×144 Apple)
+                  </p>
+                  <button
+                    onClick={handleAdaptForGoogle}
+                    style={{
+                      width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                      background: "rgba(66,133,244,0.1)", border: "1px solid rgba(66,133,244,0.3)",
+                      color: "#4285F4", cursor: "pointer",
+                    }}
+                  >
+                    Adapter pour Google Wallet
+                  </button>
+                </div>
+              )}
+            </Section>
+          )}
 
           {/* Note */}
           <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(0,122,255,0.06)", border: "1px solid rgba(0,122,255,0.15)" }}>
@@ -766,13 +1404,17 @@ const GRADIENT_THEMES = [
   { name: "Ciel",        from: "#EDF5FF", to: "#D4E4F0",   bg: "#D4E4F0",   angle: 150 },
 ];
 
-function buildStrip(
+// Feature 4+5 — buildStrip async with logo + text2
+async function buildStrip(
   from: string, to: string, angle: number,
   text = "", textColor = "#FFFFFF",
   textSize: "s"|"m"|"l" = "m",
   textPos: "bl"|"bc"|"br"|"c" = "bl",
   font: "sans"|"serif"|"mono" = "sans",
-): string {
+  text2 = "",
+  text2Size: "s"|"m"|"l" = "s",
+  logoUrl?: string,
+): Promise<string> {
   const W = 750, H = 288;
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
@@ -790,7 +1432,31 @@ function buildStrip(
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  // Texte
+  // Feature 4 — Logo en bas à gauche
+  if (logoUrl) {
+    try {
+      const logoImg = new Image();
+      logoImg.src = logoUrl;
+      await new Promise<void>((resolve, reject) => {
+        logoImg.onload = () => resolve();
+        logoImg.onerror = () => reject();
+        // Timeout fallback
+        setTimeout(resolve, 2000);
+      });
+      const logoZoneH = 60;
+      const maxLogoH = 50;
+      const pad = 20;
+      const logoRatio = logoImg.width / (logoImg.height || 1);
+      const logoH = Math.min(maxLogoH, logoImg.height);
+      const logoW = logoH * logoRatio;
+      const logoY = H - logoZoneH + (logoZoneH - logoH) / 2;
+      ctx.drawImage(logoImg, pad, logoY, logoW, logoH);
+    } catch {
+      // silently fail
+    }
+  }
+
+  // Feature 5 — Texte ligne 1 + ligne 2
   if (text) {
     const sz = textSize === "s" ? 36 : textSize === "m" ? 54 : 76;
     const fontFamily =
@@ -805,6 +1471,17 @@ function buildStrip(
     const x = textPos === "bl" ? pad : textPos === "bc" ? W / 2 : textPos === "br" ? W - pad : W / 2;
     const y = textPos === "c" ? H / 2 + sz * 0.35 : H - pad;
     ctx.fillText(text, x, y);
+
+    // Ligne 2
+    if (text2) {
+      const sz2 = text2Size === "s" ? 26 : text2Size === "m" ? 36 : 50;
+      ctx.font = `500 ${sz2}px ${fontFamily}`;
+      ctx.fillStyle = textColor;
+      ctx.globalAlpha = 0.8;
+      const y2 = textPos === "c" ? H / 2 + sz * 0.35 + sz2 + 8 : H - pad + sz2 + 8;
+      ctx.fillText(text2, x, y2);
+      ctx.globalAlpha = 1;
+    }
   }
 
   return canvas.toDataURL("image/jpeg", 0.92);
@@ -816,13 +1493,6 @@ function downloadStrip(dataUrl: string, filename: string) {
   a.download = filename;
   a.click();
 }
-
-// Keep for potential future use
-function generateGradientStrip(from: string, to: string, angle: number): string {
-  return buildStrip(from, to, angle);
-}
-// Suppress unused warning at module level
-void generateGradientStrip;
 
 // ── Color helpers ─────────────────────────────────────
 
@@ -888,26 +1558,19 @@ async function resizeImage(file: File, maxW: number): Promise<string> {
   });
 }
 
-async function cropResizeImage(file: File, targetW: number, targetH: number): Promise<string> {
+// Feature 6 — resize maintaining aspect ratio (for raw upload)
+async function resizeImageRaw(file: File, maxW: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const targetRatio = targetW / targetH;
-      const imgRatio = img.width / img.height;
-      let sx=0, sy=0, sw=img.width, sh=img.height;
-      if (imgRatio > targetRatio) {
-        sw = Math.round(img.height * targetRatio);
-        sx = Math.round((img.width - sw) / 2);
-      } else {
-        sh = Math.round(img.width / targetRatio);
-        sy = Math.round((img.height - sh) / 2);
-      }
+      const ratio = Math.min(maxW / img.width, 1);
       const canvas = document.createElement("canvas");
-      canvas.width = targetW; canvas.height = targetH;
-      canvas.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-      resolve(canvas.toDataURL("image/jpeg", 0.88));
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.92));
     };
     img.onerror = reject;
     img.src = url;

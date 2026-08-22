@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@zxing/library": "^0.21.3",
+    "anthropic": "^0.0.0",
     "firebase": "^12.16.0",
     "firebase-admin": "^13.10.0",
     "html2canvas": "^1.4.1",
