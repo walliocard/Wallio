@@ -331,15 +331,15 @@ export default function AppleWalletCard({
       </div>
 
       {/* ── Barcode (Apple Wallet impose cette zone en bas, centrée) ── */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "18px 16px 30px" }}>
-        <div style={{ background: "#FFFFFF", borderRadius: 10, padding: 8, boxShadow: "0 2px 16px rgba(0,0,0,0.18)" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 16px 36px" }}>
+        <div style={{ background: "#FFFFFF", borderRadius: 10, padding: 8, border: "1px solid rgba(0,0,0,0.08)" }}>
           {qr ? (
             <img src={qr} alt="QR Code" style={{ width: 100, height: 100, display: "block" }} />
           ) : (
-            <div style={{ width: 100, height: 100, background: "#f0f0f0" }} />
+            <div style={{ width: 100, height: 100, background: "#f0f0f0", borderRadius: 4 }} />
           )}
         </div>
-        <div style={{ fontSize: 10, color: labelClr, marginTop: 10, letterSpacing: "0.04em" }}>
+        <div style={{ fontSize: 10, color: labelClr, marginTop: 8, letterSpacing: "0.04em" }}>
           app.wallio.ma
         </div>
       </div>
