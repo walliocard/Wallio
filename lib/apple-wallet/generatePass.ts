@@ -1,6 +1,5 @@
 // Génère le pass.json Apple Wallet (structure officielle PKPass — storeCard)
 // Nécessite : Apple Developer ($99/an), passTypeIdentifier, teamIdentifier, certificat PKCS12
-// Pour générer le .pkpass réel : zipper pass.json + images + manifest.json + signature
 
 function hexToRgb(hex: string): string {
   const h = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#000000";
@@ -19,98 +18,86 @@ function relativeLuminance(hex: string): number {
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }
 
+export interface PassField {
+  label: string;
+  value: string;
+}
+
 export interface PassInput {
-  walletId: string;          // serialNumber unique du client
-  authToken: string;         // token aléatoire 16+ chars stocké en Firestore
+  walletId: string;
+  authToken: string;
   merchantName: string;
-  backgroundColor: string;  // hex — couleur_principale du marchand
+  backgroundColor: string;
+  foregroundColor?: string;
+  labelColorHex?: string;
   stampsCurrent: number;
   stampsObjective: number;
   rewardName: string;
   clientPrenom: string;
   clientNom: string;
+  primaryLabel?: string;
+  rewardLabel?: string;
+  memberLabel?: string;
+  headerField?: PassField;            // champ en-tête (haut droite)
+  auxiliaryFields?: PassField[];      // champs auxiliaires (max 4, entre secondary et barcode)
+  backInfo?: string;
+  description?: string;
 }
 
 export function generatePassJson(input: PassInput): object {
   const dark = relativeLuminance(input.backgroundColor) < 0.35;
-  const fg = dark ? "#FFFFFF" : "#000000";
-  const labelColor = dark ? "#AAAAAA" : "#666666";
+  const fg = input.foregroundColor ?? (dark ? "#FFFFFF" : "#000000");
+  const lc = input.labelColorHex ?? (dark ? "#AAAAAA" : "#666666");
+
+  const headerFields = input.headerField?.value
+    ? [{ key: "header1", label: input.headerField.label.toUpperCase(), value: input.headerField.value }]
+    : [];
+
+  const auxiliaryFields = (input.auxiliaryFields ?? [])
+    .filter(f => f.value)
+    .map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
 
   return {
     formatVersion: 1,
-
-    // À remplir avec les identifiants Apple Developer
     passTypeIdentifier: "pass.ma.wallio.loyalty",
     teamIdentifier: process.env.APPLE_TEAM_ID ?? "XXXXXXXXXX",
-
-    // Identifiant unique du pass client
     serialNumber: input.walletId,
-
-    // Serveur de mise à jour PassKit — Apple appellera ces endpoints après chaque push
     webServiceURL: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.wallio.ma"}/api/apple-wallet`,
-    authenticationToken: input.authToken, // token aléatoire 16+ chars stocké en Firestore
-
+    authenticationToken: input.authToken,
     organizationName: "Wallio",
-    description: `Carte de fidélité — ${input.merchantName}`,
+    description: input.description || `Carte de fidélité — ${input.merchantName}`,
     logoText: input.merchantName,
-
     backgroundColor: hexToRgb(input.backgroundColor),
     foregroundColor: hexToRgb(fg),
-    labelColor: hexToRgb(labelColor),
-
-    // Type storeCard = carte fidélité (Apple Wallet)
+    labelColor: hexToRgb(lc),
     storeCard: {
-      headerFields: [],
-
-      // Champ principal (le plus visible — grand texte)
+      headerFields,
       primaryFields: [
         {
           key: "stamps",
-          label: "TAMPONS",
-          value: `${input.stampsCurrent}/${input.stampsObjective}`,
+          label: (input.primaryLabel ?? "TAMPONS").toUpperCase(),
+          value: `${input.stampsCurrent} / ${input.stampsObjective}`,
           changeMessage: "Nouveau tampon ! Vous avez maintenant %@",
         },
       ],
-
-      // Champs secondaires (2 colonnes)
       secondaryFields: [
         {
           key: "reward",
-          label: "RÉCOMPENSE",
+          label: (input.rewardLabel ?? "RÉCOMPENSE").toUpperCase(),
           value: input.rewardName,
         },
         {
           key: "member",
-          label: "MEMBRE",
+          label: (input.memberLabel ?? "MEMBRE").toUpperCase(),
           value: `${input.clientPrenom} ${input.clientNom}`.trim(),
         },
       ],
-
-      // Champs auxiliaires (optionnels — pas utilisés en MVP)
-      auxiliaryFields: [],
-
-      // Dos de la carte (non visible sur la face, accessible en retournant)
+      auxiliaryFields,
       backFields: [
-        {
-          key: "info",
-          label: "À PROPOS",
-          value:
-            "Carte de fidélité numérique. Présentez votre QR code à chaque visite pour gagner vos tampons.",
-        },
-        {
-          key: "rgpd",
-          label: "VOS DONNÉES",
-          value:
-            "Vos données sont gérées conformément au RGPD. Suppression disponible depuis l'application.",
-        },
-        {
-          key: "contact",
-          label: "CONTACT",
-          value: "support@wallio.ma",
-        },
+        ...(input.backInfo ? [{ key: "info", label: "À PROPOS", value: input.backInfo }] : []),
+        { key: "rgpd", label: "VOS DONNÉES", value: "Vos données sont gérées conformément au RGPD. Suppression disponible depuis l'application." },
+        { key: "contact", label: "CONTACT", value: "support@wallio.ma" },
       ],
-
-      // QR code — scanné par le marchand pour créditer un tampon
       barcode: {
         format: "PKBarcodeFormatQR",
         message: `https://app.wallio.ma/client/${input.walletId}`,
@@ -120,8 +107,3 @@ export function generatePassJson(input: PassInput): object {
     },
   };
 }
-
-// Images requises dans le .pkpass (à générer côté serveur) :
-// - icon.png    : 29×29px  (icon@2x.png : 58×58, icon@3x.png : 87×87)  — OBLIGATOIRE
-// - logo.png    : ≤160×50px (logo@2x.png : ≤320×100) — logo marchand
-// - strip.png   : 375×144px (strip@2x.png : 750×288) — image bannière optionnelle

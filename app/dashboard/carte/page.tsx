@@ -70,6 +70,20 @@ export default function CartePage() {
   const [description, setDescription] = useState<string>((marchand?.apple_description as string) || "");
   const [backInfo, setBackInfo] = useState<string>((marchand?.apple_back_info as string) || "");
 
+  // Header field (haut droite Apple Wallet)
+  const [headerLabel, setHeaderLabel] = useState<string>((marchand?.apple_header_label as string) || "");
+  const [headerValue, setHeaderValue] = useState<string>((marchand?.apple_header_value as string) || "");
+
+  // Auxiliary fields (entre secondary et barcode)
+  const [aux1Label, setAux1Label] = useState<string>((marchand?.apple_aux1_label as string) || "");
+  const [aux1Value, setAux1Value] = useState<string>((marchand?.apple_aux1_value as string) || "");
+  const [aux2Label, setAux2Label] = useState<string>((marchand?.apple_aux2_label as string) || "");
+  const [aux2Value, setAux2Value] = useState<string>((marchand?.apple_aux2_value as string) || "");
+
+  // Icône notification (29×29px — affiché dans les pushs)
+  const [iconUrl, setIconUrl] = useState<string>((marchand?.apple_icon_url as string) || "");
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+
   // Preview mode
   const [previewMode, setPreviewMode] = useState<"full" | "compact" | "back">("full");
   // Wallet type
@@ -206,6 +220,13 @@ export default function CartePage() {
       apple_member_label: memberLabel,
       apple_description: description,
       apple_back_info: backInfo,
+      apple_header_label: headerLabel,
+      apple_header_value: headerValue,
+      apple_aux1_label: aux1Label,
+      apple_aux1_value: aux1Value,
+      apple_aux2_label: aux2Label,
+      apple_aux2_value: aux2Value,
+      apple_icon_url: iconUrl,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -235,6 +256,19 @@ export default function CartePage() {
       }
     } finally {
       setUploadingLogo(false);
+    }
+  }
+
+  async function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user || !file.type.startsWith("image/")) return;
+    setUploadingIcon(true);
+    try {
+      const dataUrl = await resizeImage(file, 87);
+      setIconUrl(dataUrl);
+      await updateDoc(doc(db, "marchands", user.uid), { apple_icon_url: dataUrl });
+    } finally {
+      setUploadingIcon(false);
     }
   }
 
@@ -452,6 +486,11 @@ export default function CartePage() {
               mode={previewMode}
               backInfo={backInfo}
               description={description}
+              headerField={headerValue ? { label: headerLabel || "INFO", value: headerValue } : undefined}
+              auxiliaryFields={[
+                { label: aux1Label || "INFOS", value: aux1Value },
+                { label: aux2Label || "INFOS", value: aux2Value },
+              ]}
             />
           ) : (
             <GoogleWalletCard
@@ -601,7 +640,7 @@ export default function CartePage() {
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
               Choisir un thème dégradé
             </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 5 }}>
               {GRADIENT_THEMES.map(t => (
                 <button key={t.name} title={t.name} onClick={async () => {
                   pushHistory();
@@ -789,51 +828,50 @@ export default function CartePage() {
               value={bgColor}
               onChange={handleBgColorChange}
               presets={[
-                // Noir / gris
-                "#000000","#0A0A0A","#111111","#1C1C1E","#2C2C2E","#3A3A3C","#4A4A4C","#636366","#8E8E93","#AEAEB2",
-                // Bleu nuit
-                "#0A0A1A","#1A1A2E","#16213E","#0F3460","#0A1628","#1B262C","#0D2137","#162840","#1E3A5F",
-                // Bleu vif
-                "#003399","#0047AB","#0055CC","#007AFF","#0099FF","#00AAFF","#29ABE2","#00B4D8","#0096C7",
-                // Teal / Aqua
-                "#004444","#006666","#008888","#009999","#00AAAA","#00BBBB","#00CED1","#20B2AA","#008080",
-                // Vert foncé
-                "#0A1A0A","#0D1A0D","#1A2E1A","#2D3A2D","#3A4A32","#1A3A1A","#003300","#004400","#005500",
-                // Vert vif
-                "#006633","#008844","#00A550","#2ECC71","#00C853","#00E676","#4A6741","#5C7A52","#6B8C5E",
-                // Vert électrique
-                "#00F5A0","#00E676","#69F0AE","#B2FF59","#CCFF00",
-                // Marron / Espresso
-                "#1C0E05","#2E1A0E","#3A2A1C","#4A3020","#5C3A20","#6B4520","#8B5E2A","#A0522D","#8B4513",
-                // Orange / Ambre
-                "#5C2800","#8B3A00","#CC5500","#E65C00","#FF6600","#FF7700","#FF8800","#FFA000","#FFB300",
-                // Or / Doré
-                "#5A4400","#7A6000","#997700","#CC9900","#D4AF37","#E8C840","#FFD700","#FFC107",
-                // Rouge foncé
-                "#1A0508","#2A0A14","#3A1020","#4A1428","#6B1A30","#8B0000","#990000","#AA0000",
-                // Rouge vif / Corail
-                "#CC0000","#DD0000","#FF0000","#FF3333","#E8553A","#FF4500","#FF6347","#FF6B6B",
-                // Rose / Magenta
-                "#440022","#660033","#880044","#AA0055","#CC0066","#FF0080","#FF1493","#FF69B4",
-                // Violet foncé
-                "#0A0514","#1A0A28","#2A1040","#3A1A54","#4A1E6B","#5E2080","#6B21A8",
-                // Violet vif
-                "#7B2FA0","#8B36B0","#9B59B6","#A855F7","#9333EA","#7C3AED","#6D28D9",
-                // Clairs / Ivoire
-                "#FFFFFF","#FAFAFA","#F5F5F5","#F0F0F0","#EBEBEB",
-                "#FFFBF5","#FAF8F5","#F8F4EF","#F5F0E8","#F0EBE3","#E8E0D5","#DDD5C8",
-                // Pastel crème / pêche
-                "#FFF0E8","#FFE4D4","#FFD4BC","#FFC4A4","#FFB8A0","#F5D0B8","#ECC4A8",
-                // Pastel rose
-                "#FFE0EE","#FFD0E4","#FFC0D8","#FFB0CC","#F0C4DA","#E8AACE",
-                // Pastel lavande
-                "#F5F0FF","#EDE8F8","#E4DEFF","#D8CCFF","#CCBFFF","#C0B0FF","#A098D8",
-                // Pastel bleu
-                "#EDF5FF","#E0EEFF","#D0E4FF","#C0D8FF","#B0CCFF","#A0C0FF","#90B4FF",
-                // Pastel vert / menthe
-                "#E8F5E8","#D4ECD4","#C8DCC4","#D0F5EA","#B8EDD8","#A0E4C4","#98B898",
-                // Pastel jaune / sable
-                "#FFFDE8","#FFF8D0","#FFF0A0","#FFE878","#F5D480","#E8C860","#EDE8B8",
+                // Noir → Gris foncé (9)
+                "#000000","#050505","#0A0A0A","#111111","#1C1C1E","#2C2C2E","#3A3A3C","#4A4A4C","#636366",
+                // Gris moyen → Blanc (9)
+                "#8E8E93","#AEAEB2","#C7C7CC","#D1D1D6","#E5E5EA","#EBEBEB","#F0F0F0","#F5F5F5","#FFFFFF",
+                // Bleu nuit (9)
+                "#020B18","#0A0A1A","#0D1828","#0F1F33","#16213E","#1B2A4A","#1E3A5F","#0F3460","#243C54",
+                // Bleu vif (9)
+                "#001A6E","#0033AA","#0047AB","#005AE0","#007AFF","#0099FF","#29ABE2","#00B4D8","#64B5F6",
+                // Teal foncé (9)
+                "#001A1A","#003333","#004444","#005555","#006666","#007777","#008888","#009999","#00AAAA",
+                // Teal clair (9)
+                "#00BBBB","#00CED1","#20B2AA","#3DCFCF","#48D1CC","#5CE0D8","#7DE8E8","#9FF0F0","#C0FAF8",
+                // Vert foncé (9)
+                "#041404","#0A1A0A","#122212","#1A3218","#20401E","#285228","#336633","#3D7A3D","#4A8C4A",
+                // Vert vif (9)
+                "#005522","#006633","#008844","#00A550","#14B860","#2ECC71","#48D882","#7EE8A2","#B2F5CC",
+                // Kaki / Olive (9)
+                "#1A1A00","#2A2A00","#3A3800","#4A4A1A","#5C6B3A","#6B8040","#8BAA50","#A0C060","#C8DC80",
+                // Marron / Espresso (9)
+                "#150800","#1C0E05","#2E1A0E","#3A2A1C","#4A3020","#6B4520","#8B5E2A","#A0522D","#C68642",
+                // Orange / Ambre (9)
+                "#3A1A00","#5C2800","#8B3A00","#CC5500","#E65C00","#FF6600","#FF7F00","#FF9500","#FFB300",
+                // Or / Jaune (9)
+                "#3A2E00","#5A4400","#997700","#BB9900","#D4AF37","#E8C840","#FFD700","#FFE44A","#FFF0A0",
+                // Rouge foncé (9)
+                "#0A0000","#1A0508","#2A0A14","#4A1428","#6B1A30","#8B0000","#AA1111","#CC3333","#E85555",
+                // Corail / Saumon (9)
+                "#7A1A0A","#AA3333","#CC4444","#E8553A","#F07060","#F59080","#F7B09A","#FAC8B4","#FDDDD0",
+                // Rose / Magenta (9)
+                "#220011","#440022","#660033","#880044","#AA0055","#CC0066","#EE1188","#FF55AA","#FFB0D8",
+                // Violet foncé (9)
+                "#0A0514","#180A28","#2A1040","#3A1A54","#4A1E6B","#6D28D9","#8B36B0","#9B59B6","#B07CD0",
+                // Violet clair / Lavande (9)
+                "#C8A0E8","#D8C0F8","#E4DEFF","#EDE8F8","#F0E8FF","#F5F0FF","#E8E0FF","#D8D0FF","#CCBFFF",
+                // Crème / Ivoire (9)
+                "#F0E8D8","#F4EDD8","#F5F0E8","#F8F4EF","#FAF8F5","#FFFBF5","#FFFDE8","#FFFFF0","#FAFAF5",
+                // Pastel chaud — pêche / abricot (9)
+                "#FFE8E0","#FFD4BC","#FFC4A4","#FFB8A0","#F5D0B8","#FFECD2","#FFDAB9","#FFE4C4","#FFECC8",
+                // Pastel froid — bleu / lilas (9)
+                "#E0E8FF","#D0DCFF","#D0E4FF","#C0D8FF","#B0CCFF","#E8E0FF","#D8D0FF","#D0C8FF","#C8C0FF",
+                // Pastel vert / menthe (9)
+                "#D0F5EA","#B8EDD8","#A0E4C4","#E8F5E8","#D4ECD4","#C8DCC4","#B8CDB8","#E8F4E4","#D4E8D0",
+                // Pastel rose / pêche (9)
+                "#FFE0EE","#FFD0E4","#FFC0D8","#F5D0E0","#EEC0D0","#FFD4C0","#FFCCB0","#FFC4A0","#FFB890",
               ]}
             />
 
@@ -998,6 +1036,80 @@ export default function CartePage() {
             </Field>
           </Section>
 
+          {/* Champ en-tête — Apple uniquement */}
+          {walletType === "apple" && (
+            <Section label="Champ en-tête">
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
+                Affiché en haut à droite — ex : niveau, date, code.
+              </p>
+              <Field label="Label">
+                <TextInput value={headerLabel} onChange={setHeaderLabel} placeholder="NIVEAU"/>
+              </Field>
+              <Field label="Valeur">
+                <TextInput value={headerValue} onChange={setHeaderValue} placeholder="Gold"/>
+              </Field>
+            </Section>
+          )}
+
+          {/* Champs auxiliaires — Apple uniquement */}
+          {walletType === "apple" && (
+            <Section label="Champs auxiliaires">
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
+                Ligne supplémentaire entre les champs et le QR code.
+              </p>
+              <Field label="Label 1">
+                <TextInput value={aux1Label} onChange={setAux1Label} placeholder="VALABLE"/>
+              </Field>
+              <Field label="Valeur 1">
+                <TextInput value={aux1Value} onChange={setAux1Value} placeholder="Tous établissements"/>
+              </Field>
+              <Field label="Label 2">
+                <TextInput value={aux2Label} onChange={setAux2Label} placeholder="CODE"/>
+              </Field>
+              <Field label="Valeur 2">
+                <TextInput value={aux2Value} onChange={setAux2Value} placeholder=""/>
+              </Field>
+            </Section>
+          )}
+
+          {/* Icône notification — Apple uniquement */}
+          {walletType === "apple" && (
+            <Section label="Icône notification">
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
+                29×29px — affichée dans les pushs Apple Wallet.
+              </p>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+                  border: "1px solid var(--border)", overflow: "hidden",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "var(--glass-bg)",
+                }}>
+                  {iconUrl
+                    ? <img src={iconUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }}/>
+                    : <span style={{ fontSize: 18 }}>🔔</span>
+                  }
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{
+                    display: "block", width: "100%", padding: "7px 0", borderRadius: 10,
+                    fontSize: 12, fontWeight: 500, background: "var(--glass-bg)",
+                    border: "1px solid var(--border)", color: "var(--fg)",
+                    cursor: uploadingIcon ? "wait" : "pointer", textAlign: "center",
+                  }}>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleIconUpload} disabled={uploadingIcon}/>
+                    {uploadingIcon ? "Upload…" : iconUrl ? "Changer" : "Ajouter"}
+                  </label>
+                  {iconUrl && (
+                    <button onClick={() => setIconUrl("")} style={{ width: "100%", marginTop: 4, padding: "4px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
+                      Supprimer
+                    </button>
+                  )}
+                </div>
+              </div>
+            </Section>
+          )}
+
           {/* Dos de la carte — Apple uniquement */}
           {walletType === "apple" && (
             <Section label="Dos de la carte">
@@ -1079,68 +1191,90 @@ export default function CartePage() {
 // ── Gradient themes ──────────────────────────────────
 
 const GRADIENT_THEMES = [
-  // ── Sombres ──────────────────────────────────────────
+  // Noir / Gris (5)
   { name: "Minuit",      from: "#1A1A2E", to: "#0A0A0A",   bg: "#0A0A0A",   angle: 160 },
   { name: "Charbon",     from: "#2C2C2E", to: "#0A0A0A",   bg: "#0A0A0A",   angle: 140 },
+  { name: "Anthracite",  from: "#3A3A3C", to: "#1C1C1E",   bg: "#1C1C1E",   angle: 150 },
   { name: "Ardoise",     from: "#3A4A5A", to: "#1A2A3A",   bg: "#1A2A3A",   angle: 155 },
-  { name: "Anthracite",  from: "#3A3A3C", to: "#1C1C1E",   bg: "#1C1C1E",   angle: 145 },
-  // ── Bleus ────────────────────────────────────────────
+  { name: "Graphite",    from: "#4A4A4C", to: "#2C2C2E",   bg: "#2C2C2E",   angle: 145 },
+  // Bleu nuit (5)
   { name: "Cosmos",      from: "#2A1654", to: "#0A0A1A",   bg: "#0A0A1A",   angle: 135 },
-  { name: "Océan nuit",  from: "#0F3460", to: "#0A0A1A",   bg: "#0A0A1A",   angle: 145 },
   { name: "Saphir",      from: "#1A4A8A", to: "#0A1A3A",   bg: "#0A1A3A",   angle: 150 },
+  { name: "Cobalt",      from: "#0047AB", to: "#001A4A",   bg: "#001A4A",   angle: 155 },
+  { name: "Ocean nuit",  from: "#0F3460", to: "#0A0A1A",   bg: "#0A0A1A",   angle: 145 },
   { name: "Denim",       from: "#2C5F8A", to: "#162E44",   bg: "#162E44",   angle: 140 },
+  // Bleu vif (5)
   { name: "Glacial",     from: "#0099CC", to: "#005577",   bg: "#005577",   angle: 135 },
   { name: "Aqua",        from: "#00B4D8", to: "#0077B6",   bg: "#0077B6",   angle: 145 },
-  { name: "Cobalt",      from: "#0047AB", to: "#001A4A",   bg: "#001A4A",   angle: 155 },
-  // ── Verts ────────────────────────────────────────────
-  { name: "Forêt",       from: "#1A3A1A", to: "#0A1A0A",   bg: "#0A1A0A",   angle: 150 },
+  { name: "Azur",        from: "#007AFF", to: "#003A88",   bg: "#003A88",   angle: 140 },
+  { name: "Pacifique",   from: "#0096C7", to: "#003A55",   bg: "#003A55",   angle: 150 },
+  { name: "Ciel elec.",  from: "#64B5F6", to: "#1565C0",   bg: "#1565C0",   angle: 135 },
+  // Teal (5)
+  { name: "Teal nuit",   from: "#006666", to: "#001A1A",   bg: "#001A1A",   angle: 145 },
+  { name: "Turquoise",   from: "#00CED1", to: "#005577",   bg: "#005577",   angle: 135 },
+  { name: "Lagon",       from: "#00AAA0", to: "#004444",   bg: "#004444",   angle: 140 },
+  { name: "Em. eau",     from: "#00897B", to: "#00332C",   bg: "#00332C",   angle: 145 },
+  { name: "Cyan",        from: "#00BCD4", to: "#006A70",   bg: "#00606A",   angle: 135 },
+  // Vert (5)
+  { name: "Foret",       from: "#1A3A1A", to: "#0A1A0A",   bg: "#0A1A0A",   angle: 150 },
   { name: "Matcha",      from: "#4A6741", to: "#2D3A2D",   bg: "#2D3A2D",   angle: 135 },
-  { name: "Émeraude",    from: "#00695C", to: "#00332C",   bg: "#00332C",   angle: 145 },
-  { name: "Menthe",      from: "#2ECC71", to: "#0A5C30",   bg: "#0A5C30",   angle: 140 },
-  { name: "Kaki",        from: "#5C6B3A", to: "#2C3418",   bg: "#2C3418",   angle: 150 },
   { name: "Jade",        from: "#00A878", to: "#00503A",   bg: "#00503A",   angle: 135 },
-  // ── Rouges / Bordeaux ────────────────────────────────
+  { name: "Emeraude",    from: "#00695C", to: "#00332C",   bg: "#00332C",   angle: 145 },
+  { name: "Menthe",      from: "#2ECC71", to: "#0A5C30",   bg: "#0A5C30",   angle: 140 },
+  // Kaki / Olive (5)
+  { name: "Kaki",        from: "#5C6B3A", to: "#2C3418",   bg: "#2C3418",   angle: 150 },
+  { name: "Olive",       from: "#6B7030", to: "#30340A",   bg: "#30340A",   angle: 145 },
+  { name: "Militaire",   from: "#4B5320", to: "#1A1E00",   bg: "#1A1E00",   angle: 155 },
+  { name: "Mousse",      from: "#6B7C45", to: "#2A3010",   bg: "#2A3010",   angle: 140 },
+  { name: "Savane",      from: "#8A9A50", to: "#3A4018",   bg: "#3A4018",   angle: 135 },
+  // Bordeaux / Rouge (5)
   { name: "Bordeaux",    from: "#6B1A30", to: "#2A0A14",   bg: "#2A0A14",   angle: 135 },
   { name: "Cramoisi",    from: "#8B0000", to: "#3A0000",   bg: "#3A0000",   angle: 140 },
+  { name: "Grenat",      from: "#7B0028", to: "#320010",   bg: "#320010",   angle: 135 },
   { name: "Cerise",      from: "#CC0033", to: "#660011",   bg: "#660011",   angle: 135 },
-  { name: "Corail",      from: "#E8553A", to: "#7A1A0A",   bg: "#7A1A0A",   angle: 130 },
   { name: "Aurore",      from: "#6B2A4A", to: "#2A0A1A",   bg: "#2A0A1A",   angle: 125 },
-  // ── Oranges / Ambre ──────────────────────────────────
-  { name: "Espresso",    from: "#4A3020", to: "#1C0E05",   bg: "#1C0E05",   angle: 140 },
-  { name: "Amber",       from: "#CC7700", to: "#663300",   bg: "#663300",   angle: 135 },
-  { name: "Caramel",     from: "#A0522D", to: "#4A1A0A",   bg: "#4A1A0A",   angle: 140 },
+  // Corail / Orange (5)
+  { name: "Corail",      from: "#E8553A", to: "#7A1A0A",   bg: "#7A1A0A",   angle: 130 },
   { name: "Sunset",      from: "#FF6B35", to: "#C0392B",   bg: "#7A1A0A",   angle: 125 },
   { name: "Feu",         from: "#FF4500", to: "#8B0000",   bg: "#5A0000",   angle: 130 },
-  { name: "Cuivre",      from: "#B87333", to: "#5A300A",   bg: "#3A1A00",   angle: 145 },
-  // ── Violets / Roses ──────────────────────────────────
-  { name: "Prune",       from: "#4A1A6B", to: "#1A0A2E",   bg: "#1A0A2E",   angle: 135 },
-  { name: "Améthyste",   from: "#9B59B6", to: "#4A1A6B",   bg: "#2A0A3A",   angle: 140 },
-  { name: "Mauve",       from: "#8B5E8B", to: "#3A1A3A",   bg: "#2A0A2A",   angle: 135 },
-  { name: "Rose nuit",   from: "#8B1A4A", to: "#2A0A1A",   bg: "#2A0A1A",   angle: 130 },
-  { name: "Magenta",     from: "#CC0066", to: "#660033",   bg: "#440022",   angle: 135 },
-  { name: "Fuchsia",     from: "#FF0080", to: "#880040",   bg: "#440020",   angle: 140 },
-  // ── Électriques ──────────────────────────────────────
-  { name: "Néon vert",   from: "#00F5A0", to: "#005533",   bg: "#0A1A10",   angle: 135 },
-  { name: "Électrique",  from: "#007AFF", to: "#0A1A3A",   bg: "#0A1A3A",   angle: 145 },
-  { name: "Cyber",       from: "#00FFCC", to: "#003344",   bg: "#001A22",   angle: 140 },
-  { name: "Aurora",      from: "#00F5A0", to: "#007AFF",   bg: "#001A3A",   angle: 135 },
-  // ── Dorés / Luxe ─────────────────────────────────────
+  { name: "Amber",       from: "#CC7700", to: "#663300",   bg: "#663300",   angle: 135 },
+  { name: "Caramel",     from: "#A0522D", to: "#4A1A0A",   bg: "#4A1A0A",   angle: 140 },
+  // Or / Cuivre (5)
   { name: "Or",          from: "#D4AF37", to: "#6B5500",   bg: "#3A2E00",   angle: 140 },
   { name: "Champagne",   from: "#E8D5A3", to: "#B89A50",   bg: "#5A4400",   angle: 135 },
   { name: "Bronze",      from: "#CD7F32", to: "#5A3000",   bg: "#3A1A00",   angle: 145 },
-  // ── Clairs / Pastel ──────────────────────────────────
+  { name: "Cuivre",      from: "#B87333", to: "#5A300A",   bg: "#3A1A00",   angle: 145 },
+  { name: "Safran",      from: "#F4A300", to: "#884400",   bg: "#5A2A00",   angle: 135 },
+  // Rose / Magenta (5)
+  { name: "Rose nuit",   from: "#8B1A4A", to: "#2A0A1A",   bg: "#2A0A1A",   angle: 130 },
+  { name: "Magenta",     from: "#CC0066", to: "#660033",   bg: "#440022",   angle: 135 },
+  { name: "Fuchsia",     from: "#FF0080", to: "#880040",   bg: "#440020",   angle: 140 },
+  { name: "Orchidee",    from: "#DA70D6", to: "#8B008B",   bg: "#3A003A",   angle: 135 },
+  { name: "Flamant",     from: "#FF69B4", to: "#C2185B",   bg: "#6A0033",   angle: 130 },
+  // Violet (5)
+  { name: "Prune",       from: "#4A1A6B", to: "#1A0A2E",   bg: "#1A0A2E",   angle: 135 },
+  { name: "Amethyste",   from: "#9B59B6", to: "#4A1A6B",   bg: "#2A0A3A",   angle: 140 },
+  { name: "Mauve",       from: "#8B5E8B", to: "#3A1A3A",   bg: "#2A0A2A",   angle: 135 },
+  { name: "Indigo",      from: "#3F51B5", to: "#1A1A6B",   bg: "#0A0A3A",   angle: 150 },
+  { name: "Lavande s.",  from: "#7B68EE", to: "#3A2A8B",   bg: "#1A0A5A",   angle: 140 },
+  // Electriques (5)
+  { name: "Neon vert",   from: "#00F5A0", to: "#005533",   bg: "#0A1A10",   angle: 135 },
+  { name: "Electrique",  from: "#007AFF", to: "#0A1A3A",   bg: "#0A1A3A",   angle: 145 },
+  { name: "Cyber",       from: "#00FFCC", to: "#003344",   bg: "#001A22",   angle: 140 },
+  { name: "Aurora",      from: "#00F5A0", to: "#007AFF",   bg: "#001A3A",   angle: 135 },
+  { name: "Neon violet", from: "#BF5FFF", to: "#6600CC",   bg: "#2A0055",   angle: 140 },
+  // Clairs doux (5)
   { name: "Ivoire",      from: "#FFFFFF", to: "#F0EBE3",   bg: "#F0EBE3",   angle: 160 },
-  { name: "Crème",       from: "#FFFBF0", to: "#F4EDD8",   bg: "#F4EDD8",   angle: 135 },
+  { name: "Creme",       from: "#FFFBF0", to: "#F4EDD8",   bg: "#F4EDD8",   angle: 135 },
   { name: "Blush",       from: "#FFE8E0", to: "#F0D8D0",   bg: "#F0D8D0",   angle: 135 },
-  { name: "Pêche",       from: "#FFD4B2", to: "#F0B8A0",   bg: "#F0B8A0",   angle: 130 },
   { name: "Sage clair",  from: "#E8F4E4", to: "#D4E8D0",   bg: "#D4E8D0",   angle: 145 },
-  { name: "Menthe pâle", from: "#D0F5EA", to: "#B0E8D4",   bg: "#B0E8D4",   angle: 135 },
+  { name: "Ciel pale",   from: "#EDF5FF", to: "#D4E4F0",   bg: "#D4E4F0",   angle: 150 },
+  // Pastels doux (5)
   { name: "Lavande",     from: "#EDE8F8", to: "#D8D0E8",   bg: "#D8D0E8",   angle: 135 },
-  { name: "Lilas",       from: "#E8D5F5", to: "#D0B8E8",   bg: "#D0B8E8",   angle: 135 },
-  { name: "Ciel",        from: "#EDF5FF", to: "#D4E4F0",   bg: "#D4E4F0",   angle: 150 },
+  { name: "Rose pale",   from: "#FFE0EE", to: "#F0C4DA",   bg: "#F0C4DA",   angle: 135 },
+  { name: "Peche",       from: "#FFD4B2", to: "#F0B8A0",   bg: "#F0B8A0",   angle: 130 },
+  { name: "Menthe pale", from: "#D0F5EA", to: "#B0E8D4",   bg: "#B0E8D4",   angle: 135 },
   { name: "Baby blue",   from: "#D0E8FF", to: "#B0CCEE",   bg: "#B0CCEE",   angle: 145 },
-  { name: "Rose pâle",   from: "#FFE0EE", to: "#F0C4DA",   bg: "#F0C4DA",   angle: 135 },
-  { name: "Sable",       from: "#F5E6C8", to: "#E8D4A8",   bg: "#E8D4A8",   angle: 140 },
 ];
 
 // Feature 4+5 — buildStrip async with logo + text2
@@ -1334,14 +1468,14 @@ function ColorRow({ label, value, onChange, presets }: {
           {/^#[0-9a-f]{6}$/i.test(value) ? value.toUpperCase() : value}
         </span>
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(9, 22px)", gap: 4 }}>
         {presets.map(c => (
           <button key={c} onClick={() => onChange(c)} style={{
-            width: 22, height: 22, borderRadius: 6,
+            width: 22, height: 22, borderRadius: 5,
             background: c,
-            border: value === c ? "2px solid var(--accent)" : "1px solid var(--border)",
+            border: value === c ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.25)",
             cursor: "pointer", padding: 0,
-            boxShadow: (c === "#FFFFFF" || c === "#F2F2F7" || c === "#F5F5F5") ? "inset 0 0 0 1px rgba(0,0,0,0.08)" : undefined,
+            boxShadow: (c === "#FFFFFF" || c.toUpperCase() === "#FAFAFA" || c.toUpperCase() === "#F5F5F5") ? "inset 0 0 0 1px rgba(0,0,0,0.08)" : undefined,
           }}/>
         ))}
       </div>

@@ -25,17 +25,17 @@ export interface AppleWalletCardProps {
   rewardName: string;
   clientPrenom?: string;
   clientNom?: string;
-  /** Labels personnalisables (texte affiché au-dessus des valeurs) */
   primaryLabel?: string;
   rewardLabel?: string;
   memberLabel?: string;
-  /** UID pour encoder l'URL du QR code */
   previewUid?: string;
-  /** Mode d'affichage */
   mode?: "full" | "compact" | "back";
-  /** Infos dos de carte */
   backInfo?: string;
   description?: string;
+  /** Champ en-tête haut droite (Apple Wallet officiel) */
+  headerField?: { label: string; value: string };
+  /** Champs auxiliaires entre secondary et barcode (Apple Wallet officiel) */
+  auxiliaryFields?: { label: string; value: string }[];
 }
 
 export default function AppleWalletCard({
@@ -58,6 +58,8 @@ export default function AppleWalletCard({
   mode = "full",
   backInfo,
   description,
+  headerField,
+  auxiliaryFields = [],
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -229,7 +231,7 @@ export default function AppleWalletCard({
     >
       {/* ── Header ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 12px" }}>
-        {/* Zone logo — toujours visible */}
+        {/* Logo */}
         <div style={{
           height: 38, minWidth: 38, maxWidth: 110, flexShrink: 0,
           borderRadius: 8,
@@ -244,12 +246,23 @@ export default function AppleWalletCard({
         </div>
         {logoText && (
           <span style={{
-            fontSize: 15, fontWeight: 600, color: fg,
+            flex: 1, fontSize: 15, fontWeight: 600, color: fg,
             letterSpacing: -0.2, overflow: "hidden",
             textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
             {logoText}
           </span>
+        )}
+        {/* Champ en-tête haut droite — officiel Apple Wallet */}
+        {headerField?.value && (
+          <div style={{ flexShrink: 0, textAlign: "right" }}>
+            <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
+              {headerField.label}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: fg }}>
+              {headerField.value}
+            </div>
+          </div>
         )}
       </div>
 
@@ -330,6 +343,22 @@ export default function AppleWalletCard({
           </div>
         </div>
       </div>
+
+      {/* ── Auxiliary fields (entre secondary et barcode — officiel Apple Wallet) ── */}
+      {auxiliaryFields.filter(f => f.value).length > 0 && (
+        <div style={{ display: "flex", padding: "10px 16px 12px", borderBottom: `1px solid ${sep}`, gap: 8 }}>
+          {auxiliaryFields.filter(f => f.value).slice(0, 4).map((f, i) => (
+            <div key={i} style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>
+                {f.label}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {f.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Barcode (Apple Wallet impose cette zone en bas, centrée) ── */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 16px 36px" }}>
