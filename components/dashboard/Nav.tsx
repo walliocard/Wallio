@@ -9,11 +9,12 @@ import type { Marchand } from "@/lib/loyalty";
 import WallioLogo from "@/components/WallioLogo";
 
 const NAV = [
-  { href: "/dashboard",           label: "Accueil",  Icon: Icons.Home },
-  { href: "/dashboard/scanner",   label: "Scanner",  Icon: Icons.Camera },
-  { href: "/dashboard/clients",   label: "Clients",  Icon: Icons.Users },
-  { href: "/dashboard/carte",     label: "Ma carte", Icon: Icons.Card },
-  { href: "/dashboard/reglages",  label: "Réglages", Icon: Icons.Settings },
+  { href: "/dashboard",                   label: "Accueil",       Icon: Icons.Home },
+  { href: "/dashboard/scanner",           label: "Scanner",       Icon: Icons.Camera },
+  { href: "/dashboard/clients",           label: "Clients",       Icon: Icons.Users },
+  { href: "/dashboard/carte",             label: "Ma carte",      Icon: Icons.Card },
+  { href: "/dashboard/notifications",     label: "Notifications", Icon: Icons.Bell },
+  { href: "/dashboard/reglages",          label: "Réglages",      Icon: Icons.Settings },
 ];
 
 function active(pathname: string, href: string) {
