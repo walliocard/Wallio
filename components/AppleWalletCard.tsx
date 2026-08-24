@@ -279,7 +279,7 @@ export default function AppleWalletCard({
       {/* ── Primary field ── */}
       <div
         style={{
-          padding: "14px 16px 12px",
+          padding: "14px 16px 10px",
           borderBottom: `1px solid ${sep}`,
         }}
       >
@@ -310,104 +310,47 @@ export default function AppleWalletCard({
         </div>
       </div>
 
-      {/* ── Secondary fields ── */}
+      {/* ── Secondary fields + QR (même rangée) ── */}
       <div
         style={{
           display: "flex",
-          padding: "12px 16px 14px",
-          borderBottom: `1px solid ${sep}`,
-        }}
-      >
-        <div style={{ flex: 1, paddingRight: 8 }}>
-          <div
-            style={{
-              fontSize: 10,
-              color: labelClr,
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-              marginBottom: 3,
-            }}
-          >
-            {rewardLabel}
-          </div>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 500,
-              color: fg,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {rewardName || "—"}
-          </div>
-        </div>
-        <div style={{ flex: 1 }}>
-          <div
-            style={{
-              fontSize: 10,
-              color: labelClr,
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-              marginBottom: 3,
-            }}
-          >
-            {memberLabel}
-          </div>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 500,
-              color: fg,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {clientName}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Barcode zone (QR toujours blanc — Apple impose) ── */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          padding: "20px 0 22px",
+          padding: "14px 16px 20px",
+          gap: 12,
         }}
       >
-        <div
-          style={{
-            background: "#FFFFFF",
-            borderRadius: 10,
-            padding: 8,
-            boxShadow: "0 2px 16px rgba(0,0,0,0.18)",
-          }}
-        >
-          {qr ? (
-            <img
-              src={qr}
-              alt="QR Code"
-              style={{ width: 100, height: 100, display: "block" }}
-            />
-          ) : (
-            <div
-              style={{ width: 100, height: 100, background: "#f0f0f0" }}
-            />
-          )}
+        {/* Champs texte */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>
+              {rewardLabel}
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {rewardName || "—"}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>
+              {memberLabel}
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {clientName}
+            </div>
+          </div>
         </div>
-        <div
-          style={{
-            fontSize: 10,
-            color: labelClr,
-            marginTop: 10,
-            letterSpacing: "0.04em",
-          }}
-        >
-          app.wallio.ma
+
+        {/* QR code — toujours blanc, Apple impose */}
+        <div style={{ flexShrink: 0 }}>
+          <div style={{ background: "#FFFFFF", borderRadius: 8, padding: 6, boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
+            {qr ? (
+              <img src={qr} alt="QR Code" style={{ width: 88, height: 88, display: "block" }} />
+            ) : (
+              <div style={{ width: 88, height: 88, background: "#f0f0f0" }} />
+            )}
+          </div>
+          <div style={{ fontSize: 9, color: labelClr, textAlign: "center", marginTop: 5, letterSpacing: "0.03em" }}>
+            app.wallio.ma
+          </div>
         </div>
       </div>
     </div>
