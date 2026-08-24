@@ -41,6 +41,11 @@ export default function ReglagesPage() {
     relance_delai_jours:    Number(autoRaw?.relance?.delai_jours ?? 30),
   });
   const [nfcId, setNfcId] = useState(marchand?.nfc_id || "");
+  const [notifActif, setNotifActif] = useState<boolean>((marchand as Record<string,unknown>)?.notif_actif !== false);
+  const [notifMessage, setNotifMessage] = useState<string>(
+    ((marchand as Record<string,unknown>)?.notif_message as string) ||
+    `Pour ne manquer aucune de vos récompenses chez ${marchand?.nom || "nous"}, activez les notifications !`
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [generatingNfc, setGeneratingNfc] = useState(false);
@@ -59,6 +64,8 @@ export default function ReglagesPage() {
         anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant },
         relance: { actif: auto.relance_actif, delai_jours: auto.relance_delai_jours },
       },
+      notif_actif: notifActif,
+      notif_message: notifMessage,
       updated_at: serverTimestamp(),
     });
     setSaving(false); setSaved(true);
@@ -233,6 +240,46 @@ export default function ReglagesPage() {
           >
             {FUSEAUX.map(tz => <option key={tz} value={tz}>{tz}</option>)}
           </select>
+        </Card>
+
+        {/* Notifications clients */}
+        <Card title="Notifications clients" className="lg:col-span-2">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Prompt d&apos;activation</p>
+              <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+                Affiché au client juste après la création de sa carte, pour activer les notifications push.
+              </p>
+            </div>
+            <Toggle value={notifActif} onChange={setNotifActif} />
+          </div>
+
+          {notifActif && (
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                Message personnalisé
+              </p>
+              <textarea
+                value={notifMessage}
+                onChange={e => setNotifMessage(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-3 rounded-2xl text-[13px] outline-none resize-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", lineHeight: 1.5 }}
+                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                onBlur={e => (e.target.style.borderColor = "var(--border)")}
+              />
+              <div className="mt-3 rounded-2xl p-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>Aperçu</p>
+                <div className="flex items-start gap-3">
+                  <span className="text-xl">🔔</span>
+                  <div>
+                    <p className="text-[13px] font-medium mb-0.5" style={{ color: "var(--fg)" }}>Restez informé</p>
+                    <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>{notifMessage}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Tag NFC */}

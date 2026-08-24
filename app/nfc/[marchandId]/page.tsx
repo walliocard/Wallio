@@ -310,8 +310,21 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
 // ─── Carte créée ──────────────────────────────────────────────────────────────
 
 function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }) {
+  const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
+
+  const m = marchand as Record<string, unknown>;
+  const notifActif = m.notif_actif !== false;
+  const notifMessage = (m.notif_message as string) ||
+    `Pour ne manquer aucune de vos récompenses chez ${marchand.nom}, activez les notifications !`;
+
+  async function activerNotifications() {
+    if (!("Notification" in window)) { setNotifState("denied"); return; }
+    const perm = await Notification.requestPermission();
+    setNotifState(perm === "granted" ? "granted" : "denied");
+  }
+
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
+    <main className="min-h-screen flex items-center justify-center px-6 py-10" style={{ background: "var(--bg)" }}>
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[600px] h-[500px] rounded-full opacity-20"
           style={{ background: "radial-gradient(circle, rgba(0,122,255,0.25) 0%, transparent 70%)" }} />
@@ -328,13 +341,13 @@ function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }
         {/* Carte preview */}
         <div className="rounded-[28px] p-6 mb-6 text-left"
           style={{
-            background: `linear-gradient(135deg, ${marchand.couleur_principale || "#007AFF"}, #005EC4)`,
-            boxShadow: "0 20px 60px rgba(0,122,255,0.35)",
+            background: `linear-gradient(135deg, ${(m.apple_bg_color as string) || marchand.couleur_principale || "#1C1C1E"}, ${(m.apple_bg_color as string) ? "rgba(0,0,0,0.6)" : "#005EC4"})`,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
           }}>
           <div className="flex items-start justify-between mb-8">
             <div>
-              <p className="text-white/60 text-[12px] font-medium uppercase tracking-wider">Carte de fidélité</p>
-              <p className="text-white text-[18px] font-semibold mt-0.5">{marchand.nom}</p>
+              <p className="text-[12px] font-medium uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.6)" }}>Carte de fidélité</p>
+              <p className="text-[18px] font-semibold mt-0.5 text-white">{marchand.nom}</p>
             </div>
             <span className="text-[28px]">{marchand.icone_tampons || "⭐"}</span>
           </div>
@@ -342,17 +355,55 @@ function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }
           <div className="flex gap-2 mb-8 flex-wrap">
             {Array.from({ length: marchand.objectif_tampons }).map((_, i) => (
               <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-sm"
-                style={{ background: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.2)" }}>
+                style={{ background: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.18)" }}>
                 {i === 0 ? (marchand.icone_tampons || "⭐") : ""}
               </div>
             ))}
           </div>
 
           <div>
-            <p className="text-white/60 text-[11px] uppercase tracking-wider">Client</p>
-            <p className="text-white text-[16px] font-medium">{client.prenom} {client.nom}</p>
+            <p className="text-[11px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.6)" }}>Client</p>
+            <p className="text-[16px] font-medium text-white">{client.prenom} {client.nom}</p>
           </div>
         </div>
+
+        {/* Prompt notifications — affiché si actif et pas encore répondu */}
+        {notifActif && notifState === "idle" && (
+          <div className="rounded-[22px] p-5 mb-4 text-left"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)" }}>
+            <div className="flex items-start gap-3 mb-4">
+              <span className="text-2xl">🔔</span>
+              <div>
+                <p className="text-[15px] font-semibold mb-1" style={{ color: "var(--fg)" }}>Restez informé</p>
+                <p className="text-[13px]" style={{ color: "var(--fg-secondary)", lineHeight: 1.5 }}>{notifMessage}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={activerNotifications}
+                className="flex-1 py-3 rounded-2xl text-[14px] font-semibold text-white"
+                style={{ background: "var(--accent)", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }}
+              >
+                Activer
+              </button>
+              <button
+                onClick={() => setNotifState("denied")}
+                className="py-3 px-5 rounded-2xl text-[14px] font-medium"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}
+              >
+                Plus tard
+              </button>
+            </div>
+          </div>
+        )}
+
+        {notifState === "granted" && (
+          <div className="rounded-2xl py-3 px-5 mb-4 flex items-center justify-center gap-2"
+            style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.2)" }}>
+            <span style={{ color: "#34C759" }}>✓</span>
+            <p className="text-[13px] font-medium" style={{ color: "#34C759" }}>Notifications activées</p>
+          </div>
+        )}
 
         {/* Bouton Wallet (placeholder — actif à la brique 4) */}
         <div className="rounded-2xl py-4 px-6 flex items-center justify-center gap-3"
