@@ -26,6 +26,14 @@ export default function NfcPage({ params }: { params: { marchandId: string } }) 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
     setScreen({ type: "result", result, client, marchand });
+    // Signal Apple Wallet pour mettre à jour la carte (fire-and-forget)
+    if (result.type === "ok" || result.type === "recompense") {
+      fetch("/api/apple-wallet/push-update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletId: client.wallet_id }),
+      }).catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -417,17 +425,20 @@ function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }
           </div>
         )}
 
-        {/* Bouton Wallet (placeholder — actif à la brique 4) */}
-        <div className="rounded-2xl py-4 px-6 flex items-center justify-center gap-3"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)" }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <rect x="2" y="5" width="20" height="14" rx="3" stroke="var(--fg-secondary)" strokeWidth="1.5"/>
-            <path d="M2 10H22" stroke="var(--fg-secondary)" strokeWidth="1.5"/>
+        {/* Bouton Apple Wallet */}
+        <a
+          href={`/api/apple-wallet/generate/${client.wallet_id}`}
+          download
+          className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 transition-opacity active:opacity-70"
+          style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.15)" }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <rect x="2" y="5" width="20" height="14" rx="3" fill="none" stroke="white" strokeWidth="1.5"/>
+            <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
+            <circle cx="7" cy="14.5" r="1.5" fill="white"/>
           </svg>
-          <span className="text-[15px] font-medium" style={{ color: "var(--fg-secondary)" }}>
-            Ajouter à Apple Wallet — disponible prochainement
-          </span>
-        </div>
+          <span className="text-[15px] font-semibold text-white">Ajouter à Apple Wallet</span>
+        </a>
       </div>
     </main>
   );

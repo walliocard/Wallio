@@ -43,10 +43,21 @@ export default function ClientQrPage({ params }: { params: { walletId: string } 
     setResult(r);
     if (r.type === "ok") {
       setClient(prev => prev ? { ...prev, tampons: r.tampons, derniere_visite: { seconds: Date.now() / 1000 } as never } : prev);
+      // Signal Apple Wallet pour mettre à jour la carte (fire-and-forget)
+      fetch("/api/apple-wallet/push-update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletId: client.wallet_id }),
+      }).catch(() => {});
     }
     if (r.type === "recompense") {
       const newTampons = marchand.mode_recompense === "cyclique" ? 0 : r.tampons;
       setClient(prev => prev ? { ...prev, tampons: newTampons, recompense_en_attente: true, derniere_visite: { seconds: Date.now() / 1000 } as never } : prev);
+      fetch("/api/apple-wallet/push-update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletId: client.wallet_id }),
+      }).catch(() => {});
     }
     setAjoutEnCours(false);
   }

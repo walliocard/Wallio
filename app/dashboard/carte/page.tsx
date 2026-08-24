@@ -8,154 +8,6 @@ import { db, storage } from "@/lib/firebase";
 import AppleWalletCard from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 
-// ── Full sector themes ────────────────────────────────
-interface FullTheme {
-  name: string;
-  emoji: string;
-  sector: string;
-  bgColor: string;
-  gradient: { from: string; to: string; angle: number } | null;
-  primaryLabel: string;
-  rewardLabel: string;
-  memberLabel: string;
-  stripText?: string;
-}
-
-const FULL_THEMES: FullTheme[] = [
-  {
-    name: "Café",
-    emoji: "☕",
-    sector: "café",
-    bgColor: "#1C0E05",
-    gradient: { from: "#4A3020", to: "#1C0E05", angle: 140 },
-    primaryLabel: "Cafés",
-    rewardLabel: "Récompense",
-    memberLabel: "Client",
-    stripText: "Votre café quotidien",
-  },
-  {
-    name: "Restaurant",
-    emoji: "🍽️",
-    sector: "restaurant",
-    bgColor: "#1A0508",
-    gradient: { from: "#6B1A30", to: "#2A0A14", angle: 135 },
-    primaryLabel: "Visites",
-    rewardLabel: "Cadeau",
-    memberLabel: "Membre",
-    stripText: "Bonne table, bonne humeur",
-  },
-  {
-    name: "Barber",
-    emoji: "💈",
-    sector: "barber",
-    bgColor: "#0A1420",
-    gradient: { from: "#2C4A6B", to: "#0A1420", angle: 155 },
-    primaryLabel: "Coupes",
-    rewardLabel: "Offre",
-    memberLabel: "Client",
-    stripText: "Style & élégance",
-  },
-  {
-    name: "Beauté",
-    emoji: "💄",
-    sector: "beauté",
-    bgColor: "#2A0A14",
-    gradient: { from: "#8B2040", to: "#2A0A14", angle: 125 },
-    primaryLabel: "Soins",
-    rewardLabel: "Cadeau",
-    memberLabel: "Membre",
-    stripText: "Beauté & bien-être",
-  },
-  {
-    name: "Spa",
-    emoji: "🧖",
-    sector: "spa",
-    bgColor: "#0D1A0D",
-    gradient: { from: "#4A6741", to: "#1A2E1A", angle: 150 },
-    primaryLabel: "Séances",
-    rewardLabel: "Soin offert",
-    memberLabel: "Abonné",
-    stripText: "Détente & sérénité",
-  },
-  {
-    name: "Sport",
-    emoji: "💪",
-    sector: "sport",
-    bgColor: "#0A0A1A",
-    gradient: { from: "#0F3460", to: "#0A0A1A", angle: 145 },
-    primaryLabel: "Passages",
-    rewardLabel: "Bonus",
-    memberLabel: "Adhérent",
-    stripText: "Performance & dépassement",
-  },
-  {
-    name: "Mode",
-    emoji: "👗",
-    sector: "mode",
-    bgColor: "#0A0A0A",
-    gradient: { from: "#1A1A2E", to: "#0A0A0A", angle: 160 },
-    primaryLabel: "Achats",
-    rewardLabel: "Remise",
-    memberLabel: "Fidèle",
-    stripText: "Style & tendances",
-  },
-  {
-    name: "Pâtisserie",
-    emoji: "🧁",
-    sector: "pâtisserie",
-    bgColor: "#2E1A0E",
-    gradient: { from: "#8B5E2A", to: "#2E1A0E", angle: 135 },
-    primaryLabel: "Douceurs",
-    rewardLabel: "Surprise",
-    memberLabel: "Gourmand",
-    stripText: "Saveurs & créations",
-  },
-  {
-    name: "Librairie",
-    emoji: "📚",
-    sector: "librairie",
-    bgColor: "#1A2E1A",
-    gradient: { from: "#5C7A52", to: "#1A2E1A", angle: 140 },
-    primaryLabel: "Livres",
-    rewardLabel: "Livre offert",
-    memberLabel: "Lecteur",
-    stripText: "Univers de mots",
-  },
-  {
-    name: "Pharmacie",
-    emoji: "💊",
-    sector: "pharmacie",
-    bgColor: "#0A1628",
-    gradient: { from: "#1B4A6B", to: "#0A1628", angle: 150 },
-    primaryLabel: "Points",
-    rewardLabel: "Avantage",
-    memberLabel: "Client",
-    stripText: "Votre santé, notre priorité",
-  },
-  {
-    name: "Hôtel",
-    emoji: "🏨",
-    sector: "hôtel",
-    bgColor: "#1C1C1E",
-    gradient: { from: "#3A3A3C", to: "#1C1C1E", angle: 160 },
-    primaryLabel: "Nuits",
-    rewardLabel: "Nuit offerte",
-    memberLabel: "Hôte",
-    stripText: "Confort & hospitalité",
-  },
-  {
-    name: "Wine Bar",
-    emoji: "🍷",
-    sector: "wine bar",
-    bgColor: "#2A0A14",
-    gradient: { from: "#6B1A30", to: "#1A0508", angle: 135 },
-    primaryLabel: "Verres",
-    rewardLabel: "Bouteille",
-    memberLabel: "Amateur",
-    stripText: "L'art de la dégustation",
-  },
-];
-
 // ── History snapshot ──────────────────────────────────
 interface Snapshot {
   bgColor: string;
@@ -173,13 +25,6 @@ interface Snapshot {
   labelColor: string;
 }
 
-// ── AI palette type ───────────────────────────────────
-interface AIPalette {
-  name: string;
-  backgroundColor: string;
-  foregroundColor: string;
-  labelColor: string;
-}
 
 export default function CartePage() {
   const { user, marchand } = useAuth();
@@ -326,11 +171,6 @@ export default function CartePage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingStrip, setUploadingStrip] = useState(false);
 
-  // Feature 2 — AI colors state
-  const [aiDescription, setAiDescription] = useState<string>("");
-  const [aiLoading, setAiLoading] = useState<boolean>(false);
-  const [aiPalettes, setAiPalettes] = useState<AIPalette[]>([]);
-  const [aiError, setAiError] = useState<string>("");
 
   if (!marchand || !user) return null;
 
@@ -448,39 +288,6 @@ export default function CartePage() {
     }).catch(() => {});
   }
 
-  // Feature 2 — AI color generation
-  async function handleAiGenerate() {
-    if (!aiDescription.trim()) return;
-    setAiLoading(true);
-    setAiError("");
-    setAiPalettes([]);
-    try {
-      const res = await fetch("/api/suggest-colors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: aiDescription }),
-      });
-      const data = await res.json() as AIPalette[] | { error: string };
-      if (!res.ok || "error" in data) {
-        setAiError(("error" in data ? data.error : "Erreur inconnue") as string);
-      } else {
-        setAiPalettes(data as AIPalette[]);
-      }
-    } catch (err: unknown) {
-      setAiError(err instanceof Error ? err.message : "Erreur réseau");
-    } finally {
-      setAiLoading(false);
-    }
-  }
-
-  function applyAiPalette(palette: AIPalette) {
-    pushHistory();
-    setBgColor(palette.backgroundColor);
-    setFgAuto(false);
-    setFgColor(palette.foregroundColor);
-    setLabelAuto(false);
-    setLabelColor(palette.labelColor);
-  }
 
   // Feature 9 — Google Wallet hero image adapter
   async function handleAdaptForGoogle() {
@@ -558,8 +365,8 @@ export default function CartePage() {
         {/* ── Preview ── */}
         <div style={{
           flex: 1, display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-          padding: 32, gap: 14, background: "var(--bg)", overflowY: "auto",
+          alignItems: "center", justifyContent: "flex-start",
+          padding: "32px 32px 48px", gap: 14, background: "var(--bg)", overflowY: "auto",
         }}>
 
           {/* Toggle Apple / Google Wallet */}
@@ -677,149 +484,6 @@ export default function CartePage() {
           overflowY: "auto", padding: "20px 18px",
           display: "flex", flexDirection: "column", gap: 22, flexShrink: 0,
         }}>
-
-          {/* ── Feature 1 — Thèmes complets par secteur ── */}
-          <Section label="Thèmes par secteur">
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-              Appliquer couleurs + dégradé + labels en 1 clic
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              {FULL_THEMES.map(theme => (
-                <button
-                  key={theme.name}
-                  onClick={async () => {
-                    pushHistory();
-                    setBgColor(theme.bgColor);
-                    setPrimaryLabel(theme.primaryLabel);
-                    setRewardLabel(theme.rewardLabel);
-                    setMemberLabel(theme.memberLabel);
-                    if (theme.gradient) {
-                      const { from, to, angle } = theme.gradient;
-                      setStripFrom(from);
-                      setStripTo(to);
-                      setStripAngle(angle);
-                      setIsUploadedStrip(false);
-                      setRawStripUrl("");
-                      const strip = await buildStrip(
-                        from, to, angle,
-                        theme.stripText || "", "#FFFFFF", "m", "bl", "sans",
-                        "", "s",
-                        undefined
-                      );
-                      setStripUrl(strip);
-                      if (theme.stripText) setStripText(theme.stripText);
-                      updateDoc(doc(db, "marchands", user!.uid), {
-                        strip_url: strip,
-                        apple_bg_color: theme.bgColor,
-                      });
-                    } else {
-                      setStripFrom("");
-                      setStripTo("");
-                      setStripUrl("");
-                      updateDoc(doc(db, "marchands", user!.uid), {
-                        strip_url: "",
-                        apple_bg_color: theme.bgColor,
-                      });
-                    }
-                  }}
-                  style={{
-                    padding: "8px 6px",
-                    borderRadius: 10,
-                    border: "1px solid var(--border)",
-                    background: theme.gradient
-                      ? `linear-gradient(${theme.gradient.angle}deg, ${theme.gradient.from}, ${theme.gradient.to})`
-                      : theme.bgColor,
-                    cursor: "pointer",
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-                    transition: "transform 0.1s",
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.03)")}
-                  onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
-                >
-                  <span style={{ fontSize: 18 }}>{theme.emoji}</span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 600,
-                    color: isDarkBg(theme.bgColor) ? "#FFFFFF" : "#000000",
-                    textShadow: isDarkBg(theme.bgColor) ? "0 1px 2px rgba(0,0,0,0.5)" : "none",
-                  }}>
-                    {theme.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </Section>
-
-          {/* ── Feature 2 — IA couleurs ── */}
-          <Section label="IA — Générer des couleurs">
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-              Décrivez votre établissement pour obtenir 3 palettes suggérées
-            </p>
-            <textarea
-              value={aiDescription}
-              onChange={e => setAiDescription(e.target.value)}
-              placeholder="Ex : café chaleureux parisien, ambiance vintage, bois sombre..."
-              rows={2}
-              style={{
-                width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 12,
-                background: "var(--glass-bg)", border: "1px solid var(--border)",
-                color: "var(--fg)", outline: "none", resize: "vertical",
-                fontFamily: "inherit", lineHeight: 1.5, boxSizing: "border-box",
-              }}
-              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-              onBlur={e => (e.target.style.borderColor = "var(--border)")}
-            />
-            <button
-              onClick={handleAiGenerate}
-              disabled={aiLoading || !aiDescription.trim()}
-              style={{
-                width: "100%", padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                background: "var(--accent)", color: "white",
-                border: "none", cursor: aiLoading || !aiDescription.trim() ? "not-allowed" : "pointer",
-                opacity: aiLoading || !aiDescription.trim() ? 0.6 : 1,
-              }}
-            >
-              {aiLoading ? "Génération…" : "✨ Générer"}
-            </button>
-            {aiError && (
-              <div style={{
-                padding: "8px 12px", borderRadius: 10, fontSize: 11,
-                background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.25)",
-                color: "#FF3B30",
-              }}>
-                {aiError}
-              </div>
-            )}
-            {aiPalettes.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {aiPalettes.map((p, i) => (
-                  <button
-                    key={i}
-                    onClick={() => applyAiPalette(p)}
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: 10,
-                      border: "1px solid var(--border)",
-                      background: p.backgroundColor,
-                      cursor: "pointer",
-                      display: "flex", flexDirection: "column", gap: 4, textAlign: "left",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    }}
-                  >
-                    <span style={{ fontSize: 11, fontWeight: 600, color: p.foregroundColor }}>
-                      {p.name}
-                    </span>
-                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                      <div style={{ width: 14, height: 14, borderRadius: 4, background: p.backgroundColor, border: "1px solid rgba(128,128,128,0.3)" }}/>
-                      <div style={{ width: 14, height: 14, borderRadius: 4, background: p.foregroundColor, border: "1px solid rgba(128,128,128,0.3)" }}/>
-                      <div style={{ width: 14, height: 14, borderRadius: 4, background: p.labelColor, border: "1px solid rgba(128,128,128,0.3)" }}/>
-                      <span style={{ fontSize: 10, color: p.labelColor }}>Cliquer pour appliquer</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </Section>
 
           {/* Logo */}
           <Section label="Logo">

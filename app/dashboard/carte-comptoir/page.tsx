@@ -46,8 +46,9 @@ function drawChevaleret(
   nom: string,
   nfc_id: string | undefined,
   template: Template,
+  scale = 1,
 ) {
-  const W = 800, H = 1440;
+  const W = 800 * scale, H = 1440 * scale;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
@@ -131,8 +132,9 @@ function drawComptoir(
   nom: string,
   nfc_id: string | undefined,
   template: Template,
+  scale = 1,
 ) {
-  const W = 1600, H = 900;
+  const W = 1600 * scale, H = 900 * scale;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
@@ -283,9 +285,9 @@ export default function CarteComptoirPage() {
     setDownloading(true);
     const canvas = document.createElement("canvas");
     if (format === "chevaleret") {
-      drawChevaleret(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, marchandData.nfc_id, template);
+      drawChevaleret(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, marchandData.nfc_id, template, 4);
     } else {
-      drawComptoir(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, marchandData.nfc_id, template);
+      drawComptoir(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, marchandData.nfc_id, template, 4);
     }
     const link = document.createElement("a");
     const label = format === "chevaleret" ? "chevaleret" : "carte-comptoir";

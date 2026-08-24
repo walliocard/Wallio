@@ -21,6 +21,7 @@ function relativeLuminance(hex: string): number {
 
 export interface PassInput {
   walletId: string;          // serialNumber unique du client
+  authToken: string;         // token aléatoire 16+ chars stocké en Firestore
   merchantName: string;
   backgroundColor: string;  // hex — couleur_principale du marchand
   stampsCurrent: number;
@@ -45,7 +46,9 @@ export function generatePassJson(input: PassInput): object {
     // Identifiant unique du pass client
     serialNumber: input.walletId,
 
-    // webServiceURL et authenticationToken ajoutés quand le serveur de mise à jour push sera prêt
+    // Serveur de mise à jour PassKit — Apple appellera ces endpoints après chaque push
+    webServiceURL: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.wallio.ma"}/api/apple-wallet`,
+    authenticationToken: input.authToken, // token aléatoire 16+ chars stocké en Firestore
 
     organizationName: "Wallio",
     description: `Carte de fidélité — ${input.merchantName}`,
