@@ -1043,10 +1043,10 @@ export default function CartePage() {
                 Affiché en haut à droite — ex : niveau, date, code.
               </p>
               <Field label="Label">
-                <TextInput value={headerLabel} onChange={setHeaderLabel} placeholder="NIVEAU"/>
+                <TextInput value={headerLabel} onChange={setHeaderLabel} placeholder="ex : NIVEAU"/>
               </Field>
-              <Field label="Valeur">
-                <TextInput value={headerValue} onChange={setHeaderValue} placeholder="Gold"/>
+              <Field label="Valeur (obligatoire pour afficher)">
+                <TextInput value={headerValue} onChange={setHeaderValue} placeholder="ex : Gold, VIP, Premium…"/>
               </Field>
             </Section>
           )}
@@ -1058,13 +1058,13 @@ export default function CartePage() {
                 Ligne supplémentaire entre les champs et le QR code.
               </p>
               <Field label="Label 1">
-                <TextInput value={aux1Label} onChange={setAux1Label} placeholder="VALABLE"/>
+                <TextInput value={aux1Label} onChange={setAux1Label} placeholder="ex : VALABLE"/>
               </Field>
-              <Field label="Valeur 1">
-                <TextInput value={aux1Value} onChange={setAux1Value} placeholder="Tous établissements"/>
+              <Field label="Valeur 1 (obligatoire pour afficher)">
+                <TextInput value={aux1Value} onChange={setAux1Value} placeholder="ex : Tous établissements"/>
               </Field>
               <Field label="Label 2">
-                <TextInput value={aux2Label} onChange={setAux2Label} placeholder="CODE"/>
+                <TextInput value={aux2Label} onChange={setAux2Label} placeholder="ex : CODE"/>
               </Field>
               <Field label="Valeur 2">
                 <TextInput value={aux2Value} onChange={setAux2Value} placeholder=""/>
