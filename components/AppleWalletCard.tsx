@@ -218,6 +218,7 @@ export default function AppleWalletCard({
     <div
       style={{
         width: 375,
+        flexShrink: 0,
         background: bg,
         borderRadius: 20,
         overflow: "hidden",
