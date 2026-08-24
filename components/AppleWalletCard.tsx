@@ -305,8 +305,8 @@ export default function AppleWalletCard({
           }}
         >
           {stampsCurrent}
-          <span style={{ fontSize: 24, fontWeight: 400, opacity: 0.55 }}>
-            /{stampsObjective}
+          <span style={{ fontSize: 24, fontWeight: 400, opacity: 0.55, marginLeft: 6 }}>
+            / {stampsObjective}
           </span>
         </div>
       </div>
