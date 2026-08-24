@@ -68,14 +68,23 @@ export default function AccueilPage() {
 
       {/* Header */}
       <div className="mb-8 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-          style={{ background: "linear-gradient(135deg,#EDE8FF 0%,#F0F0FF 100%)" }}>
-          <WallioLogo size={38} />
+        {/* Logo du marchand — ou initiale si pas de logo */}
+        <div className="w-12 h-12 rounded-2xl flex-shrink-0 overflow-hidden flex items-center justify-center"
+          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+          {(marchand as Record<string, unknown>).logo_url
+            ? <img src={(marchand as Record<string, unknown>).logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            : <span className="text-[22px] font-bold" style={{ color: "var(--accent)" }}>
+                {(marchand.nom?.[0] || "?").toUpperCase()}
+              </span>
+          }
         </div>
         <div>
-          <p className="text-[12px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: "var(--fg-tertiary)" }}>
-            Tableau de bord
-          </p>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <WallioLogo size={14} />
+            <p className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>
+              Wallio · Tableau de bord
+            </p>
+          </div>
           <h1 className="text-[28px] lg:text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
             {marchand.nom}
           </h1>
