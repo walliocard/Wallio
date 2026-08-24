@@ -7,6 +7,9 @@ import {
   formatTemps, WALLET_KEY,
   type Marchand, type Client, type TamponResult,
 } from "@/lib/loyalty";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { registerFcmToken } from "@/lib/fcm";
 
 type Screen =
   | { type: "loading" }
@@ -320,7 +323,16 @@ function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }
   async function activerNotifications() {
     if (!("Notification" in window)) { setNotifState("denied"); return; }
     const perm = await Notification.requestPermission();
-    setNotifState(perm === "granted" ? "granted" : "denied");
+    if (perm === "granted") {
+      setNotifState("granted");
+      // Enregistrement FCM + sauvegarde token en Firestore
+      const token = await registerFcmToken();
+      if (token && client.id) {
+        await updateDoc(doc(db, "clients", client.id), { fcm_token: token });
+      }
+    } else {
+      setNotifState("denied");
+    }
   }
 
   return (
