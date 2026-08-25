@@ -35,7 +35,7 @@ export interface AppleWalletCardProps {
   headerField?: { label: string; value: string };
   auxiliaryFields?: { label: string; value: string }[];
   stampsOnStrip?: boolean;
-  stripStampStyle?: "dot" | "plus" | "ring" | "stamp";
+  stripStampStyle?: "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond";
 }
 
 export default function AppleWalletCard({
@@ -380,18 +380,42 @@ export default function AppleWalletCard({
   );
 }
 
+// Icônes SVG style tampon encreur (contours blancs, viewBox 24×24)
+const STAMP_ICONS: Record<string, string> = {
+  heart:   "M12 21C12 21 3 14 3 8.5 3 5.4 5.4 3 8.5 3c1.7 0 3.3.9 4.3 2.3C13.8 3.9 15.4 3 17.5 3 20.6 3 23 5.4 23 8.5 23 14 14 21 12 21Z",
+  star:    "M12 2 14.9 9H22l-5.8 4.2 2.2 7L12 16.2 5.6 20.2l2.2-7L2 9h7.1Z",
+  bolt:    "M13 2 5 14h7l-1 8 9-12h-7Z",
+  crown:   "M3 18V9l3.5 5L12 2l5.5 12L21 9v9H3Z",
+  flower:  "M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0M12 5a3 3 0 0 1 0 6M12 13a3 3 0 0 1 0 6M5 12a3 3 0 0 1 6 0M13 12a3 3 0 0 1 6 0",
+  diamond: "M12 2 22 12 12 22 2 12Z",
+};
+
 function StampCircles({
   total, filled, style = "dot",
 }: {
-  total: number; filled: number; style?: "dot" | "plus" | "ring" | "stamp";
+  total: number; filled: number; style?: "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond";
 }) {
   const perRow = total <= 8 ? total : Math.ceil(total / 2);
   const rows = Math.ceil(total / perRow);
   const size = Math.min(36, Math.floor((343 - (perRow - 1) * 10) / perRow));
   const s = size;
 
+  const iconPath = STAMP_ICONS[style];
+
   const Inner = ({ isFilled }: { isFilled: boolean }) => {
     if (!isFilled) return null;
+
+    // Formes SVG style tampon (contour blanc, pas de remplissage)
+    if (iconPath) {
+      const sw = Math.max(1.2, s * 0.09);
+      return (
+        <svg width={s * 0.58} height={s * 0.58} viewBox="0 0 24 24" fill="none"
+          stroke="rgba(255,255,255,0.95)" strokeWidth={sw}
+          strokeLinecap="round" strokeLinejoin="round">
+          <path d={iconPath} />
+        </svg>
+      );
+    }
     if (style === "dot") {
       return <div style={{ width: s * 0.38, height: s * 0.38, borderRadius: "50%", background: "rgba(255,255,255,0.95)" }} />;
     }

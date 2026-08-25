@@ -61,8 +61,9 @@ export default function CartePage() {
 
   // Tampons sur la bannière
   const [stampsOnStrip, setStampsOnStrip] = useState<boolean>((marchand as Record<string, unknown>).apple_stamps_on_strip === true);
-  const [stripStampStyle, setStripStampStyle] = useState<"dot" | "plus" | "ring" | "stamp">(
-    ((marchand as Record<string, unknown>).apple_strip_stamp_style as "dot" | "plus" | "ring" | "stamp") || "dot"
+  type StampStyle = "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond";
+  const [stripStampStyle, setStripStampStyle] = useState<StampStyle>(
+    ((marchand as Record<string, unknown>).apple_strip_stamp_style as StampStyle) || "dot"
   );
 
   // Feature 6 — cadrage image uploadée
@@ -809,12 +810,18 @@ export default function CartePage() {
                   <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>
                     Style — synchro avec les réglages ({marchand.objectif_tampons || 10} tampons · {marchand.icone_tampons})
                   </p>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 5 }}>
                     {([
-                      { key: "dot",   label: "·",  desc: "Point" },
-                      { key: "plus",  label: "+",   desc: "Croix" },
-                      { key: "ring",  label: "◎",   desc: "Anneau" },
-                      { key: "stamp", label: "⊙",   desc: "Tampon" },
+                      { key: "heart",   label: "♡",  desc: "Cœur" },
+                      { key: "star",    label: "☆",  desc: "Étoile" },
+                      { key: "bolt",    label: "⚡",  desc: "Éclair" },
+                      { key: "crown",   label: "♛",  desc: "Couronne" },
+                      { key: "flower",  label: "✿",  desc: "Fleur" },
+                      { key: "diamond", label: "◇",  desc: "Diamant" },
+                      { key: "dot",     label: "·",  desc: "Point" },
+                      { key: "plus",    label: "+",  desc: "Croix" },
+                      { key: "ring",    label: "◎",  desc: "Anneau" },
+                      { key: "stamp",   label: "⊙",  desc: "Tampon" },
                     ] as const).map(opt => (
                       <button key={opt.key} onClick={() => setStripStampStyle(opt.key)}
                         style={{
