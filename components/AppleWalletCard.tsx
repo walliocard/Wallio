@@ -35,8 +35,7 @@ export interface AppleWalletCardProps {
   headerField?: { label: string; value: string };
   auxiliaryFields?: { label: string; value: string }[];
   stampsOnStrip?: boolean;
-  stripStampStyle?: "icon" | "dot" | "check";
-  stampIcon?: string;
+  stripStampStyle?: "dot" | "plus" | "ring";
 }
 
 export default function AppleWalletCard({
@@ -62,8 +61,7 @@ export default function AppleWalletCard({
   headerField,
   auxiliaryFields = [],
   stampsOnStrip = false,
-  stripStampStyle = "icon",
-  stampIcon = "⭐",
+  stripStampStyle = "dot",
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -294,7 +292,7 @@ export default function AppleWalletCard({
 
         {/* Overlay tampons sur bannière */}
         {stampsOnStrip && stampsObjective > 0 && (
-          <StampCircles total={stampsObjective} filled={stampsCurrent} style={stripStampStyle} icon={stampIcon} />
+          <StampCircles total={stampsObjective} filled={stampsCurrent} style={stripStampStyle} />
         )}
       </div>
 
@@ -383,19 +381,37 @@ export default function AppleWalletCard({
 }
 
 function StampCircles({
-  total, filled, style = "icon", icon = "⭐",
+  total, filled, style = "dot",
 }: {
-  total: number; filled: number; style?: "icon" | "dot" | "check"; icon?: string;
+  total: number; filled: number; style?: "dot" | "plus" | "ring";
 }) {
   const perRow = total <= 8 ? total : Math.ceil(total / 2);
   const rows = Math.ceil(total / perRow);
   const size = Math.min(36, Math.floor((343 - (perRow - 1) * 10) / perRow));
+  const s = size;
 
-  const innerContent = (isFilled: boolean) => {
+  // Élément intérieur pour les tampons remplis
+  const Inner = ({ isFilled }: { isFilled: boolean }) => {
     if (!isFilled) return null;
-    if (style === "icon") return <span style={{ fontSize: size * 0.48, lineHeight: 1 }}>{icon}</span>;
-    if (style === "check") return <span style={{ fontSize: size * 0.52, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>✓</span>;
-    return null; // dot = juste le cercle plein
+    if (style === "dot") {
+      // Petit cercle plein au centre
+      return <div style={{ width: s * 0.38, height: s * 0.38, borderRadius: "50%", background: "rgba(255,255,255,0.95)" }} />;
+    }
+    if (style === "plus") {
+      // Croix (+)
+      const bar = s * 0.38, thick = s * 0.1;
+      return (
+        <div style={{ position: "relative", width: bar, height: bar }}>
+          <div style={{ position: "absolute", top: "50%", left: 0, width: bar, height: thick, marginTop: -thick/2, background: "rgba(255,255,255,0.95)", borderRadius: 2 }} />
+          <div style={{ position: "absolute", left: "50%", top: 0, width: thick, height: bar, marginLeft: -thick/2, background: "rgba(255,255,255,0.95)", borderRadius: 2 }} />
+        </div>
+      );
+    }
+    if (style === "ring") {
+      // Anneau intérieur
+      return <div style={{ width: s * 0.42, height: s * 0.42, borderRadius: "50%", border: `${Math.max(1.5, s * 0.07)}px solid rgba(255,255,255,0.9)` }} />;
+    }
+    return null;
   };
 
   return (
@@ -415,14 +431,14 @@ function StampCircles({
               const isFilled = idx < filled;
               return (
                 <div key={col} style={{
-                  width: size, height: size, borderRadius: "50%",
-                  background: isFilled ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.12)",
-                  border: `2px solid ${isFilled ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.45)"}`,
-                  backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
+                  width: s, height: s, borderRadius: "50%",
+                  background: isFilled ? "rgba(255,255,255,0.18)" : "transparent",
+                  border: `2px solid ${isFilled ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.40)"}`,
+                  backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
                   flexShrink: 0,
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
-                  {innerContent(isFilled)}
+                  <Inner isFilled={isFilled} />
                 </div>
               );
             })}

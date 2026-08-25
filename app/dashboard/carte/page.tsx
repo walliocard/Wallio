@@ -61,8 +61,8 @@ export default function CartePage() {
 
   // Tampons sur la bannière
   const [stampsOnStrip, setStampsOnStrip] = useState<boolean>((marchand as Record<string, unknown>).apple_stamps_on_strip === true);
-  const [stripStampStyle, setStripStampStyle] = useState<"icon" | "dot" | "check">(
-    ((marchand as Record<string, unknown>).apple_strip_stamp_style as "icon" | "dot" | "check") || "icon"
+  const [stripStampStyle, setStripStampStyle] = useState<"dot" | "plus" | "ring">(
+    ((marchand as Record<string, unknown>).apple_strip_stamp_style as "dot" | "plus" | "ring") || "dot"
   );
 
   // Feature 6 — cadrage image uploadée
@@ -501,7 +501,6 @@ export default function CartePage() {
               ]}
               stampsOnStrip={stampsOnStrip}
               stripStampStyle={stripStampStyle}
-              stampIcon={marchand.icone_tampons}
             />
           ) : (
             <GoogleWalletCard
@@ -812,9 +811,9 @@ export default function CartePage() {
                   </p>
                   <div style={{ display: "flex", gap: 6 }}>
                     {([
-                      { key: "icon",  label: marchand.icone_tampons || "⭐", desc: "Icône" },
-                      { key: "dot",   label: "●",    desc: "Plein" },
-                      { key: "check", label: "✓",    desc: "Coche" },
+                      { key: "dot",  label: "·", desc: "Point" },
+                      { key: "plus", label: "+",  desc: "Croix" },
+                      { key: "ring", label: "◎",  desc: "Anneau" },
                     ] as const).map(opt => (
                       <button key={opt.key} onClick={() => setStripStampStyle(opt.key)}
                         style={{
