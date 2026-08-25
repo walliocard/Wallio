@@ -15,6 +15,22 @@ const TEMPLATES: { id: Template; label: string; desc: string }[] = [
   { id: "gradient", label: "Dégradé",  desc: "Transition des deux couleurs" },
 ];
 
+async function generateQRImage(url: string, size: number): Promise<HTMLImageElement | null> {
+  try {
+    const QRCode = (await import("qrcode")).default;
+    const dataUrl = await QRCode.toDataURL(url, {
+      width: size, margin: 1,
+      color: { dark: "#000000", light: "#FFFFFF" },
+    });
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = dataUrl;
+    });
+  } catch { return null; }
+}
+
 function nfcArcs(
   ctx: CanvasRenderingContext2D,
   cx: number, cy: number,
@@ -39,7 +55,7 @@ function nfcArcs(
   }
 }
 
-function drawChevaleret(
+async function drawChevaleret(
   canvas: HTMLCanvasElement,
   couleur_principale: string,
   couleur_secondaire: string,
@@ -47,6 +63,7 @@ function drawChevaleret(
   nfc_id: string | undefined,
   template: Template,
   scale = 1,
+  showQR = true,
 ) {
   const W = 800 * scale, H = 1440 * scale;
   canvas.width = W; canvas.height = H;
@@ -112,10 +129,37 @@ function drawChevaleret(
     ctx.fillText(nom, W / 2 + W * 0.04, H * 0.635);
   }
 
+  // QR code de secours — centré entre le texte et le bas
+  if (showQR && nfc_id) {
+    const qrSize = Math.round(W * 0.22);
+    const qrUrl = `https://app.wallio.ma/nfc/${nfc_id}`;
+    const qrImg = await generateQRImage(qrUrl, qrSize);
+    if (qrImg) {
+      const pad = Math.round(W * 0.022);
+      const boxW = qrSize + pad * 2;
+      const boxH = qrSize + pad * 2 + Math.round(W * 0.04);
+      const bx = (W - boxW) / 2;
+      const by = H * 0.67;
+      // Fond blanc arrondi
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      const r = Math.round(W * 0.02);
+      ctx.roundRect(bx, by, boxW, boxH, r);
+      ctx.fill();
+      // QR
+      ctx.drawImage(qrImg, bx + pad, by + pad, qrSize, qrSize);
+      // Label
+      ctx.font = `500 ${W * 0.024}px Arial, sans-serif`;
+      ctx.fillStyle = "#555555";
+      ctx.textAlign = "center";
+      ctx.fillText("ou scannez ce QR", W / 2, by + qrSize + pad * 2 + W * 0.01);
+    }
+  }
+
   // Séparateur bas
   ctx.beginPath();
-  ctx.moveTo(W * 0.3, H * 0.79);
-  ctx.lineTo(W * 0.7, H * 0.79);
+  ctx.moveTo(W * 0.3, H * 0.855);
+  ctx.lineTo(W * 0.7, H * 0.855);
   ctx.strokeStyle = `${textColor}14`; ctx.lineWidth = 1.5; ctx.stroke();
 
   // URL
@@ -125,7 +169,7 @@ function drawChevaleret(
   ctx.fillText(url, W / 2, H * 0.93);
 }
 
-function drawComptoir(
+async function drawComptoir(
   canvas: HTMLCanvasElement,
   couleur_principale: string,
   couleur_secondaire: string,
@@ -133,6 +177,7 @@ function drawComptoir(
   nfc_id: string | undefined,
   template: Template,
   scale = 1,
+  showQR = true,
 ) {
   const W = 1600 * scale, H = 900 * scale;
   canvas.width = W; canvas.height = H;
@@ -200,10 +245,38 @@ function drawComptoir(
   ctx.fillStyle = `${textColor}60`;
   ctx.fillText("pour gagner vos points", tx, oy + H * 0.41);
 
+  // QR code de secours — coin bas droite
+  if (showQR && nfc_id) {
+    const qrSize = Math.round(H * 0.22);
+    const qrUrl = `https://app.wallio.ma/nfc/${nfc_id}`;
+    const qrImg = await generateQRImage(qrUrl, qrSize);
+    if (qrImg) {
+      const pad = Math.round(H * 0.022);
+      const labelH = Math.round(H * 0.045);
+      const boxW = qrSize + pad * 2;
+      const boxH = qrSize + pad * 2 + labelH;
+      const bx = W - boxW - Math.round(W * 0.05);
+      const by = H - boxH - Math.round(H * 0.08);
+      // Fond blanc arrondi
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.roundRect(bx, by, boxW, boxH, Math.round(H * 0.018));
+      ctx.fill();
+      // QR
+      ctx.drawImage(qrImg, bx + pad, by + pad, qrSize, qrSize);
+      // "ou scannez" label
+      ctx.font = `500 ${H * 0.028}px Arial, sans-serif`;
+      ctx.fillStyle = "#444444";
+      ctx.textAlign = "center";
+      ctx.fillText("ou scannez", bx + boxW / 2, by + qrSize + pad * 2 + H * 0.012);
+    }
+  }
+
   // URL bas
   const url = nfc_id ? `app.wallio.ma/nfc/${nfc_id}` : "app.wallio.ma";
   ctx.font = `${H * 0.032}px Arial, sans-serif`;
   ctx.fillStyle = `${textColor}25`;
+  ctx.textAlign = "center";
   ctx.fillText(url, W / 2, H - 60);
 }
 
@@ -223,7 +296,9 @@ function TemplatePreview({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const fn = format === "chevaleret" ? drawChevaleret : drawComptoir;
-    fn(canvas, marchand.couleur_principale, marchand.couleur_secondaire, marchand.nom, marchand.nfc_id, template.id);
+    // preview sans QR pour ne pas ralentir le rendu des miniatures
+    fn(canvas, marchand.couleur_principale, marchand.couleur_secondaire, marchand.nom, marchand.nfc_id, template.id, 1, false)
+      .catch(() => {});
   }, [format, template.id, marchand]);
 
   const isPortrait = format === "chevaleret";
@@ -262,6 +337,7 @@ export default function CarteComptoirPage() {
   const [format, setFormat] = useState<Format>("chevaleret");
   const [template, setTemplate] = useState<Template>("dark");
   const [downloading, setDownloading] = useState(false);
+  const [showQR, setShowQR] = useState(true);
 
   useEffect(() => {
     if (!loading && (!user || !marchand?.actif)) router.push("/auth/connexion");
@@ -285,9 +361,9 @@ export default function CarteComptoirPage() {
     setDownloading(true);
     const canvas = document.createElement("canvas");
     if (format === "chevaleret") {
-      drawChevaleret(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, marchandData.nfc_id, template, 4);
+      await drawChevaleret(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, marchandData.nfc_id, template, 4, showQR);
     } else {
-      drawComptoir(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, marchandData.nfc_id, template, 4);
+      await drawComptoir(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, marchandData.nfc_id, template, 4, showQR);
     }
     const link = document.createElement("a");
     const label = format === "chevaleret" ? "chevaleret" : "carte-comptoir";
@@ -408,6 +484,20 @@ export default function CarteComptoirPage() {
           </p>
         </div>
       )}
+
+      {/* Option QR */}
+      <div className="flex items-start gap-3 p-4 rounded-2xl mb-4"
+        style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+        <input type="checkbox" id="show-qr" checked={showQR} onChange={e => setShowQR(e.target.checked)}
+          style={{ accentColor: "var(--accent)", width: 16, height: 16, marginTop: 2, cursor: "pointer", flexShrink: 0 }}
+        />
+        <label htmlFor="show-qr" style={{ cursor: "pointer" }}>
+          <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>QR code de secours</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+            Même rôle que le NFC · Anti-doublon partagé (NFC + QR = 1 tampon max par période)
+          </p>
+        </label>
+      </div>
 
       {/* Download */}
       <button
