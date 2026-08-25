@@ -59,6 +59,9 @@ export default function CartePage() {
   // Feature 4 — logo dans la bannière
   const [stripIncludeLogo, setStripIncludeLogo] = useState<boolean>(false);
 
+  // Tampons sur la bannière
+  const [stampsOnStrip, setStampsOnStrip] = useState<boolean>((marchand as Record<string, unknown>).apple_stamps_on_strip === true);
+
   // Feature 6 — cadrage image uploadée
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
   const [cropY, setCropY] = useState<number>(50);
@@ -227,6 +230,7 @@ export default function CartePage() {
       apple_aux2_label: aux2Label,
       apple_aux2_value: aux2Value,
       apple_icon_url: iconUrl,
+      apple_stamps_on_strip: stampsOnStrip,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -491,6 +495,7 @@ export default function CartePage() {
                 { label: aux1Label || "INFOS", value: aux1Value },
                 { label: aux2Label || "INFOS", value: aux2Value },
               ]}
+              stampsOnStrip={stampsOnStrip}
             />
           ) : (
             <GoogleWalletCard
@@ -772,11 +777,8 @@ export default function CartePage() {
             {/* Feature 4 — Logo dans la bannière */}
             {stripFrom && (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input
-                  type="checkbox"
-                  id="strip-include-logo"
-                  checked={stripIncludeLogo}
-                  onChange={e => setStripIncludeLogo(e.target.checked)}
+                <input type="checkbox" id="strip-include-logo"
+                  checked={stripIncludeLogo} onChange={e => setStripIncludeLogo(e.target.checked)}
                   style={{ accentColor: "var(--accent)", width: 14, height: 14, cursor: "pointer" }}
                 />
                 <label htmlFor="strip-include-logo" style={{ fontSize: 12, color: "var(--fg)", cursor: "pointer" }}>
@@ -784,6 +786,17 @@ export default function CartePage() {
                 </label>
               </div>
             )}
+
+            {/* Tampons sur la bannière */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input type="checkbox" id="stamps-on-strip"
+                checked={stampsOnStrip} onChange={e => setStampsOnStrip(e.target.checked)}
+                style={{ accentColor: "var(--accent)", width: 14, height: 14, cursor: "pointer" }}
+              />
+              <label htmlFor="stamps-on-strip" style={{ fontSize: 12, color: "var(--fg)", cursor: "pointer" }}>
+                Afficher les tampons sur la bannière
+              </label>
+            </div>
 
             {/* Actions */}
             {(stripFrom || stripUrl) && (

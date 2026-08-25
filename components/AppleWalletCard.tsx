@@ -32,10 +32,10 @@ export interface AppleWalletCardProps {
   mode?: "full" | "compact" | "back";
   backInfo?: string;
   description?: string;
-  /** Champ en-tête haut droite (Apple Wallet officiel) */
   headerField?: { label: string; value: string };
-  /** Champs auxiliaires entre secondary et barcode (Apple Wallet officiel) */
   auxiliaryFields?: { label: string; value: string }[];
+  /** Affiche les tampons directement sur la bannière (cercles overlay) */
+  stampsOnStrip?: boolean;
 }
 
 export default function AppleWalletCard({
@@ -60,6 +60,7 @@ export default function AppleWalletCard({
   description,
   headerField,
   auxiliaryFields = [],
+  stampsOnStrip = false,
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -273,7 +274,6 @@ export default function AppleWalletCard({
         ) : stripContent ? (
           <div style={{ width: 375, height: 144, flexShrink: 0 }}>{stripContent}</div>
         ) : (
-          /* Placeholder bannière */
           <div style={{
             width: "100%", height: "100%",
             border: `1.5px dashed ${dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)"}`,
@@ -287,6 +287,11 @@ export default function AppleWalletCard({
               Bannière
             </span>
           </div>
+        )}
+
+        {/* Overlay tampons sur bannière */}
+        {stampsOnStrip && stampsObjective > 0 && (
+          <StampCircles total={stampsObjective} filled={stampsCurrent} />
         )}
       </div>
 
@@ -370,6 +375,47 @@ export default function AppleWalletCard({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function StampCircles({ total, filled }: { total: number; filled: number }) {
+  // Disposition : 1 ligne si ≤ 8, 2 lignes sinon
+  const perRow = total <= 8 ? total : Math.ceil(total / 2);
+  const rows = Math.ceil(total / perRow);
+  // Taille des cercles adaptée à la largeur (375px - 32px padding = 343px)
+  const size = Math.min(36, Math.floor((343 - (perRow - 1) * 10) / perRow));
+
+  return (
+    <div style={{
+      position: "absolute", inset: 0,
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      gap: 10, padding: "10px 16px",
+      pointerEvents: "none",
+    }}>
+      {Array.from({ length: rows }).map((_, row) => {
+        const start = row * perRow;
+        const count = Math.min(perRow, total - start);
+        return (
+          <div key={row} style={{ display: "flex", gap: 10 }}>
+            {Array.from({ length: count }).map((_, col) => {
+              const idx = start + col;
+              const isFilled = idx < filled;
+              return (
+                <div key={col} style={{
+                  width: size, height: size, borderRadius: "50%",
+                  background: isFilled ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.12)",
+                  border: `2px solid ${isFilled ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.45)"}`,
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                  flexShrink: 0,
+                }} />
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 }
