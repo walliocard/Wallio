@@ -61,6 +61,9 @@ export default function CartePage() {
 
   // Tampons sur la bannière
   const [stampsOnStrip, setStampsOnStrip] = useState<boolean>((marchand as Record<string, unknown>).apple_stamps_on_strip === true);
+  const [stripStampStyle, setStripStampStyle] = useState<"icon" | "dot" | "check">(
+    ((marchand as Record<string, unknown>).apple_strip_stamp_style as "icon" | "dot" | "check") || "icon"
+  );
 
   // Feature 6 — cadrage image uploadée
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
@@ -231,6 +234,7 @@ export default function CartePage() {
       apple_aux2_value: aux2Value,
       apple_icon_url: iconUrl,
       apple_stamps_on_strip: stampsOnStrip,
+      apple_strip_stamp_style: stripStampStyle,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -496,6 +500,8 @@ export default function CartePage() {
                 { label: aux2Label || "INFOS", value: aux2Value },
               ]}
               stampsOnStrip={stampsOnStrip}
+              stripStampStyle={stripStampStyle}
+              stampIcon={marchand.icone_tampons}
             />
           ) : (
             <GoogleWalletCard
@@ -788,14 +794,44 @@ export default function CartePage() {
             )}
 
             {/* Tampons sur la bannière */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" id="stamps-on-strip"
-                checked={stampsOnStrip} onChange={e => setStampsOnStrip(e.target.checked)}
-                style={{ accentColor: "var(--accent)", width: 14, height: 14, cursor: "pointer" }}
-              />
-              <label htmlFor="stamps-on-strip" style={{ fontSize: 12, color: "var(--fg)", cursor: "pointer" }}>
-                Afficher les tampons sur la bannière
-              </label>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: stampsOnStrip ? 10 : 0 }}>
+                <input type="checkbox" id="stamps-on-strip"
+                  checked={stampsOnStrip} onChange={e => setStampsOnStrip(e.target.checked)}
+                  style={{ accentColor: "var(--accent)", width: 14, height: 14, cursor: "pointer" }}
+                />
+                <label htmlFor="stamps-on-strip" style={{ fontSize: 12, color: "var(--fg)", cursor: "pointer" }}>
+                  Afficher les tampons sur la bannière
+                </label>
+              </div>
+
+              {stampsOnStrip && (
+                <div>
+                  <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>
+                    Style — synchro avec les réglages ({marchand.objectif_tampons || 10} tampons · {marchand.icone_tampons})
+                  </p>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {([
+                      { key: "icon",  label: marchand.icone_tampons || "⭐", desc: "Icône" },
+                      { key: "dot",   label: "●",    desc: "Plein" },
+                      { key: "check", label: "✓",    desc: "Coche" },
+                    ] as const).map(opt => (
+                      <button key={opt.key} onClick={() => setStripStampStyle(opt.key)}
+                        style={{
+                          flex: 1, padding: "8px 4px", borderRadius: 10, fontSize: 16,
+                          display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+                          background: stripStampStyle === opt.key ? "var(--accent)" : "var(--glass-bg)",
+                          border: `1px solid ${stripStampStyle === opt.key ? "var(--accent)" : "var(--border)"}`,
+                          color: stripStampStyle === opt.key ? "white" : "var(--fg)",
+                          cursor: "pointer",
+                        }}>
+                        <span>{opt.label}</span>
+                        <span style={{ fontSize: 9, opacity: 0.7 }}>{opt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Actions */}

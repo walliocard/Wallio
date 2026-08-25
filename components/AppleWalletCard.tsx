@@ -34,8 +34,9 @@ export interface AppleWalletCardProps {
   description?: string;
   headerField?: { label: string; value: string };
   auxiliaryFields?: { label: string; value: string }[];
-  /** Affiche les tampons directement sur la bannière (cercles overlay) */
   stampsOnStrip?: boolean;
+  stripStampStyle?: "icon" | "dot" | "check";
+  stampIcon?: string;
 }
 
 export default function AppleWalletCard({
@@ -61,6 +62,8 @@ export default function AppleWalletCard({
   headerField,
   auxiliaryFields = [],
   stampsOnStrip = false,
+  stripStampStyle = "icon",
+  stampIcon = "⭐",
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -291,7 +294,7 @@ export default function AppleWalletCard({
 
         {/* Overlay tampons sur bannière */}
         {stampsOnStrip && stampsObjective > 0 && (
-          <StampCircles total={stampsObjective} filled={stampsCurrent} />
+          <StampCircles total={stampsObjective} filled={stampsCurrent} style={stripStampStyle} icon={stampIcon} />
         )}
       </div>
 
@@ -379,20 +382,28 @@ export default function AppleWalletCard({
   );
 }
 
-function StampCircles({ total, filled }: { total: number; filled: number }) {
-  // Disposition : 1 ligne si ≤ 8, 2 lignes sinon
+function StampCircles({
+  total, filled, style = "icon", icon = "⭐",
+}: {
+  total: number; filled: number; style?: "icon" | "dot" | "check"; icon?: string;
+}) {
   const perRow = total <= 8 ? total : Math.ceil(total / 2);
   const rows = Math.ceil(total / perRow);
-  // Taille des cercles adaptée à la largeur (375px - 32px padding = 343px)
   const size = Math.min(36, Math.floor((343 - (perRow - 1) * 10) / perRow));
+
+  const innerContent = (isFilled: boolean) => {
+    if (!isFilled) return null;
+    if (style === "icon") return <span style={{ fontSize: size * 0.48, lineHeight: 1 }}>{icon}</span>;
+    if (style === "check") return <span style={{ fontSize: size * 0.52, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>✓</span>;
+    return null; // dot = juste le cercle plein
+  };
 
   return (
     <div style={{
       position: "absolute", inset: 0,
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center",
-      gap: 10, padding: "10px 16px",
-      pointerEvents: "none",
+      gap: 10, padding: "10px 16px", pointerEvents: "none",
     }}>
       {Array.from({ length: rows }).map((_, row) => {
         const start = row * perRow;
@@ -407,10 +418,12 @@ function StampCircles({ total, filled }: { total: number; filled: number }) {
                   width: size, height: size, borderRadius: "50%",
                   background: isFilled ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.12)",
                   border: `2px solid ${isFilled ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.45)"}`,
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
+                  backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
                   flexShrink: 0,
-                }} />
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {innerContent(isFilled)}
+                </div>
               );
             })}
           </div>
