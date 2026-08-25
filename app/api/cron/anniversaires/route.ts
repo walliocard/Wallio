@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb, adminMessaging } from "@/lib/admin";
+import { adminDb } from "@/lib/admin";
 
 export async function GET(req: Request) {
   if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
