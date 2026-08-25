@@ -61,10 +61,14 @@ export default function CartePage() {
 
   // Tampons sur la bannière
   const [stampsOnStrip, setStampsOnStrip] = useState<boolean>((marchand as Record<string, unknown>).apple_stamps_on_strip === true);
-  type StampStyle = "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond";
+  type StampStyle = "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond" | "text";
   const [stripStampStyle, setStripStampStyle] = useState<StampStyle>(
     ((marchand as Record<string, unknown>).apple_strip_stamp_style as StampStyle) || "dot"
   );
+  const [stampText, setStampText] = useState<string>((marchand as Record<string, unknown>).apple_stamp_text as string || "");
+  const [stampTextBold, setStampTextBold] = useState<boolean>((marchand as Record<string, unknown>).apple_stamp_text_bold === true);
+  const [stampTextItalic, setStampTextItalic] = useState<boolean>((marchand as Record<string, unknown>).apple_stamp_text_italic === true);
+  const [stampTextSize, setStampTextSize] = useState<number>(((marchand as Record<string, unknown>).apple_stamp_text_size as number) || 1);
 
   // Feature 6 — cadrage image uploadée
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
@@ -236,6 +240,10 @@ export default function CartePage() {
       apple_icon_url: iconUrl,
       apple_stamps_on_strip: stampsOnStrip,
       apple_strip_stamp_style: stripStampStyle,
+      apple_stamp_text: stampText,
+      apple_stamp_text_bold: stampTextBold,
+      apple_stamp_text_italic: stampTextItalic,
+      apple_stamp_text_size: stampTextSize,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -502,6 +510,10 @@ export default function CartePage() {
               ]}
               stampsOnStrip={stampsOnStrip}
               stripStampStyle={stripStampStyle}
+              stampText={stampText}
+              stampTextBold={stampTextBold}
+              stampTextItalic={stampTextItalic}
+              stampTextSize={stampTextSize}
             />
           ) : (
             <GoogleWalletCard
@@ -822,6 +834,7 @@ export default function CartePage() {
                       { key: "plus",    label: "+",  desc: "Croix" },
                       { key: "ring",    label: "◎",  desc: "Anneau" },
                       { key: "stamp",   label: "⊙",  desc: "Tampon" },
+                      { key: "text",    label: "Aa", desc: "Texte" },
                     ] as const).map(opt => (
                       <button key={opt.key} onClick={() => setStripStampStyle(opt.key)}
                         style={{
@@ -837,6 +850,70 @@ export default function CartePage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Mini-éditeur texte */}
+                  {stripStampStyle === "text" && (
+                    <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+                      {/* Saisie texte */}
+                      <div>
+                        <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 5 }}>
+                          Texte dans le cercle — recommandé : 2 à 6 caractères
+                        </p>
+                        <input
+                          type="text"
+                          value={stampText}
+                          onChange={e => setStampText(e.target.value.slice(0, 12))}
+                          placeholder="ex : CAFÉ, W, ★"
+                          maxLength={12}
+                          style={{
+                            width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 13,
+                            background: "var(--glass-bg)", border: "1px solid var(--border)",
+                            color: "var(--fg)", outline: "none", boxSizing: "border-box",
+                            fontWeight: stampTextBold ? 700 : 400,
+                            fontStyle: stampTextItalic ? "italic" : "normal",
+                          }}
+                          onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                          onBlur={e => (e.target.style.borderColor = "var(--border)")}
+                        />
+                      </div>
+
+                      {/* Style texte */}
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        {/* Gras */}
+                        <button onClick={() => setStampTextBold(v => !v)} style={{
+                          width: 34, height: 34, borderRadius: 8, fontSize: 15, fontWeight: 700,
+                          background: stampTextBold ? "var(--accent)" : "var(--glass-bg)",
+                          border: `1px solid ${stampTextBold ? "var(--accent)" : "var(--border)"}`,
+                          color: stampTextBold ? "white" : "var(--fg)", cursor: "pointer",
+                        }}>B</button>
+
+                        {/* Italique */}
+                        <button onClick={() => setStampTextItalic(v => !v)} style={{
+                          width: 34, height: 34, borderRadius: 8, fontSize: 15, fontStyle: "italic",
+                          background: stampTextItalic ? "var(--accent)" : "var(--glass-bg)",
+                          border: `1px solid ${stampTextItalic ? "var(--accent)" : "var(--border)"}`,
+                          color: stampTextItalic ? "white" : "var(--fg)", cursor: "pointer",
+                        }}>I</button>
+
+                        {/* Taille */}
+                        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6 }}>
+                          <button onClick={() => setStampTextSize(v => Math.max(0.6, +(v - 0.1).toFixed(1)))} style={{
+                            width: 28, height: 28, borderRadius: 8, fontSize: 16, fontWeight: 500,
+                            background: "var(--glass-bg)", border: "1px solid var(--border)",
+                            color: "var(--fg)", cursor: "pointer",
+                          }}>−</button>
+                          <span style={{ flex: 1, textAlign: "center", fontSize: 11, color: "var(--fg-secondary)" }}>
+                            Taille {Math.round(stampTextSize * 100)}%
+                          </span>
+                          <button onClick={() => setStampTextSize(v => Math.min(1.6, +(v + 0.1).toFixed(1)))} style={{
+                            width: 28, height: 28, borderRadius: 8, fontSize: 16, fontWeight: 500,
+                            background: "var(--glass-bg)", border: "1px solid var(--border)",
+                            color: "var(--fg)", cursor: "pointer",
+                          }}>+</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

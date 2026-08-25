@@ -35,7 +35,11 @@ export interface AppleWalletCardProps {
   headerField?: { label: string; value: string };
   auxiliaryFields?: { label: string; value: string }[];
   stampsOnStrip?: boolean;
-  stripStampStyle?: "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond";
+  stripStampStyle?: "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond" | "text";
+  stampText?: string;
+  stampTextBold?: boolean;
+  stampTextItalic?: boolean;
+  stampTextSize?: number;
 }
 
 export default function AppleWalletCard({
@@ -62,6 +66,10 @@ export default function AppleWalletCard({
   auxiliaryFields = [],
   stampsOnStrip = false,
   stripStampStyle = "dot",
+  stampText = "",
+  stampTextBold = false,
+  stampTextItalic = false,
+  stampTextSize = 1,
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -292,7 +300,10 @@ export default function AppleWalletCard({
 
         {/* Overlay tampons sur bannière */}
         {stampsOnStrip && stampsObjective > 0 && (
-          <StampCircles total={stampsObjective} filled={stampsCurrent} style={stripStampStyle} />
+          <StampCircles
+            total={stampsObjective} filled={stampsCurrent} style={stripStampStyle}
+            text={stampText} textBold={stampTextBold} textItalic={stampTextItalic} textSize={stampTextSize}
+          />
         )}
       </div>
 
@@ -391,9 +402,11 @@ const STAMP_ICONS: Record<string, string> = {
 };
 
 function StampCircles({
-  total, filled, style = "dot",
+  total, filled, style = "dot", text = "", textBold = false, textItalic = false, textSize = 1,
 }: {
-  total: number; filled: number; style?: "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond";
+  total: number; filled: number;
+  style?: "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond" | "text";
+  text?: string; textBold?: boolean; textItalic?: boolean; textSize?: number;
 }) {
   const perRow = total <= 8 ? total : Math.ceil(total / 2);
   const rows = Math.ceil(total / perRow);
@@ -404,6 +417,36 @@ function StampCircles({
 
   const Inner = ({ isFilled }: { isFilled: boolean }) => {
     if (!isFilled) return null;
+
+    // Style texte — auto-fit dans le cercle
+    if (style === "text" && text) {
+      const chars = text.length;
+      // Taille de base : adapte au nombre de caractères et à la taille du cercle
+      const innerW = s * 0.72;
+      const baseFontSize = innerW / Math.max(1, chars * 0.65);
+      const fontSize = Math.min(baseFontSize, s * 0.38) * textSize;
+      return (
+        <div style={{
+          width: s * 0.78, maxHeight: s * 0.78,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          overflow: "hidden",
+        }}>
+          <span style={{
+            fontSize: Math.max(5, fontSize),
+            fontWeight: textBold ? 700 : 500,
+            fontStyle: textItalic ? "italic" : "normal",
+            color: "rgba(255,255,255,0.95)",
+            textAlign: "center",
+            lineHeight: 1.1,
+            letterSpacing: chars <= 3 ? "0.04em" : "0",
+            wordBreak: "break-all",
+            userSelect: "none",
+          }}>
+            {text}
+          </span>
+        </div>
+      );
+    }
 
     // Formes SVG style tampon (contour blanc, pas de remplissage)
     if (iconPath) {
