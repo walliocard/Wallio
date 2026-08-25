@@ -1,26 +1,12 @@
 import { NextResponse } from "next/server";
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-
-function getAdmin() {
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      }),
-    });
-  }
-  return getFirestore();
-}
+import { adminDb, adminMessaging } from "@/lib/admin";
 
 export async function GET(req: Request) {
   if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getAdmin();
+  const db = adminDb();
   const today = new Date();
   const mois = String(today.getMonth() + 1).padStart(2, "0");
   const jour = String(today.getDate()).padStart(2, "0");

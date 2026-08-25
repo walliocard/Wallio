@@ -3,8 +3,6 @@ import { adminDb } from "@/lib/admin";
 import { buildPkpass } from "@/lib/apple-wallet/buildPass";
 import crypto from "crypto";
 
-// GET /api/apple-wallet/generate/[walletId]
-// Retourne le fichier .pkpass à télécharger dans Apple Wallet
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ walletId: string }> }
@@ -29,7 +27,7 @@ export async function GET(
   if (!marchandDoc.exists) {
     return NextResponse.json({ error: "Marchand introuvable" }, { status: 404 });
   }
-  const marchand = marchandDoc.data()!;
+  const m = marchandDoc.data()!;
 
   let authToken: string = client.apns_auth_token;
   if (!authToken) {
@@ -40,13 +38,25 @@ export async function GET(
   const pkpass = await buildPkpass({
     walletId,
     authToken,
-    merchantName: marchand.nom,
-    backgroundColor: marchand.couleur_principale || "#007AFF",
+    merchantName: m.nom,
+    backgroundColor: m.apple_bg_color || m.couleur_principale || "#1C1C1E",
+    foregroundColor: m.apple_fg_color || undefined,
+    labelColorHex: m.apple_label_color || undefined,
     stampsCurrent: client.tampons || 0,
-    stampsObjective: marchand.objectif_tampons || 10,
-    rewardName: marchand.nom_recompense || "Récompense",
+    stampsObjective: m.objectif_tampons || 10,
+    rewardName: m.nom_recompense || "Récompense",
     clientPrenom: client.prenom || "",
     clientNom: client.nom || "",
+    primaryLabel: m.apple_primary_label || "Tampons",
+    rewardLabel: m.apple_reward_label || "Récompense",
+    memberLabel: m.apple_member_label || "Membre",
+    headerField: m.apple_header_value ? { label: m.apple_header_label || "INFO", value: m.apple_header_value } : undefined,
+    auxiliaryFields: [
+      m.apple_aux1_value ? { label: m.apple_aux1_label || "INFOS", value: m.apple_aux1_value } : null,
+      m.apple_aux2_value ? { label: m.apple_aux2_label || "INFOS", value: m.apple_aux2_value } : null,
+    ].filter(Boolean) as { label: string; value: string }[],
+    backInfo: m.apple_back_info || undefined,
+    description: m.apple_description || undefined,
   });
 
   return new Response(new Uint8Array(pkpass), {

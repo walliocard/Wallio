@@ -1,20 +1,6 @@
 import { NextResponse } from "next/server";
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import { getMessaging } from "firebase-admin/messaging";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
-
-function initAdmin() {
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      }),
-    });
-  }
-}
+import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
 
 // POST /api/notify
 // Body : { title, body, segment: "tous" | "actifs" | "inactifs", marchandId, idToken }
@@ -27,7 +13,7 @@ export async function POST(req: Request) {
     }
 
     initAdmin();
-    const db = getFirestore();
+    const db = adminDb();
     const auth = getAdminAuth();
 
     // Vérifie l'identité du marchand
@@ -62,7 +48,7 @@ export async function POST(req: Request) {
     }
 
     // Envoi en batch (max 500 par appel FCM)
-    const messaging = getMessaging();
+    const messaging = adminMessaging();
     let sent = 0;
     let failed = 0;
 
