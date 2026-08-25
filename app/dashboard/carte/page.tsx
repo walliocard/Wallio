@@ -61,8 +61,8 @@ export default function CartePage() {
 
   // Tampons sur la bannière
   const [stampsOnStrip, setStampsOnStrip] = useState<boolean>((marchand as Record<string, unknown>).apple_stamps_on_strip === true);
-  const [stripStampStyle, setStripStampStyle] = useState<"dot" | "plus" | "ring">(
-    ((marchand as Record<string, unknown>).apple_strip_stamp_style as "dot" | "plus" | "ring") || "dot"
+  const [stripStampStyle, setStripStampStyle] = useState<"dot" | "plus" | "ring" | "stamp">(
+    ((marchand as Record<string, unknown>).apple_strip_stamp_style as "dot" | "plus" | "ring" | "stamp") || "dot"
   );
 
   // Feature 6 — cadrage image uploadée
@@ -811,9 +811,10 @@ export default function CartePage() {
                   </p>
                   <div style={{ display: "flex", gap: 6 }}>
                     {([
-                      { key: "dot",  label: "·", desc: "Point" },
-                      { key: "plus", label: "+",  desc: "Croix" },
-                      { key: "ring", label: "◎",  desc: "Anneau" },
+                      { key: "dot",   label: "·",  desc: "Point" },
+                      { key: "plus",  label: "+",   desc: "Croix" },
+                      { key: "ring",  label: "◎",   desc: "Anneau" },
+                      { key: "stamp", label: "⊙",   desc: "Tampon" },
                     ] as const).map(opt => (
                       <button key={opt.key} onClick={() => setStripStampStyle(opt.key)}
                         style={{

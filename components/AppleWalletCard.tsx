@@ -35,7 +35,7 @@ export interface AppleWalletCardProps {
   headerField?: { label: string; value: string };
   auxiliaryFields?: { label: string; value: string }[];
   stampsOnStrip?: boolean;
-  stripStampStyle?: "dot" | "plus" | "ring";
+  stripStampStyle?: "dot" | "plus" | "ring" | "stamp";
 }
 
 export default function AppleWalletCard({
@@ -383,22 +383,19 @@ export default function AppleWalletCard({
 function StampCircles({
   total, filled, style = "dot",
 }: {
-  total: number; filled: number; style?: "dot" | "plus" | "ring";
+  total: number; filled: number; style?: "dot" | "plus" | "ring" | "stamp";
 }) {
   const perRow = total <= 8 ? total : Math.ceil(total / 2);
   const rows = Math.ceil(total / perRow);
   const size = Math.min(36, Math.floor((343 - (perRow - 1) * 10) / perRow));
   const s = size;
 
-  // Élément intérieur pour les tampons remplis
   const Inner = ({ isFilled }: { isFilled: boolean }) => {
     if (!isFilled) return null;
     if (style === "dot") {
-      // Petit cercle plein au centre
       return <div style={{ width: s * 0.38, height: s * 0.38, borderRadius: "50%", background: "rgba(255,255,255,0.95)" }} />;
     }
     if (style === "plus") {
-      // Croix (+)
       const bar = s * 0.38, thick = s * 0.1;
       return (
         <div style={{ position: "relative", width: bar, height: bar }}>
@@ -408,7 +405,6 @@ function StampCircles({
       );
     }
     if (style === "ring") {
-      // Anneau intérieur
       return <div style={{ width: s * 0.42, height: s * 0.42, borderRadius: "50%", border: `${Math.max(1.5, s * 0.07)}px solid rgba(255,255,255,0.9)` }} />;
     }
     return null;
@@ -429,6 +425,35 @@ function StampCircles({
             {Array.from({ length: count }).map((_, col) => {
               const idx = start + col;
               const isFilled = idx < filled;
+
+              // Style tampon encre — bordure pointillée + cercle plein intérieur
+              if (style === "stamp") {
+                return (
+                  <div key={col} style={{
+                    width: s, height: s, borderRadius: "50%",
+                    border: `${Math.max(2, s * 0.07)}px ${isFilled ? "solid" : "dashed"} ${isFilled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.38)"}`,
+                    flexShrink: 0, position: "relative",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {isFilled && (
+                      <>
+                        {/* Cercle intérieur — effet encre */}
+                        <div style={{
+                          width: s * 0.54, height: s * 0.54, borderRadius: "50%",
+                          background: "rgba(255,255,255,0.88)",
+                        }} />
+                        {/* Anneau intermédiaire */}
+                        <div style={{
+                          position: "absolute",
+                          width: s * 0.76, height: s * 0.76, borderRadius: "50%",
+                          border: `${Math.max(1, s * 0.04)}px solid rgba(255,255,255,0.55)`,
+                        }} />
+                      </>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <div key={col} style={{
                   width: s, height: s, borderRadius: "50%",
