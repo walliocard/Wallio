@@ -7,6 +7,7 @@ import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storag
 import { db, storage } from "@/lib/firebase";
 import AppleWalletCard from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
+import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
 
 // ── History snapshot ──────────────────────────────────
 interface Snapshot {
@@ -112,6 +113,7 @@ export default function CartePage() {
   // Feature 3 — undo history
   const historyRef = useRef<Snapshot[]>([]);
   const historyIndexRef = useRef<number>(-1);
+  const comptoirCanvasRef = useRef<HTMLCanvasElement>(null);
   const [canUndo, setCanUndo] = useState<boolean>(false);
 
   function makeSnapshot(): Snapshot {
@@ -194,6 +196,28 @@ export default function CartePage() {
     ).then(strip => setStripUrl(strip)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stripText, stripTextSize, stripTextColor, stripTextPos, stripTextFont, stripText2, stripText2Size, stripIncludeLogo, logoUrl]);
+
+  // Carte comptoir
+  const [comptoirFormat, setComptoirFormat] = useState<ComptoirFormat>("comptoir");
+  const [comptoirTemplate, setComptoirTemplate] = useState<ComptoirTemplate>("dark");
+  const [comptoirShowQR, setComptoirShowQR] = useState(true);
+  const [comptoirDownloading, setComptoirDownloading] = useState(false);
+  const [comptoirBgUrl, setComptoirBgUrl] = useState<string>(
+    ((marchand as Record<string, unknown>)?.comptoir_bg_url as string) || ""
+  );
+  const [uploadingComptoirBg, setUploadingComptoirBg] = useState(false);
+
+  // Preview carte comptoir live (sans QR pour la vitesse)
+  useEffect(() => {
+    const canvas = comptoirCanvasRef.current;
+    if (!canvas || !marchand) return;
+    const couleurP = (marchand as Record<string, unknown>).couleur_principale as string || "#0A0A0A";
+    const couleurS = (marchand as Record<string, unknown>).couleur_secondaire as string || "#1A1A1A";
+    const nfcId = (marchand as Record<string, unknown>).nfc_id as string | undefined;
+    const fn = comptoirFormat === "chevaleret" ? drawChevaleret : drawComptoir;
+    fn(canvas, couleurP, couleurS, nom, nfcId, comptoirTemplate, 1, false, comptoirBgUrl || undefined).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comptoirFormat, comptoirTemplate, comptoirBgUrl, nom, marchand]);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -374,6 +398,46 @@ export default function CartePage() {
     await updateDoc(doc(db, "marchands", user!.uid), { strip_url: adapted });
   }
 
+  async function handleComptoirBgUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user || !file.type.startsWith("image/")) return;
+    setUploadingComptoirBg(true);
+    try {
+      const rawUrl = await resizeImageRaw(file, 1600);
+      let finalUrl: string;
+      try {
+        finalUrl = await uploadToStorage(rawUrl, `marchands/${user.uid}/comptoir-bg.jpg`);
+      } catch {
+        finalUrl = rawUrl;
+      }
+      setComptoirBgUrl(finalUrl);
+      await updateDoc(doc(db, "marchands", user!.uid), { comptoir_bg_url: finalUrl });
+    } catch (err: unknown) {
+      alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setUploadingComptoirBg(false);
+    }
+  }
+
+  async function telechargerComptoir() {
+    setComptoirDownloading(true);
+    const canvas = document.createElement("canvas");
+    const couleurP = (marchand as Record<string, unknown>).couleur_principale as string || "#0A0A0A";
+    const couleurS = (marchand as Record<string, unknown>).couleur_secondaire as string || "#1A1A1A";
+    const nfcId = (marchand as Record<string, unknown>).nfc_id as string | undefined;
+    if (comptoirFormat === "chevaleret") {
+      await drawChevaleret(canvas, couleurP, couleurS, nom, nfcId, comptoirTemplate, 4, comptoirShowQR, comptoirBgUrl || undefined);
+    } else {
+      await drawComptoir(canvas, couleurP, couleurS, nom, nfcId, comptoirTemplate, 4, comptoirShowQR, comptoirBgUrl || undefined);
+    }
+    const link = document.createElement("a");
+    const label = comptoirFormat === "chevaleret" ? "chevaleret" : "carte-comptoir";
+    link.download = `wallio-${label}-${comptoirTemplate}-${nom?.replace(/\s+/g, "-").toLowerCase() || "enseigne"}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    setComptoirDownloading(false);
+  }
+
   return (
     <div style={{ height: "calc(100vh - 0px)", display: "flex", flexDirection: "column" }}>
 
@@ -550,6 +614,118 @@ export default function CartePage() {
           <p style={{ fontSize: 11, color: "var(--fg-tertiary)", textAlign: "center", maxWidth: 340 }}>
             Bannière libre · Couleurs personnalisables · Structure imposée par {walletType === "apple" ? "Apple" : "Google"}
           </p>
+
+          {/* ── Séparateur Carte comptoir ── */}
+          <div style={{
+            width: "100%", maxWidth: 540,
+            borderTop: "1px solid var(--border)", paddingTop: 36, marginTop: 8,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 20,
+          }}>
+
+            {/* Titre */}
+            <div style={{ width: "100%", textAlign: "center" }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-tertiary)", marginBottom: 4 }}>
+                Carte comptoir
+              </p>
+              <p style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
+                Support NFC imprimable — zones fixes : NOM · NFC · QR
+              </p>
+            </div>
+
+            {/* Contrôles */}
+            <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+
+              {/* Format */}
+              <div style={{ display: "flex", gap: 6 }}>
+                {(["comptoir", "chevaleret"] as const).map(f => (
+                  <button key={f} onClick={() => setComptoirFormat(f)} style={{
+                    flex: 1, padding: "8px 0", borderRadius: 12, fontSize: 12, fontWeight: 600,
+                    background: comptoirFormat === f ? "rgba(0,122,255,0.08)" : "var(--glass-bg)",
+                    border: `1px solid ${comptoirFormat === f ? "var(--accent)" : "var(--border)"}`,
+                    color: comptoirFormat === f ? "var(--accent)" : "var(--fg-secondary)", cursor: "pointer",
+                  }}>
+                    {f === "comptoir" ? "Carte 16×9" : "Chevaleret portrait"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Design + Fond sur la même ligne */}
+              <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
+                {/* Template */}
+                <div style={{ display: "flex", gap: 5, flex: 1 }}>
+                  {(["dark", "couleur", "clair", "gradient"] as const).map(t => (
+                    <button key={t} onClick={() => setComptoirTemplate(t)} style={{
+                      flex: 1, padding: "8px 4px", borderRadius: 10, fontSize: 11, fontWeight: 600,
+                      background: comptoirTemplate === t && !comptoirBgUrl ? "var(--accent)" : "var(--glass-bg)",
+                      border: `1px solid ${comptoirTemplate === t && !comptoirBgUrl ? "var(--accent)" : "var(--border)"}`,
+                      color: comptoirTemplate === t && !comptoirBgUrl ? "white" : "var(--fg-secondary)", cursor: "pointer",
+                    }}>
+                      {t === "dark" ? "Noir" : t === "couleur" ? "Couleur" : t === "clair" ? "Clair" : "Dégradé"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Fond custom */}
+                <label style={{
+                  padding: "8px 14px", borderRadius: 10, fontSize: 11, fontWeight: 600,
+                  background: comptoirBgUrl ? "rgba(0,122,255,0.08)" : "var(--glass-bg)",
+                  border: `1px solid ${comptoirBgUrl ? "var(--accent)" : "var(--border)"}`,
+                  color: comptoirBgUrl ? "var(--accent)" : "var(--fg-secondary)",
+                  cursor: uploadingComptoirBg ? "wait" : "pointer", whiteSpace: "nowrap", flexShrink: 0,
+                }}>
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleComptoirBgUpload} disabled={uploadingComptoirBg}/>
+                  {uploadingComptoirBg ? "…" : comptoirBgUrl ? "Photo ✓" : "Photo"}
+                </label>
+                {comptoirBgUrl && (
+                  <button
+                    onClick={() => { setComptoirBgUrl(""); updateDoc(doc(db, "marchands", user!.uid), { comptoir_bg_url: "" }); }}
+                    style={{ padding: "8px 10px", borderRadius: 10, fontSize: 11, fontWeight: 600, background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)", color: "#FF3B30", cursor: "pointer", flexShrink: 0 }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* QR toggle */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input type="checkbox" id="comptoir-qr" checked={comptoirShowQR}
+                  onChange={e => setComptoirShowQR(e.target.checked)}
+                  style={{ accentColor: "var(--accent)", width: 14, height: 14, cursor: "pointer" }}
+                />
+                <label htmlFor="comptoir-qr" style={{ fontSize: 12, color: "var(--fg-secondary)", cursor: "pointer" }}>
+                  QR code de secours
+                </label>
+              </div>
+            </div>
+
+            {/* Preview canvas */}
+            <div style={{
+              width: "100%",
+              maxWidth: comptoirFormat === "comptoir" ? 500 : 220,
+              borderRadius: 16, overflow: "hidden",
+              border: "1px solid var(--border)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+            }}>
+              <canvas
+                ref={comptoirCanvasRef}
+                style={{ width: "100%", display: "block" }}
+              />
+            </div>
+
+            {/* Download */}
+            <button
+              onClick={telechargerComptoir}
+              disabled={comptoirDownloading}
+              style={{
+                padding: "10px 32px", borderRadius: 14, fontSize: 13, fontWeight: 600,
+                background: "var(--accent)", color: "white", border: "none", cursor: "pointer",
+                boxShadow: "0 4px 14px rgba(0,122,255,0.3)",
+              }}
+            >
+              {comptoirDownloading ? "Génération…" : `⬇ Télécharger — ${comptoirFormat === "comptoir" ? "Carte 16×9" : "Chevaleret"}`}
+            </button>
+          </div>
+
         </div>
 
         {/* ── Panel droit ── */}
