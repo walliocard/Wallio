@@ -35,11 +35,15 @@ export interface AppleWalletCardProps {
   headerField?: { label: string; value: string };
   auxiliaryFields?: { label: string; value: string }[];
   stampsOnStrip?: boolean;
-  stripStampStyle?: "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond" | "text";
+  stripStampStyle?: "dot"|"plus"|"ring"|"stamp"|"heart"|"star"|"bolt"|"crown"|"flower"|"diamond"|"text"|"bar";
   stampText?: string;
   stampTextBold?: boolean;
   stampTextItalic?: boolean;
   stampTextSize?: number;
+  stampColor?: string;
+  stampPosition?: "top"|"center"|"bottom";
+  stampSizePreset?: "s"|"m"|"l";
+  stampSubText?: string;
 }
 
 export default function AppleWalletCard({
@@ -70,6 +74,10 @@ export default function AppleWalletCard({
   stampTextBold = false,
   stampTextItalic = false,
   stampTextSize = 1,
+  stampColor = "#FFFFFF",
+  stampPosition = "center",
+  stampSizePreset = "m",
+  stampSubText = "",
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -303,6 +311,7 @@ export default function AppleWalletCard({
           <StampCircles
             total={stampsObjective} filled={stampsCurrent} style={stripStampStyle}
             text={stampText} textBold={stampTextBold} textItalic={stampTextItalic} textSize={stampTextSize}
+            color={stampColor} position={stampPosition} sizePreset={stampSizePreset} subText={stampSubText}
           />
         )}
       </div>
@@ -402,18 +411,56 @@ const STAMP_ICONS: Record<string, string> = {
 };
 
 function StampCircles({
-  total, filled, style = "dot", text = "", textBold = false, textItalic = false, textSize = 1,
+  total, filled, style = "dot",
+  text = "", textBold = false, textItalic = false, textSize = 1,
+  color = "#FFFFFF", position = "center", sizePreset = "m", subText = "",
 }: {
   total: number; filled: number;
-  style?: "dot" | "plus" | "ring" | "stamp" | "heart" | "star" | "bolt" | "crown" | "flower" | "diamond" | "text";
+  style?: "dot"|"plus"|"ring"|"stamp"|"heart"|"star"|"bolt"|"crown"|"flower"|"diamond"|"text"|"bar";
   text?: string; textBold?: boolean; textItalic?: boolean; textSize?: number;
+  color?: string; position?: "top"|"center"|"bottom"; sizePreset?: "s"|"m"|"l"; subText?: string;
 }) {
+  const sizeMult = sizePreset === "s" ? 0.72 : sizePreset === "l" ? 1.28 : 1.0;
   const perRow = total <= 8 ? total : Math.ceil(total / 2);
   const rows = Math.ceil(total / perRow);
-  const size = Math.min(36, Math.floor((343 - (perRow - 1) * 10) / perRow));
-  const s = size;
+  const gap = Math.round(Math.max(6, 10 * sizeMult));
+  const baseSize = Math.min(36, Math.floor((343 - (perRow - 1) * gap) / perRow));
+  const s = Math.max(14, Math.round(baseSize * sizeMult));
+
+  // Position verticale
+  const justifyContent = position === "top" ? "flex-start" : position === "bottom" ? "flex-end" : "center";
+  const paddingV = position === "top" ? `${Math.round(s * 0.35)}px 16px 0` : position === "bottom" ? `0 16px ${Math.round(s * 0.35)}px` : "0 16px";
+
+  // Couleurs dérivées de `color`
+  const filledBorder = color;
+  const filledBg = color + "30"; // 18% opacity
+  const emptyBorder = color + "55"; // 33% opacity
 
   const iconPath = STAMP_ICONS[style];
+
+  // ── Style Barre de progression ──────────────────────────────────────────────
+  if (style === "bar") {
+    const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
+    const barH = Math.max(6, Math.round(s * 0.32));
+    return (
+      <div style={{
+        position: "absolute", inset: 0,
+        display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent, padding: paddingV, pointerEvents: "none", gap: 5,
+      }}>
+        <div style={{ width: "100%", height: barH, borderRadius: barH, overflow: "hidden", background: emptyBorder }}>
+          {pct > 0 && (
+            <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: barH, minWidth: barH }} />
+          )}
+        </div>
+        {filled > 0 && (
+          <span style={{ fontSize: Math.max(8, s * 0.28), fontWeight: 600, color, letterSpacing: "0.04em" }}>
+            {filled} / {total}
+          </span>
+        )}
+      </div>
+    );
+  }
 
   const Inner = ({ isFilled }: { isFilled: boolean }) => {
     if (!isFilled) return null;
@@ -435,7 +482,7 @@ function StampCircles({
             fontSize: Math.max(5, fontSize),
             fontWeight: textBold ? 700 : 500,
             fontStyle: textItalic ? "italic" : "normal",
-            color: "rgba(255,255,255,0.95)",
+            color,
             textAlign: "center",
             lineHeight: 1.1,
             letterSpacing: chars <= 3 ? "0.04em" : "0",
@@ -448,31 +495,41 @@ function StampCircles({
       );
     }
 
-    // Formes SVG style tampon (contour blanc, pas de remplissage)
+    // Formes SVG — avec sous-texte combo optionnel
     if (iconPath) {
       const sw = Math.max(1.2, s * 0.09);
+      const iconH = subText ? s * 0.42 : s * 0.58;
       return (
-        <svg width={s * 0.58} height={s * 0.58} viewBox="0 0 24 24" fill="none"
-          stroke="rgba(255,255,255,0.95)" strokeWidth={sw}
-          strokeLinecap="round" strokeLinejoin="round">
-          <path d={iconPath} />
-        </svg>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+          <svg width={iconH} height={iconH} viewBox="0 0 24 24" fill="none"
+            stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+            <path d={iconPath} />
+          </svg>
+          {subText && (
+            <span style={{
+              fontSize: Math.max(5, s * 0.16), fontWeight: 700, color,
+              letterSpacing: "0.03em", lineHeight: 1, textTransform: "uppercase",
+            }}>
+              {subText.slice(0, 6)}
+            </span>
+          )}
+        </div>
       );
     }
     if (style === "dot") {
-      return <div style={{ width: s * 0.38, height: s * 0.38, borderRadius: "50%", background: "rgba(255,255,255,0.95)" }} />;
+      return <div style={{ width: s * 0.38, height: s * 0.38, borderRadius: "50%", background: color }} />;
     }
     if (style === "plus") {
       const bar = s * 0.38, thick = s * 0.1;
       return (
         <div style={{ position: "relative", width: bar, height: bar }}>
-          <div style={{ position: "absolute", top: "50%", left: 0, width: bar, height: thick, marginTop: -thick/2, background: "rgba(255,255,255,0.95)", borderRadius: 2 }} />
-          <div style={{ position: "absolute", left: "50%", top: 0, width: thick, height: bar, marginLeft: -thick/2, background: "rgba(255,255,255,0.95)", borderRadius: 2 }} />
+          <div style={{ position: "absolute", top: "50%", left: 0, width: bar, height: thick, marginTop: -thick/2, background: color, borderRadius: 2 }} />
+          <div style={{ position: "absolute", left: "50%", top: 0, width: thick, height: bar, marginLeft: -thick/2, background: color, borderRadius: 2 }} />
         </div>
       );
     }
     if (style === "ring") {
-      return <div style={{ width: s * 0.42, height: s * 0.42, borderRadius: "50%", border: `${Math.max(1.5, s * 0.07)}px solid rgba(255,255,255,0.9)` }} />;
+      return <div style={{ width: s * 0.42, height: s * 0.42, borderRadius: "50%", border: `${Math.max(1.5, s * 0.07)}px solid ${color}` }} />;
     }
     return null;
   };
@@ -481,40 +538,31 @@ function StampCircles({
     <div style={{
       position: "absolute", inset: 0,
       display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      gap: 10, padding: "10px 16px", pointerEvents: "none",
+      alignItems: "center", justifyContent,
+      gap, padding: paddingV, pointerEvents: "none",
     }}>
       {Array.from({ length: rows }).map((_, row) => {
         const start = row * perRow;
         const count = Math.min(perRow, total - start);
         return (
-          <div key={row} style={{ display: "flex", gap: 10 }}>
+          <div key={row} style={{ display: "flex", gap }}>
             {Array.from({ length: count }).map((_, col) => {
               const idx = start + col;
               const isFilled = idx < filled;
+              const bw = Math.max(1.5, s * 0.07);
 
-              // Style tampon encre — bordure pointillée + cercle plein intérieur
+              // Style tampon encre
               if (style === "stamp") {
                 return (
                   <div key={col} style={{
-                    width: s, height: s, borderRadius: "50%",
-                    border: `${Math.max(2, s * 0.07)}px ${isFilled ? "solid" : "dashed"} ${isFilled ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.38)"}`,
-                    flexShrink: 0, position: "relative",
+                    width: s, height: s, borderRadius: "50%", flexShrink: 0, position: "relative",
+                    border: `${Math.max(2, s * 0.07)}px ${isFilled ? "solid" : "dashed"} ${isFilled ? filledBorder : emptyBorder}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     {isFilled && (
                       <>
-                        {/* Cercle intérieur — effet encre */}
-                        <div style={{
-                          width: s * 0.54, height: s * 0.54, borderRadius: "50%",
-                          background: "rgba(255,255,255,0.88)",
-                        }} />
-                        {/* Anneau intermédiaire */}
-                        <div style={{
-                          position: "absolute",
-                          width: s * 0.76, height: s * 0.76, borderRadius: "50%",
-                          border: `${Math.max(1, s * 0.04)}px solid rgba(255,255,255,0.55)`,
-                        }} />
+                        <div style={{ width: s * 0.54, height: s * 0.54, borderRadius: "50%", background: color + "E0" }} />
+                        <div style={{ position: "absolute", width: s * 0.76, height: s * 0.76, borderRadius: "50%", border: `${Math.max(1, s * 0.04)}px solid ${color + "88"}` }} />
                       </>
                     )}
                   </div>
@@ -523,11 +571,9 @@ function StampCircles({
 
               return (
                 <div key={col} style={{
-                  width: s, height: s, borderRadius: "50%",
-                  background: isFilled ? "rgba(255,255,255,0.18)" : "transparent",
-                  border: `2px solid ${isFilled ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.40)"}`,
-                  backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
-                  flexShrink: 0,
+                  width: s, height: s, borderRadius: "50%", flexShrink: 0,
+                  background: isFilled ? filledBg : "transparent",
+                  border: `${bw}px solid ${isFilled ? filledBorder : emptyBorder}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   <Inner isFilled={isFilled} />
