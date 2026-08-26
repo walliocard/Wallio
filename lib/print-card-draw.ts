@@ -317,23 +317,23 @@ export async function drawPrintCard(
 
   // "TAPEZ NFC" label
   const labelX = leftX + panelW * 0.56;
-  const labelY = nfcCY - 52 * s;
+  const nfcLabelY = nfcCY - 52 * s;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.font = `700 ${60 * s}px ${font}`;
 
   ctx.fillStyle = "#1D1D1F";
-  ctx.fillText("TAPEZ ", labelX, labelY);
+  ctx.fillText("TAPEZ ", labelX, nfcLabelY);
   const tapezW = ctx.measureText("TAPEZ ").width;
 
   ctx.fillStyle = "#4E7EF6";
-  ctx.fillText("NFC", labelX + tapezW, labelY);
+  ctx.fillText("NFC", labelX + tapezW, nfcLabelY);
 
   // Subtext multiline
   ctx.font = `400 ${30 * s}px ${font}`;
   ctx.fillStyle = "#8E8E93";
-  ctx.fillText("Approchez votre", labelX, labelY + 52 * s);
-  ctx.fillText("téléphone ici", labelX, labelY + 90 * s);
+  ctx.fillText("Approchez votre", labelX, nfcLabelY + 52 * s);
+  ctx.fillText("téléphone ici", labelX, nfcLabelY + 90 * s);
 
   // ── 5. SEPARATOR "OU" ────────────────────────────────────────────────────
   const sepX = PAD + panelW + GAP / 2;
