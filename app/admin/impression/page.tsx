@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { drawPrintCard, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
 const PREVIEW_SCALE = 0.42;
-const PRINT_SCALE   = 2; // 3000×2000px — print quality
+const PRINT_SCALE   = 3; // 4500×3000px — 4K print quality
 
 export default function ImpressionPage() {
   const [urls, setUrls] = useState<string>("");

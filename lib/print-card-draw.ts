@@ -157,10 +157,10 @@ export async function drawPrintCard(
     ctx.stroke();
   });
 
-  // Logo NFC SVG — centré dans le cercle gris (bounding box 70×70 spec)
+  // Logo NFC SVG — centré dans le cercle gris (agrandi à 110×110)
   const nfcImg = await loadImg("/nfc-icon.svg");
   if (nfcImg) {
-    ctx.drawImage(nfcImg, p(255), p(430), p(70), p(70));
+    ctx.drawImage(nfcImg, p(235), p(410), p(110), p(110));
   }
 
   // ── 6. TEXTE NFC (X:420 Y:405) ───────────────────────────────────────────
