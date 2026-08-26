@@ -4,10 +4,10 @@ export const metadata = { title: "Mentions légales — Wallio" };
 
 export default function LegalPage() {
   return (
-    <main style={{ maxWidth: 720, margin: "0 auto", padding: "60px 24px 80px", fontFamily: "-apple-system, 'Helvetica Neue', sans-serif", color: "#1D1D1F", lineHeight: 1.7 }}>
+    <main style={{ maxWidth: 720, margin: "0 auto", padding: "clamp(40px,6vw,80px) clamp(16px,4vw,40px)", fontFamily: "-apple-system, 'Helvetica Neue', sans-serif", color: "#1D1D1F", lineHeight: 1.7 }}>
       <Link href="/" style={{ fontSize: 14, color: "#007AFF", textDecoration: "none" }}>← Wallio</Link>
 
-      <h1 style={{ fontSize: 36, fontWeight: 700, marginTop: 32, marginBottom: 8, letterSpacing: -0.5 }}>Mentions légales</h1>
+      <h1 style={{ fontSize: "clamp(26px,5vw,36px)", fontWeight: 700, marginTop: 32, marginBottom: 8, letterSpacing: -0.5 }}>Mentions légales</h1>
       <p style={{ color: "#6E6E73", marginBottom: 40 }}>Dernière mise à jour : août 2026</p>
 
       <Section title="Éditeur du service">

@@ -57,27 +57,65 @@ export default function LandingPage() {
   return (
     <>
       <style>{`
-        @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-        @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+        @keyframes fadeUp  { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes float   { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
         @keyframes shimmer { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
-        .hero-title { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.1s both; }
+
+        * { box-sizing:border-box; margin:0; padding:0; }
+
+        .hero-badge { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.00s both; }
+        .hero-title { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.10s both; }
         .hero-sub   { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.25s both; }
         .hero-cta   { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.40s both; }
-        .hero-badge { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.0s both; }
+        .hero-card  { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.55s both; }
         .hero-float { animation: float 5s ease-in-out infinite; }
+
         [data-reveal] { opacity:0; transform:translateY(32px); transition: opacity 0.7s cubic-bezier(.16,1,.3,1), transform 0.7s cubic-bezier(.16,1,.3,1); }
-        .grad-text { background: linear-gradient(92deg,#4472F5,#6A5AF9,#8A5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation: shimmer 4s ease infinite; }
+
+        .grad-text { background:linear-gradient(92deg,#4472F5,#6A5AF9,#8A5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:shimmer 4s ease infinite; }
+
         .glass { background:rgba(255,255,255,0.60); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); border:0.5px solid rgba(255,255,255,0.85); }
-        .glass-dark { background:rgba(29,29,31,0.75); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); border:0.5px solid rgba(255,255,255,0.10); }
+
         .btn-primary { background:#1D1D1F; color:white; padding:14px 32px; border-radius:14px; font-size:15px; font-weight:600; text-decoration:none; letter-spacing:-0.2px; transition:transform 0.15s, box-shadow 0.15s; display:inline-block; }
         .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,0,0,0.25); }
-        .btn-ghost { background:rgba(0,0,0,0.05); color:#1D1D1F; padding:14px 32px; border-radius:14px; font-size:15px; font-weight:500; text-decoration:none; transition:background 0.15s; display:inline-block; }
+        .btn-ghost  { background:rgba(0,0,0,0.05); color:#1D1D1F; padding:14px 32px; border-radius:14px; font-size:15px; font-weight:500; text-decoration:none; transition:background 0.15s; display:inline-block; }
         .btn-ghost:hover { background:rgba(0,0,0,0.09); }
+
         .card-hover { transition:transform 0.25s cubic-bezier(.16,1,.3,1), box-shadow 0.25s; }
         .card-hover:hover { transform:translateY(-4px); box-shadow:0 24px 48px rgba(0,0,0,0.10) !important; }
+
         .feature-tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; color:#4472F5; background:rgba(68,114,245,0.08); padding:5px 12px; border-radius:20px; margin-bottom:20px; }
-        * { box-sizing:border-box; margin:0; padding:0; }
+
+        /* Nav */
+        .lp-nav { padding:0 48px; }
+        /* Hero float card */
+        .float-card { padding:28px 36px; display:inline-flex; align-items:center; gap:24px; }
+        .float-card-sep { width:1px; height:48px; background:rgba(0,0,0,0.08); }
+        /* CTA section */
+        .cta-section { padding:88px 48px; }
+        /* Footer */
+        .lp-footer { padding:36px 48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+
+        /* ── Tablet (≤ 768px) ── */
+        @media (max-width: 768px) {
+          .lp-nav { padding:0 24px; }
+          .lp-nav .nav-label { display:none; }
+          .hero-float { display:none; }
+          .cta-section { padding:56px 28px; border-radius:24px !important; }
+          .lp-footer { padding:28px 24px; flex-direction:column; text-align:center; gap:20px; }
+          .lp-footer > div { justify-content:center; }
+        }
+
+        /* ── Mobile (≤ 480px) ── */
+        @media (max-width: 480px) {
+          .lp-nav { padding:0 16px; }
+          .btn-primary, .btn-ghost { padding:12px 22px; font-size:14px; border-radius:12px; }
+          .feature-tag { font-size:10px; }
+          .cta-section { padding:44px 20px; border-radius:20px !important; }
+          .cta-section h2 { font-size:30px !important; letter-spacing:-0.6px !important; }
+          .cta-section p  { font-size:15px !important; }
+          .legal-nav { display:none; }
+        }
       `}</style>
 
       <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue',sans-serif", background:"#F2F2F7", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
@@ -88,7 +126,7 @@ export default function LandingPage() {
         <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, background:"radial-gradient(ellipse 80% 60% at 70% 40%, rgba(100,130,255,0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 20% 80%, rgba(140,100,255,0.05) 0%, transparent 50%)" }} />
 
         {/* Nav */}
-        <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:20, height:58, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 48px", background: scrolled ? "rgba(242,242,247,0.85)" : "transparent", backdropFilter: scrolled ? "blur(24px)" : "none", borderBottom: scrolled ? "0.5px solid rgba(0,0,0,0.09)" : "none", transition:"all 0.3s" }}>
+        <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:20, height:58, display:"flex", alignItems:"center", justifyContent:"space-between", background: scrolled ? "rgba(242,242,247,0.85)" : "transparent", backdropFilter: scrolled ? "blur(24px)" : "none", borderBottom: scrolled ? "0.5px solid rgba(0,0,0,0.09)" : "none", transition:"all 0.3s" }}>
           <span style={{ fontSize:14, fontWeight:700, letterSpacing:"0.16em", color:"#1D1D1F" }}>WALLIO</span>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             <Link href="/auth/connexion" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>Connexion</Link>
@@ -125,18 +163,18 @@ export default function LandingPage() {
             </div>
 
             {/* Floating glass card */}
-            <div className="hero-float" style={{ marginTop:72 }}>
-              <div className="glass" style={{ borderRadius:28, padding:"28px 36px", boxShadow:"0 24px 64px rgba(0,0,0,0.09)", display:"inline-flex", alignItems:"center", gap:24 }}>
+            <div className="hero-card hero-float" style={{ marginTop:72 }}>
+              <div className="glass float-card" style={{ borderRadius:28, boxShadow:"0 24px 64px rgba(0,0,0,0.09)" }}>
                 <div style={{ textAlign:"left" }}>
                   <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:4 }}>Tampons</p>
                   <p style={{ fontSize:36, fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", lineHeight:1 }}>7<span style={{ fontSize:22, fontWeight:400, color:"#C7C7CC" }}>/10</span></p>
                 </div>
-                <div style={{ width:1, height:48, background:"rgba(0,0,0,0.08)" }} />
+                <div className="float-card-sep" />
                 <div style={{ textAlign:"left" }}>
                   <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:4 }}>Récompense</p>
                   <p style={{ fontSize:16, fontWeight:600, color:"#1D1D1F" }}>Café offert</p>
                 </div>
-                <div style={{ width:1, height:48, background:"rgba(0,0,0,0.08)" }} />
+                <div className="float-card-sep" />
                 <div style={{ width:44, height:44, borderRadius:12, background:"#1D1D1F", display:"flex", alignItems:"center", justifyContent:"center" }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
                 </div>
@@ -208,7 +246,7 @@ export default function LandingPage() {
 
           {/* ── CTA ── */}
           <section style={{ padding:"0 32px 96px" }}>
-            <div data-reveal style={{ maxWidth:1040, margin:"0 auto", borderRadius:32, overflow:"hidden", position:"relative", background:"linear-gradient(135deg,#4472F5 0%,#6A5AF9 52%,#8A5CF6 100%)", padding:"88px 48px", textAlign:"center" }}>
+            <div data-reveal className="cta-section" style={{ maxWidth:1040, margin:"0 auto", borderRadius:32, overflow:"hidden", position:"relative", background:"linear-gradient(135deg,#4472F5 0%,#6A5AF9 52%,#8A5CF6 100%)", textAlign:"center" }}>
               <div style={{ position:"absolute", top:-80, right:-80, width:320, height:320, borderRadius:"50%", background:"rgba(255,255,255,0.07)", pointerEvents:"none" }} />
               <div style={{ position:"absolute", bottom:-100, left:-60, width:260, height:260, borderRadius:"50%", background:"rgba(255,255,255,0.05)", pointerEvents:"none" }} />
               <div style={{ position:"absolute", top:"30%", left:"15%", width:180, height:180, borderRadius:"50%", background:"rgba(255,255,255,0.04)", pointerEvents:"none" }} />
@@ -224,8 +262,8 @@ export default function LandingPage() {
           </section>
 
           {/* ── FOOTER ── */}
-          <footer style={{ borderTop:"0.5px solid rgba(0,0,0,0.08)", padding:"36px 48px" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
+          <footer style={{ borderTop:"0.5px solid rgba(0,0,0,0.08)" }}>
+            <div className="lp-footer" style={{ maxWidth:1040, margin:"0 auto" }}>
               <span style={{ fontSize:12, fontWeight:700, letterSpacing:"0.16em", color:"#1D1D1F" }}>WALLIO</span>
               <div style={{ display:"flex", gap:24, flexWrap:"wrap", justifyContent:"center" }}>
                 {[
