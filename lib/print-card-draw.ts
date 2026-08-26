@@ -149,18 +149,18 @@ export async function drawPrintCard(
   ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
   ctx.clip();
 
-  // Couche de base : blanc semi-transparent (effet givre)
+  // Liquid Glass blanc pur — s'intègre dans le panneau blanc
   const glassBase = ctx.createRadialGradient(ncx, ncy - p(20), 0, ncx, ncy, p(90));
-  glassBase.addColorStop(0,   "rgba(255,255,255,0.82)");
-  glassBase.addColorStop(0.5, "rgba(245,249,255,0.72)");
-  glassBase.addColorStop(1,   "rgba(228,238,255,0.60)");
+  glassBase.addColorStop(0,   "rgba(255,255,255,0.95)");
+  glassBase.addColorStop(0.6, "rgba(255,255,255,0.80)");
+  glassBase.addColorStop(1,   "rgba(248,248,250,0.65)");
   ctx.fillStyle = glassBase;
   ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
 
-  // Reflet spéculaire — bord supérieur gauche (lumière qui traverse le verre)
-  const specGrad = ctx.createLinearGradient(ncx - p(90), ncy - p(90), ncx + p(30), ncy + p(10));
-  specGrad.addColorStop(0,    "rgba(255,255,255,0.55)");
-  specGrad.addColorStop(0.35, "rgba(255,255,255,0.15)");
+  // Reflet spéculaire — bord supérieur gauche
+  const specGrad = ctx.createLinearGradient(ncx - p(90), ncy - p(90), ncx + p(20), ncy + p(10));
+  specGrad.addColorStop(0,    "rgba(255,255,255,0.70)");
+  specGrad.addColorStop(0.30, "rgba(255,255,255,0.20)");
   specGrad.addColorStop(1,    "rgba(255,255,255,0.00)");
   ctx.fillStyle = specGrad;
   ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
@@ -170,9 +170,9 @@ export async function drawPrintCard(
   // Bord verre : fine ligne blanche brillante en haut + subtile en bas
   ctx.save();
   const rimGrad = ctx.createLinearGradient(ncx, ncy - p(90), ncx, ncy + p(90));
-  rimGrad.addColorStop(0,   "rgba(255,255,255,0.80)");
-  rimGrad.addColorStop(0.4, "rgba(200,220,255,0.25)");
-  rimGrad.addColorStop(1,   "rgba(180,200,255,0.10)");
+  rimGrad.addColorStop(0,   "rgba(255,255,255,0.90)");
+  rimGrad.addColorStop(0.4, "rgba(220,220,225,0.30)");
+  rimGrad.addColorStop(1,   "rgba(200,200,205,0.15)");
   ctx.beginPath();
   ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
   ctx.strokeStyle = rimGrad;
