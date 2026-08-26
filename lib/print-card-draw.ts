@@ -137,8 +137,8 @@ export async function drawPrintCard(
   ctx.fillStyle = "#FFFFFF";
   ctx.fill();
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-  ctx.strokeStyle = "rgba(0,0,0,0.07)";
-  ctx.lineWidth   = p(1);
+  ctx.strokeStyle = "rgba(68,114,245,0.45)";
+  ctx.lineWidth   = p(1.5);
   ctx.stroke();
 
   // NFC : grand cercle gris rempli (le fond du "tap zone")
