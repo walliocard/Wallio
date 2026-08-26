@@ -143,9 +143,13 @@ export async function drawPrintCard(
 
   // NFC : grand cercle gris rempli (le fond du "tap zone")
   const ncx = p(290), ncy = p(465);
+  // Fond bleu glacier — style iOS/visionOS 2025
+  const nfcGrad = ctx.createRadialGradient(ncx - p(20), ncy - p(20), 0, ncx, ncy, p(90));
+  nfcGrad.addColorStop(0, "#EEF4FF");
+  nfcGrad.addColorStop(1, "#E2ECFF");
   ctx.beginPath();
   ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
-  ctx.fillStyle = "#EAECF3";
+  ctx.fillStyle = nfcGrad;
   ctx.fill();
 
   // Anneaux concentriques subtils (180 → 105)
