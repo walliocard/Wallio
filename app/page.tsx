@@ -84,14 +84,16 @@ export default function LandingPage() {
         .hero-card  { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.55s both; }
         .hero-float { animation: float 5s ease-in-out infinite; }
 
-        /* Scroll reveal — état initial */
-        [data-reveal]           { opacity:0; transform:translateY(40px) scale(0.97); filter:blur(4px); transition: opacity 0.75s cubic-bezier(.16,1,.3,1), transform 0.75s cubic-bezier(.16,1,.3,1), filter 0.75s cubic-bezier(.16,1,.3,1); }
-        [data-reveal="left"]    { opacity:0; transform:translateX(-48px) scale(0.97); filter:blur(4px); transition: opacity 0.75s cubic-bezier(.16,1,.3,1), transform 0.75s cubic-bezier(.16,1,.3,1), filter 0.75s; }
-        [data-reveal="right"]   { opacity:0; transform:translateX(48px) scale(0.97); filter:blur(4px); transition: opacity 0.75s cubic-bezier(.16,1,.3,1), transform 0.75s cubic-bezier(.16,1,.3,1), filter 0.75s; }
-        [data-reveal="scale"]   { opacity:0; transform:scale(0.88); filter:blur(6px); transition: opacity 0.8s cubic-bezier(.16,1,.3,1), transform 0.8s cubic-bezier(.16,1,.3,1), filter 0.8s; }
-        [data-reveal="fade"]    { opacity:0; transition: opacity 0.9s ease; }
-        /* État révélé */
-        .revealed { opacity:1 !important; transform:none !important; filter:none !important; }
+        /* GPU acceleration */
+        [data-reveal], [data-reveal="left"], [data-reveal="right"], [data-reveal="scale"], [data-reveal="fade"] { will-change:transform,opacity; }
+
+        /* Scroll reveal — état initial (sans blur = 60fps sur mobile) */
+        [data-reveal]         { opacity:0; transform:translateY(32px); transition:opacity 0.65s cubic-bezier(.16,1,.3,1), transform 0.65s cubic-bezier(.16,1,.3,1); }
+        [data-reveal="left"]  { opacity:0; transform:translateX(-36px); transition:opacity 0.65s cubic-bezier(.16,1,.3,1), transform 0.65s cubic-bezier(.16,1,.3,1); }
+        [data-reveal="right"] { opacity:0; transform:translateX(36px);  transition:opacity 0.65s cubic-bezier(.16,1,.3,1), transform 0.65s cubic-bezier(.16,1,.3,1); }
+        [data-reveal="scale"] { opacity:0; transform:scale(0.92) translateY(20px); transition:opacity 0.70s cubic-bezier(.16,1,.3,1), transform 0.70s cubic-bezier(.16,1,.3,1); }
+        [data-reveal="fade"]  { opacity:0; transition:opacity 0.80s ease; }
+        .revealed { opacity:1 !important; transform:none !important; }
 
         .grad-text { background:linear-gradient(92deg,#4472F5,#6A5AF9,#8A5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:shimmer 4s ease infinite; }
 
@@ -120,22 +122,31 @@ export default function LandingPage() {
         /* ── Tablet (≤ 768px) ── */
         @media (max-width: 768px) {
           .lp-nav { padding:0 24px; }
-          .lp-nav .nav-label { display:none; }
           .hero-float { display:none; }
-          .cta-section { padding:56px 28px; border-radius:24px !important; }
-          .lp-footer { padding:28px 24px; flex-direction:column; text-align:center; gap:20px; }
+          .features-grid { grid-template-columns:repeat(2,1fr) !important; }
+          .sectors-grid  { grid-template-columns:repeat(2,1fr) !important; }
+          .steps-grid    { grid-template-columns:1fr !important; }
+          .cta-section   { padding:56px 28px; border-radius:24px !important; }
+          .lp-footer     { padding:28px 24px; flex-direction:column; text-align:center; gap:20px; }
           .lp-footer > div { justify-content:center; }
+          section { padding-left:20px !important; padding-right:20px !important; }
         }
 
         /* ── Mobile (≤ 480px) ── */
         @media (max-width: 480px) {
           .lp-nav { padding:0 16px; }
+          .lp-nav .nav-contact { display:none; }
           .btn-primary, .btn-ghost { padding:12px 22px; font-size:14px; border-radius:12px; }
           .feature-tag { font-size:10px; }
-          .cta-section { padding:44px 20px; border-radius:20px !important; }
-          .cta-section h2 { font-size:30px !important; letter-spacing:-0.6px !important; }
+          .features-grid { grid-template-columns:1fr !important; }
+          .sectors-grid  { grid-template-columns:1fr !important; }
+          .steps-grid    { grid-template-columns:1fr !important; }
+          .cta-section   { padding:44px 20px; border-radius:20px !important; margin:0 12px !important; }
+          .cta-section h2 { font-size:28px !important; letter-spacing:-0.5px !important; }
           .cta-section p  { font-size:15px !important; }
-          .legal-nav { display:none; }
+          .hero-cta { flex-direction:column; align-items:center; }
+          .hero-cta a { width:100%; text-align:center; }
+          section { padding-top:64px !important; padding-bottom:64px !important; }
         }
       `}</style>
 
@@ -150,8 +161,8 @@ export default function LandingPage() {
         <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:20, height:58, display:"flex", alignItems:"center", justifyContent:"space-between", background: scrolled ? "rgba(242,242,247,0.85)" : "transparent", backdropFilter: scrolled ? "blur(24px)" : "none", borderBottom: scrolled ? "0.5px solid rgba(0,0,0,0.09)" : "none", transition:"all 0.3s" }}>
           <span style={{ fontSize:14, fontWeight:700, letterSpacing:"0.16em", color:"#1D1D1F" }}>WALLIO</span>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-            <Link href="/auth/connexion" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>Connexion</Link>
-            <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ padding:"7px 18px", fontSize:13, borderRadius:20 }}>
+            <Link href="/auth/connexion" className="nav-label" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>Connexion</Link>
+            <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary nav-contact" style={{ padding:"7px 18px", fontSize:13, borderRadius:20 }}>
               Nous contacter
             </a>
           </div>
@@ -210,7 +221,7 @@ export default function LandingPage() {
               <h2 style={{ fontSize:40, fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Trois secondes. Pas une de plus.</h2>
             </div>
 
-            <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:16 }}>
+            <div data-stagger className="steps-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
               {[
                 { n:"01", title:"Tap ou Scan", body:"Le client approche son téléphone du tag NFC ou scanne le QR code. Aucune application à télécharger, aucun compte à créer au préalable." },
                 { n:"02", title:"Tampon instantané", body:"Un tampon est ajouté automatiquement sur sa carte de fidélité en moins d'une seconde. La progression est visible immédiatement." },
@@ -233,7 +244,7 @@ export default function LandingPage() {
                 <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Tout ce dont vous avez besoin</h2>
               </div>
 
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
+              <div data-stagger className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
                 {[
                   { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg>, title:"NFC + QR Code", body:"Compatible avec tous les smartphones. Aucune application à installer, aucun compte requis.", accent:"#4472F5" },
                   { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="15" r="1" fill="currentColor"/></svg>, title:"Apple & Google Wallet", body:"La carte de fidélité s'intègre nativement dans le portefeuille numérique du client.", accent:"#6A5AF9" },
@@ -265,7 +276,7 @@ export default function LandingPage() {
                 <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>Une seule solution, adaptée à chaque type d'établissement.</p>
               </div>
 
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:12 }}>
+              <div data-stagger className="sectors-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:12 }}>
                 {[
                   { label:"Café & Salon de thé",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg> },
                   { label:"Restaurant",             icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg> },
