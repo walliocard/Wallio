@@ -267,8 +267,8 @@ export async function drawPrintCard(
   // ── 3. ACTION PANELS ──────────────────────────────────────────────────────
   const PAD = 72 * s;
   const GAP = 68 * s;
-  const panelY = 218 * s;
-  const panelH = 480 * s;
+  const panelY = 210 * s;
+  const panelH = 540 * s;
   const panelW = (W - PAD * 2 - GAP) / 2;
   const panelR = 36 * s;
   const leftX = PAD;
@@ -407,29 +407,31 @@ export async function drawPrintCard(
   ctx.fillText("de votre téléphone", qrTextX, qrTextY + 153 * s);
   ctx.fillText("et ajoutez la carte", qrTextX, qrTextY + 186 * s);
 
-  // ── 7. WAVES ─────────────────────────────────────────────────────────────
-  const waveY = panelY + panelH + 55 * s;
+  // ── 7. WAVES (commencent juste après les panneaux) ───────────────────────
+  const waveY = panelY + panelH + 20 * s;
   drawWaves(ctx, W, H, waveY);
 
-  // ── 8. WALLET BADGES ─────────────────────────────────────────────────────
+  // ── 8. WALLET BADGES (centrés dans la zone basse) ────────────────────────
+  // "Ajoutez à votre portefeuille" — légèrement sous les vagues
+  const labelY = waveY + 58 * s;
   ctx.font = `400 ${28 * s}px ${font}`;
   ctx.fillStyle = "#8E8E93";
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText("Ajoutez à votre portefeuille", W / 2, waveY + 38 * s);
+  ctx.fillText("Ajoutez à votre portefeuille", W / 2, labelY);
 
-  const badgeH = 72 * s;
-  const badgeGap = 20 * s;
-  const badgeY = waveY + 62 * s;
+  const badgeH = 76 * s;
+  const badgeGap = 22 * s;
+  const badgeY = labelY + 22 * s;
 
-  // Apple Wallet — SVG officiel FR
   const appleImg = await loadSvgImage("/apple-wallet-badge.svg", Math.round(badgeH * 4));
-  const appleW = appleImg ? Math.round(badgeH * (appleImg.naturalWidth / (appleImg.naturalHeight || 1))) || Math.round(badgeH * 3.4) : Math.round(badgeH * 3.4);
-  const badgeTotalW = appleW + badgeGap + appleW; // same width for both
+  const appleW = appleImg
+    ? Math.round(badgeH * (appleImg.naturalWidth / (appleImg.naturalHeight || 1))) || Math.round(badgeH * 3.4)
+    : Math.round(badgeH * 3.4);
+  const badgeTotalW = appleW * 2 + badgeGap;
   const badgeX1 = (W - badgeTotalW) / 2;
   const badgeX2 = badgeX1 + appleW + badgeGap;
-
-  const badgeR = badgeH * 0.18; // rayon arrondi uniforme
+  const badgeR = badgeH * 0.18;
 
   function drawBadgeImg(img: HTMLImageElement, x: number, w: number) {
     ctx.save();
@@ -452,15 +454,16 @@ export async function drawPrintCard(
     drawWalletBadge(ctx, badgeX2, badgeY, appleW, badgeH, "google");
   }
 
-  // ── 9. WALLIO BRANDING ───────────────────────────────────────────────────
+  // ── 9. WALLIO BRANDING — tout en bas ──────────────────────────────────────
+  const wallioY = H - 95 * s;
   ctx.textAlign = "center";
   ctx.font = `500 ${24 * s}px ${font}`;
   ctx.fillStyle = "#C7C7CC";
   ctx.letterSpacing = `${5 * s}px`;
-  ctx.fillText("WALLIO", W / 2, badgeY + badgeH + 42 * s);
+  ctx.fillText("WALLIO", W / 2, wallioY);
   ctx.letterSpacing = "0px";
 
   ctx.font = `400 ${20 * s}px ${font}`;
   ctx.fillStyle = "#D1D1D6";
-  ctx.fillText("wallio.app", W / 2, badgeY + badgeH + 68 * s);
+  ctx.fillText("wallio.app", W / 2, wallioY + 32 * s);
 }

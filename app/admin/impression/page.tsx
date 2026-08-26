@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { drawPrintCard, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
-const PREVIEW_SCALE = 0.28;
+const PREVIEW_SCALE = 0.42;
 
 export default function ImpressionPage() {
   const [urls, setUrls] = useState<string>("");
