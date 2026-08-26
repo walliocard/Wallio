@@ -149,45 +149,30 @@ export async function drawPrintCard(
   ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
   ctx.clip();
 
-  // Liquid Glass blanc pur — s'intègre dans le panneau blanc
-  const glassBase = ctx.createRadialGradient(ncx, ncy - p(20), 0, ncx, ncy, p(90));
-  glassBase.addColorStop(0,   "rgba(255,255,255,0.95)");
-  glassBase.addColorStop(0.6, "rgba(255,255,255,0.80)");
-  glassBase.addColorStop(1,   "rgba(248,248,250,0.65)");
+  // Champagne / perle — chaud, premium
+  const glassBase = ctx.createRadialGradient(ncx - p(20), ncy - p(20), 0, ncx, ncy, p(90));
+  glassBase.addColorStop(0,   "#FBF9F5");
+  glassBase.addColorStop(0.6, "#F6F1EA");
+  glassBase.addColorStop(1,   "#EEE8DC");
   ctx.fillStyle = glassBase;
   ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
 
-  // Reflet spéculaire — bord supérieur gauche
+  // Reflet spéculaire
   const specGrad = ctx.createLinearGradient(ncx - p(90), ncy - p(90), ncx + p(20), ncy + p(10));
-  specGrad.addColorStop(0,    "rgba(255,255,255,0.70)");
-  specGrad.addColorStop(0.30, "rgba(255,255,255,0.20)");
+  specGrad.addColorStop(0,    "rgba(255,255,255,0.60)");
+  specGrad.addColorStop(0.35, "rgba(255,255,255,0.15)");
   specGrad.addColorStop(1,    "rgba(255,255,255,0.00)");
   ctx.fillStyle = specGrad;
   ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
 
   ctx.restore();
 
-  // Bord verre : fine ligne blanche brillante en haut + subtile en bas
-  ctx.save();
-  const rimGrad = ctx.createLinearGradient(ncx, ncy - p(90), ncx, ncy + p(90));
-  rimGrad.addColorStop(0,   "rgba(255,255,255,0.90)");
-  rimGrad.addColorStop(0.4, "rgba(220,220,225,0.30)");
-  rimGrad.addColorStop(1,   "rgba(200,200,205,0.15)");
+  // Un seul cercle — bord fin champagne
   ctx.beginPath();
   ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
-  ctx.strokeStyle = rimGrad;
+  ctx.strokeStyle = "rgba(200,185,160,0.50)";
   ctx.lineWidth   = p(1.5);
   ctx.stroke();
-  ctx.restore();
-
-  // Anneaux concentriques subtils (180 → 105)
-  [180, 155, 130, 105].forEach((d, i) => {
-    ctx.beginPath();
-    ctx.arc(ncx, ncy, p(d / 2), 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(170,178,218,${0.30 - i * 0.06})`;
-    ctx.lineWidth   = p(1.2);
-    ctx.stroke();
-  });
 
   // Logo NFC SVG — centré dans le cercle gris (agrandi à 110×110)
   const nfcImg = await loadImg("/nfc-icon.svg");
