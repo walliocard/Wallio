@@ -418,16 +418,25 @@ export async function drawPrintCard(
   ctx.textBaseline = "alphabetic";
   ctx.fillText("Ajoutez à votre portefeuille", W / 2, waveY + 38 * s);
 
-  const badgeW = 280 * s;
   const badgeH = 72 * s;
   const badgeGap = 20 * s;
-  const badgeTotalW = badgeW * 2 + badgeGap;
-  const badgeX1 = (W - badgeTotalW) / 2;
-  const badgeX2 = badgeX1 + badgeW + badgeGap;
   const badgeY = waveY + 62 * s;
 
-  drawWalletBadge(ctx, badgeX1, badgeY, badgeW, badgeH, "apple");
-  drawWalletBadge(ctx, badgeX2, badgeY, badgeW, badgeH, "google");
+  // Apple Wallet — SVG officiel FR
+  const appleImg = await loadSvgImage("/apple-wallet-badge.svg", Math.round(badgeH * 4));
+  const appleW = appleImg ? Math.round(badgeH * (appleImg.naturalWidth / (appleImg.naturalHeight || 1))) || Math.round(badgeH * 3.4) : Math.round(badgeH * 3.4);
+  const badgeTotalW = appleW + badgeGap + appleW; // same width for both
+  const badgeX1 = (W - badgeTotalW) / 2;
+  const badgeX2 = badgeX1 + appleW + badgeGap;
+
+  if (appleImg) {
+    ctx.drawImage(appleImg, badgeX1, badgeY, appleW, badgeH);
+  } else {
+    drawWalletBadge(ctx, badgeX1, badgeY, appleW, badgeH, "apple");
+  }
+
+  // Google Wallet — canvas pur (badge officiel non disponible en téléchargement direct)
+  drawWalletBadge(ctx, badgeX2, badgeY, appleW, badgeH, "google");
 
   // ── 9. WALLIO BRANDING ───────────────────────────────────────────────────
   ctx.textAlign = "center";
