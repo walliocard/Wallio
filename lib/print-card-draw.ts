@@ -149,28 +149,32 @@ export async function drawPrintCard(
   ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
   ctx.clip();
 
-  // Champagne / perle — chaud, premium
-  const glassBase = ctx.createRadialGradient(ncx - p(20), ncy - p(20), 0, ncx, ncy, p(90));
-  glassBase.addColorStop(0,   "#FBF9F5");
-  glassBase.addColorStop(0.6, "#F6F1EA");
-  glassBase.addColorStop(1,   "#EEE8DC");
+  // Liquid Glass blanc vitré
+  const glassBase = ctx.createRadialGradient(ncx, ncy - p(20), 0, ncx, ncy, p(90));
+  glassBase.addColorStop(0,   "rgba(255,255,255,0.92)");
+  glassBase.addColorStop(0.5, "rgba(252,252,255,0.78)");
+  glassBase.addColorStop(1,   "rgba(245,245,250,0.60)");
   ctx.fillStyle = glassBase;
   ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
 
-  // Reflet spéculaire
+  // Reflet spéculaire haut-gauche
   const specGrad = ctx.createLinearGradient(ncx - p(90), ncy - p(90), ncx + p(20), ncy + p(10));
-  specGrad.addColorStop(0,    "rgba(255,255,255,0.60)");
-  specGrad.addColorStop(0.35, "rgba(255,255,255,0.15)");
+  specGrad.addColorStop(0,    "rgba(255,255,255,0.65)");
+  specGrad.addColorStop(0.30, "rgba(255,255,255,0.18)");
   specGrad.addColorStop(1,    "rgba(255,255,255,0.00)");
   ctx.fillStyle = specGrad;
   ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
 
   ctx.restore();
 
-  // Un seul cercle — bord fin champagne
+  // Un seul cercle — bord verre fin
+  const rimGrad = ctx.createLinearGradient(ncx, ncy - p(90), ncx, ncy + p(90));
+  rimGrad.addColorStop(0,   "rgba(255,255,255,0.90)");
+  rimGrad.addColorStop(0.5, "rgba(210,215,230,0.30)");
+  rimGrad.addColorStop(1,   "rgba(190,200,220,0.15)");
   ctx.beginPath();
   ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(200,185,160,0.50)";
+  ctx.strokeStyle = rimGrad;
   ctx.lineWidth   = p(1.5);
   ctx.stroke();
 
