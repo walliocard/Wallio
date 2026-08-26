@@ -226,25 +226,28 @@ export default function LandingPage() {
           </section>
 
           {/* ── FEATURES ── */}
-          <section style={{ padding:"80px 32px", background:"rgba(255,255,255,0.50)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+          <section style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Fonctionnalités</span>
-                <h2 style={{ fontSize:40, fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Tout ce dont vous avez besoin</h2>
+                <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Tout ce dont vous avez besoin</h2>
               </div>
 
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
                 {[
-                  { title:"NFC + QR Code",         body:"Compatible avec tous les smartphones. Aucune app à installer." },
-                  { title:"Apple & Google Wallet",  body:"La carte s'intègre nativement dans le portefeuille du client." },
-                  { title:"Notifications push",     body:"Relancez vos clients avec des messages personnalisés et ciblés." },
-                  { title:"Dashboard temps réel",   body:"Clients, tampons, récompenses — suivis en direct." },
-                  { title:"Carte personnalisable",  body:"Couleurs, logo, tampons — entièrement à votre image de marque." },
-                  { title:"Carte comptoir 4K",      body:"Fichier haute résolution prêt à envoyer à l'imprimeur." },
+                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg>, title:"NFC + QR Code", body:"Compatible avec tous les smartphones. Aucune application à installer, aucun compte requis.", accent:"#4472F5" },
+                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="15" r="1" fill="currentColor"/></svg>, title:"Apple & Google Wallet", body:"La carte de fidélité s'intègre nativement dans le portefeuille numérique du client.", accent:"#6A5AF9" },
+                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>, title:"Notifications push", body:"Relancez vos clients au bon moment avec des messages personnalisés et ciblés.", accent:"#8A5CF6" },
+                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z" opacity=".4"/></svg>, title:"Dashboard temps réel", body:"Visualisez vos clients, tampons et récompenses depuis un tableau de bord clair.", accent:"#4472F5" },
+                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>, title:"Carte personnalisable", body:"Couleurs, logo, tampons, récompenses — entièrement à l'image de votre marque.", accent:"#6A5AF9" },
+                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, title:"Carte comptoir 4K", body:"Fichier haute résolution généré automatiquement, prêt à envoyer à l'imprimeur.", accent:"#8A5CF6" },
                 ].map((f) => (
-                  <div key={f.title} className="card-hover" style={{ background:"rgba(245,245,247,0.80)", backdropFilter:"blur(10px)", borderRadius:20, padding:"26px 22px", border:"0.5px solid rgba(0,0,0,0.06)", boxShadow:"0 2px 12px rgba(0,0,0,0.03)" }}>
-                    <h3 style={{ fontSize:15, fontWeight:600, color:"#1D1D1F", marginBottom:8, letterSpacing:-0.1 }}>{f.title}</h3>
-                    <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{f.body}</p>
+                  <div key={f.title} className="card-hover" style={{ background:"white", borderRadius:22, padding:"28px 26px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)" }}>
+                    <div style={{ width:44, height:44, borderRadius:14, background:`${f.accent}12`, color:f.accent, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
+                      {f.icon}
+                    </div>
+                    <h3 style={{ fontSize:16, fontWeight:650, color:"#1D1D1F", marginBottom:8, letterSpacing:-0.2 }}>{f.title}</h3>
+                    <p style={{ fontSize:14, lineHeight:1.65, color:"#8E8E93" }}>{f.body}</p>
                   </div>
                 ))}
               </div>
@@ -252,14 +255,32 @@ export default function LandingPage() {
           </section>
 
           {/* ── POUR QUI ── */}
-          <section style={{ maxWidth:760, margin:"0 auto", padding:"80px 32px", textAlign:"center" }}>
-            <div data-reveal="fade">
-              <span className="feature-tag">Secteurs</span>
-              <h2 style={{ fontSize:40, fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:14 }}>Pour tous les commerces</h2>
-              <p style={{ fontSize:17, color:"#8E8E93", marginBottom:36 }}>Cafés · Restaurants · Barbers · Salons · Boutiques · Salles de sport · Instituts</p>
-              <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
-                {["Café", "Restaurant", "Barber", "Salon", "Boutique", "Sport", "Institut"].map(c => (
-                  <span key={c} className="glass card-hover" style={{ fontSize:13, fontWeight:500, color:"#3A3A3C", padding:"8px 18px", borderRadius:20, boxShadow:"0 2px 8px rgba(0,0,0,0.04)", cursor:"default" }}>{c}</span>
+          <section style={{ padding:"96px 32px", overflow:"hidden", position:"relative" }}>
+            {/* Fond gradient subtil */}
+            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 70% 80% at 50% 50%, rgba(68,114,245,0.05) 0%, transparent 70%)", pointerEvents:"none" }} />
+            <div style={{ maxWidth:1040, margin:"0 auto", position:"relative" }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
+                <span className="feature-tag">Secteurs</span>
+                <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:14 }}>Pour tous les commerces<br />de proximité</h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>Une seule solution, adaptée à chaque type d'établissement.</p>
+              </div>
+
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:12 }}>
+                {[
+                  { label:"Café & Salon de thé",   icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg> },
+                  { label:"Restaurant",             icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg> },
+                  { label:"Barber Shop",            icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M20 17v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><line x1="12" y1="12" x2="12" y2="21"/></svg> },
+                  { label:"Salon de beauté",        icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> },
+                  { label:"Boutique",               icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> },
+                  { label:"Salle de sport",         icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 4l2 4h-3l-1-4z"/><path d="M14 4l1 4h-4l1-4z"/><path d="M10 4l-1 4H6l2-4z"/><path d="M18 8H6l-2 4h16z"/><path d="M4 12l2 8h12l2-8"/></svg> },
+                  { label:"Institut & Spa",         icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+                ].map((s) => (
+                  <div key={s.label} className="glass card-hover" style={{ borderRadius:18, padding:"20px 18px", display:"flex", alignItems:"center", gap:14, boxShadow:"0 4px 16px rgba(0,0,0,0.05)" }}>
+                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(68,114,245,0.10)", color:"#4472F5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      {s.icon}
+                    </div>
+                    <span style={{ fontSize:14, fontWeight:500, color:"#1D1D1F" }}>{s.label}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -291,7 +312,7 @@ export default function LandingPage() {
                   { href:"/privacy", label:"Confidentialité" },
                   { href:"/terms",   label:"CGU" },
                   { href:"/legal",   label:"Mentions légales" },
-                  { href:"mailto:contact@wallio.app", label:"contact@wallio.app" },
+                  { href:"mailto:wallio.card@gmail.com", label:"wallio.card@gmail.com" },
                 ].map(l => (
                   <Link key={l.href} href={l.href} style={{ fontSize:13, color:"#8E8E93", textDecoration:"none", transition:"color 0.15s" }}>{l.label}</Link>
                 ))}

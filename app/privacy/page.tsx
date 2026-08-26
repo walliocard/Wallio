@@ -12,7 +12,7 @@ export default function PrivacyPage() {
 
       <Section title="1. Qui sommes-nous ?">
         <p>Wallio est une plateforme de fidélité numérique permettant aux commerçants de proposer des cartes de fidélité via NFC et QR code, compatibles Apple Wallet et Google Wallet.</p>
-        <p>Responsable du traitement : Wallio · contact@wallio.app</p>
+        <p>Responsable du traitement : Wallio · wallio.card@gmail.com</p>
       </Section>
 
       <Section title="2. Données collectées">
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="5. Durée de conservation">
-        <p>Les données des clients sont conservées tant que la carte de fidélité est active, puis supprimées dans un délai de 3 ans après la dernière utilisation. Les commerçants peuvent demander la suppression immédiate de leurs données via contact@wallio.app.</p>
+        <p>Les données des clients sont conservées tant que la carte de fidélité est active, puis supprimées dans un délai de 3 ans après la dernière utilisation. Les commerçants peuvent demander la suppression immédiate de leurs données via wallio.card@gmail.com.</p>
       </Section>
 
       <Section title="6. Partage des données">
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="7. Vos droits">
-        <p>Conformément au RGPD, vous disposez des droits d'accès, rectification, effacement, portabilité et opposition. Pour exercer ces droits : <strong>contact@wallio.app</strong></p>
+        <p>Conformément au RGPD, vous disposez des droits d'accès, rectification, effacement, portabilité et opposition. Pour exercer ces droits : <strong>wallio.card@gmail.com</strong></p>
       </Section>
 
       <Section title="8. Cookies">
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="9. Contact">
-        <p>Pour toute question relative à vos données personnelles : <strong>contact@wallio.app</strong></p>
+        <p>Pour toute question relative à vos données personnelles : <strong>wallio.card@gmail.com</strong></p>
       </Section>
 
       <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #E5E5EA", display: "flex", gap: 24 }}>

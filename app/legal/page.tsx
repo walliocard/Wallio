@@ -13,7 +13,7 @@ export default function LegalPage() {
       <Section title="Éditeur du service">
         <Row label="Société" value="Wallio" />
         <Row label="Statut" value="À compléter (SARL, Auto-entrepreneur…)" />
-        <Row label="Email" value="contact@wallio.app" />
+        <Row label="Email" value="wallio.card@gmail.com" />
         <Row label="Site web" value="wallio.app" />
       </Section>
 
@@ -30,7 +30,7 @@ export default function LegalPage() {
 
       <Section title="Données personnelles">
         <p>Wallio traite des données personnelles conformément à sa <Link href="/privacy" style={{ color: "#007AFF" }}>Politique de confidentialité</Link> et au Règlement Général sur la Protection des Données (RGPD).</p>
-        <p style={{ marginTop: 8 }}>Contact DPO : <strong>contact@wallio.app</strong></p>
+        <p style={{ marginTop: 8 }}>Contact DPO : <strong>wallio.card@gmail.com</strong></p>
       </Section>
 
       <Section title="Cookies">

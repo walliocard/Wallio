@@ -55,7 +55,7 @@ export default function TermsPage() {
       </Section>
 
       <Section title="10. Contact">
-        <p>Pour toute question : <strong>contact@wallio.app</strong></p>
+        <p>Pour toute question : <strong>wallio.card@gmail.com</strong></p>
       </Section>
 
       <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #E5E5EA", display: "flex", gap: 24 }}>
