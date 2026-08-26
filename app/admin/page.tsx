@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
+import { drawPrintCard, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
 type Marchand = {
   id: string;
@@ -141,6 +142,16 @@ export default function AdminPage() {
   const [generatingNfc, setGeneratingNfc] = useState(false);
   const [updatingAbo, setUpdatingAbo] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [downloadingCard, setDownloadingCard] = useState(false);
+
+  // Nouveau marchand
+  const [showCreate, setShowCreate] = useState(false);
+  const [createNom, setCreateNom] = useState("");
+  const [createEmail, setCreateEmail] = useState("");
+  const [createPassword, setCreatePassword] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+
   const router = useRouter();
 
   useEffect(() => {
@@ -199,13 +210,35 @@ export default function AdminPage() {
     setUpdatingAbo(false);
   }
 
-  function telechargerCarte(m: Marchand) {
+  async function telechargerCarte(m: Marchand) {
+    if (!m.nfc_id) return;
+    setDownloadingCard(true);
     const canvas = document.createElement("canvas");
-    drawNfcCard(canvas, m);
+    await drawPrintCard(canvas, `https://app.wallio.ma/nfc/${m.nfc_id}`, 3);
     const link = document.createElement("a");
-    link.download = `wallio-carte-${m.id}.png`;
+    link.download = `wallio-carte-${slugify(m.nom || m.id)}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
+    setDownloadingCard(false);
+  }
+
+  async function creerMarchand() {
+    if (!createNom || !createEmail || !createPassword) return;
+    setCreating(true); setCreateError("");
+    const res = await fetch("/api/admin/create-marchand", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nom: createNom, email: createEmail, password: createPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setCreateError(data.error || "Erreur"); setCreating(false); return; }
+    await chargerMarchands();
+    setShowCreate(false);
+    setCreateNom(""); setCreateEmail(""); setCreatePassword("");
+    setCreating(false);
+    // Ouvrir le drawer du nouveau marchand
+    const nouveau = marchands.find(m => m.id === data.uid);
+    if (nouveau) setSelected(nouveau);
   }
 
   async function copierNfc(nfc_id: string) {
@@ -243,6 +276,52 @@ export default function AdminPage() {
         <div className="absolute top-[-10%] right-[10%] w-[600px] h-[500px] rounded-full opacity-20"
           style={{ background: "radial-gradient(circle, rgba(0,122,255,0.15) 0%, transparent 70%)" }} />
       </div>
+
+      {/* Modal nouveau marchand */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6"
+          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
+          <div className="w-full max-w-sm rounded-[28px] p-7"
+            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <h3 className="text-[18px] font-semibold mb-1" style={{ color: "var(--fg)" }}>Nouveau marchand</h3>
+            <p className="text-[13px] mb-5" style={{ color: "var(--fg-secondary)" }}>
+              Crée le compte + génère automatiquement le NFC ID
+            </p>
+
+            {[
+              { label: "Nom du commerce", value: createNom, set: setCreateNom, placeholder: "Café Central", type: "text" },
+              { label: "Email", value: createEmail, set: setCreateEmail, placeholder: "contact@cafe.ma", type: "email" },
+              { label: "Mot de passe", value: createPassword, set: setCreatePassword, placeholder: "Min. 8 caractères", type: "password" },
+            ].map(f => (
+              <div key={f.label} className="mb-3">
+                <label className="block text-[11px] font-medium mb-1 uppercase tracking-wide"
+                  style={{ color: "var(--fg-tertiary)" }}>{f.label}</label>
+                <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)}
+                  placeholder={f.placeholder}
+                  className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
+                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }} />
+              </div>
+            ))}
+
+            {createError && (
+              <p className="text-[13px] mb-3" style={{ color: "#FF3B30" }}>{createError}</p>
+            )}
+
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => { setShowCreate(false); setCreateError(""); }}
+                className="flex-1 py-3 rounded-2xl text-[15px] font-medium"
+                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
+                Annuler
+              </button>
+              <button onClick={creerMarchand} disabled={creating || !createNom || !createEmail || !createPassword}
+                className="flex-1 py-3 rounded-2xl text-[15px] font-semibold text-white"
+                style={{ background: creating ? "#888" : "var(--accent)" }}>
+                {creating ? "Création…" : "Créer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal confirmation suppression */}
       {confirmDelete && (
@@ -328,53 +407,79 @@ export default function AdminPage() {
                 </div>
               </Section>
 
-              {/* NFC */}
-              <Section title="Identifiant NFC">
+              {/* NFC + Carte */}
+              <Section title="Tag NFC physique">
                 {selected.nfc_id ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
+                    {/* URL */}
                     <div className="rounded-2xl px-4 py-3 font-mono text-[12px] break-all"
                       style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>
-                      app.wallio.ma/nfc/<span style={{ color: "var(--fg)" }}>{selected.nfc_id}</span>
+                      app.wallio.ma/nfc/<span style={{ color: "var(--fg)", fontWeight: 600 }}>{selected.nfc_id}</span>
                     </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => copierNfc(selected.nfc_id!)}
-                        className="flex-1 py-2.5 rounded-xl text-[13px] font-medium"
-                        style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: copied ? "#30D158" : "var(--fg)" }}>
-                        {copied ? "Copié ✓" : "Copier l'URL"}
-                      </button>
-                      <button onClick={() => genererNfc(selected)} disabled={generatingNfc}
-                        className="flex-1 py-2.5 rounded-xl text-[13px] font-medium"
-                        style={{ background: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.15)", color: "#FF9F0A" }}>
-                        {generatingNfc ? "…" : "Régénérer"}
-                      </button>
+
+                    {/* Copier — grand bouton pour iPhone */}
+                    <button onClick={() => copierNfc(selected.nfc_id!)}
+                      className="w-full py-3.5 rounded-2xl text-[15px] font-semibold"
+                      style={{
+                        background: copied ? "rgba(48,209,88,0.12)" : "var(--accent)",
+                        color: copied ? "#30D158" : "white",
+                        transition: "all 0.2s",
+                      }}>
+                      {copied ? "✓ URL copiée" : "Copier l'URL NFC"}
+                    </button>
+
+                    {/* Steps iPhone */}
+                    <div className="rounded-2xl p-4 space-y-2.5"
+                      style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide mb-2"
+                        style={{ color: "var(--fg-tertiary)" }}>Programmer le tag — iPhone</p>
+                      {[
+                        ["1", "Copie l'URL ci-dessus"],
+                        ["2", "Ouvre NFC Tools → Write"],
+                        ["3", "Add a record → URL"],
+                        ["4", "Colle l'URL → OK → Write"],
+                        ["5", "Approche le tag → Done ✓"],
+                      ].map(([n, t]) => (
+                        <div key={n} className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                            style={{ background: "var(--accent)", color: "white" }}>{n}</span>
+                          <span className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>{t}</span>
+                        </div>
+                      ))}
                     </div>
+
+                    <button onClick={() => genererNfc(selected)} disabled={generatingNfc}
+                      className="w-full py-2.5 rounded-xl text-[12px] font-medium"
+                      style={{ background: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.15)", color: "#FF9F0A" }}>
+                      {generatingNfc ? "…" : "Régénérer l'ID NFC"}
+                    </button>
                   </div>
                 ) : (
                   <button onClick={() => genererNfc(selected)} disabled={generatingNfc}
-                    className="w-full py-3 rounded-2xl text-[14px] font-medium"
-                    style={{ background: "rgba(0,245,160,0.06)", border: "1px solid rgba(0,245,160,0.15)", color: "#00F5A0" }}>
-                    {generatingNfc ? "Génération…" : "+ Générer l'identifiant NFC"}
+                    className="w-full py-3 rounded-2xl text-[14px] font-semibold"
+                    style={{ background: "var(--accent)", color: "white" }}>
+                    {generatingNfc ? "Génération…" : "+ Générer l'ID NFC"}
                   </button>
                 )}
               </Section>
 
-              {/* Carte physique */}
-              <Section title="Carte comptoir NFC">
-                <p className="text-[13px] mb-3" style={{ color: "var(--fg-tertiary)" }}>
-                  Format 16 × 9 cm — prêt à imprimer sur PVC rigide.
-                </p>
+              {/* Carte comptoir */}
+              <Section title="Carte comptoir imprimable">
                 <button
                   onClick={() => telechargerCarte(selected)}
-                  disabled={!selected.nfc_id}
-                  className="w-full py-3 rounded-2xl text-[14px] font-medium"
+                  disabled={!selected.nfc_id || downloadingCard}
+                  className="w-full py-3 rounded-2xl text-[14px] font-semibold"
                   style={{
-                    background: selected.nfc_id ? "rgba(0,245,160,0.06)" : "var(--glass-bg)",
-                    border: `1px solid ${selected.nfc_id ? "rgba(0,245,160,0.15)" : "var(--border)"}`,
-                    color: selected.nfc_id ? "#00F5A0" : "var(--fg-tertiary)",
+                    background: selected.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)",
+                    border: `1px solid ${selected.nfc_id ? "var(--accent)" : "var(--border)"}`,
+                    color: selected.nfc_id ? "var(--accent)" : "var(--fg-tertiary)",
                     cursor: selected.nfc_id ? "pointer" : "not-allowed",
                   }}>
-                  {selected.nfc_id ? "Télécharger la carte (PNG)" : "Générer d'abord l'identifiant NFC"}
+                  {downloadingCard ? "Génération 4K…" : selected.nfc_id ? "⬇ Télécharger PNG 4K" : "Générer d'abord l'ID NFC"}
                 </button>
+                <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
+                  4500×3000px · ratio 3:2 · prêt imprimeur
+                </p>
               </Section>
 
               {/* Actions compte */}
@@ -415,11 +520,18 @@ export default function AdminPage() {
               </p>
             </div>
           </div>
-          <button onClick={logout}
-            className="text-[13px] px-4 py-2 rounded-xl"
-            style={{ color: "var(--fg-secondary)", background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-            Déconnexion
-          </button>
+          <div className="flex gap-3">
+            <button onClick={() => setShowCreate(true)}
+              className="text-[13px] px-4 py-2 rounded-xl font-semibold text-white"
+              style={{ background: "var(--accent)" }}>
+              + Nouveau marchand
+            </button>
+            <button onClick={logout}
+              className="text-[13px] px-4 py-2 rounded-xl"
+              style={{ color: "var(--fg-secondary)", background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+              Déconnexion
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
