@@ -13,7 +13,6 @@ const NAV = [
   { href: "/dashboard/scanner",           label: "Scanner",       Icon: Icons.Camera },
   { href: "/dashboard/clients",           label: "Clients",       Icon: Icons.Users },
   { href: "/dashboard/carte",             label: "Ma carte",      Icon: Icons.Card },
-  { href: "/dashboard/carte-comptoir",    label: "Comptoir NFC",  Icon: Icons.Print },
   { href: "/dashboard/notifications",     label: "Notifications", Icon: Icons.Bell },
   { href: "/dashboard/reglages",          label: "Réglages",      Icon: Icons.Settings },
 ];
