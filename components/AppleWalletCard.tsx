@@ -12,6 +12,9 @@ function relativeLuminance(hex: string): number {
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }
 
+export type StampStyle = "dot"|"ring"|"plus"|"check"|"heart"|"star"|"text"|"logo";
+export interface MilestoneReward { at: number; label: string }
+
 export interface AppleWalletCardProps {
   logoUrl?: string;
   logoText: string;
@@ -35,7 +38,7 @@ export interface AppleWalletCardProps {
   headerField?: { label: string; value: string };
   auxiliaryFields?: { label: string; value: string }[];
   stampsOnStrip?: boolean;
-  stripStampStyle?: "dot"|"plus"|"ring"|"stamp"|"heart"|"star"|"bolt"|"crown"|"flower"|"diamond"|"text"|"bar";
+  stripStampStyle?: StampStyle;
   stampText?: string;
   stampTextBold?: boolean;
   stampTextItalic?: boolean;
@@ -43,7 +46,9 @@ export interface AppleWalletCardProps {
   stampColor?: string;
   stampPosition?: "top"|"center"|"bottom";
   stampSizePreset?: "s"|"m"|"l";
-  stampSubText?: string;
+  stampThickness?: number;
+  stampLogoOpacity?: number;
+  milestoneRewards?: MilestoneReward[];
 }
 
 export default function AppleWalletCard({
@@ -77,7 +82,9 @@ export default function AppleWalletCard({
   stampColor = "#FFFFFF",
   stampPosition = "center",
   stampSizePreset = "m",
-  stampSubText = "",
+  stampThickness = 2,
+  stampLogoOpacity = 1,
+  milestoneRewards = [],
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -311,7 +318,8 @@ export default function AppleWalletCard({
           <StampCircles
             total={stampsObjective} filled={stampsCurrent} style={stripStampStyle}
             text={stampText} textBold={stampTextBold} textItalic={stampTextItalic} textSize={stampTextSize}
-            color={stampColor} position={stampPosition} sizePreset={stampSizePreset} subText={stampSubText}
+            color={stampColor} position={stampPosition} sizePreset={stampSizePreset}
+            thickness={stampThickness} logoUrl={logoUrl} logoOpacity={stampLogoOpacity}
           />
         )}
       </div>
@@ -386,6 +394,42 @@ export default function AppleWalletCard({
         </div>
       )}
 
+      {/* ── Paliers de récompenses ── */}
+      {milestoneRewards.length > 0 && (
+        <div style={{ padding: "12px 16px 14px", borderBottom: `1px solid ${sep}` }}>
+          <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
+            À débloquer
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {milestoneRewards.sort((a, b) => a.at - b.at).map((r, i) => {
+              const done = stampsCurrent >= r.at;
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                    background: done ? fg : "transparent",
+                    border: `1.5px solid ${done ? fg : sep}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {done && (
+                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                        <polyline points="2,6 5,9 10,3" stroke={bg} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 13, color: done ? fg : labelClr, flex: 1, fontWeight: done ? 500 : 400 }}>
+                    {r.label}
+                  </span>
+                  <span style={{ fontSize: 11, color: labelClr, flexShrink: 0 }}>
+                    {r.at} ✦
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Barcode (Apple Wallet impose cette zone en bas, centrée) ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px 24px" }}>
         <div style={{ background: "#FFFFFF", borderRadius: 10, padding: 8, border: "1px solid rgba(0,0,0,0.08)" }}>
@@ -400,25 +444,22 @@ export default function AppleWalletCard({
   );
 }
 
-// Icônes SVG style tampon encreur (contours blancs, viewBox 24×24)
 const STAMP_ICONS: Record<string, string> = {
-  heart:   "M12 21C12 21 3 14 3 8.5 3 5.4 5.4 3 8.5 3c1.7 0 3.3.9 4.3 2.3C13.8 3.9 15.4 3 17.5 3 20.6 3 23 5.4 23 8.5 23 14 14 21 12 21Z",
-  star:    "M12 2 14.9 9H22l-5.8 4.2 2.2 7L12 16.2 5.6 20.2l2.2-7L2 9h7.1Z",
-  bolt:    "M13 2 5 14h7l-1 8 9-12h-7Z",
-  crown:   "M3 18V9l3.5 5L12 2l5.5 12L21 9v9H3Z",
-  flower:  "M12 3C12 3 14.5 7 14.5 9.5C14.5 11 13.4 12 12 12C10.6 12 9.5 11 9.5 9.5C9.5 7 12 3 12 3ZM21 12C21 12 17 14.5 14.5 14.5C13 14.5 12 13.4 12 12C12 10.6 13 9.5 14.5 9.5C17 9.5 21 12 21 12ZM12 21C12 21 9.5 17 9.5 14.5C9.5 13 10.6 12 12 12C13.4 12 14.5 13 14.5 14.5C14.5 17 12 21 12 21ZM3 12C3 12 7 9.5 9.5 9.5C11 9.5 12 10.6 12 12C12 13.4 11 14.5 9.5 14.5C7 14.5 3 12 3 12Z",
-  diamond: "M12 2 22 12 12 22 2 12Z",
+  heart: "M12 20C12 20 4 14 4 8.5 4 5.9 6.2 4 8.5 4c1.5 0 2.9.9 3.5 2.2C12.6 4.9 14 4 15.5 4 17.8 4 20 5.9 20 8.5 20 14 12 20 12 20Z",
+  star:  "M12 2.5l2.4 6.9H22l-6 4.3 2.3 6.9-6.3-4.6-6.3 4.6 2.3-6.9-6-4.3h7.6Z",
 };
 
 function StampCircles({
   total, filled, style = "dot",
   text = "", textBold = false, textItalic = false, textSize = 1,
-  color = "#FFFFFF", position = "center", sizePreset = "m", subText = "",
+  color = "#FFFFFF", position = "center", sizePreset = "m",
+  thickness = 2, logoUrl = "", logoOpacity = 1,
 }: {
   total: number; filled: number;
-  style?: "dot"|"plus"|"ring"|"stamp"|"heart"|"star"|"bolt"|"crown"|"flower"|"diamond"|"text"|"bar";
+  style?: StampStyle;
   text?: string; textBold?: boolean; textItalic?: boolean; textSize?: number;
-  color?: string; position?: "top"|"center"|"bottom"; sizePreset?: "s"|"m"|"l"; subText?: string;
+  color?: string; position?: "top"|"center"|"bottom"; sizePreset?: "s"|"m"|"l";
+  thickness?: number; logoUrl?: string; logoOpacity?: number;
 }) {
   const sizeMult = sizePreset === "s" ? 0.72 : sizePreset === "l" ? 1.28 : 1.0;
   const perRow = total <= 8 ? total : Math.ceil(total / 2);
@@ -427,109 +468,79 @@ function StampCircles({
   const baseSize = Math.min(36, Math.floor((343 - (perRow - 1) * gap) / perRow));
   const s = Math.max(14, Math.round(baseSize * sizeMult));
 
-  // Position verticale
   const justifyContent = position === "top" ? "flex-start" : position === "bottom" ? "flex-end" : "center";
   const paddingV = position === "top" ? `${Math.round(s * 0.35)}px 16px 0` : position === "bottom" ? `0 16px ${Math.round(s * 0.35)}px` : "0 16px";
 
-  // Couleurs dérivées de `color`
   const filledBorder = color;
-  const filledBg = color + "30"; // 18% opacity
-  const emptyBorder = color + "55"; // 33% opacity
+  const filledBg = color + "22";
+  const emptyBorder = color + "44";
 
-  const iconPath = STAMP_ICONS[style];
-
-  // ── Style Barre de progression ──────────────────────────────────────────────
-  if (style === "bar") {
-    const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
-    const barH = Math.max(6, Math.round(s * 0.32));
-    return (
-      <div style={{
-        position: "absolute", inset: 0,
-        display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent, padding: paddingV, pointerEvents: "none", gap: 5,
-      }}>
-        <div style={{ width: "100%", height: barH, borderRadius: barH, overflow: "hidden", background: emptyBorder }}>
-          {pct > 0 && (
-            <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: barH, minWidth: barH }} />
-          )}
-        </div>
-        {filled > 0 && (
-          <span style={{ fontSize: Math.max(8, s * 0.28), fontWeight: 600, color, letterSpacing: "0.04em" }}>
-            {filled} / {total}
-          </span>
-        )}
-      </div>
-    );
-  }
+  const thicknessPx = Math.max(0.5, (s * 0.06) * (thickness / 2));
 
   const Inner = ({ isFilled }: { isFilled: boolean }) => {
     if (!isFilled) return null;
 
-    // Style texte — auto-fit dans le cercle
     if (style === "text" && text) {
       const chars = text.length;
-      // Taille de base : adapte au nombre de caractères et à la taille du cercle
-      const innerW = s * 0.72;
-      const baseFontSize = innerW / Math.max(1, chars * 0.65);
-      const fontSize = Math.min(baseFontSize, s * 0.38) * textSize;
+      const fontSize = Math.min(s * 0.72 / Math.max(1, chars * 0.65), s * 0.38) * textSize;
+      return (
+        <span style={{
+          fontSize: Math.max(5, fontSize), fontWeight: textBold ? 700 : 500,
+          fontStyle: textItalic ? "italic" : "normal", color,
+          textAlign: "center", lineHeight: 1.1, letterSpacing: chars <= 3 ? "0.04em" : "0",
+          wordBreak: "break-all", userSelect: "none", maxWidth: s * 0.78,
+        }}>
+          {text}
+        </span>
+      );
+    }
+
+    if (style === "logo" && logoUrl) {
       return (
         <div style={{
-          width: s * 0.78, maxHeight: s * 0.78,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          overflow: "hidden",
+          width: s * 0.72, height: s * 0.72, borderRadius: "50%",
+          overflow: "hidden", opacity: logoOpacity, flexShrink: 0,
         }}>
-          <span style={{
-            fontSize: Math.max(5, fontSize),
-            fontWeight: textBold ? 700 : 500,
-            fontStyle: textItalic ? "italic" : "normal",
-            color,
-            textAlign: "center",
-            lineHeight: 1.1,
-            letterSpacing: chars <= 3 ? "0.04em" : "0",
-            wordBreak: "break-all",
-            userSelect: "none",
-          }}>
-            {text}
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
       );
     }
 
-    // Formes SVG — avec sous-texte combo optionnel
-    if (iconPath) {
-      const sw = Math.max(1.2, s * 0.09);
-      const iconH = subText ? s * 0.42 : s * 0.58;
-      return (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-          <svg width={iconH} height={iconH} viewBox="0 0 24 24" fill="none"
-            stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
-            <path d={iconPath} />
-          </svg>
-          {subText && (
-            <span style={{
-              fontSize: Math.max(5, s * 0.16), fontWeight: 700, color,
-              letterSpacing: "0.03em", lineHeight: 1, textTransform: "uppercase",
-            }}>
-              {subText.slice(0, 6)}
-            </span>
-          )}
-        </div>
-      );
-    }
     if (style === "dot") {
-      return <div style={{ width: s * 0.38, height: s * 0.38, borderRadius: "50%", background: color }} />;
+      return <div style={{ width: s * 0.36, height: s * 0.36, borderRadius: "50%", background: color }} />;
     }
+
     if (style === "plus") {
-      const bar = s * 0.38, thick = s * 0.1;
+      const bar = s * 0.36, thick = Math.max(1.5, thicknessPx * 0.8);
       return (
         <div style={{ position: "relative", width: bar, height: bar }}>
-          <div style={{ position: "absolute", top: "50%", left: 0, width: bar, height: thick, marginTop: -thick/2, background: color, borderRadius: 2 }} />
-          <div style={{ position: "absolute", left: "50%", top: 0, width: thick, height: bar, marginLeft: -thick/2, background: color, borderRadius: 2 }} />
+          <div style={{ position: "absolute", top: "50%", left: 0, width: bar, height: thick, marginTop: -thick / 2, background: color, borderRadius: thick }} />
+          <div style={{ position: "absolute", left: "50%", top: 0, width: thick, height: bar, marginLeft: -thick / 2, background: color, borderRadius: thick }} />
         </div>
       );
     }
+
+    if (style === "check") {
+      return (
+        <svg width={s * 0.52} height={s * 0.52} viewBox="0 0 14 14" fill="none">
+          <polyline points="2,7 5.5,10.5 12,3" stroke={color} strokeWidth={Math.max(1, thicknessPx * 0.9)} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+
     if (style === "ring") {
-      return <div style={{ width: s * 0.42, height: s * 0.42, borderRadius: "50%", border: `${Math.max(1.5, s * 0.07)}px solid ${color}` }} />;
+      return <div style={{ width: s * 0.5, height: s * 0.5, borderRadius: "50%", border: `${thicknessPx}px solid ${color}` }} />;
+    }
+
+    const iconPath = STAMP_ICONS[style];
+    if (iconPath) {
+      return (
+        <svg width={s * 0.52} height={s * 0.52} viewBox="0 0 24 24" fill="none"
+          stroke={color} strokeWidth={Math.max(1, thicknessPx * 0.9)} strokeLinecap="round" strokeLinejoin="round">
+          <path d={iconPath} />
+        </svg>
+      );
     }
     return null;
   };
@@ -549,31 +560,11 @@ function StampCircles({
             {Array.from({ length: count }).map((_, col) => {
               const idx = start + col;
               const isFilled = idx < filled;
-              const bw = Math.max(1.5, s * 0.07);
-
-              // Style tampon encre
-              if (style === "stamp") {
-                return (
-                  <div key={col} style={{
-                    width: s, height: s, borderRadius: "50%", flexShrink: 0, position: "relative",
-                    border: `${Math.max(2, s * 0.07)}px ${isFilled ? "solid" : "dashed"} ${isFilled ? filledBorder : emptyBorder}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    {isFilled && (
-                      <>
-                        <div style={{ width: s * 0.54, height: s * 0.54, borderRadius: "50%", background: color + "E0" }} />
-                        <div style={{ position: "absolute", width: s * 0.76, height: s * 0.76, borderRadius: "50%", border: `${Math.max(1, s * 0.04)}px solid ${color + "88"}` }} />
-                      </>
-                    )}
-                  </div>
-                );
-              }
-
               return (
                 <div key={col} style={{
                   width: s, height: s, borderRadius: "50%", flexShrink: 0,
                   background: isFilled ? filledBg : "transparent",
-                  border: `${bw}px solid ${isFilled ? filledBorder : emptyBorder}`,
+                  border: `${thicknessPx}px solid ${isFilled ? filledBorder : emptyBorder}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   <Inner isFilled={isFilled} />

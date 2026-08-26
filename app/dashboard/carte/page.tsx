@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
-import AppleWalletCard from "@/components/AppleWalletCard";
+import AppleWalletCard, { type StampStyle, type MilestoneReward } from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
 
@@ -62,7 +62,6 @@ export default function CartePage() {
 
   // Tampons sur la bannière
   const [stampsOnStrip, setStampsOnStrip] = useState<boolean>((marchand as Record<string, unknown>).apple_stamps_on_strip === true);
-  type StampStyle = "dot"|"plus"|"ring"|"stamp"|"heart"|"star"|"bolt"|"crown"|"flower"|"diamond"|"text"|"bar";
   const [stripStampStyle, setStripStampStyle] = useState<StampStyle>(
     ((marchand as Record<string, unknown>).apple_strip_stamp_style as StampStyle) || "dot"
   );
@@ -73,7 +72,11 @@ export default function CartePage() {
   const [stampColor, setStampColor] = useState<string>((marchand as Record<string, unknown>).apple_stamp_color as string || "#FFFFFF");
   const [stampPosition, setStampPosition] = useState<"top"|"center"|"bottom">(((marchand as Record<string, unknown>).apple_stamp_position as "top"|"center"|"bottom") || "center");
   const [stampSizePreset, setStampSizePreset] = useState<"s"|"m"|"l">(((marchand as Record<string, unknown>).apple_stamp_size as "s"|"m"|"l") || "m");
-  const [stampSubText, setStampSubText] = useState<string>((marchand as Record<string, unknown>).apple_stamp_sub_text as string || "");
+  const [stampThickness, setStampThickness] = useState<number>(((marchand as Record<string, unknown>).apple_stamp_thickness as number) ?? 2);
+  const [stampLogoOpacity, setStampLogoOpacity] = useState<number>(((marchand as Record<string, unknown>).apple_stamp_logo_opacity as number) ?? 1);
+  const [milestoneRewards, setMilestoneRewards] = useState<MilestoneReward[]>(((marchand as Record<string, unknown>).apple_milestone_rewards as MilestoneReward[]) || []);
+  const [newRewardLabel, setNewRewardLabel] = useState("");
+  const [newRewardAt, setNewRewardAt] = useState<number>(objectif);
 
   // Feature 6 — cadrage image uploadée
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
@@ -275,7 +278,9 @@ export default function CartePage() {
       apple_stamp_color: stampColor,
       apple_stamp_position: stampPosition,
       apple_stamp_size: stampSizePreset,
-      apple_stamp_sub_text: stampSubText,
+      apple_stamp_thickness: stampThickness,
+      apple_stamp_logo_opacity: stampLogoOpacity,
+      apple_milestone_rewards: milestoneRewards,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -589,7 +594,9 @@ export default function CartePage() {
               stampColor={stampColor}
               stampPosition={stampPosition}
               stampSizePreset={stampSizePreset}
-              stampSubText={stampSubText}
+              stampThickness={stampThickness}
+              stampLogoOpacity={stampLogoOpacity}
+              milestoneRewards={milestoneRewards}
             />
           ) : (
             <GoogleWalletCard
@@ -1011,22 +1018,18 @@ export default function CartePage() {
                   {/* ── Style ── */}
                   <div>
                     <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>
-                      Style · {marchand.objectif_tampons || 10} tampons
+                      Dessin · {marchand.objectif_tampons || 10} tampons
                     </p>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 5 }}>
                       {([
-                        { key: "heart",   label: "♡",  desc: "Cœur" },
-                        { key: "star",    label: "☆",  desc: "Étoile" },
-                        { key: "bolt",    label: "⚡",  desc: "Éclair" },
-                        { key: "crown",   label: "♛",  desc: "Couronne" },
-                        { key: "flower",  label: "✿",  desc: "Fleur" },
-                        { key: "diamond", label: "◇",  desc: "Diamant" },
-                        { key: "dot",     label: "·",  desc: "Point" },
-                        { key: "plus",    label: "+",  desc: "Croix" },
-                        { key: "ring",    label: "◎",  desc: "Anneau" },
-                        { key: "stamp",   label: "⊙",  desc: "Tampon" },
-                        { key: "text",    label: "Aa", desc: "Texte" },
-                        { key: "bar",     label: "▬",  desc: "Barre" },
+                        { key: "dot",   label: "·",  desc: "Point" },
+                        { key: "ring",  label: "◎",  desc: "Anneau" },
+                        { key: "plus",  label: "+",  desc: "Croix" },
+                        { key: "check", label: "✓",  desc: "Check" },
+                        { key: "heart", label: "♡",  desc: "Cœur" },
+                        { key: "star",  label: "☆",  desc: "Étoile" },
+                        { key: "text",  label: "Aa", desc: "Texte" },
+                        { key: "logo",  label: "⊕",  desc: "Logo" },
                       ] as const).map(opt => (
                         <button key={opt.key} onClick={() => setStripStampStyle(opt.key)} style={{
                           padding: "7px 4px", borderRadius: 8, fontSize: 15,
@@ -1061,6 +1064,30 @@ export default function CartePage() {
                     </div>
                   </div>
 
+                  {/* ── Épaisseur ── */}
+                  <div>
+                    <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>
+                      Épaisseur des cercles — {stampThickness === 1 ? "Fin" : stampThickness === 2 ? "Normal" : stampThickness === 3 ? "Épais" : stampThickness === 4 ? "Très épais" : "Maximum"}
+                    </p>
+                    <input type="range" min={1} max={5} step={1} value={stampThickness}
+                      onChange={e => setStampThickness(+e.target.value)}
+                      style={{ width: "100%", accentColor: "var(--accent)", cursor: "pointer" }}
+                    />
+                  </div>
+
+                  {/* ── Opacité logo (style logo seulement) ── */}
+                  {stripStampStyle === "logo" && (
+                    <div>
+                      <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>
+                        Opacité du logo — {Math.round(stampLogoOpacity * 100)}%
+                      </p>
+                      <input type="range" min={0} max={1} step={0.05} value={stampLogoOpacity}
+                        onChange={e => setStampLogoOpacity(+e.target.value)}
+                        style={{ width: "100%", accentColor: "var(--accent)", cursor: "pointer" }}
+                      />
+                    </div>
+                  )}
+
                   {/* ── Position ── */}
                   <div>
                     <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>Position</p>
@@ -1079,49 +1106,28 @@ export default function CartePage() {
                   </div>
 
                   {/* ── Taille ── */}
-                  {stripStampStyle !== "bar" && (
-                    <div>
-                      <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>Taille des cercles</p>
-                      <div style={{ display: "flex", gap: 5 }}>
-                        {(["s","m","l"] as const).map(sz => (
-                          <button key={sz} onClick={() => setStampSizePreset(sz)} style={{
-                            flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 11, fontWeight: 600,
-                            background: stampSizePreset === sz ? "var(--accent)" : "var(--glass-bg)",
-                            border: `1px solid ${stampSizePreset === sz ? "var(--accent)" : "var(--border)"}`,
-                            color: stampSizePreset === sz ? "white" : "var(--fg-secondary)", cursor: "pointer",
-                          }}>
-                            {sz === "s" ? "S — Petit" : sz === "m" ? "M — Moyen" : "L — Grand"}
-                          </button>
-                        ))}
-                      </div>
+                  <div>
+                    <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>Taille des tampons</p>
+                    <div style={{ display: "flex", gap: 5 }}>
+                      {(["s","m","l"] as const).map(sz => (
+                        <button key={sz} onClick={() => setStampSizePreset(sz)} style={{
+                          flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 11, fontWeight: 600,
+                          background: stampSizePreset === sz ? "var(--accent)" : "var(--glass-bg)",
+                          border: `1px solid ${stampSizePreset === sz ? "var(--accent)" : "var(--border)"}`,
+                          color: stampSizePreset === sz ? "white" : "var(--fg-secondary)", cursor: "pointer",
+                        }}>
+                          {sz === "s" ? "S — Petit" : sz === "m" ? "M — Moyen" : "L — Grand"}
+                        </button>
+                      ))}
                     </div>
-                  )}
+                  </div>
 
-                  {/* ── Sous-texte (combo icône + texte) ── */}
-                  {["heart","star","bolt","crown","flower","diamond"].includes(stripStampStyle) && (
-                    <div>
-                      <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>
-                        Texte sous l&apos;icône (optionnel — ex : CAFÉ, W)
-                      </p>
-                      <input type="text" value={stampSubText} onChange={e => setStampSubText(e.target.value.slice(0, 6))}
-                        placeholder="ex : CAFÉ" maxLength={6}
-                        style={{
-                          width: "100%", padding: "7px 12px", borderRadius: 8, fontSize: 12,
-                          background: "var(--glass-bg)", border: "1px solid var(--border)",
-                          color: "var(--fg)", outline: "none", boxSizing: "border-box",
-                        }}
-                        onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-                        onBlur={e => (e.target.style.borderColor = "var(--border)")}
-                      />
-                    </div>
-                  )}
-
-                  {/* ── Éditeur texte (style texte uniquement) ── */}
+                  {/* ── Éditeur texte ── */}
                   {stripStampStyle === "text" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <div>
                         <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 5 }}>
-                          Texte dans le cercle — recommandé : 2–6 caractères
+                          Texte dans le cercle — ex : CAFÉ, W
                         </p>
                         <input type="text" value={stampText} onChange={e => setStampText(e.target.value.slice(0, 12))}
                           placeholder="ex : CAFÉ, W" maxLength={12}
@@ -1391,8 +1397,8 @@ export default function CartePage() {
             />
           </Section>
 
-          {/* Récompense */}
-          <Section label="Récompense">
+          {/* Récompense principale */}
+          <Section label="Récompense finale">
             <Field label="Description">
               <TextInput value={recompense} onChange={setRecompense} placeholder="1 café offert"/>
             </Field>
@@ -1412,6 +1418,77 @@ export default function CartePage() {
                 ))}
               </div>
             </Field>
+          </Section>
+
+          {/* Paliers intermédiaires */}
+          <Section label="Paliers à débloquer">
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+              Cadeaux intermédiaires visibles sur la carte du client.
+            </p>
+
+            {/* Liste existante */}
+            {milestoneRewards.sort((a, b) => a.at - b.at).map((r, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <div style={{
+                  flexShrink: 0, padding: "3px 8px", borderRadius: 20, fontSize: 11, fontWeight: 600,
+                  background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)",
+                }}>
+                  {r.at} ✦
+                </div>
+                <span style={{ flex: 1, fontSize: 13, color: "var(--fg)" }}>{r.label}</span>
+                <button onClick={() => setMilestoneRewards(prev => prev.filter((_, j) => j !== i))} style={{
+                  width: 26, height: 26, borderRadius: 6, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "none", border: "1px solid var(--border)", color: "var(--fg-tertiary)", cursor: "pointer",
+                }}>×</button>
+              </div>
+            ))}
+
+            {/* Ajouter un palier */}
+            <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+              <input type="number" min={1} max={objectif - 1} value={newRewardAt}
+                onChange={e => setNewRewardAt(Math.min(objectif - 1, Math.max(1, +e.target.value)))}
+                style={{
+                  width: 52, padding: "7px 8px", borderRadius: 8, fontSize: 12, textAlign: "center",
+                  background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none",
+                }}
+              />
+              <input type="text" value={newRewardLabel} onChange={e => setNewRewardLabel(e.target.value)}
+                placeholder="ex : Café offert" maxLength={40}
+                style={{
+                  flex: 1, padding: "7px 10px", borderRadius: 8, fontSize: 12,
+                  background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none",
+                }}
+                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                onBlur={e => (e.target.style.borderColor = "var(--border)")}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && newRewardLabel.trim()) {
+                    setMilestoneRewards(prev => [...prev, { at: newRewardAt, label: newRewardLabel.trim() }]);
+                    setNewRewardLabel("");
+                    setNewRewardAt(objectif);
+                  }
+                }}
+              />
+              <button
+                disabled={!newRewardLabel.trim()}
+                onClick={() => {
+                  if (!newRewardLabel.trim()) return;
+                  setMilestoneRewards(prev => [...prev, { at: newRewardAt, label: newRewardLabel.trim() }]);
+                  setNewRewardLabel("");
+                  setNewRewardAt(objectif);
+                }}
+                style={{
+                  padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  background: newRewardLabel.trim() ? "var(--accent)" : "var(--glass-bg)",
+                  border: "1px solid var(--border)",
+                  color: newRewardLabel.trim() ? "white" : "var(--fg-tertiary)", cursor: "pointer",
+                }}
+              >
+                +
+              </button>
+            </div>
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginTop: 6 }}>
+              Le chiffre = nombre de tampons requis. Entrez et appuyez sur +.
+            </p>
           </Section>
 
           {/* Champ en-tête — Apple uniquement */}
