@@ -157,23 +157,11 @@ export async function drawPrintCard(
     ctx.stroke();
   });
 
-  // Arcs NFC ))) en canvas (symbol standard contactless)
-  // Dessinés depuis un point légèrement à gauche du centre
-  const ax = ncx - p(4), ay = ncy;
-  const arcSpan = Math.PI * 0.72; // ±65° autour de l'axe horizontal
-  ctx.lineCap  = "round";
-  ctx.strokeStyle = blue;
-  [0.14, 0.26, 0.40].forEach(frac => {
-    ctx.beginPath();
-    ctx.arc(ax, ay, p(90) * frac, -arcSpan / 2, arcSpan / 2);
-    ctx.lineWidth = p(90) * 0.09;
-    ctx.stroke();
-  });
-  // Point central
-  ctx.beginPath();
-  ctx.arc(ax, ay, p(90) * 0.055, 0, Math.PI * 2);
-  ctx.fillStyle = blue;
-  ctx.fill();
+  // Logo NFC SVG — centré dans le cercle gris (bounding box 70×70 spec)
+  const nfcImg = await loadImg("/nfc-icon.svg");
+  if (nfcImg) {
+    ctx.drawImage(nfcImg, p(255), p(430), p(70), p(70));
+  }
 
   // ── 6. TEXTE NFC (X:420 Y:405) ───────────────────────────────────────────
   ctx.textAlign    = "left";
@@ -280,20 +268,9 @@ export async function drawPrintCard(
   ctx.textBaseline = "top";
   ctx.fillText("Ajoutez à votre portefeuille", p(750), p(680));
 
-  // Badges helper : fond blanc + border + image préservant l'aspect ratio
+  // Badges helper : image SVG directe, letterbox, pas de fond ajouté
   function drawBadge(img: HTMLImageElement | null, x: number, y: number, w: number, h: number) {
-    // Fond blanc
-    ctx.shadowColor = "rgba(0,0,0,0.08)"; ctx.shadowBlur = p(10); ctx.shadowOffsetY = p(2);
-    rr(ctx, p(x), p(y), p(w), p(h), p(18));
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fill();
-    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-    ctx.strokeStyle = "rgba(0,0,0,0.10)";
-    ctx.lineWidth   = p(1);
-    ctx.stroke();
-
     if (!img) return;
-    // Calculer les dimensions pour conserver l'aspect ratio (letterbox)
     const natR = img.naturalWidth / (img.naturalHeight || 1);
     const boxW = p(w), boxH = p(h);
     const boxR = boxW / boxH;
@@ -302,12 +279,7 @@ export async function drawPrintCard(
     else             { dh = boxH; dw = boxH * natR; }
     const dx = p(x) + (boxW - dw) / 2;
     const dy = p(y) + (boxH - dh) / 2;
-
-    ctx.save();
-    rr(ctx, p(x), p(y), p(w), p(h), p(18));
-    ctx.clip();
     ctx.drawImage(img, dx, dy, dw, dh);
-    ctx.restore();
   }
 
   // ── 12. BADGE APPLE (X:435 Y:725 W:300 H:78) ─────────────────────────────
