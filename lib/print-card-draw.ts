@@ -4,6 +4,17 @@
 export const PRINT_W = 1890;
 export const PRINT_H = 1181;
 
+async function loadSvgImage(src: string, size: number): Promise<HTMLImageElement | null> {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+    img.width = size;
+    img.height = size;
+  });
+}
+
 async function loadQRImage(url: string, size: number): Promise<HTMLImageElement | null> {
   try {
     const QRCode = (await import("qrcode")).default;
@@ -33,6 +44,17 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.lineTo(x, y + r);
   ctx.arcTo(x, y, x + r, y, r);
   ctx.closePath();
+}
+
+async function drawNFCIconFromSVG(
+  ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number
+): Promise<boolean> {
+  const img = await loadSvgImage("/nfc-icon.svg", size);
+  if (!img) return false;
+  // Draw on a tmp canvas to tint if needed — SVG already blue so draw directly
+  const d = size * 0.9;
+  ctx.drawImage(img, cx - d / 2, cy - d / 2, d, d);
+  return true;
 }
 
 function drawNFCIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
@@ -289,7 +311,9 @@ export async function drawPrintCard(
   // ── 4. NFC ICON ───────────────────────────────────────────────────────────
   const nfcCX = leftX + panelW * 0.30;
   const nfcCY = panelY + panelH / 2;
-  drawNFCIcon(ctx, nfcCX, nfcCY, 170 * s);
+  const nfcSize = 200 * s;
+  const svgOk = await drawNFCIconFromSVG(ctx, nfcCX, nfcCY, nfcSize);
+  if (!svgOk) drawNFCIcon(ctx, nfcCX, nfcCY, 170 * s);
 
   // "TAPEZ NFC" label
   const labelX = leftX + panelW * 0.56;
