@@ -435,8 +435,13 @@ export async function drawPrintCard(
     drawWalletBadge(ctx, badgeX1, badgeY, appleW, badgeH, "apple");
   }
 
-  // Google Wallet — canvas pur (badge officiel non disponible en téléchargement direct)
-  drawWalletBadge(ctx, badgeX2, badgeY, appleW, badgeH, "google");
+  // Google Wallet — SVG officiel FR
+  const googleImg = await loadSvgImage("/google-wallet-badge.svg", Math.round(badgeH * 4));
+  if (googleImg) {
+    ctx.drawImage(googleImg, badgeX2, badgeY, appleW, badgeH);
+  } else {
+    drawWalletBadge(ctx, badgeX2, badgeY, appleW, badgeH, "google");
+  }
 
   // ── 9. WALLIO BRANDING ───────────────────────────────────────────────────
   ctx.textAlign = "center";
