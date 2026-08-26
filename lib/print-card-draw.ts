@@ -143,14 +143,42 @@ export async function drawPrintCard(
 
   // NFC : grand cercle gris rempli (le fond du "tap zone")
   const ncx = p(290), ncy = p(465);
-  // Fond bleu glacier — style iOS/visionOS 2025
-  const nfcGrad = ctx.createRadialGradient(ncx - p(20), ncy - p(20), 0, ncx, ncy, p(90));
-  nfcGrad.addColorStop(0, "#EEF4FF");
-  nfcGrad.addColorStop(1, "#E2ECFF");
+  // Liquid Glass iOS 26 — surface translucide avec reflet spéculaire
+  ctx.save();
   ctx.beginPath();
   ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
-  ctx.fillStyle = nfcGrad;
-  ctx.fill();
+  ctx.clip();
+
+  // Couche de base : blanc semi-transparent (effet givre)
+  const glassBase = ctx.createRadialGradient(ncx, ncy - p(20), 0, ncx, ncy, p(90));
+  glassBase.addColorStop(0,   "rgba(255,255,255,0.82)");
+  glassBase.addColorStop(0.5, "rgba(245,249,255,0.72)");
+  glassBase.addColorStop(1,   "rgba(228,238,255,0.60)");
+  ctx.fillStyle = glassBase;
+  ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
+
+  // Reflet spéculaire — bord supérieur gauche (lumière qui traverse le verre)
+  const specGrad = ctx.createLinearGradient(ncx - p(90), ncy - p(90), ncx + p(30), ncy + p(10));
+  specGrad.addColorStop(0,    "rgba(255,255,255,0.55)");
+  specGrad.addColorStop(0.35, "rgba(255,255,255,0.15)");
+  specGrad.addColorStop(1,    "rgba(255,255,255,0.00)");
+  ctx.fillStyle = specGrad;
+  ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
+
+  ctx.restore();
+
+  // Bord verre : fine ligne blanche brillante en haut + subtile en bas
+  ctx.save();
+  const rimGrad = ctx.createLinearGradient(ncx, ncy - p(90), ncx, ncy + p(90));
+  rimGrad.addColorStop(0,   "rgba(255,255,255,0.80)");
+  rimGrad.addColorStop(0.4, "rgba(200,220,255,0.25)");
+  rimGrad.addColorStop(1,   "rgba(180,200,255,0.10)");
+  ctx.beginPath();
+  ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
+  ctx.strokeStyle = rimGrad;
+  ctx.lineWidth   = p(1.5);
+  ctx.stroke();
+  ctx.restore();
 
   // Anneaux concentriques subtils (180 → 105)
   [180, 155, 130, 105].forEach((d, i) => {
