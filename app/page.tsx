@@ -9,7 +9,7 @@ function useReveal() {
     // Stagger children inside [data-stagger]
     document.querySelectorAll("[data-stagger]").forEach(parent => {
       Array.from(parent.children).forEach((child, i) => {
-        (child as HTMLElement).style.transitionDelay = `${i * 0.09}s`;
+        (child as HTMLElement).style.transitionDelay = `${i * 0.055}s`;
         child.setAttribute("data-reveal", "");
       });
     });
@@ -19,11 +19,12 @@ function useReveal() {
       entries => entries.forEach(e => {
         if (e.isIntersecting) {
           const el = e.target as HTMLElement;
-          el.classList.add("revealed");
+          // rAF pour synchroniser avec le prochain frame GPU
+          requestAnimationFrame(() => el.classList.add("revealed"));
           io.unobserve(el);
         }
       }),
-      { threshold: 0.10, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.06 }
     );
     els.forEach(el => io.observe(el));
     return () => io.disconnect();
@@ -49,22 +50,25 @@ export default function LandingPage() {
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     resize();
     window.addEventListener("resize", resize);
-    const draw = () => {
+    // Throttle à 30fps sur mobile pour économiser le GPU
+    const isMobile = window.innerWidth < 768;
+    let last = 0;
+    const draw = (ts: number) => {
+      raf = requestAnimationFrame(draw);
+      if (isMobile && ts - last < 33) return; // 30fps mobile
+      last = ts;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const cx = canvas.width * 0.75, cy = canvas.height * 0.45, t = frame / 200;
-      for (let i = 0; i < 6; i++) {
+      const arcs = isMobile ? 4 : 6;
+      for (let i = 0; i < arcs; i++) {
         const r = 50 + i * 75 + Math.sin(t + i * 0.7) * 10;
-        const a = (0.045 - i * 0.006) * (0.5 + 0.5 * Math.sin(t * 0.3 + i));
+        const a = (0.04 - i * 0.006) * (0.5 + 0.5 * Math.sin(t * 0.3 + i));
         ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI * 0.6, Math.PI * 0.6);
         ctx.strokeStyle = `rgba(68,114,245,${a})`; ctx.lineWidth = 1.5; ctx.lineCap = "round"; ctx.stroke();
       }
-      // Ambient glow
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 320);
-      g.addColorStop(0, "rgba(100,130,255,0.04)"); g.addColorStop(1, "transparent");
-      ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      frame++; raf = requestAnimationFrame(draw);
+      frame++;
     };
-    draw();
+    raf = requestAnimationFrame(draw);
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
   }, []);
 
@@ -84,16 +88,21 @@ export default function LandingPage() {
         .hero-card  { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.55s both; }
         .hero-float { animation: float 5s ease-in-out infinite; }
 
-        /* GPU acceleration */
-        [data-reveal], [data-reveal="left"], [data-reveal="right"], [data-reveal="scale"], [data-reveal="fade"] { will-change:transform,opacity; }
+        /* GPU compositing — aucun repaint */
+        [data-reveal], [data-reveal="left"], [data-reveal="right"], [data-reveal="scale"], [data-reveal="fade"] {
+          will-change: transform, opacity;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          transform-style: preserve-3d;
+        }
 
-        /* Scroll reveal — état initial (sans blur = 60fps sur mobile) */
-        [data-reveal]         { opacity:0; transform:translateY(32px); transition:opacity 0.65s cubic-bezier(.16,1,.3,1), transform 0.65s cubic-bezier(.16,1,.3,1); }
-        [data-reveal="left"]  { opacity:0; transform:translateX(-36px); transition:opacity 0.65s cubic-bezier(.16,1,.3,1), transform 0.65s cubic-bezier(.16,1,.3,1); }
-        [data-reveal="right"] { opacity:0; transform:translateX(36px);  transition:opacity 0.65s cubic-bezier(.16,1,.3,1), transform 0.65s cubic-bezier(.16,1,.3,1); }
-        [data-reveal="scale"] { opacity:0; transform:scale(0.92) translateY(20px); transition:opacity 0.70s cubic-bezier(.16,1,.3,1), transform 0.70s cubic-bezier(.16,1,.3,1); }
-        [data-reveal="fade"]  { opacity:0; transition:opacity 0.80s ease; }
-        .revealed { opacity:1 !important; transform:none !important; }
+        /* Scroll reveal — translate3d force le GPU */
+        [data-reveal]         { opacity:0; transform:translate3d(0,24px,0);   transition:opacity 0.48s cubic-bezier(.22,1,.36,1), transform 0.48s cubic-bezier(.22,1,.36,1); }
+        [data-reveal="left"]  { opacity:0; transform:translate3d(-28px,0,0);  transition:opacity 0.48s cubic-bezier(.22,1,.36,1), transform 0.48s cubic-bezier(.22,1,.36,1); }
+        [data-reveal="right"] { opacity:0; transform:translate3d(28px,0,0);   transition:opacity 0.48s cubic-bezier(.22,1,.36,1), transform 0.48s cubic-bezier(.22,1,.36,1); }
+        [data-reveal="scale"] { opacity:0; transform:translate3d(0,16px,0) scale3d(0.94,0.94,1); transition:opacity 0.52s cubic-bezier(.22,1,.36,1), transform 0.52s cubic-bezier(.22,1,.36,1); }
+        [data-reveal="fade"]  { opacity:0; transition:opacity 0.55s ease; }
+        .revealed { opacity:1 !important; transform:translate3d(0,0,0) !important; }
 
         .grad-text { background:linear-gradient(92deg,#4472F5,#6A5AF9,#8A5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:shimmer 4s ease infinite; }
 
