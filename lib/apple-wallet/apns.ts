@@ -31,7 +31,13 @@ export async function pushPassUpdate(pushToken: string): Promise<void> {
 
   const host = process.env.NODE_ENV === "production" ? APNS_HOST_PROD : APNS_HOST_DEV;
   const path = `/3/device/${pushToken}`;
-  const jwt  = buildJwt();
+  let jwt: string;
+  try {
+    jwt = buildJwt();
+  } catch (e) {
+    console.warn("[APNS] buildJwt échoué — Apple Developer requis", e);
+    return;
+  }
 
   return new Promise((resolve, reject) => {
     const client = http2.connect(`https://${host}`);

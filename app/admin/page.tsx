@@ -1,6 +1,4 @@
 "use client";
-
-"use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "firebase/firestore";
@@ -30,7 +28,7 @@ function slugify(str: string) {
 
 function genNfcId(nom: string) {
   const base = slugify(nom) || "marchand";
-  const rand = Math.random().toString(36).substring(2, 6);
+  const rand = Math.random().toString(36).substring(2, 7);
   return `${base}-${rand}`;
 }
 
@@ -248,9 +246,11 @@ export default function AdminPage() {
     setShowCreate(false);
     setCreateNom(""); setCreateEmail(""); setCreatePassword("");
     setCreating(false);
-    // Ouvrir le drawer du nouveau marchand
-    const nouveau = marchands.find(m => m.id === data.uid);
-    if (nouveau) setSelected(nouveau);
+    // chargerMarchands() met à jour le state — on cherche dans la collection Firestore directement
+    // via l'uid retourné par l'API pour ouvrir le drawer immédiatement
+    const { getDoc, doc } = await import("firebase/firestore");
+    const snap = await getDoc(doc((await import("@/lib/firebase")).db, "marchands", data.uid));
+    if (snap.exists()) setSelected({ id: snap.id, nom: "", email: "", actif: false, ...snap.data() } as Marchand);
   }
 
   async function copierNfc(nfc_id: string) {

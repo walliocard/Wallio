@@ -40,7 +40,7 @@ export async function GET(req: Request) {
       if (dnSuffix === suffixRef && !client.birthday_bonus_used) {
         await clientDoc.ref.update({
           birthday_bonus: true,
-          birthday_bonus_used: false,
+          birthday_bonus_used: true,
         });
         traites++;
       }

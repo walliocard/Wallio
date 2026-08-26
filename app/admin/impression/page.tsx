@@ -1,17 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { drawPrintCard, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
 const PREVIEW_SCALE = 0.42;
 const PRINT_SCALE   = 3; // 4500×3000px — 4K print quality
 
 export default function ImpressionPage() {
+  const router = useRouter();
   const [urls, setUrls] = useState<string>("");
   const [previewUrl, setPreviewUrl] = useState("https://app.wallio.ma/nfc/demo");
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const previewRef = useRef<HTMLCanvasElement>(null);
+
+  // Vérification accès admin
+  useEffect(() => {
+    fetch("/api/admin/check").then(r => { if (!r.ok) router.push("/admin/login"); });
+  }, [router]);
 
   // Refresh preview when previewUrl changes
   useEffect(() => {

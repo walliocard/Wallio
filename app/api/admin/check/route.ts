@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "wallio.card@gmail.com";
-const SECRET = process.env.CRON_SECRET ?? "secret";
+const SECRET = process.env.ADMIN_SECRET ?? process.env.CRON_SECRET ?? "secret";
 
 export async function GET() {
   const store = await cookies();

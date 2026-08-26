@@ -219,7 +219,10 @@ export default function ClientsPage() {
         <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {filtered.map(client => {
             const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
-            const pct = Math.round((client.tampons / marchand.objectif_tampons) * 100);
+            const niveau = (client.niveau as number | undefined) ?? 0;
+            const palier = marchand.paliers?.[niveau];
+            const objectifActuel = palier?.tampons ?? marchand.objectif_tampons ?? 10;
+            const pct = Math.min(100, Math.round((client.tampons / objectifActuel) * 100));
             return (
               <Link
                 key={client.id}

@@ -66,7 +66,12 @@ export default function NfcPage({ params }: { params: { marchandId: string } }) 
       result={screen.result}
       marchand={screen.marchand}
       onValiderRecompense={async () => {
-        await validerRecompense(screen.client.id, screen.marchand);
+        await validerRecompense(
+          screen.client.id,
+          screen.marchand,
+          screen.client.niveau ?? 0,
+          screen.client.paliers_valides ?? []
+        );
         setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
       }}
     />
@@ -425,20 +430,30 @@ function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }
           </div>
         )}
 
-        {/* Bouton Apple Wallet */}
-        <a
-          href={`/api/apple-wallet/generate/${client.wallet_id}`}
-          download
-          className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 transition-opacity active:opacity-70"
-          style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.15)" }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-            <rect x="2" y="5" width="20" height="14" rx="3" fill="none" stroke="white" strokeWidth="1.5"/>
-            <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
-            <circle cx="7" cy="14.5" r="1.5" fill="white"/>
-          </svg>
-          <span className="text-[15px] font-semibold text-white">Ajouter à Apple Wallet</span>
-        </a>
+        {/* Bouton Apple Wallet — actif uniquement si Apple Developer configuré */}
+        {process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" ? (
+          <a
+            href={`/api/apple-wallet/generate/${client.wallet_id}`}
+            download
+            className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 transition-opacity active:opacity-70"
+            style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.15)" }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+              <rect x="2" y="5" width="20" height="14" rx="3" fill="none" stroke="white" strokeWidth="1.5"/>
+              <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
+              <circle cx="7" cy="14.5" r="1.5" fill="white"/>
+            </svg>
+            <span className="text-[15px] font-semibold text-white">Ajouter à Apple Wallet</span>
+          </a>
+        ) : (
+          <div className="w-full rounded-2xl py-3 px-6 text-center"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+            <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>Apple Wallet</p>
+            <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+              Disponible prochainement
+            </p>
+          </div>
+        )}
       </div>
     </main>
   );
