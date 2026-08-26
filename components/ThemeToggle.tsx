@@ -20,10 +20,10 @@ export default function ThemeToggle() {
     setTheme(t);
   }
 
-  const options: { value: Theme; icon: string; label: string }[] = [
-    { value: "light",  icon: "☀️", label: "Clair" },
-    { value: "system", icon: "⚙️", label: "Auto" },
-    { value: "dark",   icon: "🌙", label: "Sombre" },
+  const options: { value: Theme; label: string }[] = [
+    { value: "light",  label: "Clair" },
+    { value: "system", label: "Auto" },
+    { value: "dark",   label: "Sombre" },
   ];
 
   return (
@@ -34,14 +34,13 @@ export default function ThemeToggle() {
     }}>
       {options.map(o => (
         <button key={o.value} onClick={() => apply(o.value)}
-          title={o.label}
           style={{
-            padding: "4px 10px", borderRadius: 9, fontSize: 13,
+            padding: "4px 10px", borderRadius: 9, fontSize: 12, fontWeight: 500,
             background: theme === o.value ? "var(--accent)" : "transparent",
             color: theme === o.value ? "white" : "var(--fg-secondary)",
             cursor: "pointer", border: "none", transition: "all 0.15s",
           }}>
-          {o.icon}
+          {o.label}
         </button>
       ))}
     </div>
