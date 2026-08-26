@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+"use client";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -152,6 +153,16 @@ export default function AdminPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
+  // Onglets
+  const [tab, setTab] = useState<"marchands" | "impression">("marchands");
+
+  // Impression
+  const [impUrl, setImpUrl] = useState("https://app.wallio.ma/nfc/demo");
+  const [impUrls, setImpUrls] = useState("");
+  const [impGenerating, setImpGenerating] = useState(false);
+  const [impProgress, setImpProgress] = useState(0);
+  const previewRef = useRef<HTMLCanvasElement>(null);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -245,6 +256,45 @@ export default function AdminPage() {
     await navigator.clipboard.writeText(`https://app.wallio.ma/nfc/${nfc_id}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  // Preview impression
+  useEffect(() => {
+    const canvas = previewRef.current;
+    if (!canvas) return;
+    drawPrintCard(canvas, impUrl, 0.42).catch(() => {});
+  }, [impUrl]);
+
+  async function impDownloadSingle() {
+    setImpGenerating(true);
+    const canvas = document.createElement("canvas");
+    await drawPrintCard(canvas, impUrl, 3);
+    const link = document.createElement("a");
+    link.download = "wallio-carte-comptoir.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    setImpGenerating(false);
+  }
+
+  async function impDownloadBatch() {
+    const list = impUrls.split("\n").map(l => l.trim()).filter(Boolean);
+    if (!list.length) return;
+    setImpGenerating(true); setImpProgress(0);
+    const JSZip = (await import("jszip")).default;
+    const zip = new JSZip();
+    for (let i = 0; i < list.length; i++) {
+      const canvas = document.createElement("canvas");
+      await drawPrintCard(canvas, list[i], 3);
+      const blob = await new Promise<Blob>(r => canvas.toBlob(b => r(b!), "image/png"));
+      zip.file(`wallio-carte-${String(i + 1).padStart(2, "0")}.png`, blob);
+      setImpProgress(Math.round(((i + 1) / list.length) * 100));
+    }
+    const content = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement("a");
+    link.download = `wallio-cartes-${list.length}.zip`;
+    link.href = URL.createObjectURL(content);
+    link.click();
+    setImpGenerating(false); setImpProgress(0);
   }
 
   async function logout() {
@@ -534,6 +584,22 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Onglets */}
+        <div className="flex gap-2 mb-8 p-1 rounded-2xl w-fit"
+          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+          {([["marchands", "Marchands"], ["impression", "Cartes comptoir"]] as const).map(([key, label]) => (
+            <button key={key} onClick={() => setTab(key)}
+              className="px-5 py-2 rounded-xl text-[14px] font-medium transition-all"
+              style={{
+                background: tab === key ? "var(--accent)" : "transparent",
+                color: tab === key ? "white" : "var(--fg-secondary)",
+              }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "marchands" && <>
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           {[
@@ -637,6 +703,93 @@ export default function AdminPage() {
             </table>
           )}
         </div>
+        </>}
+
+        {/* ── Onglet Cartes comptoir ── */}
+        {tab === "impression" && (
+          <div className="flex gap-6 items-start flex-wrap">
+
+            {/* Contrôles */}
+            <div style={{ flex: "0 0 300px", display: "flex", flexDirection: "column", gap: 16 }}>
+
+              {/* URL unique */}
+              <div className="rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--fg-tertiary)" }}>
+                  URL unique — aperçu
+                </p>
+                <input type="text" value={impUrl} onChange={e => setImpUrl(e.target.value)}
+                  placeholder="https://app.wallio.ma/nfc/xxx"
+                  className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none mb-3"
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", boxSizing: "border-box" }} />
+                <button onClick={impDownloadSingle} disabled={impGenerating}
+                  className="w-full py-3 rounded-xl text-[14px] font-semibold text-white"
+                  style={{ background: impGenerating ? "#888" : "var(--accent)" }}>
+                  {impGenerating ? "Génération…" : "⬇ Télécharger PNG 4K"}
+                </button>
+              </div>
+
+              {/* Batch */}
+              <div className="rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--fg-tertiary)" }}>
+                  Batch — une URL par ligne
+                </p>
+                <textarea value={impUrls} onChange={e => setImpUrls(e.target.value)} rows={8}
+                  placeholder={"https://app.wallio.ma/nfc/abc\nhttps://app.wallio.ma/nfc/def\n…"}
+                  className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none mb-2"
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", fontFamily: "monospace", boxSizing: "border-box" }} />
+                <p className="text-[11px] mb-3" style={{ color: "var(--fg-tertiary)" }}>
+                  {impUrls.split("\n").map(l => l.trim()).filter(Boolean).length} carte(s) détectée(s)
+                </p>
+                {impGenerating && impProgress > 0 && (
+                  <div className="mb-3">
+                    <div style={{ height: 4, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ width: `${impProgress}%`, height: "100%", background: "var(--accent)", borderRadius: 4, transition: "width 0.3s" }} />
+                    </div>
+                    <p className="text-[11px] mt-1" style={{ color: "var(--fg-tertiary)" }}>{impProgress}%</p>
+                  </div>
+                )}
+                <button onClick={impDownloadBatch}
+                  disabled={impGenerating || !impUrls.split("\n").some(l => l.trim())}
+                  className="w-full py-3 rounded-xl text-[14px] font-semibold text-white"
+                  style={{ background: impGenerating ? "#888" : "#6A5AF9" }}>
+                  {impGenerating ? `Génération… ${impProgress}%` : `⬇ Télécharger ZIP`}
+                </button>
+              </div>
+
+              {/* Specs */}
+              <div className="rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--fg-tertiary)" }}>Specs imprimeur</p>
+                {[
+                  ["Canvas", `${PRINT_W}×${PRINT_H}px`],
+                  ["Export", "4500×3000px (×3)"],
+                  ["Ratio", "3:2"],
+                  ["Format", "PNG RVB"],
+                  ["Support", "PVC rigide 1mm"],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex justify-between mb-1.5">
+                    <span className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>{k}</span>
+                    <span className="text-[12px] font-medium" style={{ color: "var(--fg)" }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview canvas */}
+            <div className="flex-1 rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+              <p className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--fg-tertiary)" }}>
+                Aperçu — échelle 42%
+              </p>
+              <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.15)", display: "inline-block" }}>
+                <canvas ref={previewRef}
+                  style={{ display: "block", width: Math.round(PRINT_W * 0.42), height: Math.round(PRINT_H * 0.42) }} />
+              </div>
+              <p className="text-[11px] mt-3" style={{ color: "var(--fg-tertiary)" }}>
+                Le fichier téléchargé est en pleine résolution (4500×3000px).
+              </p>
+            </div>
+          </div>
+        )}
+
       </div>
     </main>
   );
