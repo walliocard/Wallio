@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { genererNfcId, type PalierConfig } from "@/lib/loyalty";
@@ -327,6 +328,19 @@ export default function ReglagesPage() {
         >
           {saving ? "Sauvegarde…" : saved ? "Sauvegardé ✓" : "Sauvegarder les réglages"}
         </button>
+
+        {/* Apparence */}
+        <div className="mt-4 rounded-2xl p-5"
+          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+          <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>
+            Apparence
+          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Mode d&apos;affichage</p>
+            <ThemeToggle />
+          </div>
+        </div>
+
       </div>
     </div>
   );
