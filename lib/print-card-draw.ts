@@ -141,21 +141,39 @@ export async function drawPrintCard(
   ctx.lineWidth   = p(1);
   ctx.stroke();
 
-  // NFC circles concentriques (centre X:290 Y:465)
+  // NFC : grand cercle gris rempli (le fond du "tap zone")
   const ncx = p(290), ncy = p(465);
+  ctx.beginPath();
+  ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
+  ctx.fillStyle = "#EAECF3";
+  ctx.fill();
+
+  // Anneaux concentriques subtils (180 → 105)
   [180, 155, 130, 105].forEach((d, i) => {
     ctx.beginPath();
     ctx.arc(ncx, ncy, p(d / 2), 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(150,160,210,${0.18 - i * 0.04})`;
-    ctx.lineWidth   = p(1.5);
+    ctx.strokeStyle = `rgba(170,178,218,${0.30 - i * 0.06})`;
+    ctx.lineWidth   = p(1.2);
     ctx.stroke();
   });
 
-  // NFC icon SVG (X:255 Y:430 W:70 H:70)
-  const nfcImg = await loadImg("/nfc-icon.svg");
-  if (nfcImg) {
-    ctx.drawImage(nfcImg, p(255), p(430), p(70), p(70));
-  }
+  // Arcs NFC ))) en canvas (symbol standard contactless)
+  // Dessinés depuis un point légèrement à gauche du centre
+  const ax = ncx - p(4), ay = ncy;
+  const arcSpan = Math.PI * 0.72; // ±65° autour de l'axe horizontal
+  ctx.lineCap  = "round";
+  ctx.strokeStyle = blue;
+  [0.14, 0.26, 0.40].forEach(frac => {
+    ctx.beginPath();
+    ctx.arc(ax, ay, p(90) * frac, -arcSpan / 2, arcSpan / 2);
+    ctx.lineWidth = p(90) * 0.09;
+    ctx.stroke();
+  });
+  // Point central
+  ctx.beginPath();
+  ctx.arc(ax, ay, p(90) * 0.055, 0, Math.PI * 2);
+  ctx.fillStyle = blue;
+  ctx.fill();
 
   // ── 6. TEXTE NFC (X:420 Y:405) ───────────────────────────────────────────
   ctx.textAlign    = "left";
@@ -262,25 +280,43 @@ export async function drawPrintCard(
   ctx.textBaseline = "top";
   ctx.fillText("Ajoutez à votre portefeuille", p(750), p(680));
 
-  // ── 12. BADGE APPLE (X:435 Y:725 W:300 H:78 R:18) ────────────────────────
-  const appleImg = await loadImg("/apple-wallet-badge.svg");
-  if (appleImg) {
+  // Badges helper : fond blanc + border + image préservant l'aspect ratio
+  function drawBadge(img: HTMLImageElement | null, x: number, y: number, w: number, h: number) {
+    // Fond blanc
+    ctx.shadowColor = "rgba(0,0,0,0.08)"; ctx.shadowBlur = p(10); ctx.shadowOffsetY = p(2);
+    rr(ctx, p(x), p(y), p(w), p(h), p(18));
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.strokeStyle = "rgba(0,0,0,0.10)";
+    ctx.lineWidth   = p(1);
+    ctx.stroke();
+
+    if (!img) return;
+    // Calculer les dimensions pour conserver l'aspect ratio (letterbox)
+    const natR = img.naturalWidth / (img.naturalHeight || 1);
+    const boxW = p(w), boxH = p(h);
+    const boxR = boxW / boxH;
+    let dw: number, dh: number;
+    if (natR > boxR) { dw = boxW; dh = boxW / natR; }
+    else             { dh = boxH; dw = boxH * natR; }
+    const dx = p(x) + (boxW - dw) / 2;
+    const dy = p(y) + (boxH - dh) / 2;
+
     ctx.save();
-    rr(ctx, p(435), p(725), p(300), p(78), p(18));
+    rr(ctx, p(x), p(y), p(w), p(h), p(18));
     ctx.clip();
-    ctx.drawImage(appleImg, p(435), p(725), p(300), p(78));
+    ctx.drawImage(img, dx, dy, dw, dh);
     ctx.restore();
   }
 
-  // ── 13. BADGE GOOGLE (X:765 Y:725 W:300 H:78 R:18) ───────────────────────
+  // ── 12. BADGE APPLE (X:435 Y:725 W:300 H:78) ─────────────────────────────
+  const appleImg = await loadImg("/apple-wallet-badge.svg");
+  drawBadge(appleImg, 435, 725, 300, 78);
+
+  // ── 13. BADGE GOOGLE (X:765 Y:725 W:300 H:78) ────────────────────────────
   const googleImg = await loadImg("/google-wallet-badge.svg");
-  if (googleImg) {
-    ctx.save();
-    rr(ctx, p(765), p(725), p(300), p(78), p(18));
-    ctx.clip();
-    ctx.drawImage(googleImg, p(765), p(725), p(300), p(78));
-    ctx.restore();
-  }
+  drawBadge(googleImg, 765, 725, 300, 78);
 
   // ── 15. WALLIO (X:625 Y:855 W:250 letter-spacing:8px) ────────────────────
   ctx.font         = `500 ${p(24)}px ${font}`;
