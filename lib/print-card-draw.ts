@@ -36,48 +36,48 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 }
 
 function drawNFCIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
-  // Outer glow circles (very faint concentric rings = tap zone)
-  for (let i = 3; i >= 1; i--) {
-    const r = size * (0.42 + i * 0.16);
+  // Outer concentric rings (tap zone indicator, very faint)
+  for (let i = 2; i >= 0; i--) {
+    const r = size * (0.52 + i * 0.13);
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(100,120,240,${0.06 - i * 0.012})`;
-    ctx.lineWidth = size * 0.025;
+    ctx.strokeStyle = `rgba(150,160,200,${0.12 - i * 0.03})`;
+    ctx.lineWidth = size * 0.022;
     ctx.stroke();
   }
 
-  // Background circle (light gray)
+  // Main circle background (light gray, like reference)
   ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.44, 0, Math.PI * 2);
-  ctx.fillStyle = "#F0F0F5";
+  ctx.arc(cx, cy, size * 0.50, 0, Math.PI * 2);
+  ctx.fillStyle = "#EDEEF3";
   ctx.fill();
-
-  // Inner faint ring
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.42, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(180,185,220,0.5)";
-  ctx.lineWidth = size * 0.018;
+  ctx.strokeStyle = "rgba(180,185,210,0.45)";
+  ctx.lineWidth = size * 0.016;
   ctx.stroke();
 
-  // NFC arcs (3 arcs, opens to the right, from -50° to +50°)
-  const blue = "#4E7EF6";
-  const startAng = -Math.PI * 0.5;
-  const endAng = Math.PI * 0.5;
+  // NFC arcs — standard contactless symbol, opens to the right
+  // Like the reference: 3 bold rounded arcs, spanning ~80° each side
+  const blue = "#4472F5";
+  const arcCX = cx - size * 0.05; // slightly left of center
+  const arcCY = cy;
+  const arcSpan = Math.PI * 0.75; // 135° total span (±67.5°)
+  const startA = -arcSpan / 2;
+  const endA   =  arcSpan / 2;
 
   ctx.lineCap = "round";
-  [0.10, 0.19, 0.29].forEach((rFrac, i) => {
-    const r = size * rFrac;
-    const opacity = 1 - i * 0.15;
+  ctx.strokeStyle = blue;
+
+  // 3 arcs of increasing radius
+  [0.12, 0.21, 0.31].forEach(rFrac => {
     ctx.beginPath();
-    ctx.arc(cx - size * 0.04, cy, r, startAng, endAng);
-    ctx.strokeStyle = blue + Math.round(opacity * 255).toString(16).padStart(2, "0");
-    ctx.lineWidth = size * 0.055;
+    ctx.arc(arcCX, arcCY, size * rFrac, startA, endA);
+    ctx.lineWidth = size * 0.065;
     ctx.stroke();
   });
 
   // Center dot
   ctx.beginPath();
-  ctx.arc(cx - size * 0.04, cy, size * 0.045, 0, Math.PI * 2);
+  ctx.arc(arcCX, arcCY, size * 0.048, 0, Math.PI * 2);
   ctx.fillStyle = blue;
   ctx.fill();
 }
@@ -106,70 +106,85 @@ function drawWaves(ctx: CanvasRenderingContext2D, W: number, H: number, waveY: n
 function drawWalletBadge(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number,
-  iconColor: string, iconShape: "apple" | "google",
-  line1: string, line2: string,
+  iconShape: "apple" | "google",
 ) {
-  // Badge background
-  roundRect(ctx, x, y, w, h, h * 0.22);
+  const font = `-apple-system, 'Helvetica Neue', Arial, sans-serif`;
+
+  // Badge background + border
+  roundRect(ctx, x, y, w, h, h * 0.20);
   ctx.fillStyle = "#FFFFFF";
   ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.10)";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(0,0,0,0.13)";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  const iconSize = h * 0.42;
-  const iconX = x + h * 0.28;
+  const iconSize = h * 0.50;
+  const iconX = x + h * 0.32;
   const iconY = y + h / 2;
+  const textX = iconX + iconSize * 0.80;
 
   if (iconShape === "apple") {
-    // Apple Wallet icon — simplified wallet shape
+    // Apple Wallet icon: black rounded rect card with green card inside
     const s = iconSize;
+    const bx = iconX - s * 0.46, by = iconY - s * 0.46;
+    const bw = s * 0.92, bh = s * 0.92;
     ctx.fillStyle = "#1C1C1E";
-    ctx.beginPath();
-    ctx.roundRect(iconX - s * 0.5, iconY - s * 0.45, s, s * 0.9, s * 0.18);
+    roundRect(ctx, bx, by, bw, bh, s * 0.18);
     ctx.fill();
+    // Green card strip inside
     ctx.fillStyle = "#30D158";
-    ctx.beginPath();
-    ctx.roundRect(iconX - s * 0.35, iconY - s * 0.05, s * 0.7, s * 0.38, s * 0.08);
+    roundRect(ctx, bx + bw * 0.14, by + bh * 0.44, bw * 0.72, bh * 0.36, s * 0.08);
     ctx.fill();
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = `700 ${s * 0.28}px -apple-system, Helvetica`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("W", iconX, iconY + s * 0.08);
+    // Tiny white card at top-left
+    ctx.fillStyle = "rgba(255,255,255,0.20)";
+    roundRect(ctx, bx + bw * 0.14, by + bh * 0.14, bw * 0.38, bh * 0.26, s * 0.06);
+    ctx.fill();
   } else {
-    // Google Wallet icon — G in multicolor
-    const s = iconSize * 0.9;
-    const colors = ["#4285F4", "#EA4335", "#FBBC05", "#34A853"];
-    const angles = [0, 90, 180, 270];
-    angles.forEach((startDeg, i) => {
-      const start = (startDeg * Math.PI) / 180;
-      const end = ((startDeg + 90) * Math.PI) / 180;
+    // Google Wallet icon: colorful square with rounded corners
+    const s = iconSize * 0.92;
+    const gx = iconX - s * 0.5, gy = iconY - s * 0.5;
+    // Background square
+    ctx.fillStyle = "#FFFFFF";
+    roundRect(ctx, gx, gy, s, s, s * 0.16);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.08)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // Four colored segments (G logo style)
+    const r = s * 0.38;
+    const gcx = gx + s / 2, gcy = gy + s / 2;
+    const segs: [string, number, number][] = [
+      ["#4285F4", -Math.PI / 2, 0],
+      ["#EA4335", 0, Math.PI / 2],
+      ["#FBBC05", Math.PI / 2, Math.PI],
+      ["#34A853", Math.PI, Math.PI * 1.5],
+    ];
+    segs.forEach(([color, start, end]) => {
       ctx.beginPath();
-      ctx.moveTo(iconX, iconY);
-      ctx.arc(iconX, iconY, s * 0.46, start - Math.PI / 2, end - Math.PI / 2);
+      ctx.moveTo(gcx, gcy);
+      ctx.arc(gcx, gcy, r, start, end);
       ctx.closePath();
-      ctx.fillStyle = colors[i];
+      ctx.fillStyle = color;
       ctx.fill();
     });
-    // White center circle
+    // White center
     ctx.beginPath();
-    ctx.arc(iconX, iconY, s * 0.22, 0, Math.PI * 2);
+    ctx.arc(gcx, gcy, r * 0.46, 0, Math.PI * 2);
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
   }
 
-  // Text
-  const textX = iconX + iconSize * 0.72;
-  ctx.fillStyle = "rgba(60,60,67,0.55)";
-  ctx.font = `400 ${h * 0.18}px -apple-system, 'Helvetica Neue', sans-serif`;
+  // "Ajouter à" (small, gray)
+  ctx.fillStyle = "rgba(60,60,67,0.52)";
+  ctx.font = `400 ${h * 0.19}px ${font}`;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillText(line1, textX, y + h * 0.35);
+  ctx.fillText("Ajouter à", textX, y + h * 0.33);
 
+  // "Apple Wallet" / "Google Wallet" (bold, dark)
   ctx.fillStyle = "#1D1D1F";
-  ctx.font = `600 ${h * 0.26}px -apple-system, 'Helvetica Neue', sans-serif`;
-  ctx.fillText(line2, textX, y + h * 0.67);
+  ctx.font = `600 ${h * 0.28}px ${font}`;
+  ctx.fillText(iconShape === "apple" ? "Apple Wallet" : "Google Wallet", textX, y + h * 0.67);
 }
 
 export async function drawPrintCard(
@@ -387,8 +402,8 @@ export async function drawPrintCard(
   const badgeX2 = badgeX1 + badgeW + badgeGap;
   const badgeY = waveY + 62 * s;
 
-  drawWalletBadge(ctx, badgeX1, badgeY, badgeW, badgeH, "#1C1C1E", "apple", "Ajouter à", "Apple Wallet");
-  drawWalletBadge(ctx, badgeX2, badgeY, badgeW, badgeH, "#4285F4", "google", "Ajouter à", "Google Wallet");
+  drawWalletBadge(ctx, badgeX1, badgeY, badgeW, badgeH, "apple");
+  drawWalletBadge(ctx, badgeX2, badgeY, badgeW, badgeH, "google");
 
   // ── 9. WALLIO BRANDING ───────────────────────────────────────────────────
   ctx.textAlign = "center";
