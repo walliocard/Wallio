@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 import { drawPrintCard, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
 type Marchand = {
@@ -570,7 +571,8 @@ export default function AdminPage() {
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            <ThemeToggle />
             <button onClick={() => setShowCreate(true)}
               className="text-[13px] px-4 py-2 rounded-xl font-semibold text-white"
               style={{ background: "var(--accent)" }}>

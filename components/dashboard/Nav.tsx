@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase";
 import { Icons } from "./icons";
 import type { Marchand } from "@/lib/loyalty";
 import WallioLogo from "@/components/WallioLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV = [
   { href: "/dashboard",                   label: "Accueil",       Icon: Icons.Home },
@@ -96,22 +97,20 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           })}
         </nav>
 
-        {/* Logout */}
-        <div className="flex-shrink-0 px-2 lg:px-3 py-3" style={{ borderTop: "1px solid var(--border)" }}>
+        {/* Theme + Logout */}
+        <div className="flex-shrink-0 px-2 lg:px-3 py-3 space-y-2" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="hidden lg:flex justify-center">
+            <ThemeToggle />
+          </div>
           <button
             onClick={() => signOut(auth)}
             className="relative flex items-center gap-3 w-full rounded-xl px-3 py-2.5 transition-all duration-150 group"
             style={{ color: "var(--fg-tertiary)" }}
           >
-            <span className="flex-shrink-0">
-              <Icons.LogOut size={18} />
-            </span>
+            <span className="flex-shrink-0"><Icons.LogOut size={18} /></span>
             <span className="hidden lg:block text-[13.5px] font-medium">Déconnexion</span>
-            <span
-              className="lg:hidden absolute left-[calc(100%+8px)] px-2.5 py-1.5 rounded-lg text-[12px] font-medium
-                opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg"
-              style={{ background: "var(--fg)", color: "var(--bg)" }}
-            >
+            <span className="lg:hidden absolute left-[calc(100%+8px)] px-2.5 py-1.5 rounded-lg text-[12px] font-medium opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-lg"
+              style={{ background: "var(--fg)", color: "var(--bg)" }}>
               Déconnexion
             </span>
           </button>
