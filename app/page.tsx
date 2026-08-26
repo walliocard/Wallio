@@ -6,10 +6,24 @@ const WA = "https://wa.me/40749056483?text=Bonjour%2C%20je%20souhaite%20d%C3%A9c
 
 function useReveal() {
   useEffect(() => {
+    // Stagger children inside [data-stagger]
+    document.querySelectorAll("[data-stagger]").forEach(parent => {
+      Array.from(parent.children).forEach((child, i) => {
+        (child as HTMLElement).style.transitionDelay = `${i * 0.09}s`;
+        child.setAttribute("data-reveal", "");
+      });
+    });
+
     const els = document.querySelectorAll("[data-reveal]");
     const io = new IntersectionObserver(
-      entries => entries.forEach(e => { if (e.isIntersecting) { (e.target as HTMLElement).style.opacity = "1"; (e.target as HTMLElement).style.transform = "translateY(0)"; } }),
-      { threshold: 0.12 }
+      entries => entries.forEach(e => {
+        if (e.isIntersecting) {
+          const el = e.target as HTMLElement;
+          el.classList.add("revealed");
+          io.unobserve(el);
+        }
+      }),
+      { threshold: 0.10, rootMargin: "0px 0px -40px 0px" }
     );
     els.forEach(el => io.observe(el));
     return () => io.disconnect();
@@ -70,7 +84,14 @@ export default function LandingPage() {
         .hero-card  { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.55s both; }
         .hero-float { animation: float 5s ease-in-out infinite; }
 
-        [data-reveal] { opacity:0; transform:translateY(32px); transition: opacity 0.7s cubic-bezier(.16,1,.3,1), transform 0.7s cubic-bezier(.16,1,.3,1); }
+        /* Scroll reveal — état initial */
+        [data-reveal]           { opacity:0; transform:translateY(40px) scale(0.97); filter:blur(4px); transition: opacity 0.75s cubic-bezier(.16,1,.3,1), transform 0.75s cubic-bezier(.16,1,.3,1), filter 0.75s cubic-bezier(.16,1,.3,1); }
+        [data-reveal="left"]    { opacity:0; transform:translateX(-48px) scale(0.97); filter:blur(4px); transition: opacity 0.75s cubic-bezier(.16,1,.3,1), transform 0.75s cubic-bezier(.16,1,.3,1), filter 0.75s; }
+        [data-reveal="right"]   { opacity:0; transform:translateX(48px) scale(0.97); filter:blur(4px); transition: opacity 0.75s cubic-bezier(.16,1,.3,1), transform 0.75s cubic-bezier(.16,1,.3,1), filter 0.75s; }
+        [data-reveal="scale"]   { opacity:0; transform:scale(0.88); filter:blur(6px); transition: opacity 0.8s cubic-bezier(.16,1,.3,1), transform 0.8s cubic-bezier(.16,1,.3,1), filter 0.8s; }
+        [data-reveal="fade"]    { opacity:0; transition: opacity 0.9s ease; }
+        /* État révélé */
+        .revealed { opacity:1 !important; transform:none !important; filter:none !important; }
 
         .grad-text { background:linear-gradient(92deg,#4472F5,#6A5AF9,#8A5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:shimmer 4s ease infinite; }
 
@@ -184,18 +205,18 @@ export default function LandingPage() {
 
           {/* ── STEPS ── */}
           <section style={{ maxWidth:1040, margin:"0 auto", padding:"40px 32px 96px" }}>
-            <div data-reveal style={{ textAlign:"center", marginBottom:56 }}>
+            <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
               <span className="feature-tag">Comment ça marche</span>
               <h2 style={{ fontSize:40, fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Trois secondes. Pas une de plus.</h2>
             </div>
 
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:16 }}>
+            <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:16 }}>
               {[
                 { n:"01", title:"Tap ou Scan", body:"Le client approche son téléphone du tag NFC ou scanne le QR code. Aucune application à télécharger, aucun compte à créer au préalable." },
                 { n:"02", title:"Tampon instantané", body:"Un tampon est ajouté automatiquement sur sa carte de fidélité en moins d'une seconde. La progression est visible immédiatement." },
                 { n:"03", title:"Récompense débloquée", body:"Objectif atteint — la récompense se débloque. Le marchand valide en un seul clic depuis son tableau de bord." },
               ].map((s, i) => (
-                <div key={s.n} data-reveal className="glass card-hover" style={{ borderRadius:24, padding:"36px 30px", boxShadow:"0 4px 24px rgba(0,0,0,0.06)", transitionDelay:`${i * 0.08}s` }}>
+                <div key={s.n} className="glass card-hover" style={{ borderRadius:24, padding:"36px 30px", boxShadow:"0 4px 24px rgba(0,0,0,0.06)" }}>
                   <p style={{ fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:"#4472F5", marginBottom:20 }}>{s.n}</p>
                   <h3 style={{ fontSize:22, fontWeight:650, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:12 }}>{s.title}</h3>
                   <p style={{ fontSize:14, lineHeight:1.65, color:"#6E6E73" }}>{s.body}</p>
@@ -207,12 +228,12 @@ export default function LandingPage() {
           {/* ── FEATURES ── */}
           <section style={{ padding:"80px 32px", background:"rgba(255,255,255,0.50)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal style={{ textAlign:"center", marginBottom:56 }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
                 <span className="feature-tag">Fonctionnalités</span>
                 <h2 style={{ fontSize:40, fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Tout ce dont vous avez besoin</h2>
               </div>
 
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>
                 {[
                   { title:"NFC + QR Code",         body:"Compatible avec tous les smartphones. Aucune app à installer." },
                   { title:"Apple & Google Wallet",  body:"La carte s'intègre nativement dans le portefeuille du client." },
@@ -220,8 +241,8 @@ export default function LandingPage() {
                   { title:"Dashboard temps réel",   body:"Clients, tampons, récompenses — suivis en direct." },
                   { title:"Carte personnalisable",  body:"Couleurs, logo, tampons — entièrement à votre image de marque." },
                   { title:"Carte comptoir 4K",      body:"Fichier haute résolution prêt à envoyer à l'imprimeur." },
-                ].map((f, i) => (
-                  <div key={f.title} data-reveal className="card-hover" style={{ background:"rgba(245,245,247,0.80)", backdropFilter:"blur(10px)", borderRadius:20, padding:"26px 22px", border:"0.5px solid rgba(0,0,0,0.06)", boxShadow:"0 2px 12px rgba(0,0,0,0.03)", transitionDelay:`${i * 0.06}s` }}>
+                ].map((f) => (
+                  <div key={f.title} className="card-hover" style={{ background:"rgba(245,245,247,0.80)", backdropFilter:"blur(10px)", borderRadius:20, padding:"26px 22px", border:"0.5px solid rgba(0,0,0,0.06)", boxShadow:"0 2px 12px rgba(0,0,0,0.03)" }}>
                     <h3 style={{ fontSize:15, fontWeight:600, color:"#1D1D1F", marginBottom:8, letterSpacing:-0.1 }}>{f.title}</h3>
                     <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{f.body}</p>
                   </div>
@@ -232,7 +253,7 @@ export default function LandingPage() {
 
           {/* ── POUR QUI ── */}
           <section style={{ maxWidth:760, margin:"0 auto", padding:"80px 32px", textAlign:"center" }}>
-            <div data-reveal>
+            <div data-reveal="fade">
               <span className="feature-tag">Secteurs</span>
               <h2 style={{ fontSize:40, fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:14 }}>Pour tous les commerces</h2>
               <p style={{ fontSize:17, color:"#8E8E93", marginBottom:36 }}>Cafés · Restaurants · Barbers · Salons · Boutiques · Salles de sport · Instituts</p>
@@ -246,7 +267,7 @@ export default function LandingPage() {
 
           {/* ── CTA ── */}
           <section style={{ padding:"0 32px 96px" }}>
-            <div data-reveal className="cta-section" style={{ maxWidth:1040, margin:"0 auto", borderRadius:32, overflow:"hidden", position:"relative", background:"linear-gradient(135deg,#4472F5 0%,#6A5AF9 52%,#8A5CF6 100%)", textAlign:"center" }}>
+            <div data-reveal="scale" className="cta-section" style={{ maxWidth:1040, margin:"0 auto", borderRadius:32, overflow:"hidden", position:"relative", background:"linear-gradient(135deg,#4472F5 0%,#6A5AF9 52%,#8A5CF6 100%)", textAlign:"center" }}>
               <div style={{ position:"absolute", top:-80, right:-80, width:320, height:320, borderRadius:"50%", background:"rgba(255,255,255,0.07)", pointerEvents:"none" }} />
               <div style={{ position:"absolute", bottom:-100, left:-60, width:260, height:260, borderRadius:"50%", background:"rgba(255,255,255,0.05)", pointerEvents:"none" }} />
               <div style={{ position:"absolute", top:"30%", left:"15%", width:180, height:180, borderRadius:"50%", background:"rgba(255,255,255,0.04)", pointerEvents:"none" }} />
