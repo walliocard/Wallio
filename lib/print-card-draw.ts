@@ -1,17 +1,16 @@
-// Print-ready counter card — 160×100mm @ 300 DPI = 1890×1181px
-// Reproduces the WALLIO reference design exactly.
+// Canvas maître : 1500 × 1000 px (ratio 3:2)
+// Toutes les coordonnées sont exprimées pour ce canvas.
+// À l'export : scale = finalWidth / 1500
 
-export const PRINT_W = 1890;
-export const PRINT_H = 1181;
+export const PRINT_W = 1500;
+export const PRINT_H = 1000;
 
-async function loadSvgImage(src: string, size: number): Promise<HTMLImageElement | null> {
+async function loadImg(src: string): Promise<HTMLImageElement | null> {
   return new Promise(resolve => {
     const img = new Image();
-    img.onload = () => resolve(img);
+    img.onload  = () => resolve(img);
     img.onerror = () => resolve(null);
     img.src = src;
-    img.width = size;
-    img.height = size;
   });
 }
 
@@ -25,188 +24,25 @@ async function loadQRImage(url: string, size: number): Promise<HTMLImageElement 
     });
     return new Promise(resolve => {
       const img = new Image();
-      img.onload = () => resolve(img);
+      img.onload  = () => resolve(img);
       img.onerror = () => resolve(null);
       img.src = dataUrl;
     });
   } catch { return null; }
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
-  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.arcTo(x + w, y,     x + w, y + r,     r);
   ctx.lineTo(x + w, y + h - r);
   ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
   ctx.lineTo(x + r, y + h);
-  ctx.arcTo(x, y + h, x, y + h - r, r);
-  ctx.lineTo(x, y + r);
-  ctx.arcTo(x, y, x + r, y, r);
+  ctx.arcTo(x,     y + h, x,     y + h - r, r);
+  ctx.lineTo(x,     y + r);
+  ctx.arcTo(x,     y,     x + r, y,         r);
   ctx.closePath();
-}
-
-async function drawNFCIconFromSVG(
-  ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number
-): Promise<boolean> {
-  const img = await loadSvgImage("/nfc-icon.svg", size);
-  if (!img) return false;
-  // Draw on a tmp canvas to tint if needed — SVG already blue so draw directly
-  const d = size * 0.9;
-  ctx.drawImage(img, cx - d / 2, cy - d / 2, d, d);
-  return true;
-}
-
-function drawNFCIcon(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
-  // Outer concentric rings (tap zone indicator, very faint)
-  for (let i = 2; i >= 0; i--) {
-    const r = size * (0.52 + i * 0.13);
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(150,160,200,${0.12 - i * 0.03})`;
-    ctx.lineWidth = size * 0.022;
-    ctx.stroke();
-  }
-
-  // Main circle background (light gray, like reference)
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.50, 0, Math.PI * 2);
-  ctx.fillStyle = "#EDEEF3";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(180,185,210,0.45)";
-  ctx.lineWidth = size * 0.016;
-  ctx.stroke();
-
-  // NFC arcs — standard contactless symbol, opens to the right
-  // Like the reference: 3 bold rounded arcs, spanning ~80° each side
-  const blue = "#4472F5";
-  const arcCX = cx - size * 0.05; // slightly left of center
-  const arcCY = cy;
-  const arcSpan = Math.PI * 0.75; // 135° total span (±67.5°)
-  const startA = -arcSpan / 2;
-  const endA   =  arcSpan / 2;
-
-  ctx.lineCap = "round";
-  ctx.strokeStyle = blue;
-
-  // 3 arcs of increasing radius
-  [0.12, 0.21, 0.31].forEach(rFrac => {
-    ctx.beginPath();
-    ctx.arc(arcCX, arcCY, size * rFrac, startA, endA);
-    ctx.lineWidth = size * 0.065;
-    ctx.stroke();
-  });
-
-  // Center dot
-  ctx.beginPath();
-  ctx.arc(arcCX, arcCY, size * 0.048, 0, Math.PI * 2);
-  ctx.fillStyle = blue;
-  ctx.fill();
-}
-
-function drawWaves(ctx: CanvasRenderingContext2D, W: number, H: number, waveY: number) {
-  const waves = [
-    { offset: 0,   opacity: 0.10, color: "100,140,255" },
-    { offset: 40,  opacity: 0.09, color: "130,120,250" },
-    { offset: -30, opacity: 0.07, color: "170,120,245" },
-  ];
-
-  waves.forEach(({ offset, opacity, color }) => {
-    const y0 = waveY + offset;
-    ctx.beginPath();
-    ctx.moveTo(0, y0 + 80);
-    ctx.bezierCurveTo(W * 0.15, y0 - 30, W * 0.30, y0 + 60, W * 0.50, y0 + 20);
-    ctx.bezierCurveTo(W * 0.68, y0 - 20, W * 0.82, y0 + 50, W, y0 + 30);
-    ctx.lineTo(W, H);
-    ctx.lineTo(0, H);
-    ctx.closePath();
-    ctx.fillStyle = `rgba(${color},${opacity})`;
-    ctx.fill();
-  });
-}
-
-function drawWalletBadge(
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number,
-  iconShape: "apple" | "google",
-) {
-  const font = `-apple-system, 'Helvetica Neue', Arial, sans-serif`;
-
-  // Badge background + border
-  roundRect(ctx, x, y, w, h, h * 0.20);
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.13)";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  const iconSize = h * 0.50;
-  const iconX = x + h * 0.32;
-  const iconY = y + h / 2;
-  const textX = iconX + iconSize * 0.80;
-
-  if (iconShape === "apple") {
-    // Apple Wallet icon: black rounded rect card with green card inside
-    const s = iconSize;
-    const bx = iconX - s * 0.46, by = iconY - s * 0.46;
-    const bw = s * 0.92, bh = s * 0.92;
-    ctx.fillStyle = "#1C1C1E";
-    roundRect(ctx, bx, by, bw, bh, s * 0.18);
-    ctx.fill();
-    // Green card strip inside
-    ctx.fillStyle = "#30D158";
-    roundRect(ctx, bx + bw * 0.14, by + bh * 0.44, bw * 0.72, bh * 0.36, s * 0.08);
-    ctx.fill();
-    // Tiny white card at top-left
-    ctx.fillStyle = "rgba(255,255,255,0.20)";
-    roundRect(ctx, bx + bw * 0.14, by + bh * 0.14, bw * 0.38, bh * 0.26, s * 0.06);
-    ctx.fill();
-  } else {
-    // Google Wallet icon: colorful square with rounded corners
-    const s = iconSize * 0.92;
-    const gx = iconX - s * 0.5, gy = iconY - s * 0.5;
-    // Background square
-    ctx.fillStyle = "#FFFFFF";
-    roundRect(ctx, gx, gy, s, s, s * 0.16);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.08)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    // Four colored segments (G logo style)
-    const r = s * 0.38;
-    const gcx = gx + s / 2, gcy = gy + s / 2;
-    const segs: [string, number, number][] = [
-      ["#4285F4", -Math.PI / 2, 0],
-      ["#EA4335", 0, Math.PI / 2],
-      ["#FBBC05", Math.PI / 2, Math.PI],
-      ["#34A853", Math.PI, Math.PI * 1.5],
-    ];
-    segs.forEach(([color, start, end]) => {
-      ctx.beginPath();
-      ctx.moveTo(gcx, gcy);
-      ctx.arc(gcx, gcy, r, start, end);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-    });
-    // White center
-    ctx.beginPath();
-    ctx.arc(gcx, gcy, r * 0.46, 0, Math.PI * 2);
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fill();
-  }
-
-  // "Ajouter à" (small, gray)
-  ctx.fillStyle = "rgba(60,60,67,0.52)";
-  ctx.font = `400 ${h * 0.19}px ${font}`;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillText("Ajouter à", textX, y + h * 0.33);
-
-  // "Apple Wallet" / "Google Wallet" (bold, dark)
-  ctx.fillStyle = "#1D1D1F";
-  ctx.font = `600 ${h * 0.28}px ${font}`;
-  ctx.fillText(iconShape === "apple" ? "Apple Wallet" : "Google Wallet", textX, y + h * 0.67);
 }
 
 export async function drawPrintCard(
@@ -214,256 +50,246 @@ export async function drawPrintCard(
   qrUrl: string,
   scale = 1,
 ) {
+  // scale = finalWidth / 1500
   const W = PRINT_W * scale;
   const H = PRINT_H * scale;
-  canvas.width = W;
+  canvas.width  = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
+  const p = (v: number) => v * scale; // proportional helper
 
-  const s = scale; // shorthand
+  const font = `-apple-system, 'Helvetica Neue', Arial, sans-serif`;
+  const blue  = "#4472F5";
+  const indigo = "#6A5AF9";
+  const violet = "#8A5CF6";
 
-  // ── 1. BACKGROUND ────────────────────────────────────────────────────────
-  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-  bgGrad.addColorStop(0, "#FFFFFF");
-  bgGrad.addColorStop(1, "#F3F4F8");
-  ctx.fillStyle = bgGrad;
+  // ── 1. CANVAS BACKGROUND ─────────────────────────────────────────────────
+  ctx.fillStyle = "#F0F0F5";
   ctx.fillRect(0, 0, W, H);
 
-  // ── 2. TITLE ZONE ─────────────────────────────────────────────────────────
-  const titleY = 118 * s;
-  const titleSize = 96 * s;
-  const font = `-apple-system, 'Helvetica Neue', Arial, sans-serif`;
+  // ── 1b. CARTE (X:50 Y:50 W:1400 H:900 R:55) ──────────────────────────────
+  ctx.shadowColor   = "rgba(0,0,0,0.10)";
+  ctx.shadowBlur    = p(40);
+  ctx.shadowOffsetY = p(8);
+  rr(ctx, p(50), p(50), p(1400), p(900), p(55));
+  ctx.fillStyle = "#F8F8FA";
+  ctx.fill();
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
+  // Clip everything inside the card
+  ctx.save();
+  rr(ctx, p(50), p(50), p(1400), p(900), p(55));
+  ctx.clip();
+
+  // ── 14. VAGUES (derrière tout le reste du bas) ────────────────────────────
+  // Début Y ≈ 660, descend jusqu'à Y ≈ 950 (bord bas carte = Y:50+900=950)
+  const waves = [
+    { dy: 0,   opa: 0.10, c: "100,140,255" },
+    { dy: 30,  opa: 0.08, c: "130,110,250" },
+    { dy: -20, opa: 0.06, c: "165,110,245" },
+  ];
+  waves.forEach(({ dy, opa, c }) => {
+    const y0 = p(660 + dy);
+    ctx.beginPath();
+    ctx.moveTo(p(50),   y0 + p(60));
+    ctx.bezierCurveTo(p(350),  y0 - p(30), p(600),  y0 + p(70), p(750),  y0 + p(20));
+    ctx.bezierCurveTo(p(900),  y0 - p(20), p(1150), y0 + p(50), p(1450), y0 + p(30));
+    ctx.lineTo(p(1450), p(950));
+    ctx.lineTo(p(50),   p(950));
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${c},${opa})`;
+    ctx.fill();
+  });
+
+  // ── 2. TITRE (X:180 Y:120 W:1140 font:64px) ──────────────────────────────
+  ctx.font = `600 ${p(64)}px ${font}`;
+  ctx.textBaseline = "top";
+  ctx.textAlign    = "left";
+
+  const p1 = "Votre fidélité. ";
+  const p2 = "Simplifiée.";
+  const w1 = ctx.measureText(p1).width;
+  const w2 = ctx.measureText(p2).width;
+  const titleTotalW = w1 + w2;
+  const titleStartX = p(750) - titleTotalW / 2; // centré sur 750
+
+  ctx.fillStyle = "#15171A";
+  ctx.fillText(p1, titleStartX, p(120));
+
+  const gTitle = ctx.createLinearGradient(titleStartX + w1, 0, titleStartX + w1 + w2, 0);
+  gTitle.addColorStop(0, blue);
+  gTitle.addColorStop(0.5, indigo);
+  gTitle.addColorStop(1, violet);
+  ctx.fillStyle = gTitle;
+  ctx.fillText(p2, titleStartX + w1, p(120));
+
+  // ── 3. SOUS-TITRE (X:250 Y:220 font:24px) ────────────────────────────────
+  ctx.font      = `400 ${p(24)}px ${font}`;
+  ctx.fillStyle = "#596170";
   ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
+  ctx.fillText("Ajoutez notre carte à votre portefeuille en quelques secondes.", p(750), p(220));
 
-  // Measure both parts to build the gradient
-  ctx.font = `700 ${titleSize}px ${font}`;
-  const part1 = "Votre fidélité. ";
-  const part2 = "Simplifiée.";
-  const w1 = ctx.measureText(part1).width;
-  const w2 = ctx.measureText(part2).width;
-  const totalW = w1 + w2;
-  const titleX = (W - totalW) / 2;
-
-  // "Votre fidélité." in dark
-  ctx.fillStyle = "#1D1D1F";
-  ctx.fillText(part1, titleX + w1 / 2, titleY);
-
-  // "Simplifiée." with gradient
-  const gx1 = titleX + w1;
-  const gradText = ctx.createLinearGradient(gx1, 0, gx1 + w2, 0);
-  gradText.addColorStop(0, "#4E7EF6");
-  gradText.addColorStop(0.5, "#6A5AF9");
-  gradText.addColorStop(1, "#8A5CF6");
-  ctx.fillStyle = gradText;
-  ctx.fillText(part2, gx1 + w2 / 2, titleY);
-
-  // Subtitle
-  ctx.font = `400 ${37 * s}px ${font}`;
-  ctx.fillStyle = "#6E6E73";
-  ctx.fillText("Ajoutez notre carte à votre portefeuille en quelques secondes.", W / 2, titleY + 70 * s);
-
-  // ── 3. ACTION PANELS ──────────────────────────────────────────────────────
-  const PAD = 72 * s;
-  const GAP = 68 * s;
-  const panelY = 210 * s;
-  const panelH = 540 * s;
-  const panelW = (W - PAD * 2 - GAP) / 2;
-  const panelR = 36 * s;
-  const leftX = PAD;
-  const rightX = PAD + panelW + GAP;
-
-  // Shadow helper
-  function shadow(blur: number, alpha: number) {
-    ctx.shadowColor = `rgba(0,0,0,${alpha})`;
-    ctx.shadowBlur = blur * s;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 4 * s;
-  }
-  function noShadow() {
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-  }
-
-  // Left panel (NFC)
-  shadow(28, 0.07);
-  roundRect(ctx, leftX, panelY, panelW, panelH, panelR);
+  // ── 5. BLOC NFC (X:120 Y:315 W:570 H:300 R:36) ───────────────────────────
+  ctx.shadowColor   = "rgba(0,0,0,0.06)";
+  ctx.shadowBlur    = p(20);
+  ctx.shadowOffsetY = p(4);
+  rr(ctx, p(120), p(315), p(570), p(300), p(36));
   ctx.fillStyle = "#FFFFFF";
   ctx.fill();
-  noShadow();
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   ctx.strokeStyle = "rgba(0,0,0,0.07)";
-  ctx.lineWidth = 1.5 * s;
+  ctx.lineWidth   = p(1);
   ctx.stroke();
 
-  // Right panel (QR) — with blue border
-  shadow(28, 0.07);
-  roundRect(ctx, rightX, panelY, panelW, panelH, panelR);
+  // NFC circles concentriques (centre X:290 Y:465)
+  const ncx = p(290), ncy = p(465);
+  [180, 155, 130, 105].forEach((d, i) => {
+    ctx.beginPath();
+    ctx.arc(ncx, ncy, p(d / 2), 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(150,160,210,${0.18 - i * 0.04})`;
+    ctx.lineWidth   = p(1.5);
+    ctx.stroke();
+  });
+
+  // NFC icon SVG (X:255 Y:430 W:70 H:70)
+  const nfcImg = await loadImg("/nfc-icon.svg");
+  if (nfcImg) {
+    ctx.drawImage(nfcImg, p(255), p(430), p(70), p(70));
+  }
+
+  // ── 6. TEXTE NFC (X:420 Y:405) ───────────────────────────────────────────
+  ctx.textAlign    = "left";
+  ctx.textBaseline = "top";
+
+  ctx.font      = `600 ${p(30)}px ${font}`;
+  const tapW    = ctx.measureText("TAPEZ ").width;
+  ctx.fillStyle = "#15171A";
+  ctx.fillText("TAPEZ ", p(420), p(405));
+  ctx.fillStyle = blue;
+  ctx.fillText("NFC", p(420) + tapW, p(405));
+
+  ctx.font      = `400 ${p(20)}px ${font}`;
+  ctx.fillStyle = "#596170";
+  ctx.fillText("Approchez votre", p(420), p(405 + 36 + 18));
+  ctx.fillText("téléphone ici",   p(420), p(405 + 36 + 18 + 28));
+
+  // ── 8. BLOC QR (X:810 Y:315 W:570 H:300 R:36) ────────────────────────────
+  ctx.shadowColor   = "rgba(0,0,0,0.06)";
+  ctx.shadowBlur    = p(20);
+  ctx.shadowOffsetY = p(4);
+  rr(ctx, p(810), p(315), p(570), p(300), p(36));
   ctx.fillStyle = "#FFFFFF";
   ctx.fill();
-  noShadow();
-  ctx.strokeStyle = "rgba(78,126,246,0.5)";
-  ctx.lineWidth = 2.5 * s;
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  ctx.strokeStyle = `rgba(68,114,245,0.45)`;
+  ctx.lineWidth   = p(1.5);
   ctx.stroke();
 
-  // ── 4. NFC ICON ───────────────────────────────────────────────────────────
-  const nfcCX = leftX + panelW * 0.30;
-  const nfcCY = panelY + panelH / 2;
-  const nfcSize = 200 * s;
-  const svgOk = await drawNFCIconFromSVG(ctx, nfcCX, nfcCY, nfcSize);
-  if (!svgOk) drawNFCIcon(ctx, nfcCX, nfcCY, 170 * s);
-
-  // "TAPEZ NFC" label
-  const labelX = leftX + panelW * 0.56;
-  const nfcLabelY = nfcCY - 52 * s;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "alphabetic";
-  ctx.font = `700 ${60 * s}px ${font}`;
-
-  ctx.fillStyle = "#1D1D1F";
-  ctx.fillText("TAPEZ ", labelX, nfcLabelY);
-  const tapezW = ctx.measureText("TAPEZ ").width;
-
-  ctx.fillStyle = "#4E7EF6";
-  ctx.fillText("NFC", labelX + tapezW, nfcLabelY);
-
-  // Subtext multiline
-  ctx.font = `400 ${30 * s}px ${font}`;
-  ctx.fillStyle = "#8E8E93";
-  ctx.fillText("Approchez votre", labelX, nfcLabelY + 52 * s);
-  ctx.fillText("téléphone ici", labelX, nfcLabelY + 90 * s);
-
-  // ── 5. SEPARATOR "OU" ────────────────────────────────────────────────────
-  const sepX = PAD + panelW + GAP / 2;
-  const sepMidY = panelY + panelH / 2;
-
-  ctx.beginPath();
-  ctx.moveTo(sepX, panelY + 55 * s);
-  ctx.lineTo(sepX, panelY + panelH - 55 * s);
-  ctx.strokeStyle = "rgba(0,0,0,0.10)";
-  ctx.lineWidth = 1.5 * s;
-  ctx.stroke();
-
-  const orR = 30 * s;
-  ctx.beginPath();
-  ctx.arc(sepX, sepMidY, orR, 0, Math.PI * 2);
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.10)";
-  ctx.lineWidth = 1.5 * s;
-  ctx.stroke();
-
-  ctx.font = `500 ${22 * s}px ${font}`;
-  ctx.fillStyle = "#8E8E93";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("OU", sepX, sepMidY);
-
-  // ── 6. QR CODE ───────────────────────────────────────────────────────────
-  const qrSize = Math.round(310 * s);
-  const qrImg = await loadQRImage(qrUrl, qrSize);
-  const qrPad = 22 * s;
-  const qrX = rightX + qrPad + 10 * s;
-  const qrY = panelY + (panelH - qrSize) / 2;
-
+  // ── 9. QR CODE (X:850 Y:360 W:210 H:210) ────────────────────────────────
+  const qrSize = Math.round(p(210));
+  const qrImg  = await loadQRImage(qrUrl, qrSize);
   if (qrImg) {
-    // White backing with subtle shadow
-    shadow(12, 0.06);
-    ctx.fillStyle = "#FFFFFF";
-    roundRect(ctx, qrX - qrPad * 0.5, qrY - qrPad * 0.5, qrSize + qrPad, qrSize + qrPad, 12 * s);
-    ctx.fill();
-    noShadow();
-    ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+    ctx.drawImage(qrImg, p(850), p(360), p(210), p(210));
   } else {
-    // Placeholder
     ctx.fillStyle = "#F0F0F0";
-    roundRect(ctx, qrX, qrY, qrSize, qrSize, 8 * s);
+    rr(ctx, p(850), p(360), p(210), p(210), p(8));
     ctx.fill();
   }
 
-  // "SCANNEZ LE CODE" text
-  const qrTextX = qrX + qrSize + qrPad + 20 * s;
-  const qrTextY = panelY + panelH / 2 - 70 * s;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "alphabetic";
+  // ── 10. TEXTE QR (X:1100 Y:375) ──────────────────────────────────────────
+  ctx.textAlign    = "left";
+  ctx.textBaseline = "top";
+  ctx.font         = `600 ${p(30)}px ${font}`;
 
-  ctx.font = `700 ${52 * s}px ${font}`;
-  ctx.fillStyle = "#1D1D1F";
-  ctx.fillText("SCANNEZ", qrTextX, qrTextY);
-  ctx.fillText("LE ", qrTextX, qrTextY + 65 * s);
+  // "SCANNEZ" ligne 1
+  ctx.fillStyle = "#15171A";
+  ctx.fillText("SCANNEZ", p(1100), p(375));
 
+  // "LE " + "CODE" gradient ligne 2
   const leW = ctx.measureText("LE ").width;
-  const gradCode = ctx.createLinearGradient(qrTextX + leW, 0, qrTextX + leW + 160 * s, 0);
-  gradCode.addColorStop(0, "#4E7EF6");
-  gradCode.addColorStop(1, "#8A5CF6");
-  ctx.fillStyle = gradCode;
-  ctx.fillText("CODE", qrTextX + leW, qrTextY + 65 * s);
+  ctx.fillStyle = "#15171A";
+  ctx.fillText("LE ", p(1100), p(375 + 34));
 
-  ctx.font = `400 ${27 * s}px ${font}`;
+  const gCode = ctx.createLinearGradient(p(1100) + leW, 0, p(1100) + leW + ctx.measureText("CODE").width, 0);
+  gCode.addColorStop(0, blue);
+  gCode.addColorStop(1, violet);
+  ctx.fillStyle = gCode;
+  ctx.fillText("CODE", p(1100) + leW, p(375 + 34));
+
+  // Description
+  ctx.font      = `400 ${p(17)}px ${font}`;
+  ctx.fillStyle = "#596170";
+  const descY   = p(375 + 34 + 34 + 18);
+  ctx.fillText("Ouvrez l'appareil photo",     p(1100), descY);
+  ctx.fillText("de votre téléphone et",       p(1100), descY + p(24));
+  ctx.fillText("ajoutez la carte",            p(1100), descY + p(48));
+
+  // ── 7. SÉPARATEUR CENTRAL (X=750) ────────────────────────────────────────
+  ctx.strokeStyle = "rgba(0,0,0,0.10)";
+  ctx.lineWidth   = p(1);
+
+  // Ligne sup : (749, 330) → (749, 430)
+  ctx.beginPath();
+  ctx.moveTo(p(750), p(330));
+  ctx.lineTo(p(750), p(430));
+  ctx.stroke();
+
+  // Cercle "OU" : centre (750, 465) r=35
+  ctx.beginPath();
+  ctx.arc(p(750), p(465), p(35), 0, Math.PI * 2);
+  ctx.fillStyle = "#F8F8FA";
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font      = `500 ${p(20)}px ${font}`;
   ctx.fillStyle = "#8E8E93";
-  ctx.fillText("Ouvrez l'appareil photo", qrTextX, qrTextY + 120 * s);
-  ctx.fillText("de votre téléphone", qrTextX, qrTextY + 153 * s);
-  ctx.fillText("et ajoutez la carte", qrTextX, qrTextY + 186 * s);
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("OU", p(750), p(465));
 
-  // ── 7. WAVES (commencent juste après les panneaux) ───────────────────────
-  const waveY = panelY + panelH + 20 * s;
-  drawWaves(ctx, W, H, waveY);
+  // Ligne inf : (749, 500) → (749, 615)
+  ctx.beginPath();
+  ctx.moveTo(p(750), p(500));
+  ctx.lineTo(p(750), p(615));
+  ctx.strokeStyle = "rgba(0,0,0,0.10)";
+  ctx.lineWidth   = p(1);
+  ctx.stroke();
 
-  // ── 8. WALLET BADGES (centrés dans la zone basse) ────────────────────────
-  // "Ajoutez à votre portefeuille" — légèrement sous les vagues
-  const labelY = waveY + 58 * s;
-  ctx.font = `400 ${28 * s}px ${font}`;
-  ctx.fillStyle = "#8E8E93";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillText("Ajoutez à votre portefeuille", W / 2, labelY);
+  // ── 11. "Ajoutez à votre portefeuille" (X:500 Y:680) ─────────────────────
+  ctx.font      = `400 ${p(18)}px ${font}`;
+  ctx.fillStyle = "#596170";
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "top";
+  ctx.fillText("Ajoutez à votre portefeuille", p(750), p(680));
 
-  const badgeH = 76 * s;
-  const badgeGap = 22 * s;
-  const badgeY = labelY + 22 * s;
-
-  const appleImg = await loadSvgImage("/apple-wallet-badge.svg", Math.round(badgeH * 4));
-  const appleW = appleImg
-    ? Math.round(badgeH * (appleImg.naturalWidth / (appleImg.naturalHeight || 1))) || Math.round(badgeH * 3.4)
-    : Math.round(badgeH * 3.4);
-  const badgeTotalW = appleW * 2 + badgeGap;
-  const badgeX1 = (W - badgeTotalW) / 2;
-  const badgeX2 = badgeX1 + appleW + badgeGap;
-  const badgeR = badgeH * 0.18;
-
-  function drawBadgeImg(img: HTMLImageElement, x: number, w: number) {
+  // ── 12. BADGE APPLE (X:435 Y:725 W:300 H:78 R:18) ────────────────────────
+  const appleImg = await loadImg("/apple-wallet-badge.svg");
+  if (appleImg) {
     ctx.save();
-    roundRect(ctx, x, badgeY, w, badgeH, badgeR);
+    rr(ctx, p(435), p(725), p(300), p(78), p(18));
     ctx.clip();
-    ctx.drawImage(img, x, badgeY, w, badgeH);
+    ctx.drawImage(appleImg, p(435), p(725), p(300), p(78));
     ctx.restore();
   }
 
-  if (appleImg) {
-    drawBadgeImg(appleImg, badgeX1, appleW);
-  } else {
-    drawWalletBadge(ctx, badgeX1, badgeY, appleW, badgeH, "apple");
-  }
-
-  const googleImg = await loadSvgImage("/google-wallet-badge.svg", Math.round(badgeH * 4));
+  // ── 13. BADGE GOOGLE (X:765 Y:725 W:300 H:78 R:18) ───────────────────────
+  const googleImg = await loadImg("/google-wallet-badge.svg");
   if (googleImg) {
-    drawBadgeImg(googleImg, badgeX2, appleW);
-  } else {
-    drawWalletBadge(ctx, badgeX2, badgeY, appleW, badgeH, "google");
+    ctx.save();
+    rr(ctx, p(765), p(725), p(300), p(78), p(18));
+    ctx.clip();
+    ctx.drawImage(googleImg, p(765), p(725), p(300), p(78));
+    ctx.restore();
   }
 
-  // ── 9. WALLIO BRANDING — tout en bas ──────────────────────────────────────
-  const wallioY = H - 95 * s;
-  ctx.textAlign = "center";
-  ctx.font = `500 ${24 * s}px ${font}`;
-  ctx.fillStyle = "#C7C7CC";
-  ctx.letterSpacing = `${5 * s}px`;
-  ctx.fillText("WALLIO", W / 2, wallioY);
+  // ── 15. WALLIO (X:625 Y:855 W:250 letter-spacing:8px) ────────────────────
+  ctx.font         = `500 ${p(24)}px ${font}`;
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle    = indigo;
+  ctx.letterSpacing = `${p(8)}px`;
+  ctx.fillText("WALLIO", p(750), p(855));
   ctx.letterSpacing = "0px";
 
-  ctx.font = `400 ${20 * s}px ${font}`;
-  ctx.fillStyle = "#D1D1D6";
-  ctx.fillText("wallio.app", W / 2, wallioY + 32 * s);
+  ctx.restore(); // end card clip
 }

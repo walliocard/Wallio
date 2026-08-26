@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { drawPrintCard, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
 const PREVIEW_SCALE = 0.42;
+const PRINT_SCALE   = 2; // 3000×2000px — print quality
 
 export default function ImpressionPage() {
   const [urls, setUrls] = useState<string>("");
@@ -30,7 +31,7 @@ export default function ImpressionPage() {
   async function downloadSingle() {
     setGenerating(true);
     const canvas = document.createElement("canvas");
-    await drawPrintCard(canvas, previewUrl, 1);
+    await drawPrintCard(canvas, previewUrl, PRINT_SCALE);
     const link = document.createElement("a");
     link.download = `wallio-carte-comptoir.png`;
     link.href = canvas.toDataURL("image/png");
@@ -49,7 +50,7 @@ export default function ImpressionPage() {
 
     for (let i = 0; i < list.length; i++) {
       const canvas = document.createElement("canvas");
-      await drawPrintCard(canvas, list[i], 1);
+      await drawPrintCard(canvas, list[i], PRINT_SCALE);
       const blob = await new Promise<Blob>(resolve =>
         canvas.toBlob(b => resolve(b!), "image/png")
       );
@@ -172,9 +173,9 @@ export default function ImpressionPage() {
               Specs imprimeur
             </p>
             {[
-              ["Format", "160 × 100 mm"],
-              ["Résolution", "1890 × 1181 px"],
-              ["DPI", "300"],
+              ["Format", "152 × 101 mm (ratio 3:2)"],
+              ["Résolution export", `${PRINT_W * PRINT_SCALE} × ${PRINT_H * PRINT_SCALE} px`],
+              ["DPI équivalent", "~200 DPI"],
               ["Format fichier", "PNG (RVB)"],
               ["Fond perdu", "inclure 3 mm"],
               ["Support recommandé", "PVC rigide 1mm"],
