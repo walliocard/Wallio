@@ -429,16 +429,25 @@ export async function drawPrintCard(
   const badgeX1 = (W - badgeTotalW) / 2;
   const badgeX2 = badgeX1 + appleW + badgeGap;
 
+  const badgeR = badgeH * 0.18; // rayon arrondi uniforme
+
+  function drawBadgeImg(img: HTMLImageElement, x: number, w: number) {
+    ctx.save();
+    roundRect(ctx, x, badgeY, w, badgeH, badgeR);
+    ctx.clip();
+    ctx.drawImage(img, x, badgeY, w, badgeH);
+    ctx.restore();
+  }
+
   if (appleImg) {
-    ctx.drawImage(appleImg, badgeX1, badgeY, appleW, badgeH);
+    drawBadgeImg(appleImg, badgeX1, appleW);
   } else {
     drawWalletBadge(ctx, badgeX1, badgeY, appleW, badgeH, "apple");
   }
 
-  // Google Wallet — SVG officiel FR
   const googleImg = await loadSvgImage("/google-wallet-badge.svg", Math.round(badgeH * 4));
   if (googleImg) {
-    ctx.drawImage(googleImg, badgeX2, badgeY, appleW, badgeH);
+    drawBadgeImg(googleImg, badgeX2, appleW);
   } else {
     drawWalletBadge(ctx, badgeX2, badgeY, appleW, badgeH, "google");
   }
