@@ -643,7 +643,7 @@ export default function AdminPage() {
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  {["Établissement", "Email", "NFC", "Inscription", "Abonnement", "Compte", ""].map(h => (
+                  {["Établissement", "Email", "NFC", "Inscription", "Abonnement", "Compte", "Carte", ""].map(h => (
                     <th key={h} className="text-left text-[11px] font-medium px-5 py-4 uppercase tracking-wide"
                       style={{ color: "var(--fg-tertiary)" }}>{h}</th>
                   ))}
@@ -691,7 +691,34 @@ export default function AdminPage() {
                         {m.actif ? "Actif" : "Inactif"}
                       </span>
                     </td>
-                    <td className="px-5 py-4">
+                    {/* Bouton carte comptoir */}
+                    <td className="px-3 py-4">
+                      <button
+                        onClick={async e => {
+                          e.stopPropagation();
+                          if (!m.nfc_id) return;
+                          const btn = e.currentTarget;
+                          btn.textContent = "…";
+                          btn.setAttribute("disabled", "true");
+                          await telechargerCarte(m);
+                          btn.textContent = "⬇ Carte";
+                          btn.removeAttribute("disabled");
+                        }}
+                        disabled={!m.nfc_id}
+                        title={m.nfc_id ? "Télécharger la carte comptoir 4K" : "Générer d'abord un NFC ID"}
+                        className="text-[12px] font-semibold px-3 py-2 rounded-xl whitespace-nowrap"
+                        style={{
+                          background: m.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)",
+                          border: `1px solid ${m.nfc_id ? "var(--accent)" : "var(--border)"}`,
+                          color: m.nfc_id ? "var(--accent)" : "var(--fg-tertiary)",
+                          cursor: m.nfc_id ? "pointer" : "not-allowed",
+                          opacity: m.nfc_id ? 1 : 0.5,
+                        }}>
+                        ⬇ Carte
+                      </button>
+                    </td>
+
+                    <td className="px-3 py-4">
                       <button
                         onClick={e => { e.stopPropagation(); setSelected(m); }}
                         className="text-[13px] font-medium px-4 py-2 rounded-xl"
