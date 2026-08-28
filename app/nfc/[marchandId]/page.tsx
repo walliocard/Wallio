@@ -26,13 +26,12 @@ export default function NfcPage({ params }: { params: { marchandId: string } }) 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
     setScreen({ type: "result", result, client, marchand });
-    // Signal Apple Wallet pour mettre à jour la carte (fire-and-forget)
+    // Signal Wallet pour mettre à jour la carte (fire-and-forget)
     if (result.type === "ok" || result.type === "recompense") {
-      fetch("/api/apple-wallet/push-update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletId: client.wallet_id }),
-      }).catch(() => {});
+      const body = JSON.stringify({ walletId: client.wallet_id });
+      const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+      fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+      fetch("/api/google-wallet/push-update", opts).catch(() => {});
     }
   }, []);
 
@@ -430,30 +429,47 @@ function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }
           </div>
         )}
 
-        {/* Bouton Apple Wallet — actif uniquement si Apple Developer configuré */}
-        {process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" ? (
-          <a
-            href={`/api/apple-wallet/generate/${client.wallet_id}`}
-            download
-            className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 transition-opacity active:opacity-70"
-            style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.15)" }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-              <rect x="2" y="5" width="20" height="14" rx="3" fill="none" stroke="white" strokeWidth="1.5"/>
-              <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
-              <circle cx="7" cy="14.5" r="1.5" fill="white"/>
-            </svg>
-            <span className="text-[15px] font-semibold text-white">Ajouter à Apple Wallet</span>
-          </a>
-        ) : (
-          <div className="w-full rounded-2xl py-3 px-6 text-center"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-            <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>Apple Wallet</p>
-            <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
-              Disponible prochainement
-            </p>
-          </div>
-        )}
+        {/* Boutons Wallet */}
+        <div className="flex flex-col gap-3">
+          {process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" ? (
+            <a
+              href={`/api/apple-wallet/generate/${client.wallet_id}`}
+              download
+              className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 transition-opacity active:opacity-70"
+              style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.15)" }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <rect x="2" y="5" width="20" height="14" rx="3" fill="none" stroke="white" strokeWidth="1.5"/>
+                <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
+                <circle cx="7" cy="14.5" r="1.5" fill="white"/>
+              </svg>
+              <span className="text-[15px] font-semibold text-white">Ajouter à Apple Wallet</span>
+            </a>
+          ) : (
+            <div className="w-full rounded-2xl py-3 px-6 text-center"
+              style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+              <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>Apple Wallet</p>
+              <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+                Disponible prochainement
+              </p>
+            </div>
+          )}
+
+          {process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" ? (
+            <a
+              href={`/api/google-wallet/generate/${client.wallet_id}`}
+              className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 transition-opacity active:opacity-70"
+              style={{ background: "#1a73e8" }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="white"/>
+                <rect x="2" y="5" width="20" height="14" rx="3" fill="none" stroke="white" strokeWidth="1.5"/>
+                <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
+              </svg>
+              <span className="text-[15px] font-semibold text-white">Ajouter à Google Wallet</span>
+            </a>
+          ) : null}
+        </div>
       </div>
     </main>
   );
