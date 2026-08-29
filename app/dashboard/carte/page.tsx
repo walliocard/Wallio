@@ -53,6 +53,7 @@ export default function CartePage() {
   const [stripTextSize, setStripTextSize] = useState<"s"|"m"|"l">("m");
   const [stripTextColor, setStripTextColor] = useState<string>("#FFFFFF");
   const [stripTextPos, setStripTextPos] = useState<"bl"|"bc"|"br"|"c">("bl");
+  const [stripTextY, setStripTextY] = useState<number>(((marchand as Record<string, unknown>).apple_strip_text_y as number) ?? 88);
   const [stripTextFont, setStripTextFont] = useState<"sans"|"serif"|"mono">("sans");
 
   // Feature 5 — texte 2 lignes bannière
@@ -82,7 +83,7 @@ export default function CartePage() {
 
   // Feature 6 — cadrage image uploadée
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
-  const [cropY, setCropY] = useState<number>(50);
+  const [cropY, setCropY] = useState<number>(((marchand as Record<string, unknown>).apple_strip_crop_y as number) ?? 50);
   const [isUploadedStrip, setIsUploadedStrip] = useState<boolean>(false);
   const [cropZoom, setCropZoom] = useState<number>(1);
   const [showStripCrop, setShowStripCrop] = useState(false);
@@ -210,10 +211,10 @@ export default function CartePage() {
       stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
       stripText2, stripText2Size,
       stripIncludeLogo ? logoUrl : undefined,
-      stripGlass
+      stripGlass, stripTextY
     ).then(strip => setStripUrl(strip)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stripText, stripTextSize, stripTextColor, stripTextPos, stripTextFont, stripText2, stripText2Size, stripIncludeLogo, logoUrl]);
+  }, [stripText, stripTextSize, stripTextColor, stripTextPos, stripTextFont, stripTextY, stripText2, stripText2Size, stripIncludeLogo, logoUrl]);
 
   // Carte comptoir
   const [comptoirFormat, setComptoirFormat] = useState<ComptoirFormat>("comptoir");
@@ -387,6 +388,7 @@ export default function CartePage() {
 
   async function sauvegarder() {
     setSaving(true);
+    try {
     // Toujours uploader les dataUrls sur Cloudinary avant Firestore (évite documents > 1MB)
     let finalStripUrl = stripUrl;
     if (isUploadedStrip && rawStripUrl) {
@@ -446,6 +448,8 @@ export default function CartePage() {
       apple_stamp_size: stampSizePreset,
       apple_stamp_thickness: stampThickness,
       apple_stamp_logo_opacity: stampLogoOpacity,
+      apple_strip_text_y: stripTextY,
+      apple_strip_crop_y: cropY,
       google_primary_label: googlePrimaryLabel,
       google_secondary_label: googleSecondaryLabel,
       google_bg_color: googleBgColor,
@@ -457,6 +461,11 @@ export default function CartePage() {
     setSaved(true);
     setLocked(true);
     setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setSaving(false);
+      console.error("[sauvegarder]", err);
+      alert("Erreur lors de l'enregistrement. Vérifie ta connexion.");
+    }
   }
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -870,7 +879,7 @@ export default function CartePage() {
           {walletType === "apple" && <Section label="Bannière">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {(stripUrl || rawStripUrl) ? (() => {
-                const canCrop = isUploadedStrip || (!stripFrom && !!stripUrl);
+                const canCrop = isUploadedStrip && !!rawStripUrl;
                 const src = rawStripUrl || stripUrl;
                 return (
                 <div
@@ -1117,22 +1126,30 @@ export default function CartePage() {
                 </Field>
 
                 {/* Position */}
-                <Field label="Position du texte">
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5 }}>
+                <Field label="Position X du texte">
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 5 }}>
                     {([
-                      { k: "bl", label: "↙ Bas gauche" },
-                      { k: "bc", label: "↓ Bas centre" },
-                      { k: "br", label: "↘ Bas droite" },
-                      { k: "c",  label: "⊕ Centré" },
+                      { k: "bl", label: "Gauche" },
+                      { k: "bc", label: "Centre" },
+                      { k: "br", label: "Droite" },
                     ] as const).map(({ k, label }) => (
                       <button key={k} onClick={() => setStripTextPos(k)} style={{
-                        padding: "5px 3px", borderRadius: 8, fontSize: 10, fontWeight: stripTextPos === k ? 600 : 400,
-                        background: stripTextPos === k ? "var(--accent)" : "var(--glass-bg)",
-                        color: stripTextPos === k ? "white" : "var(--fg-secondary)",
-                        border: `1px solid ${stripTextPos === k ? "var(--accent)" : "var(--border)"}`,
+                        padding: "5px 3px", borderRadius: 8, fontSize: 11, fontWeight: (stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? 600 : 400,
+                        background: (stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? "var(--accent)" : "var(--glass-bg)",
+                        color: (stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? "white" : "var(--fg-secondary)",
+                        border: `1px solid ${(stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? "var(--accent)" : "var(--border)"}`,
                         cursor: "pointer",
                       }}>{label}</button>
                     ))}
+                  </div>
+                </Field>
+                <Field label={`Position Y — ${Math.round(stripTextY)}%`}>
+                  <input type="range" min={5} max={95} step={1} value={stripTextY}
+                    onChange={e => setStripTextY(Number(e.target.value))}
+                    style={{ width: "100%", accentColor: "var(--accent)" }}
+                  />
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--fg-tertiary)", marginTop: 2 }}>
+                    <span>Haut</span><span>Milieu</span><span>Bas</span>
                   </div>
                 </Field>
               </>
@@ -1527,8 +1544,8 @@ export default function CartePage() {
             </Field>
           </Section>
 
-          {/* Paliers intermédiaires */}
-          <Section label="Paliers à débloquer">
+          {/* Paliers intermédiaires — Apple uniquement */}
+          {walletType === "apple" && <Section label="Paliers à débloquer">
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
               Cadeaux intermédiaires visibles sur la carte du client.
             </p>
@@ -1596,7 +1613,7 @@ export default function CartePage() {
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginTop: 6 }}>
               Le chiffre = nombre de tampons requis. Entrez et appuyez sur +.
             </p>
-          </Section>
+          </Section>}
 
           {/* Champ en-tête — Apple uniquement */}
           {walletType === "apple" && (
@@ -1821,7 +1838,7 @@ export default function CartePage() {
                       setGoogleStripFrom(t.from); setGoogleStripTo(t.to);
                       setGoogleStripAngle(angle); setGoogleStripGlass(glassMode);
                       setIsUploadedGoogleHero(false); setRawGoogleHeroUrl("");
-                      const hero = await buildStrip(t.from, t.to, angle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, glassMode, 1032, 344);
+                      const hero = await buildStrip(t.from, t.to, angle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, glassMode, 88, 1032, 344);
                       setGoogleHeroUrl(hero);
                     }} style={{
                       width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
@@ -1878,7 +1895,7 @@ export default function CartePage() {
                 </div>
                 {googleStripFrom && (
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={async () => { const hero = await buildStrip(googleStripFrom, googleStripTo, googleStripAngle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, googleStripGlass, 1032, 344); setGoogleHeroUrl(hero); }} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>↺ Régénérer</button>
+                    <button onClick={async () => { const hero = await buildStrip(googleStripFrom, googleStripTo, googleStripAngle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, googleStripGlass, 88, 1032, 344); setGoogleHeroUrl(hero); }} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>↺ Régénérer</button>
                     {googleHeroUrl && <button onClick={() => downloadStrip(googleHeroUrl, `wallio-hero-${nom || "carte"}.jpg`)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>⬇ Télécharger</button>}
                     <button onClick={() => { setGoogleHeroUrl(""); setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleStripGlass(false); }} style={{ padding: "8px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)", color: "#FF3B30", cursor: "pointer" }}>×</button>
                   </div>
@@ -2098,6 +2115,7 @@ async function buildStrip(
   text2Size: "s"|"m"|"l" = "s",
   logoUrl?: string,
   glass = false,
+  textY = 88,
   canvasW = 750,
   canvasH = 288,
 ): Promise<string> {
@@ -2175,10 +2193,11 @@ async function buildStrip(
     ctx.font = `700 ${sz}px ${fontFamily}`;
     ctx.fillStyle = textColor;
     const pad = 44;
-    const align = textPos === "bc" ? "center" : textPos === "br" ? "right" : "left";
+    const isCenter = textPos === "bc" || textPos === "c";
+    const align = isCenter ? "center" : textPos === "br" ? "right" : "left";
     ctx.textAlign = align;
-    const x = textPos === "bl" ? pad : textPos === "bc" ? W / 2 : textPos === "br" ? W - pad : W / 2;
-    const y = textPos === "c" ? H / 2 + sz * 0.35 : H - pad;
+    const x = textPos === "br" ? W - pad : isCenter ? W / 2 : pad;
+    const y = H * (textY / 100);
     ctx.fillText(text, x, y);
 
     // Ligne 2
@@ -2187,8 +2206,7 @@ async function buildStrip(
       ctx.font = `500 ${sz2}px ${fontFamily}`;
       ctx.fillStyle = textColor;
       ctx.globalAlpha = 0.8;
-      const y2 = textPos === "c" ? H / 2 + sz * 0.35 + sz2 + 8 : H - pad + sz2 + 8;
-      ctx.fillText(text2, x, y2);
+      ctx.fillText(text2, x, y + sz2 + 8);
       ctx.globalAlpha = 1;
     }
   }
