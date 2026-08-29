@@ -25,7 +25,7 @@ type Screen =
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
-  useTimeTheme("light"); // page NFC toujours en mode clair
+  useTimeTheme("dark"); // page NFC toujours en mode sombre (DA Wallio)
   useAutoRefresh(screen.type === "loading");
 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
@@ -203,12 +203,25 @@ function ResultScreen({ result, marchand, onValiderRecompense }: {
 const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
 const PAYS = [
-  { code: "+212", flag: "🇲🇦", label: "Maroc", digits: 9 },
-  { code: "+33",  flag: "🇫🇷", label: "France", digits: 9 },
-  { code: "+32",  flag: "🇧🇪", label: "Belgique", digits: 9 },
-  { code: "+34",  flag: "🇪🇸", label: "Espagne", digits: 9 },
-  { code: "+971", flag: "🇦🇪", label: "Émirats", digits: 9 },
-  { code: "+966", flag: "🇸🇦", label: "Arabie S.", digits: 9 },
+  { code: "+212", flag: "🇲🇦", label: "Maroc",        digits: 9  },
+  { code: "+213", flag: "🇩🇿", label: "Algérie",      digits: 9  },
+  { code: "+216", flag: "🇹🇳", label: "Tunisie",      digits: 8  },
+  { code: "+33",  flag: "🇫🇷", label: "France",       digits: 9  },
+  { code: "+32",  flag: "🇧🇪", label: "Belgique",     digits: 9  },
+  { code: "+34",  flag: "🇪🇸", label: "Espagne",      digits: 9  },
+  { code: "+39",  flag: "🇮🇹", label: "Italie",       digits: 10 },
+  { code: "+41",  flag: "🇨🇭", label: "Suisse",       digits: 9  },
+  { code: "+44",  flag: "🇬🇧", label: "Royaume-Uni",  digits: 10 },
+  { code: "+49",  flag: "🇩🇪", label: "Allemagne",    digits: 10 },
+  { code: "+31",  flag: "🇳🇱", label: "Pays-Bas",     digits: 9  },
+  { code: "+351", flag: "🇵🇹", label: "Portugal",     digits: 9  },
+  { code: "+90",  flag: "🇹🇷", label: "Turquie",      digits: 10 },
+  { code: "+971", flag: "🇦🇪", label: "Émirats",      digits: 9  },
+  { code: "+966", flag: "🇸🇦", label: "Arabie S.",    digits: 9  },
+  { code: "+974", flag: "🇶🇦", label: "Qatar",        digits: 8  },
+  { code: "+965", flag: "🇰🇼", label: "Koweït",       digits: 8  },
+  { code: "+221", flag: "🇸🇳", label: "Sénégal",      digits: 9  },
+  { code: "+225", flag: "🇨🇮", label: "Côte d'Ivoire",digits: 10 },
   { code: "+1",   flag: "🇺🇸", label: "USA / Canada", digits: 10 },
 ];
 
@@ -236,13 +249,14 @@ function MarchandHeader({ marchand }: { marchand: Marchand }) {
   );
 }
 
-// Palette carte comptoir — toujours clair
-const BG_PAGE   = "#F0F4FF";
-const BG_CARD   = "#FFFFFF";
-const BORDER    = "rgba(99,102,241,0.14)";
-const FG_MAIN   = "#1D1D1F";
-const FG_SEC    = "#6E6E73";
-const ACCENT    = "#007AFF";
+// Palette DA Wallio — dark premium
+const BG_PAGE   = "#0A0A0A";
+const BG_CARD   = "#111113";
+const BORDER    = "rgba(255,255,255,0.08)";
+const FG_MAIN   = "#F5F5F7";
+const FG_SEC    = "#86868B";
+const ACCENT    = "#00F5A0";
+const ACCENT_FG = "#0A0A0A"; // texte sur fond vert
 
 const inputStyle: React.CSSProperties = {
   background: BG_CARD,
@@ -295,7 +309,7 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
       <div className="w-full max-w-[390px] mx-auto">
         <MarchandHeader marchand={marchand} />
 
-        <div className="rounded-[28px] p-6" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(99,102,241,0.08)" }}>
+        <div className="rounded-[28px] p-6" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }}>
           <form onSubmit={handleSubmit} className="space-y-2.5">
             {([
               { value: prenom, set: setPrenom, placeholder: "Prénom", type: "text", autoComplete: "given-name" },
@@ -358,8 +372,8 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
             {error && <p className="text-[13px] px-1" style={{ color: "#FF453A" }}>{error}</p>}
 
             <button type="submit" disabled={loading}
-              className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white transition-opacity active:opacity-80 mt-1"
-              style={{ background: "var(--accent)", boxShadow: "0 4px 20px rgba(0,122,255,0.35)" }}>
+              className="w-full py-4 rounded-2xl text-[16px] font-semibold transition-opacity active:opacity-80 mt-1"
+              style={{ background: ACCENT, color: ACCENT_FG, boxShadow: `0 4px 24px ${ACCENT}40` }}>
               {loading ? "Création…" : "Créer ma carte"}
             </button>
           </form>
@@ -367,7 +381,7 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
 
         <p className="text-center text-[13px] mt-5" style={{ color: FG_SEC }}>
           Déjà inscrit ?{" "}
-          <button onClick={onRecuperation} style={{ color: ACCENT }} className="font-medium">
+          <button onClick={onRecuperation} style={{ color: ACCENT }} className="font-semibold">
             Récupérer mon compte
           </button>
         </p>
