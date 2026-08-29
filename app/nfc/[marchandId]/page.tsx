@@ -196,6 +196,12 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
         {isRecompense && (
           <RecompenseQR walletId={walletId} />
         )}
+
+        <a href={`/preferences/${walletId}`}
+          className="block mt-8 text-[12px] text-center"
+          style={{ color: "var(--fg-tertiary)" }}>
+          Gérer mes notifications
+        </a>
       </div>
     </main>
   );
