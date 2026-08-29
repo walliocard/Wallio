@@ -104,6 +104,7 @@ export async function GET(
     barcode: {
       type: "QR_CODE",
       value: `${BASE_URL}/client/${walletId}`,
+      alternateText: "",
     },
     accountName: `${client.prenom} ${client.nom}`,
     accountId: walletId,
