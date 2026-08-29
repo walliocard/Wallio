@@ -15,6 +15,8 @@ export interface GoogleWalletCardProps {
   rewardName: string;
   primaryLabel?: string;
   secondaryLabel?: string;
+  textModules?: { header: string; body: string; id: string }[];
+  links?: { uri: string; description: string }[];
   previewUid?: string;
   // props ignorées (structure imposée par Google)
   stripUrl?: string;
@@ -44,6 +46,8 @@ export default function GoogleWalletCard({
   stampsObjective,
   rewardName,
   primaryLabel = "Tampons",
+  textModules = [],
+  links = [],
   previewUid,
 }: GoogleWalletCardProps) {
   const [qr, setQr] = useState("");
@@ -143,6 +147,35 @@ export default function GoogleWalletCard({
             Récompense
           </div>
           <div style={{ fontSize: 15, fontWeight: 600, color: text }}>{rewardName}</div>
+        </div>
+      )}
+
+      {/* Modules texte */}
+      {textModules.filter(m => m.header || m.body).length > 0 && (
+        <div style={{ margin: "0 20px 10px", display: "flex", flexDirection: "column", gap: 8 }}>
+          {textModules.filter(m => m.header || m.body).map((m, i) => (
+            <div key={i} style={{ padding: "8px 12px", borderRadius: 10, background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" }}>
+              {m.header && <div style={{ fontSize: 10, fontWeight: 700, color: textSec, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 }}>{m.header}</div>}
+              {m.body && <div style={{ fontSize: 13, color: text, lineHeight: 1.4 }}>{m.body}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Liens */}
+      {links.filter(l => l.uri && l.description).length > 0 && (
+        <div style={{ margin: "0 20px 10px", display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {links.filter(l => l.uri && l.description).map((l, i) => (
+            <a key={i} href={l.uri} target="_blank" rel="noopener noreferrer"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "5px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600,
+                background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.07)",
+                color: text, textDecoration: "none",
+              }}>
+              {l.uri.startsWith("tel:") ? "📞" : l.uri.startsWith("mailto:") ? "✉" : "🌐"} {l.description}
+            </a>
+          ))}
         </div>
       )}
 

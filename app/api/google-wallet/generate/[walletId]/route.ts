@@ -113,8 +113,14 @@ export async function GET(
     },
     accountName: `${client.prenom} ${client.nom}`,
     textModulesData: [
-      { header: "Recompense", body: m.nom_recompense || "Recompense", id: "recompense" },
+      { header: "Récompense", body: m.nom_recompense || "Récompense", id: "recompense" },
+      ...((m.google_text_modules as {header: string; body: string; id: string}[] | undefined) || [])
+        .filter(mod => mod.header && mod.body)
+        .map(mod => ({ header: mod.header, body: mod.body, id: mod.id || `mod_${mod.header}` })),
     ],
+    ...(((m.google_links as {uri: string; description: string}[] | undefined) || []).filter(l => l.uri && l.description).length > 0
+      ? { linksModuleData: { uris: ((m.google_links as {uri: string; description: string}[]) || []).filter(l => l.uri && l.description).map(l => ({ uri: l.uri, description: l.description })) } }
+      : {}),
   };
 
   const jwt = buildSaveToWalletJwt([loyaltyObject]);

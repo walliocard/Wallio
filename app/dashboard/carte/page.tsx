@@ -128,6 +128,13 @@ export default function CartePage() {
   // Google Wallet labels
   const [googlePrimaryLabel, setGooglePrimaryLabel] = useState<string>((marchand as Record<string, unknown>).google_primary_label as string || "Tampons");
   const [googleSecondaryLabel, setGoogleSecondaryLabel] = useState<string>((marchand as Record<string, unknown>).google_secondary_label as string || "Objectif");
+  // Google Wallet modules texte et liens
+  const [googleTextModules, setGoogleTextModules] = useState<{header: string; body: string; id: string}[]>(
+    ((marchand as Record<string, unknown>).google_text_modules as {header: string; body: string; id: string}[]) || []
+  );
+  const [googleLinks, setGoogleLinks] = useState<{uri: string; description: string}[]>(
+    ((marchand as Record<string, unknown>).google_links as {uri: string; description: string}[]) || []
+  );
 
   // Feature 7 — preview états tampons
   const [previewFill, setPreviewFill] = useState<number>(0.5);
@@ -460,6 +467,8 @@ export default function CartePage() {
       google_secondary_label: googleSecondaryLabel,
       google_bg_color: googleBgColor,
       google_hero_url: finalGoogleHeroUrl,
+      google_text_modules: googleTextModules,
+      google_links: googleLinks,
       apple_milestone_rewards: milestoneRewards,
       updated_at: serverTimestamp(),
     });
@@ -826,6 +835,8 @@ export default function CartePage() {
               rewardName={recompense}
               primaryLabel={googlePrimaryLabel}
               secondaryLabel={googleSecondaryLabel}
+              textModules={googleTextModules}
+              links={googleLinks}
               previewUid={user.uid}
             />
           )}
@@ -1928,6 +1939,73 @@ export default function CartePage() {
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
                   Nom de la récompense modifiable dans "Récompense finale" ci-dessous.
                 </p>
+              </Section>
+
+              {/* 5/5 — Modules texte */}
+              <Section label="Infos supplémentaires">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                  Blocs d'info visibles au dos de la carte (horaires, adresse, promo…). Max 5.
+                </p>
+                {googleTextModules.map((m, i) => (
+                  <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 8 }}>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                      <input
+                        value={m.header} placeholder="Titre (ex : Horaires)"
+                        onChange={e => setGoogleTextModules(prev => prev.map((x, j) => j === i ? { ...x, header: e.target.value } : x))}
+                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                      />
+                      <textarea
+                        value={m.body} placeholder="Contenu (ex : Lun-Sam 9h-18h)"
+                        rows={2}
+                        onChange={e => setGoogleTextModules(prev => prev.map((x, j) => j === i ? { ...x, body: e.target.value } : x))}
+                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none", resize: "none", fontFamily: "inherit" }}
+                      />
+                    </div>
+                    <button onClick={() => setGoogleTextModules(prev => prev.filter((_, j) => j !== i))}
+                      style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0, marginTop: 2 }}>
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {googleTextModules.length < 5 && (
+                  <button onClick={() => setGoogleTextModules(prev => [...prev, { header: "", body: "", id: `mod_${Date.now()}` }])}
+                    style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
+                    + Ajouter un bloc
+                  </button>
+                )}
+              </Section>
+
+              {/* 6/6 — Liens */}
+              <Section label="Liens">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                  Liens cliquables sur la carte (site web, téléphone, email…). Max 3.
+                </p>
+                {googleLinks.map((lk, i) => (
+                  <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                      <input
+                        value={lk.description} placeholder="Label (ex : Notre site)"
+                        onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, description: e.target.value } : x))}
+                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                      />
+                      <input
+                        value={lk.uri} placeholder="URL ou tel:+212... ou mailto:..."
+                        onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, uri: e.target.value } : x))}
+                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                      />
+                    </div>
+                    <button onClick={() => setGoogleLinks(prev => prev.filter((_, j) => j !== i))}
+                      style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0 }}>
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {googleLinks.length < 3 && (
+                  <button onClick={() => setGoogleLinks(prev => [...prev, { uri: "", description: "" }])}
+                    style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
+                    + Ajouter un lien
+                  </button>
+                )}
               </Section>
             </>
           )}
