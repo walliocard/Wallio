@@ -250,13 +250,14 @@ function MarchandHeader({ marchand }: { marchand: Marchand }) {
 }
 
 // Palette DA Wallio — light premium
-const BG_PAGE   = "#F5F5F7";
+const BG_PAGE   = "#F0F4FF";
 const BG_CARD   = "#FFFFFF";
-const BORDER    = "rgba(0,0,0,0.08)";
+const BORDER    = "rgba(99,102,241,0.14)";
 const FG_MAIN   = "#1D1D1F";
 const FG_SEC    = "#6E6E73";
-const ACCENT    = "#00F5A0"; // vert Wallio exact
-const ACCENT_FG = "#0A0A0A"; // texte noir sur vert clair
+const ACCENT    = "#007AFF";
+const ACCENT_FG = "#FFFFFF";
+const BTN_BG    = "linear-gradient(135deg, #007AFF 0%, #8B5CF6 100%)";
 
 const inputStyle: React.CSSProperties = {
   background: BG_CARD,
@@ -373,7 +374,7 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
 
             <button type="submit" disabled={loading}
               className="w-full py-4 rounded-2xl text-[16px] font-semibold transition-opacity active:opacity-80 mt-1"
-              style={{ background: ACCENT, color: ACCENT_FG, boxShadow: `0 4px 24px ${ACCENT}40` }}>
+              style={{ background: BTN_BG, color: ACCENT_FG, boxShadow: "0 4px 24px rgba(99,102,241,0.30)" }}>
               {loading ? "Création…" : "Créer ma carte"}
             </button>
           </form>
@@ -455,7 +456,7 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
 
             <button type="submit" disabled={loading}
               className="w-full py-4 rounded-2xl text-[16px] font-semibold transition-opacity active:opacity-80 mt-1"
-              style={{ background: ACCENT, color: ACCENT_FG, boxShadow: `0 4px 24px ${ACCENT}50` }}>
+              style={{ background: BTN_BG, color: ACCENT_FG, boxShadow: "0 4px 24px rgba(99,102,241,0.30)" }}>
               {loading ? "Recherche…" : "Récupérer mon compte"}
             </button>
           </form>
