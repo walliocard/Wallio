@@ -248,10 +248,13 @@ export default function CartePage() {
   const contrastLevel: "ok" | "weak" | "fail" =
     contrastRatioValue >= 4.5 ? "ok" : contrastRatioValue >= 3 ? "weak" : "fail";
 
-  // Feature 8 — upload to Firebase Storage
+  // Feature 8 — upload to Firebase Storage (timeout 8s pour fallback si Storage non activé)
   async function uploadToStorage(dataUrl: string, path: string): Promise<string> {
     const sRef = storageRef(storage, path);
-    await uploadString(sRef, dataUrl, "data_url");
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Storage timeout")), 8000)
+    );
+    await Promise.race([uploadString(sRef, dataUrl, "data_url"), timeout]);
     return getDownloadURL(sRef);
   }
 
