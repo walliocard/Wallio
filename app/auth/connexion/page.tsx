@@ -35,11 +35,17 @@ export default function ConnexionPage() {
     setError("");
     setLoading(true);
     try {
-      const { user } = await signInWithEmailAndPassword(auth, form.email, form.password);
-      const timeout = new Promise<null>((_, reject) =>
+      const signInTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 8000)
+      );
+      const { user } = await Promise.race([
+        signInWithEmailAndPassword(auth, form.email, form.password),
+        signInTimeout,
+      ]);
+      const marchandTimeout = new Promise<null>((_, reject) =>
         setTimeout(() => reject(new Error("timeout")), 5000)
       );
-      const marchand = await Promise.race([getMarchand(user.uid), timeout]);
+      const marchand = await Promise.race([getMarchand(user.uid), marchandTimeout]);
       if (!marchand || !marchand.actif) {
         await auth.signOut();
         setError("Votre compte est en attente d'activation par l'équipe Wallio.");
@@ -48,7 +54,7 @@ export default function ConnexionPage() {
       router.push("/dashboard");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
-      setError(msg === "timeout" ? "Connexion lente, réessaie." : "Email ou mot de passe incorrect.");
+      setError(msg === "timeout" ? "Impossible de joindre Firebase. Vérifie ta connexion." : "Email ou mot de passe incorrect.");
     } finally {
       setLoading(false);
     }
