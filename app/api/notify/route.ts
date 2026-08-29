@@ -6,7 +6,7 @@ import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
 // Body : { title, body, segment: "tous" | "actifs" | "inactifs", marchandId, idToken }
 export async function POST(req: Request) {
   try {
-    const { title, body, segment, marchandId, idToken } = await req.json();
+    const { title, body, segment, marchandId, idToken, logoUrl } = await req.json();
 
     if (!title || !body || !marchandId || !idToken) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         tokens: batch,
         notification: { title, body },
         webpush: {
-          notification: { icon: "/icon-192.png", badge: "/favicon-32.png" },
+          notification: { icon: (logoUrl as string | null) || "/icon-192.png", badge: "/favicon-32.png" },
           fcmOptions: { link: `https://app.wallio.ma` },
         },
       });

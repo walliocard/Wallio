@@ -44,7 +44,7 @@ export default function NotificationsPage() {
       const res = await fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body, segment, marchandId: user!.uid, idToken }),
+        body: JSON.stringify({ title, body, segment, marchandId: user!.uid, idToken, logoUrl: (marchand as Record<string,unknown>).logo_url || null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);

@@ -244,7 +244,7 @@ export default function ReglagesPage() {
                     </p>
                     <input type="range" min={0} max={7} value={auto.anniversaire_jours_avant}
                       onChange={e => setA("anniversaire_jours_avant", Number(e.target.value))}
-                      className="w-full" style={{ accentColor: "var(--accent)" }} />
+                      className="w-full" />
                   </div>
                   <div>
                     <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>Message d'anniversaire</p>
@@ -275,7 +275,7 @@ export default function ReglagesPage() {
                     </p>
                     <input type="range" min={7} max={90} step={7} value={auto.relance_delai_jours}
                       onChange={e => setA("relance_delai_jours", Number(e.target.value))}
-                      className="w-full" style={{ accentColor: "var(--accent)" }} />
+                      className="w-full" />
                   </div>
                   <div>
                     <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>Message de relance</p>
@@ -333,10 +333,11 @@ export default function ReglagesPage() {
               <div className="mt-3 rounded-2xl p-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
                 <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>Aperçu</p>
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.1)" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
-                      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
-                    </svg>
+                  <div className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden" style={{ background: marchand.couleur_principale || "var(--accent)" }}>
+                    {(marchand as Record<string,unknown>).logo_url
+                      ? <img src={(marchand as Record<string,unknown>).logo_url as string} alt="" className="w-full h-full object-cover" />
+                      : <span className="w-full h-full flex items-center justify-center text-white font-semibold text-[13px]">{marchand.nom?.[0] || "W"}</span>
+                    }
                   </div>
                   <div>
                     <p className="text-[13px] font-medium mb-0.5" style={{ color: "var(--fg)" }}>Restez informé</p>
