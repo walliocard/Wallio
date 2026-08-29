@@ -107,7 +107,6 @@ export async function GET(
       alternateText: "",
     },
     accountName: `${client.prenom} ${client.nom}`,
-    accountId: walletId,
     textModulesData: [
       { header: "Recompense", body: m.nom_recompense || "Recompense", id: "recompense" },
     ],
