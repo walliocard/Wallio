@@ -95,11 +95,11 @@ export async function GET(
     state: "ACTIVE",
     loyaltyPoints: {
       balance: { int: client.tampons || 0 },
-      label: "Tampons",
+      label: (m.google_primary_label as string) || "Tampons",
     },
     secondaryLoyaltyPoints: {
       balance: { int: m.objectif_tampons || 10 },
-      label: "Objectif",
+      label: (m.google_secondary_label as string) || "Objectif",
     },
     barcode: {
       type: "QR_CODE",

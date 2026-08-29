@@ -35,6 +35,7 @@ export default function CartePage() {
   const [stripUrl, setStripUrl] = useState<string>((marchand?.strip_url as string) || "");
   const [recompense, setRecompense] = useState<string>((marchand?.nom_recompense as string) || "");
   const [objectif, setObjectif] = useState<number>((marchand?.objectif_tampons as number) || 10);
+  const couleurPrincipale = (marchand as Record<string, unknown>).couleur_principale as string || "#007AFF";
 
   // Couleurs Apple Wallet — 3 champs officiels
   const [bgColor, setBgColor] = useState<string>((marchand?.apple_bg_color as string) || "#1C1C1E");
@@ -107,6 +108,9 @@ export default function CartePage() {
   const [previewMode, setPreviewMode] = useState<"full" | "compact" | "back">("full");
   // Wallet type
   const [walletType, setWalletType] = useState<"apple" | "google">("apple");
+  // Google Wallet labels
+  const [googlePrimaryLabel, setGooglePrimaryLabel] = useState<string>((marchand as Record<string, unknown>).google_primary_label as string || "Tampons");
+  const [googleSecondaryLabel, setGoogleSecondaryLabel] = useState<string>((marchand as Record<string, unknown>).google_secondary_label as string || "Objectif");
 
   // Feature 7 — preview états tampons
   const [previewFill, setPreviewFill] = useState<number>(0.5);
@@ -282,6 +286,8 @@ export default function CartePage() {
       apple_stamp_size: stampSizePreset,
       apple_stamp_thickness: stampThickness,
       apple_stamp_logo_opacity: stampLogoOpacity,
+      google_primary_label: googlePrimaryLabel,
+      google_secondary_label: googleSecondaryLabel,
       apple_milestone_rewards: milestoneRewards,
       updated_at: serverTimestamp(),
     });
@@ -623,18 +629,13 @@ export default function CartePage() {
             <GoogleWalletCard
               logoUrl={logoUrl}
               logoText={nom}
-              stripUrl={stripUrl || undefined}
-              backgroundColor={bgColor}
-              foregroundColor={effectiveFg}
-              labelColor={effectiveLabel}
+              backgroundColor={couleurPrincipale || "#007AFF"}
               stampsCurrent={stampsCurrent}
               stampsObjective={objectif}
               rewardName={recompense}
-              clientPrenom="Prénom"
-              clientNom="Nom"
-              primaryLabel={primaryLabel}
-              rewardLabel={rewardLabel}
-              memberLabel={memberLabel}
+              primaryLabel={googlePrimaryLabel}
+              rewardLabel={recompense}
+              memberLabel="Membre"
               previewUid={user.uid}
             />
           )}
@@ -1504,40 +1505,59 @@ export default function CartePage() {
             </Section>
           )}
 
-          {/* Feature 9 — Google Wallet section spécifique */}
+          {/* Google Wallet — champs éditables */}
           {walletType === "google" && (
-            <Section label="Google Wallet — Options">
-              <div style={{
-                padding: "10px 12px", borderRadius: 10, fontSize: 11,
-                background: "rgba(66,133,244,0.06)", border: "1px solid rgba(66,133,244,0.2)",
-                color: "var(--fg-secondary)", lineHeight: 1.6,
-              }}>
-                <strong style={{ color: "#4285F4" }}>Google Wallet</strong> utilise Roboto — même contrainte de police qu&apos;Apple. Structure imposée par Google.
-              </div>
-
-              <Field label="Programme de fidélité">
-                <TextInput value={nom} onChange={setNom} placeholder="Nom du programme"/>
-              </Field>
-
-              {/* Hero image 430×172 */}
-              {stripUrl && (
-                <div>
-                  <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginBottom: 6 }}>
-                    Hero image Google Wallet : 430×172px (vs 375×144 Apple)
-                  </p>
-                  <button
-                    onClick={handleAdaptForGoogle}
-                    style={{
-                      width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                      background: "rgba(66,133,244,0.1)", border: "1px solid rgba(66,133,244,0.3)",
-                      color: "#4285F4", cursor: "pointer",
-                    }}
-                  >
-                    Adapter pour Google Wallet
-                  </button>
+            <>
+              <Section label="Identité Google Wallet">
+                <div style={{
+                  padding: "10px 12px", borderRadius: 10, fontSize: 11,
+                  background: "rgba(66,133,244,0.06)", border: "1px solid rgba(66,133,244,0.2)",
+                  color: "var(--fg-secondary)", lineHeight: 1.6,
+                }}>
+                  <strong style={{ color: "#4285F4" }}>Structure imposée par Google.</strong> Logo, nom et couleur viennent de tes réglages principaux. Seuls les labels ci-dessous sont personnalisables.
                 </div>
-              )}
-            </Section>
+                <Field label="Logo">
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%", overflow: "hidden",
+                      background: couleurPrincipale || "#007AFF",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      {logoUrl
+                        ? <img src={logoUrl} alt="" style={{ width: 36, height: 36, objectFit: "cover" }} />
+                        : <span style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>{nom?.[0] || "W"}</span>
+                      }
+                    </div>
+                    <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
+                      Modifiable dans &quot;Logo &amp; couleurs&quot;
+                    </span>
+                  </div>
+                </Field>
+                <Field label="Nom du programme">
+                  <TextInput value={nom} onChange={setNom} placeholder="Nom affiché sur la carte" />
+                </Field>
+                <Field label="Couleur de fond">
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, background: couleurPrincipale || "#007AFF", border: "1px solid var(--border)" }} />
+                    <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
+                      {couleurPrincipale || "#007AFF"} — modifiable dans &quot;Logo &amp; couleurs&quot;
+                    </span>
+                  </div>
+                </Field>
+              </Section>
+
+              <Section label="Labels Google Wallet">
+                <Field label="Label tampons">
+                  <TextInput value={googlePrimaryLabel} onChange={setGooglePrimaryLabel} placeholder="ex: Tampons, Points, Visites" />
+                </Field>
+                <Field label="Label objectif">
+                  <TextInput value={googleSecondaryLabel} onChange={setGoogleSecondaryLabel} placeholder="ex: Objectif, Sur" />
+                </Field>
+                <Field label="Label récompense">
+                  <TextInput value={recompense} onChange={setRecompense} placeholder="ex: Café offert" />
+                </Field>
+              </Section>
+            </>
           )}
 
           {/* Note */}
