@@ -25,7 +25,7 @@ type Screen =
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
-  useTimeTheme("dark"); // page NFC toujours en mode sombre (DA Wallio)
+  useTimeTheme("light"); // page NFC toujours en mode clair
   useAutoRefresh(screen.type === "loading");
 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
@@ -249,14 +249,14 @@ function MarchandHeader({ marchand }: { marchand: Marchand }) {
   );
 }
 
-// Palette DA Wallio — dark premium
-const BG_PAGE   = "#0A0A0A";
-const BG_CARD   = "#111113";
-const BORDER    = "rgba(255,255,255,0.08)";
-const FG_MAIN   = "#F5F5F7";
-const FG_SEC    = "#86868B";
-const ACCENT    = "#00F5A0";
-const ACCENT_FG = "#0A0A0A"; // texte sur fond vert
+// Palette DA Wallio — light premium
+const BG_PAGE   = "#F5F5F7";
+const BG_CARD   = "#FFFFFF";
+const BORDER    = "rgba(0,0,0,0.08)";
+const FG_MAIN   = "#1D1D1F";
+const FG_SEC    = "#6E6E73";
+const ACCENT    = "#00F5A0"; // vert Wallio exact
+const ACCENT_FG = "#0A0A0A"; // texte noir sur vert clair
 
 const inputStyle: React.CSSProperties = {
   background: BG_CARD,
@@ -397,14 +397,19 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
   onSuccess: (client: Client) => void;
   onBack: () => void;
 }) {
-  const [telephone, setTelephone] = useState("");
+  const [indicatif, setIndicatif] = useState(PAYS[0]);
+  const [numLocal, setNumLocal] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const selectStyle: React.CSSProperties = { ...inputStyle, backgroundImage: "none" };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    const numPropre = numLocal.replace(/\D/g, "").replace(/^0/, "");
+    const telephone = `${indicatif.code}${numPropre}`;
     const client = await getClientByTelephone(telephone, marchand.id);
     if (!client) {
       setError("Aucun compte trouvé avec ce numéro.");
@@ -415,34 +420,49 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
-      <div className="w-full max-w-[380px]">
-        <div className="text-center mb-8">
-          <h1 className="text-[24px] font-semibold tracking-tight" style={{ color: "var(--fg)" }}>Récupérer mon compte</h1>
-          <p className="text-[15px] mt-1" style={{ color: "var(--fg-secondary)" }}>Entre ton numéro de téléphone</p>
-        </div>
+    <main className="min-h-screen flex flex-col justify-center px-5 py-12" style={{ background: BG_PAGE }}>
+      <div className="w-full max-w-[390px] mx-auto">
+        <MarchandHeader marchand={marchand} />
 
-        <div className="rounded-[28px] p-7"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(30px)", boxShadow: "var(--shadow-lg)" }}>
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <input type="tel" required placeholder="Numéro de téléphone"
-              value={telephone} onChange={e => setTelephone(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-              onFocus={e => e.target.style.borderColor = "var(--accent)"}
-              onBlur={e => e.target.style.borderColor = "var(--border)"}
-            />
-            {error && <p className="text-red-500 text-[13px]">{error}</p>}
+        <div className="rounded-[28px] p-6" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, boxShadow: "0 8px 40px rgba(0,0,0,0.06)" }}>
+          <p className="text-[17px] font-semibold mb-0.5" style={{ color: FG_MAIN }}>Récupérer mon compte</p>
+          <p className="text-[13px] mb-5" style={{ color: FG_SEC }}>Entre le numéro utilisé lors de ton inscription</p>
+
+          <form onSubmit={handleSubmit} className="space-y-2.5">
+            <div className="flex rounded-2xl overflow-hidden transition-colors"
+              style={{ ...inputStyle, padding: 0, gap: 0 }}>
+              <select
+                value={indicatif.code}
+                onChange={e => setIndicatif(PAYS.find(p => p.code === e.target.value) ?? PAYS[0])}
+                className="outline-none text-[14px] font-medium shrink-0 border-r"
+                style={{ background: "transparent", color: FG_MAIN, borderColor: BORDER, padding: "0 10px 0 14px", WebkitAppearance: "none" }}>
+                {PAYS.map(p => (
+                  <option key={p.code} value={p.code} style={{ background: BG_CARD }}>
+                    {p.flag} {p.code}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="tel" required placeholder={`Numéro (${indicatif.digits} chiffres)`}
+                autoComplete="tel-national" value={numLocal}
+                onChange={e => setNumLocal(e.target.value.replace(/[^\d\s]/g, ""))}
+                className="flex-1 px-4 py-3.5 text-[15px] outline-none bg-transparent"
+                style={{ color: FG_MAIN }}
+              />
+            </div>
+
+            {error && <p className="text-[13px] px-1" style={{ color: "#FF453A" }}>{error}</p>}
+
             <button type="submit" disabled={loading}
-              className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white transition-all"
-              style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.3)" }}>
-              {loading ? "Recherche…" : "Récupérer"}
+              className="w-full py-4 rounded-2xl text-[16px] font-semibold transition-opacity active:opacity-80 mt-1"
+              style={{ background: ACCENT, color: ACCENT_FG, boxShadow: `0 4px 24px ${ACCENT}50` }}>
+              {loading ? "Recherche…" : "Récupérer mon compte"}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-[13px] mt-5">
-          <button onClick={onBack} style={{ color: "var(--accent)" }} className="font-medium">← Retour</button>
+        <p className="text-center text-[13px] mt-5" style={{ color: FG_SEC }}>
+          <button onClick={onBack} style={{ color: FG_SEC }} className="font-medium">← Retour</button>
         </p>
       </div>
     </main>
