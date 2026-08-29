@@ -37,23 +37,27 @@ export default function NfcPage({ params }: { params: { marchandId: string } }) 
 
   useEffect(() => {
     async function init() {
-      const marchand = await getMarchandByNfcId(marchandId);
-      if (!marchand || !marchand.actif) {
-        setScreen({ type: "erreur", message: "Ce service est temporairement indisponible." });
-        return;
-      }
-
-      const walletId = localStorage.getItem(WALLET_KEY(marchandId));
-      if (walletId) {
-        const client = await getClientByWalletId(walletId, marchandId);
-        if (client) {
-          await traiterTampon(client, marchand);
+      try {
+        const marchand = await getMarchandByNfcId(marchandId);
+        if (!marchand || !marchand.actif) {
+          setScreen({ type: "erreur", message: "Ce service est temporairement indisponible." });
           return;
         }
-        localStorage.removeItem(WALLET_KEY(marchandId));
-      }
 
-      setScreen({ type: "inscription", marchand });
+        const walletId = localStorage.getItem(WALLET_KEY(marchandId));
+        if (walletId) {
+          const client = await getClientByWalletId(walletId, marchandId);
+          if (client) {
+            await traiterTampon(client, marchand);
+            return;
+          }
+          localStorage.removeItem(WALLET_KEY(marchandId));
+        }
+
+        setScreen({ type: "inscription", marchand });
+      } catch (e) {
+        setScreen({ type: "erreur", message: `Erreur de connexion. Réessayez. (${String(e).slice(0, 60)})` });
+      }
     }
     init();
   }, [marchandId, traiterTampon]);
