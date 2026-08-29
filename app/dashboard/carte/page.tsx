@@ -166,6 +166,7 @@ export default function CartePage() {
   const applyCrop = useCallback(async (rawUrl: string, y: number, zoom = 1): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         const targetW = 750, targetH = 288;
         const targetRatio = targetW / targetH;
@@ -188,9 +189,10 @@ export default function CartePage() {
 
   // Regen canvas when cropY changes (skipped during drag — handled in onStripPointerUp)
   useEffect(() => {
-    if (!rawStripUrl || !isUploadedStrip || isDraggingRef.current) return;
+    const src = rawStripUrl || (!stripFrom ? stripUrl : "");
+    if (!src || isDraggingRef.current) return;
     cropYRef.current = cropY;
-    applyCrop(rawStripUrl, cropY, cropZoom).then(url => setStripUrl(url)).catch(() => {});
+    applyCrop(src, cropY, cropZoom).then(url => setStripUrl(url)).catch(() => {});
   }, [cropY, rawStripUrl, isUploadedStrip, applyCrop]);
 
   // Auto-regen strip when text or options change (gradient active only)
@@ -307,14 +309,16 @@ export default function CartePage() {
   function onStripPointerUp() {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-    if (rawStripUrl) {
-      applyCrop(rawStripUrl, cropYRef.current, cropZoom).then(url => setStripUrl(url)).catch(() => {});
+    const src = rawStripUrl || stripUrl;
+    if (src) {
+      applyCrop(src, cropYRef.current, cropZoom).then(url => setStripUrl(url)).catch(() => {});
     }
   }
 
   const applyHeroCrop = useCallback(async (rawUrl: string, y: number, zoom = 1): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         const targetW = 1032, targetH = 344;
         const targetRatio = targetW / targetH;
@@ -354,8 +358,9 @@ export default function CartePage() {
   function onGoogleHeroPointerUp() {
     if (!isGoogleHeroDraggingRef.current) return;
     isGoogleHeroDraggingRef.current = false;
-    if (rawGoogleHeroUrl) {
-      applyHeroCrop(rawGoogleHeroUrl, googleHeroCropYRef.current, googleHeroCropZoom).then(url => setGoogleHeroUrl(url)).catch(() => {});
+    const src = rawGoogleHeroUrl || googleHeroUrl;
+    if (src) {
+      applyHeroCrop(src, googleHeroCropYRef.current, googleHeroCropZoom).then(url => setGoogleHeroUrl(url)).catch(() => {});
     }
   }
 
@@ -845,31 +850,36 @@ export default function CartePage() {
           {/* Bannière — Apple uniquement */}
           {walletType === "apple" && <Section label="Bannière (strip image)">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {(stripUrl || rawStripUrl) ? (
+              {(stripUrl || rawStripUrl) ? (() => {
+                const canCrop = isUploadedStrip || (!stripFrom && !!stripUrl);
+                const src = rawStripUrl || stripUrl;
+                return (
                 <div
-                  ref={isUploadedStrip ? stripPreviewRef : undefined}
+                  ref={canCrop ? stripPreviewRef : undefined}
                   style={{
                     borderRadius: 10, overflow: "hidden", aspectRatio: "375/144",
                     border: "1px solid var(--border)", position: "relative",
-                    cursor: isUploadedStrip ? "grab" : "default",
+                    cursor: canCrop ? "grab" : "default",
                     userSelect: "none", touchAction: "none",
                   }}
-                  onPointerDown={isUploadedStrip ? onStripPointerDown : undefined}
-                  onPointerMove={isUploadedStrip ? onStripPointerMove : undefined}
-                  onPointerUp={isUploadedStrip ? onStripPointerUp : undefined}
-                  onPointerCancel={isUploadedStrip ? onStripPointerUp : undefined}
+                  onPointerDown={canCrop ? onStripPointerDown : undefined}
+                  onPointerMove={canCrop ? onStripPointerMove : undefined}
+                  onPointerUp={canCrop ? onStripPointerUp : undefined}
+                  onPointerCancel={canCrop ? onStripPointerUp : undefined}
                 >
                   <img
-                    src={isUploadedStrip && rawStripUrl ? rawStripUrl : stripUrl}
+                    src={src}
                     alt=""
                     draggable={false}
                     style={{
                       width: "100%", height: "100%", objectFit: "cover",
-                      objectPosition: isUploadedStrip ? `50% ${cropY}%` : "center",
+                      objectPosition: canCrop ? `50% ${cropY}%` : "center",
+                      transform: canCrop && cropZoom > 1 ? `scale(${cropZoom})` : "none",
+                      transformOrigin: `50% ${cropY}%`,
                       pointerEvents: "none", userSelect: "none",
                     }}
                   />
-                  {isUploadedStrip && (
+                  {canCrop && (
                     <div style={{
                       position: "absolute", bottom: 6, right: 6,
                       background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
@@ -880,7 +890,8 @@ export default function CartePage() {
                     </div>
                   )}
                 </div>
-              ) : (
+                );
+              })() : (
                 <label style={{
                   borderRadius: 10, aspectRatio: "375/144",
                   border: "2px dashed var(--border)",
@@ -900,7 +911,7 @@ export default function CartePage() {
                   )}
                 </label>
               )}
-              {isUploadedStrip && (
+              {(isUploadedStrip || (!stripFrom && !!stripUrl)) && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
                   <input type="range" min="1" max="3" step="0.05" value={cropZoom}
@@ -1823,32 +1834,37 @@ export default function CartePage() {
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Photo uploadée · Ratio 3:1 · Remplace le dégradé si définie
                 </p>
-                {(googleHeroUrl || rawGoogleHeroUrl) && (
+                {(googleHeroUrl || rawGoogleHeroUrl) && (() => {
+                  const canCrop = isUploadedGoogleHero || (!googleStripFrom && !!googleHeroUrl);
+                  const src = rawGoogleHeroUrl || googleHeroUrl;
+                  return (<>
                   <div
-                    ref={isUploadedGoogleHero ? googleHeroPreviewRef : undefined}
+                    ref={canCrop ? googleHeroPreviewRef : undefined}
                     style={{
                       marginBottom: 8, borderRadius: 10, overflow: "hidden",
                       border: "1px solid var(--border)", aspectRatio: "3/1",
                       position: "relative",
-                      cursor: isUploadedGoogleHero ? "grab" : "default",
+                      cursor: canCrop ? "grab" : "default",
                       userSelect: "none", touchAction: "none",
                     }}
-                    onPointerDown={isUploadedGoogleHero ? onGoogleHeroPointerDown : undefined}
-                    onPointerMove={isUploadedGoogleHero ? onGoogleHeroPointerMove : undefined}
-                    onPointerUp={isUploadedGoogleHero ? onGoogleHeroPointerUp : undefined}
-                    onPointerCancel={isUploadedGoogleHero ? onGoogleHeroPointerUp : undefined}
+                    onPointerDown={canCrop ? onGoogleHeroPointerDown : undefined}
+                    onPointerMove={canCrop ? onGoogleHeroPointerMove : undefined}
+                    onPointerUp={canCrop ? onGoogleHeroPointerUp : undefined}
+                    onPointerCancel={canCrop ? onGoogleHeroPointerUp : undefined}
                   >
                     <img
-                      src={isUploadedGoogleHero && rawGoogleHeroUrl ? rawGoogleHeroUrl : googleHeroUrl}
+                      src={src}
                       alt="Hero"
                       draggable={false}
                       style={{
                         width: "100%", height: "100%", objectFit: "cover", display: "block",
-                        objectPosition: isUploadedGoogleHero ? `50% ${googleHeroCropY}%` : "center",
+                        objectPosition: canCrop ? `50% ${googleHeroCropY}%` : "center",
+                        transform: canCrop && googleHeroCropZoom > 1 ? `scale(${googleHeroCropZoom})` : "none",
+                        transformOrigin: `50% ${googleHeroCropY}%`,
                         pointerEvents: "none", userSelect: "none",
                       }}
                     />
-                    {isUploadedGoogleHero && (
+                    {canCrop && (
                       <div style={{
                         position: "absolute", bottom: 5, right: 5,
                         background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
@@ -1859,17 +1875,18 @@ export default function CartePage() {
                       </div>
                     )}
                   </div>
-                )}
-                {isUploadedGoogleHero && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
-                    <input type="range" min="1" max="3" step="0.05" value={googleHeroCropZoom}
-                      onChange={e => setGoogleHeroCropZoom(Number(e.target.value))}
-                      style={{ flex: 1, accentColor: "var(--accent)" }}
-                    />
-                    <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>+</span>
-                  </div>
-                )}
+                  {canCrop && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
+                      <input type="range" min="1" max="3" step="0.05" value={googleHeroCropZoom}
+                        onChange={e => setGoogleHeroCropZoom(Number(e.target.value))}
+                        style={{ flex: 1, accentColor: "var(--accent)" }}
+                      />
+                      <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>+</span>
+                    </div>
+                  )}
+                  </>);
+                })()}
                 <div style={{ display: "flex", gap: 6 }}>
                   <label style={{
                     flex: 1, display: "block", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
