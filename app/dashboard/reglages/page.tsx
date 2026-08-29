@@ -38,8 +38,10 @@ export default function ReglagesPage() {
   const [auto, setAuto] = useState({
     anniversaire_actif:     Boolean(autoRaw?.anniversaire?.actif),
     anniversaire_jours_avant: Number(autoRaw?.anniversaire?.jours_avant ?? 0),
+    anniversaire_message:   String(autoRaw?.anniversaire?.message ?? `Joyeux anniversaire ! Un tampon offert vous attend chez ${marchand?.nom || "nous"}.`),
     relance_actif:          Boolean(autoRaw?.relance?.actif),
     relance_delai_jours:    Number(autoRaw?.relance?.delai_jours ?? 30),
+    relance_message:        String(autoRaw?.relance?.message ?? `Vous nous manquez ! Venez récupérer vos tampons chez ${marchand?.nom || "nous"}.`),
   });
   const [nfcId, setNfcId] = useState(marchand?.nfc_id || "");
   const [notifActif, setNotifActif] = useState<boolean>((marchand as Record<string,unknown>)?.notif_actif !== false);
@@ -62,7 +64,7 @@ export default function ReglagesPage() {
   if (!marchand || !user) return null;
 
   const set = (k: string, v: string | number) => setConfig(c => ({ ...c, [k]: v }));
-  const setA = (k: string, v: boolean | number) => setAuto(a => ({ ...a, [k]: v }));
+  const setA = (k: string, v: boolean | number | string) => setAuto(a => ({ ...a, [k]: v }));
 
   async function sauvegarder() {
     setSaving(true);
@@ -70,8 +72,8 @@ export default function ReglagesPage() {
       ...config,
       ...(config.mode_recompense === "progressif" ? { paliers } : {}),
       automatisations: {
-        anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant },
-        relance: { actif: auto.relance_actif, delai_jours: auto.relance_delai_jours },
+        anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant, message: auto.anniversaire_message },
+        relance: { actif: auto.relance_actif, delai_jours: auto.relance_delai_jours, message: auto.relance_message },
       },
       notif_actif: notifActif,
       notif_message: notifMessage,
@@ -235,13 +237,24 @@ export default function ReglagesPage() {
                 <Toggle value={auto.anniversaire_actif} onChange={v => setA("anniversaire_actif", v)} />
               </div>
               {auto.anniversaire_actif && (
-                <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                  <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>
-                    {auto.anniversaire_jours_avant === 0 ? "Le jour J" : `${auto.anniversaire_jours_avant} jour(s) avant`}
-                  </p>
-                  <input type="range" min={0} max={7} value={auto.anniversaire_jours_avant}
-                    onChange={e => setA("anniversaire_jours_avant", Number(e.target.value))}
-                    className="w-full" style={{ accentColor: "var(--accent)" }} />
+                <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div>
+                    <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>
+                      {auto.anniversaire_jours_avant === 0 ? "Le jour J" : `${auto.anniversaire_jours_avant} jour(s) avant`}
+                    </p>
+                    <input type="range" min={0} max={7} value={auto.anniversaire_jours_avant}
+                      onChange={e => setA("anniversaire_jours_avant", Number(e.target.value))}
+                      className="w-full" style={{ accentColor: "var(--accent)" }} />
+                  </div>
+                  <div>
+                    <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>Message d'anniversaire</p>
+                    <textarea value={auto.anniversaire_message}
+                      onChange={e => setA("anniversaire_message", e.target.value)}
+                      rows={2} className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", lineHeight: 1.5 }}
+                      onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                      onBlur={e => (e.target.style.borderColor = "var(--border)")} />
+                  </div>
                 </div>
               )}
             </div>
@@ -255,13 +268,24 @@ export default function ReglagesPage() {
                 <Toggle value={auto.relance_actif} onChange={v => setA("relance_actif", v)} />
               </div>
               {auto.relance_actif && (
-                <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                  <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>
-                    Après {auto.relance_delai_jours} jours d&apos;inactivité
-                  </p>
-                  <input type="range" min={7} max={90} step={7} value={auto.relance_delai_jours}
-                    onChange={e => setA("relance_delai_jours", Number(e.target.value))}
-                    className="w-full" style={{ accentColor: "var(--accent)" }} />
+                <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div>
+                    <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>
+                      Après {auto.relance_delai_jours} jours d&apos;inactivité
+                    </p>
+                    <input type="range" min={7} max={90} step={7} value={auto.relance_delai_jours}
+                      onChange={e => setA("relance_delai_jours", Number(e.target.value))}
+                      className="w-full" style={{ accentColor: "var(--accent)" }} />
+                  </div>
+                  <div>
+                    <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>Message de relance</p>
+                    <textarea value={auto.relance_message}
+                      onChange={e => setA("relance_message", e.target.value)}
+                      rows={2} className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", lineHeight: 1.5 }}
+                      onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                      onBlur={e => (e.target.style.borderColor = "var(--border)")} />
+                  </div>
                 </div>
               )}
             </div>
@@ -309,7 +333,11 @@ export default function ReglagesPage() {
               <div className="mt-3 rounded-2xl p-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
                 <p className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>Aperçu</p>
                 <div className="flex items-start gap-3">
-                  <span className="text-xl">🔔</span>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.1)" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
+                      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+                    </svg>
+                  </div>
                   <div>
                     <p className="text-[13px] font-medium mb-0.5" style={{ color: "var(--fg)" }}>Restez informé</p>
                     <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>{notifMessage}</p>
