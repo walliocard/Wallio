@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import {
   getMarchandByNfcId, getClientByWalletId, getClientByTelephone,
   creerClient, ajouterTampon, validerRecompense,
@@ -19,8 +19,8 @@ type Screen =
   | { type: "carte"; client: Client; marchand: Marchand }
   | { type: "erreur"; message: string };
 
-export default function NfcPage({ params }: { params: { marchandId: string } }) {
-  const { marchandId } = params;
+export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
+  const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {

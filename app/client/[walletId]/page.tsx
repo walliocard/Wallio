@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import {
   getClientByWalletId, getMarchandById,
@@ -11,8 +11,8 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
 
-export default function ClientQrPage({ params }: { params: { walletId: string } }) {
-  const { walletId } = params;
+export default function ClientQrPage({ params }: { params: Promise<{ walletId: string }> }) {
+  const { walletId } = use(params);
   const { user, marchand: marchandAuth, loading: authLoading } = useAuth();
   const [client, setClient] = useState<Client | null>(null);
   const [marchand, setMarchand] = useState<Marchand | null>(null);
