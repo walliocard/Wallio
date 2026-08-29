@@ -511,6 +511,7 @@ export default function CartePage() {
   function handleBgColorChange(color: string) {
     pushHistory();
     setBgColor(color);
+    setGoogleBgColor(color); // sync automatique Apple → Google
     if (stripFrom) {
       setStripFrom("");
       setStripTo("");
@@ -859,7 +860,7 @@ export default function CartePage() {
           </Section>
 
           {/* Bannière — Apple uniquement */}
-          {walletType === "apple" && <Section label="Bannière (strip image)">
+          {walletType === "apple" && <Section label="Bannière">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {(stripUrl || rawStripUrl) ? (() => {
                 const canCrop = isUploadedStrip || (!stripFrom && !!stripUrl);
@@ -1692,187 +1693,13 @@ export default function CartePage() {
             </Section>
           )}
 
-          {/* Google Wallet — personnalisation complète */}
+          {/* Google Wallet — même trame qu'Apple : Bannière → Éditeur → Couleur → Labels */}
           {walletType === "google" && (
             <>
-              <div style={{ padding: "10px 12px", borderRadius: 10, fontSize: 11, background: "rgba(66,133,244,0.06)", border: "1px solid rgba(66,133,244,0.2)", color: "var(--fg-secondary)", lineHeight: 1.6 }}>
-                <strong style={{ color: "#4285F4" }}>Google Wallet</strong> — structure fixée par Google. Tu contrôles la couleur de fond, la bannière, le logo et les labels.
-              </div>
-
-              {/* Couleur de fond — palette complète */}
-              <Section label="Couleur de fond">
-                <ColorRow
-                  label="Fond"
-                  value={googleBgColor}
-                  onChange={setGoogleBgColor}
-                  presets={BG_PRESETS}
-                />
-              </Section>
-
-              {/* Logo */}
-              <Section label="Logo">
+              {/* 1/4 — Bannière photo */}
+              <Section label="Bannière">
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                  Affiché en rond dans le coin supérieur gauche.
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", background: googleBgColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid var(--border)" }}>
-                    {logoUrl
-                      ? <img src={logoUrl} alt="" style={{ width: 44, height: 44, objectFit: "cover" }} />
-                      : <span style={{ color: "#fff", fontWeight: 700, fontSize: 18 }}>{nom?.[0] || "W"}</span>
-                    }
-                  </div>
-                  <span style={{ fontSize: 11, color: "var(--fg-secondary)" }}>Modifiable dans la section &quot;Logo &amp; couleurs&quot;</span>
-                </div>
-              </Section>
-
-              {/* Éditeur bannière dégradé — même grid que Apple */}
-              <Section label="Éditeur bannière">
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-                  Choisir un thème dégradé
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 5 }}>
-                  {GRADIENT_THEMES.map(t => (
-                    <button key={t.name} title={t.name} onClick={async () => {
-                      const angle = t.angle ?? 135;
-                      const glassMode = (t as { glass?: boolean }).glass ?? false;
-                      setGoogleStripFrom(t.from); setGoogleStripTo(t.to);
-                      setGoogleStripAngle(angle); setGoogleStripGlass(glassMode);
-                      setIsUploadedGoogleHero(false); setRawGoogleHeroUrl("");
-                      const hero = await buildStrip(
-                        t.from, t.to, angle,
-                        googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont,
-                        googleStripText2, googleStripText2Size,
-                        googleStripIncludeLogo ? logoUrl : undefined,
-                        glassMode, 1032, 344
-                      );
-                      setGoogleHeroUrl(hero);
-                    }} style={{
-                      width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
-                      background: (t as { glass?: boolean }).glass
-                        ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 55%), linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`
-                        : `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
-                      border: googleStripFrom === t.from && googleStripTo === t.to ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.2)",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.18)", flexShrink: 0,
-                    }}/>
-                  ))}
-                </div>
-
-                {/* Texte sur la bannière */}
-                <Field label="Texte sur la bannière">
-                  <TextInput value={googleStripText} onChange={setGoogleStripText} placeholder="Nom, slogan, accroche…"/>
-                </Field>
-
-                {googleStripText && (<>
-                  <Field label="Taille du texte">
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {(["s","m","l"] as const).map(s => (
-                        <button key={s} onClick={() => setGoogleStripTextSize(s)} style={{
-                          flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                          background: googleStripTextSize === s ? "var(--accent)" : "var(--glass-bg)",
-                          color: googleStripTextSize === s ? "white" : "var(--fg-secondary)",
-                          border: `1px solid ${googleStripTextSize === s ? "var(--accent)" : "var(--border)"}`,
-                          cursor: "pointer",
-                        }}>{s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}</button>
-                      ))}
-                    </div>
-                  </Field>
-                  <Field label="Position du texte">
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                      {([["bl","Bas gauche"],["bc","Bas centre"],["br","Bas droite"],["c","Centre"]] as const).map(([v,l]) => (
-                        <button key={v} onClick={() => setGoogleStripTextPos(v)} style={{
-                          padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 500,
-                          background: googleStripTextPos === v ? "var(--accent)" : "var(--glass-bg)",
-                          color: googleStripTextPos === v ? "white" : "var(--fg-secondary)",
-                          border: `1px solid ${googleStripTextPos === v ? "var(--accent)" : "var(--border)"}`,
-                          cursor: "pointer",
-                        }}>{l}</button>
-                      ))}
-                    </div>
-                  </Field>
-                  <Field label="Police">
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {([["sans","Sans"],["serif","Serif"],["mono","Mono"]] as const).map(([v,l]) => (
-                        <button key={v} onClick={() => setGoogleStripFont(v)} style={{
-                          flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12,
-                          fontFamily: v === "serif" ? "Georgia, serif" : v === "mono" ? "monospace" : "inherit",
-                          background: googleStripFont === v ? "var(--accent)" : "var(--glass-bg)",
-                          color: googleStripFont === v ? "white" : "var(--fg-secondary)",
-                          border: `1px solid ${googleStripFont === v ? "var(--accent)" : "var(--border)"}`,
-                          cursor: "pointer",
-                        }}>{l}</button>
-                      ))}
-                    </div>
-                  </Field>
-                  <ColorRow label="Couleur texte" value={googleStripTextColor} onChange={setGoogleStripTextColor}
-                    presets={["#FFFFFF","#F0F0F0","#CCCCCC","#000000","#1C1C1E","#FFD700","#FFB300","#FF9500","#FF6600","#FF3B30","#FF2D55","#AF52DE","#007AFF","#34C759","#5AC8FA"]}
-                  />
-                  <Field label="Sous-titre">
-                    <TextInput value={googleStripText2} onChange={setGoogleStripText2} placeholder="Sous-titre, tagline…"/>
-                  </Field>
-                  {googleStripText2 && (
-                    <Field label="Taille sous-titre">
-                      <div style={{ display: "flex", gap: 6 }}>
-                        {(["s","m","l"] as const).map(s => (
-                          <button key={s} onClick={() => setGoogleStripText2Size(s)} style={{
-                            flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                            background: googleStripText2Size === s ? "var(--accent)" : "var(--glass-bg)",
-                            color: googleStripText2Size === s ? "white" : "var(--fg-secondary)",
-                            border: `1px solid ${googleStripText2Size === s ? "var(--accent)" : "var(--border)"}`,
-                            cursor: "pointer",
-                          }}>{s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}</button>
-                        ))}
-                      </div>
-                    </Field>
-                  )}
-                </>)}
-
-                {/* Inclure logo */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 4 }}>
-                  <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>Inclure le logo</span>
-                  <button onClick={() => setGoogleStripIncludeLogo(v => !v)} style={{
-                    width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer",
-                    background: googleStripIncludeLogo ? "var(--accent)" : "var(--border)", position: "relative", transition: "background 0.2s",
-                  }}>
-                    <div style={{ position: "absolute", top: 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left 0.2s", left: googleStripIncludeLogo ? 22 : 2 }}/>
-                  </button>
-                </div>
-
-                {/* Actions */}
-                {googleStripFrom && (
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={async () => {
-                      const hero = await buildStrip(
-                        googleStripFrom, googleStripTo, googleStripAngle,
-                        googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont,
-                        googleStripText2, googleStripText2Size,
-                        googleStripIncludeLogo ? logoUrl : undefined,
-                        googleStripGlass, 1032, 344
-                      );
-                      setGoogleHeroUrl(hero);
-                    }} style={{
-                      flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                      background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer",
-                    }}>↺ Régénérer</button>
-                    {googleHeroUrl && (
-                      <button onClick={() => downloadStrip(googleHeroUrl, `wallio-hero-${nom || "carte"}.jpg`)} style={{
-                        flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                        background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer",
-                      }}>⬇ Télécharger</button>
-                    )}
-                    <button onClick={() => {
-                      setGoogleHeroUrl(""); setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleStripGlass(false);
-                    }} style={{
-                      padding: "8px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                      background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)", color: "#FF3B30", cursor: "pointer",
-                    }}>×</button>
-                  </div>
-                )}
-              </Section>
-
-              {/* Image bannière — photo uploadée */}
-              <Section label="Image bannière (photo)">
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                  Photo uploadée · Ratio 3:1 · Remplace le dégradé si définie
+                  Photo · Ratio 3:1 · Remplace le dégradé si définie
                 </p>
                 {(googleHeroUrl || rawGoogleHeroUrl) && (() => {
                   const canCrop = isUploadedGoogleHero || (!googleStripFrom && !!googleHeroUrl);
@@ -1976,8 +1803,94 @@ export default function CartePage() {
                 </div>
               </Section>
 
-              {/* Labels */}
-              <Section label="Labels">
+              {/* 2/4 — Éditeur bannière dégradé */}
+              <Section label="Éditeur bannière">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>Choisir un thème dégradé</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 5 }}>
+                  {GRADIENT_THEMES.map(t => (
+                    <button key={t.name} title={t.name} onClick={async () => {
+                      const angle = t.angle ?? 135;
+                      const glassMode = (t as { glass?: boolean }).glass ?? false;
+                      setGoogleStripFrom(t.from); setGoogleStripTo(t.to);
+                      setGoogleStripAngle(angle); setGoogleStripGlass(glassMode);
+                      setIsUploadedGoogleHero(false); setRawGoogleHeroUrl("");
+                      const hero = await buildStrip(t.from, t.to, angle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, glassMode, 1032, 344);
+                      setGoogleHeroUrl(hero);
+                    }} style={{
+                      width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
+                      background: (t as { glass?: boolean }).glass ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 55%), linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})` : `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
+                      border: googleStripFrom === t.from && googleStripTo === t.to ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.2)",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.18)", flexShrink: 0,
+                    }}/>
+                  ))}
+                </div>
+                <Field label="Texte sur la bannière">
+                  <TextInput value={googleStripText} onChange={setGoogleStripText} placeholder="Nom, slogan, accroche…"/>
+                </Field>
+                {googleStripText && (<>
+                  <Field label="Taille">
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {(["s","m","l"] as const).map(s => (
+                        <button key={s} onClick={() => setGoogleStripTextSize(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: googleStripTextSize === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextSize === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextSize === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}</button>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Position">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                      {([["bl","Bas gauche"],["bc","Bas centre"],["br","Bas droite"],["c","Centre"]] as const).map(([v,l]) => (
+                        <button key={v} onClick={() => setGoogleStripTextPos(v)} style={{ padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 500, background: googleStripTextPos === v ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextPos === v ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextPos === v ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{l}</button>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Police">
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {([["sans","Sans"],["serif","Serif"],["mono","Mono"]] as const).map(([v,l]) => (
+                        <button key={v} onClick={() => setGoogleStripFont(v)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontFamily: v === "serif" ? "Georgia, serif" : v === "mono" ? "monospace" : "inherit", background: googleStripFont === v ? "var(--accent)" : "var(--glass-bg)", color: googleStripFont === v ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripFont === v ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{l}</button>
+                      ))}
+                    </div>
+                  </Field>
+                  <ColorRow label="Couleur texte" value={googleStripTextColor} onChange={setGoogleStripTextColor} presets={["#FFFFFF","#F0F0F0","#CCCCCC","#000000","#1C1C1E","#FFD700","#FFB300","#FF9500","#FF6600","#FF3B30","#FF2D55","#AF52DE","#007AFF","#34C759","#5AC8FA"]}/>
+                  <Field label="Sous-titre">
+                    <TextInput value={googleStripText2} onChange={setGoogleStripText2} placeholder="Sous-titre, tagline…"/>
+                  </Field>
+                  {googleStripText2 && (
+                    <Field label="Taille sous-titre">
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {(["s","m","l"] as const).map(s => (
+                          <button key={s} onClick={() => setGoogleStripText2Size(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: googleStripText2Size === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripText2Size === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripText2Size === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}</button>
+                        ))}
+                      </div>
+                    </Field>
+                  )}
+                </>)}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 4 }}>
+                  <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>Inclure le logo</span>
+                  <button onClick={() => setGoogleStripIncludeLogo(v => !v)} style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: googleStripIncludeLogo ? "var(--accent)" : "var(--border)", position: "relative", transition: "background 0.2s" }}>
+                    <div style={{ position: "absolute", top: 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left 0.2s", left: googleStripIncludeLogo ? 22 : 2 }}/>
+                  </button>
+                </div>
+                {googleStripFrom && (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={async () => { const hero = await buildStrip(googleStripFrom, googleStripTo, googleStripAngle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, googleStripGlass, 1032, 344); setGoogleHeroUrl(hero); }} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>↺ Régénérer</button>
+                    {googleHeroUrl && <button onClick={() => downloadStrip(googleHeroUrl, `wallio-hero-${nom || "carte"}.jpg`)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>⬇ Télécharger</button>}
+                    <button onClick={() => { setGoogleHeroUrl(""); setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleStripGlass(false); }} style={{ padding: "8px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)", color: "#FF3B30", cursor: "pointer" }}>×</button>
+                  </div>
+                )}
+              </Section>
+
+              {/* 3/4 — Couleur de fond */}
+              <Section label="Couleur de fond">
+                <ColorRow label="Fond" value={googleBgColor} onChange={setGoogleBgColor} presets={BG_PRESETS}/>
+                {googleBgColor === bgColor && (
+                  <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 7L9 18l-5-5"/></svg>
+                    Synchronisée avec Apple Wallet
+                  </p>
+                )}
+              </Section>
+
+              {/* 4/4 — Labels */}
+              <Section label="Labels des champs">
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Seuls textes personnalisables — le reste est imposé par Google.
                 </p>
