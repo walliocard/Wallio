@@ -23,32 +23,31 @@ export default function ClientsPage() {
   const [formError, setFormError] = useState("");
   const [fetchError, setFetchError] = useState("");
 
-  async function charger() {
-    if (!user) return;
-    try {
-      const snap = await getDocs(query(
-        collection(db, "clients"),
-        where("marchand_id", "==", user.uid),
-      ));
-      const liste = snap.docs.map(d => ({ id: d.id, ...d.data() } as Client));
-      // Tri par date d'inscription décroissante côté client (évite l'index composite Firestore)
-      liste.sort((a, b) => {
-        const ta = (a.date_inscription as { seconds?: number })?.seconds ?? 0;
-        const tb = (b.date_inscription as { seconds?: number })?.seconds ?? 0;
-        return tb - ta;
-      });
-      setClients(liste);
-    } catch (e) {
-      setFetchError(String(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    if (!authLoading && user) charger();
-    else if (!authLoading && !user) setLoading(false);
-  }, [authLoading, user]); // eslint-disable-line react-hooks/exhaustive-deps
+    const uid = user?.uid;
+    if (!uid) { setLoading(false); return; }
+
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      if (!cancelled) setFetchError("Timeout — Firebase ne répond pas (vérifier connexion ou règles Firestore)");
+    }, 8000);
+
+    getDocs(query(collection(db, "clients"), where("marchand_id", "==", uid)))
+      .then(snap => {
+        if (cancelled) return;
+        const liste = snap.docs.map(d => ({ id: d.id, ...d.data() } as Client));
+        liste.sort((a, b) => {
+          const ta = (a.date_inscription as { seconds?: number })?.seconds ?? 0;
+          const tb = (b.date_inscription as { seconds?: number })?.seconds ?? 0;
+          return tb - ta;
+        });
+        setClients(liste);
+      })
+      .catch(e => { if (!cancelled) setFetchError(String(e)); })
+      .finally(() => { if (!cancelled) { clearTimeout(timeout); setLoading(false); } });
+
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!marchand) return null;
 
