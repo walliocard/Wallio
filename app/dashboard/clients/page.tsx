@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } from "@/lib/loyalty";
 import { Icons } from "@/components/dashboard/icons";
@@ -27,14 +27,9 @@ export default function ClientsPage() {
     const uid = user?.uid;
     if (!uid) { setLoading(false); return; }
 
-    let cancelled = false;
-    const timeout = setTimeout(() => {
-      if (!cancelled) setFetchError("Timeout — Firebase ne répond pas (vérifier connexion ou règles Firestore)");
-    }, 8000);
-
-    getDocs(query(collection(db, "clients"), where("marchand_id", "==", uid)))
-      .then(snap => {
-        if (cancelled) return;
+    const unsub = onSnapshot(
+      query(collection(db, "clients"), where("marchand_id", "==", uid)),
+      (snap) => {
         const liste = snap.docs.map(d => ({ id: d.id, ...d.data() } as Client));
         liste.sort((a, b) => {
           const ta = (a.date_inscription as { seconds?: number })?.seconds ?? 0;
@@ -42,14 +37,16 @@ export default function ClientsPage() {
           return tb - ta;
         });
         setClients(liste);
-      })
-      .catch(e => { if (!cancelled) setFetchError(String(e)); })
-      .finally(() => { if (!cancelled) { clearTimeout(timeout); setLoading(false); } });
+        setLoading(false);
+      },
+      (err) => {
+        setFetchError(String(err));
+        setLoading(false);
+      }
+    );
 
-    return () => { cancelled = true; clearTimeout(timeout); };
+    return () => unsub();
   }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (!marchand) return null;
 
   const recompensesCount = clients.filter(c => c.recompense_en_attente).length;
 
@@ -59,7 +56,7 @@ export default function ClientsPage() {
     .sort((a, b) => {
       if (sort === "tampons") return b.tampons - a.tampons;
       if (sort === "alpha") return `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr");
-      // "recent" : déjà trié par date_inscription dans charger()
+      return 0; // "recent" : déjà trié dans onSnapshot
     });
 
   async function ajouterClient() {
@@ -85,7 +82,7 @@ export default function ClientsPage() {
     setForm({ prenom: "", nom: "", telephone: "", date_naissance: "" });
     setShowModal(false);
     setSaving(false);
-    await charger();
+    // onSnapshot se met à jour automatiquement après creerClient
   }
 
   return (
@@ -218,15 +215,6 @@ export default function ClientsPage() {
       </div>
 
       {/* Liste */}
-      {/* DEBUG — à supprimer */}
-      <div className="mb-4 p-3 rounded-xl text-[11px] font-mono" style={{ background: "rgba(0,0,0,0.06)", lineHeight: 1.8 }}>
-        <div>user.uid: <b>{user?.uid ?? "NULL"}</b></div>
-        <div>authLoading: <b>{String(authLoading)}</b></div>
-        <div>loading: <b>{String(loading)}</b></div>
-        <div>clients.length: <b>{clients.length}</b></div>
-        {fetchError && <div style={{ color: "#FF453A" }}>error: {fetchError}</div>}
-      </div>
-
       {fetchError ? (
         <div className="py-10 text-center">
           <p className="text-[13px] font-mono px-4" style={{ color: "#FF453A", wordBreak: "break-all" }}>{fetchError}</p>
@@ -247,8 +235,8 @@ export default function ClientsPage() {
           {filtered.map(client => {
             const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
             const niveau = (client.niveau as number | undefined) ?? 0;
-            const palier = marchand.paliers?.[niveau];
-            const objectifActuel = palier?.tampons ?? marchand.objectif_tampons ?? 10;
+            const palier = marchand?.paliers?.[niveau];
+            const objectifActuel = palier?.tampons ?? marchand?.objectif_tampons ?? 10;
             const pct = Math.min(100, Math.round((client.tampons / objectifActuel) * 100));
             return (
               <Link
@@ -286,7 +274,7 @@ export default function ClientsPage() {
                   <p className="text-[15px] font-semibold" style={{ color: "var(--accent)" }}>
                     {client.tampons}
                     <span className="text-[11px] font-normal" style={{ color: "var(--fg-tertiary)" }}>
-                      /{marchand.objectif_tampons}
+                      /{marchand?.objectif_tampons}
                     </span>
                   </p>
                   {client.recompense_en_attente && (
