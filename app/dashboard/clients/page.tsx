@@ -11,7 +11,7 @@ import Link from "next/link";
 type Sort = "recent" | "tampons" | "alpha";
 
 export default function ClientsPage() {
-  const { user, marchand } = useAuth();
+  const { user, marchand, loading: authLoading } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
@@ -44,7 +44,10 @@ export default function ClientsPage() {
     }
   }
 
-  useEffect(() => { charger(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!authLoading && user) charger();
+    else if (!authLoading && !user) setLoading(false);
+  }, [authLoading, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!marchand) return null;
 
