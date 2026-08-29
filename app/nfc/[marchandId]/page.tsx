@@ -580,7 +580,7 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
             stampTextItalic={(m.stamp_text_italic as boolean) ?? false}
             stampTextSize={(m.stamp_text_size as number) || undefined}
             stampColor={(m.stamp_color as string) || undefined}
-            stampPosition={(m.stamp_position as never) || undefined}
+            stampPosition={typeof m.stamp_position === "number" ? m.stamp_position : m.stamp_position === "top" ? 20 : m.stamp_position === "bottom" ? 80 : 50}
             stampSizePreset={(m.stamp_size_preset as never) || undefined}
             stampThickness={(m.stamp_thickness as number) || undefined}
             stampLogoOpacity={(m.stamp_logo_opacity as number) || undefined}

@@ -46,7 +46,7 @@ export interface AppleWalletCardProps {
   stampTextItalic?: boolean;
   stampTextSize?: number;
   stampColor?: string;
-  stampPosition?: "top"|"center"|"bottom";
+  stampPosition?: number;
   stampSizePreset?: "s"|"m"|"l";
   stampThickness?: number;
   stampLogoOpacity?: number;
@@ -84,7 +84,7 @@ export default function AppleWalletCard({
   stampTextItalic = false,
   stampTextSize = 1,
   stampColor = "#FFFFFF",
-  stampPosition = "center",
+  stampPosition = 50,
   stampSizePreset = "m",
   stampThickness = 2,
   stampLogoOpacity = 1,
@@ -461,13 +461,13 @@ const STAMP_ICONS: Record<string, string> = {
 function StampCircles({
   total, filled, style = "dot",
   text = "", textBold = false, textItalic = false, textSize = 1,
-  color = "#FFFFFF", position = "center", sizePreset = "m",
+  color = "#FFFFFF", position = 50, sizePreset = "m",
   thickness = 2, logoUrl = "", logoOpacity = 1,
 }: {
   total: number; filled: number;
   style?: StampStyle;
   text?: string; textBold?: boolean; textItalic?: boolean; textSize?: number;
-  color?: string; position?: "top"|"center"|"bottom"; sizePreset?: "s"|"m"|"l";
+  color?: string; position?: number; sizePreset?: "s"|"m"|"l";
   thickness?: number; logoUrl?: string; logoOpacity?: number;
 }) {
   const sizeMult = sizePreset === "s" ? 0.72 : sizePreset === "l" ? 1.28 : 1.0;
@@ -477,8 +477,7 @@ function StampCircles({
   const baseSize = Math.min(36, Math.floor((343 - (perRow - 1) * gap) / perRow));
   const s = Math.max(14, Math.round(baseSize * sizeMult));
 
-  const justifyContent = position === "top" ? "flex-start" : position === "bottom" ? "flex-end" : "center";
-  const paddingV = position === "top" ? `${Math.round(s * 0.35)}px 16px 0` : position === "bottom" ? `0 16px ${Math.round(s * 0.35)}px` : "0 16px";
+  const stampY = typeof position === "number" ? position : position === "top" ? 20 : position === "bottom" ? 80 : 50;
 
   const filledBorder = color;
   const filledBg = color + "22";
@@ -555,11 +554,12 @@ function StampCircles({
   };
 
   return (
+    <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
     <div style={{
-      position: "absolute", inset: 0,
+      position: "absolute", left: "50%", top: `${stampY}%`,
+      transform: "translate(-50%, -50%)",
       display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent,
-      gap, padding: paddingV, pointerEvents: "none",
+      alignItems: "center", gap,
     }}>
       {Array.from({ length: rows }).map((_, row) => {
         const start = row * perRow;
@@ -583,6 +583,7 @@ function StampCircles({
           </div>
         );
       })}
+    </div>
     </div>
   );
 }

@@ -73,7 +73,13 @@ export default function CartePage() {
   const [stampTextItalic, setStampTextItalic] = useState<boolean>((marchand as Record<string, unknown>).apple_stamp_text_italic === true);
   const [stampTextSize, setStampTextSize] = useState<number>(((marchand as Record<string, unknown>).apple_stamp_text_size as number) || 1);
   const [stampColor, setStampColor] = useState<string>((marchand as Record<string, unknown>).apple_stamp_color as string || "#FFFFFF");
-  const [stampPosition, setStampPosition] = useState<"top"|"center"|"bottom">(((marchand as Record<string, unknown>).apple_stamp_position as "top"|"center"|"bottom") || "center");
+  const [stampPosition, setStampPosition] = useState<number>(() => {
+    const v = (marchand as Record<string, unknown>).apple_stamp_position;
+    if (typeof v === "number") return v;
+    if (v === "top") return 20;
+    if (v === "bottom") return 80;
+    return 50;
+  });
   const [stampSizePreset, setStampSizePreset] = useState<"s"|"m"|"l">(((marchand as Record<string, unknown>).apple_stamp_size as "s"|"m"|"l") || "m");
   const [stampThickness, setStampThickness] = useState<number>(((marchand as Record<string, unknown>).apple_stamp_thickness as number) ?? 2);
   const [stampLogoOpacity, setStampLogoOpacity] = useState<number>(((marchand as Record<string, unknown>).apple_stamp_logo_opacity as number) ?? 1);
@@ -1256,20 +1262,15 @@ export default function CartePage() {
                     </div>
                   )}
 
-                  {/* ── Position ── */}
+                  {/* ── Position Y libre ── */}
                   <div>
-                    <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>Position</p>
-                    <div style={{ display: "flex", gap: 5 }}>
-                      {(["top","center","bottom"] as const).map(pos => (
-                        <button key={pos} onClick={() => setStampPosition(pos)} style={{
-                          flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 11, fontWeight: 600,
-                          background: stampPosition === pos ? "var(--accent)" : "var(--glass-bg)",
-                          border: `1px solid ${stampPosition === pos ? "var(--accent)" : "var(--border)"}`,
-                          color: stampPosition === pos ? "white" : "var(--fg-secondary)", cursor: "pointer",
-                        }}>
-                          {pos === "top" ? "↑ Haut" : pos === "center" ? "↕ Centre" : "↓ Bas"}
-                        </button>
-                      ))}
+                    <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>Position — {Math.round(stampPosition)}%</p>
+                    <input type="range" min={5} max={95} step={1} value={stampPosition}
+                      onChange={e => setStampPosition(Number(e.target.value))}
+                      style={{ width: "100%", accentColor: "var(--accent)" }}
+                    />
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--fg-tertiary)", marginTop: 2 }}>
+                      <span>Haut</span><span>Milieu</span><span>Bas</span>
                     </div>
                   </div>
 
