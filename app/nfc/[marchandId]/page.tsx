@@ -25,7 +25,7 @@ type Screen =
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
-  useTimeTheme();
+  useTimeTheme("light"); // page NFC toujours en mode clair
   useAutoRefresh(screen.type === "loading");
 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
@@ -230,16 +230,24 @@ function MarchandHeader({ marchand }: { marchand: Marchand }) {
           </div>
         )}
       </div>
-      <h1 className="text-[22px] font-semibold tracking-tight mb-1" style={{ color: "var(--fg)" }}>{marchand.nom}</h1>
-      <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>Programme de fidélité</p>
+      <h1 className="text-[22px] font-bold tracking-tight mb-1" style={{ color: FG_MAIN }}>{marchand.nom}</h1>
+      <p className="text-[14px]" style={{ color: FG_SEC }}>Programme de fidélité</p>
     </div>
   );
 }
 
+// Palette carte comptoir — toujours clair
+const BG_PAGE   = "#F0F4FF";
+const BG_CARD   = "#FFFFFF";
+const BORDER    = "rgba(99,102,241,0.14)";
+const FG_MAIN   = "#1D1D1F";
+const FG_SEC    = "#6E6E73";
+const ACCENT    = "#007AFF";
+
 const inputStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.07)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  color: "var(--fg)",
+  background: BG_CARD,
+  border: `1px solid ${BORDER}`,
+  color: FG_MAIN,
   WebkitAppearance: "none",
 };
 
@@ -283,12 +291,11 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
   const selectStyle: React.CSSProperties = { ...inputStyle, backgroundImage: "none" };
 
   return (
-    <main className="min-h-screen flex flex-col justify-center px-5 py-12" style={{ background: "var(--bg)" }}>
+    <main className="min-h-screen flex flex-col justify-center px-5 py-12" style={{ background: BG_PAGE }}>
       <div className="w-full max-w-[390px] mx-auto">
         <MarchandHeader marchand={marchand} />
 
-        <div className="rounded-[28px] p-6"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", backdropFilter: "blur(40px)" }}>
+        <div className="rounded-[28px] p-6" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, boxShadow: "0 4px 24px rgba(99,102,241,0.08)" }}>
           <form onSubmit={handleSubmit} className="space-y-2.5">
             {([
               { value: prenom, set: setPrenom, placeholder: "Prénom", type: "text", autoComplete: "given-name" },
@@ -299,8 +306,8 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
                 onChange={e => f.set(e.target.value)}
                 className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-colors"
                 style={inputStyle}
-                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-                onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
+                onFocus={e => (e.target.style.borderColor = ACCENT)}
+                onBlur={e => (e.target.style.borderColor = BORDER)}
               />
             ))}
 
@@ -311,9 +318,9 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
                 value={indicatif.code}
                 onChange={e => setIndicatif(PAYS.find(p => p.code === e.target.value) ?? PAYS[0])}
                 className="outline-none text-[14px] font-medium shrink-0 border-r"
-                style={{ background: "transparent", color: "var(--fg)", borderColor: "rgba(128,128,128,0.2)", padding: "0 10px 0 14px", WebkitAppearance: "none" }}>
+                style={{ background: "transparent", color: FG_MAIN, borderColor: BORDER, padding: "0 10px 0 14px", WebkitAppearance: "none" }}>
                 {PAYS.map(p => (
-                  <option key={p.code} value={p.code} style={{ background: "var(--bg)" }}>
+                  <option key={p.code} value={p.code} style={{ background: BG_CARD }}>
                     {p.flag} {p.code}
                   </option>
                 ))}
@@ -323,15 +330,15 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
                 autoComplete="tel-national" value={numLocal}
                 onChange={e => setNumLocal(e.target.value.replace(/[^\d\s]/g, ""))}
                 className="flex-1 px-4 py-3.5 text-[15px] outline-none bg-transparent"
-                style={{ color: "var(--fg)" }}
+                style={{ color: FG_MAIN }}
               />
             </div>
 
             {/* Date de naissance */}
-            <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
               <p className="text-[11px] font-medium uppercase tracking-wider px-4 pt-3 pb-1"
-                style={{ color: "var(--fg-secondary)" }}>Date de naissance</p>
-              <div className="grid grid-cols-3 divide-x" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                style={{ color: FG_SEC }}>Date de naissance</p>
+              <div className="grid grid-cols-3 divide-x" style={{ borderColor: BORDER }}>
                 {[
                   { value: dateJ, set: setDateJ, placeholder: "Jour", options: Array.from({ length: 31 }, (_, i) => ({ v: String(i + 1), l: String(i + 1) })) },
                   { value: dateM, set: setDateM, placeholder: "Mois", options: MOIS.map((l, i) => ({ v: String(i + 1), l })) },
@@ -340,9 +347,9 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
                   <select key={s.placeholder} required value={s.value}
                     onChange={e => s.set(e.target.value)}
                     className="w-full px-3 py-3.5 text-[14px] outline-none bg-transparent"
-                    style={{ color: s.value ? "var(--fg)" : "var(--fg-secondary)", ...selectStyle }}>
+                    style={{ color: s.value ? FG_MAIN : FG_SEC, ...selectStyle }}>
                     <option value="" disabled>{s.placeholder}</option>
-                    {s.options.map(o => <option key={o.v} value={o.v} style={{ background: "#1C1C1E" }}>{o.l}</option>)}
+                    {s.options.map(o => <option key={o.v} value={o.v} style={{ background: BG_CARD }}>{o.l}</option>)}
                   </select>
                 ))}
               </div>
@@ -358,9 +365,9 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
           </form>
         </div>
 
-        <p className="text-center text-[13px] mt-5" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="text-center text-[13px] mt-5" style={{ color: FG_SEC }}>
           Déjà inscrit ?{" "}
-          <button onClick={onRecuperation} style={{ color: "var(--accent)" }} className="font-medium">
+          <button onClick={onRecuperation} style={{ color: ACCENT }} className="font-medium">
             Récupérer mon compte
           </button>
         </p>

@@ -1,13 +1,19 @@
 "use client";
 import { useEffect } from "react";
 
-// Applique .light (7h-20h) ou .dark (20h-7h) sur <html> pour la page NFC.
-// Se retire au démontage pour ne pas affecter les autres pages.
-export function useTimeTheme() {
+// Applique une classe de thème sur <html>. Se retire au démontage.
+// force: "light" | "dark" | "auto" (auto = heure du jour)
+export function useTimeTheme(force: "light" | "dark" | "auto" = "auto") {
   useEffect(() => {
-    const hour = new Date().getHours();
-    const cls = hour >= 7 && hour < 20 ? "light" : "dark";
+    let cls: string;
+    if (force === "light" || force === "dark") {
+      cls = force;
+    } else {
+      const hour = new Date().getHours();
+      cls = hour >= 7 && hour < 20 ? "light" : "dark";
+    }
+    document.documentElement.classList.remove("light", "dark");
     document.documentElement.classList.add(cls);
     return () => document.documentElement.classList.remove(cls);
-  }, []);
+  }, [force]);
 }
