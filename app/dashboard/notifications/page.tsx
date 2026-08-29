@@ -2,22 +2,23 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
+import type React from "react";
 import { getAuth } from "firebase/auth";
 
 type Segment = "tous" | "actifs" | "inactifs";
 type SendState = "idle" | "sending" | "success" | "error";
 
-const SEGMENTS: { id: Segment; label: string; desc: string; emoji: string }[] = [
-  { id: "tous",      label: "Tous les clients",     desc: "Clients avec notifications activées",            emoji: "👥" },
-  { id: "actifs",    label: "Clients actifs",        desc: "Visiteurs dans les 30 derniers jours",           emoji: "🟢" },
-  { id: "inactifs",  label: "Clients inactifs",      desc: "Absents depuis plus de 30 jours",                emoji: "💤" },
+const SEGMENTS: { id: Segment; label: string; desc: string; icon: React.ReactNode }[] = [
+  { id: "tous",     label: "Tous les clients", desc: "Clients avec notifications activées",  icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> },
+  { id: "actifs",   label: "Clients actifs",   desc: "Visiteurs dans les 30 derniers jours", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+  { id: "inactifs", label: "Clients inactifs", desc: "Absents depuis plus de 30 jours",       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg> },
 ];
 
 const TEMPLATES = [
-  { label: "Offre spéciale",    title: "🎁 Offre exclusive",       body: "Une surprise vous attend — venez nous rendre visite !" },
-  { label: "Double tampons",    title: "⭐ Double tampons",         body: "Ce week-end, chaque visite compte double. Profitez-en !" },
-  { label: "Événement",         title: "📅 Événement spécial",     body: "Rejoignez-nous pour un moment unique. On vous attend !" },
-  { label: "Récompense proche", title: "🏆 Vous y êtes presque !", body: "Il vous manque peu de tampons pour votre récompense. Passez nous voir !" },
+  { label: "Offre spéciale",    title: "Offre exclusive",       body: "Une surprise vous attend — venez nous rendre visite !" },
+  { label: "Double tampons",    title: "Double tampons",         body: "Ce week-end, chaque visite compte double. Profitez-en !" },
+  { label: "Événement",         title: "Événement spécial",     body: "Rejoignez-nous pour un moment unique. On vous attend !" },
+  { label: "Récompense proche", title: "Vous y êtes presque !", body: "Il vous manque peu de tampons pour votre récompense. Passez nous voir !" },
 ];
 
 export default function NotificationsPage() {
@@ -85,7 +86,7 @@ export default function NotificationsPage() {
                   background: segment === s.id ? "rgba(0,122,255,0.08)" : "var(--bg)",
                   border: `1px solid ${segment === s.id ? "var(--accent)" : "var(--border)"}`,
                 }}>
-                <span className="text-xl flex-shrink-0">{s.emoji}</span>
+                <span className="flex-shrink-0" style={{ color: segment === s.id ? "var(--accent)" : "var(--fg-tertiary)" }}>{s.icon}</span>
                 <div>
                   <p className="text-[14px] font-medium" style={{ color: segment === s.id ? "var(--accent)" : "var(--fg)" }}>
                     {s.label}
@@ -137,7 +138,7 @@ export default function NotificationsPage() {
               </div>
               <input
                 type="text" value={title} onChange={e => setTitle(e.target.value)} maxLength={65}
-                placeholder="Ex: 🎁 Offre exclusive ce week-end"
+                placeholder="Ex: Offre exclusive ce week-end"
                 className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
                 onFocus={e => (e.target.style.borderColor = "var(--accent)")}
