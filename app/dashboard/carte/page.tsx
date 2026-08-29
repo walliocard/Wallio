@@ -309,19 +309,18 @@ export default function CartePage() {
     pushHistory();
     try {
       const dataUrl = await resizeImage(file, 320);
-      // Upload to Firebase Storage
-      const url = await uploadToStorage(dataUrl, `marchands/${user.uid}/logo.jpg`);
+      let url: string;
+      try {
+        url = await uploadToStorage(dataUrl, `marchands/${user.uid}/logo.jpg`);
+      } catch (storageErr) {
+        console.warn("[Logo] Firebase Storage échoué, fallback dataUrl:", storageErr);
+        url = dataUrl;
+      }
       setLogoUrl(url);
       await updateDoc(doc(db, "marchands", user.uid), { logo_url: url });
     } catch (err: unknown) {
-      // Fallback to dataUrl if Storage fails
-      try {
-        const dataUrl = await resizeImage(file, 320);
-        setLogoUrl(dataUrl);
-        await updateDoc(doc(db, "marchands", user.uid), { logo_url: dataUrl });
-      } catch {
-        alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
-      }
+      console.error("[Logo] Erreur upload:", err);
+      alert(`Erreur upload logo : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setUploadingLogo(false);
     }
@@ -400,13 +399,15 @@ export default function CartePage() {
       let url: string;
       try {
         url = await uploadToStorage(raw, `marchands/${user.uid}/google_hero.jpg`);
-      } catch {
+      } catch (storageErr) {
+        console.warn("[GoogleHero] Firebase Storage échoué, fallback dataUrl:", storageErr);
         url = raw;
       }
       setGoogleHeroUrl(url);
       await updateDoc(doc(db, "marchands", user.uid), { google_hero_url: url });
     } catch (err) {
-      alert(`Erreur upload : ${err instanceof Error ? err.message : String(err)}`);
+      console.error("[GoogleHero] Erreur upload:", err);
+      alert(`Erreur upload bannière Google : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setUploadingGoogleHero(false);
     }
