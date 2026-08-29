@@ -778,8 +778,8 @@ export default function CartePage() {
               logoUrl={logoUrl}
               logoText={nom}
               stripUrl={stripUrl || undefined}
-              previewCropY={cropY}
-              previewZoom={cropZoom}
+              previewCropY={rawStripUrl ? cropY : 50}
+              previewZoom={rawStripUrl ? cropZoom : 1}
               backgroundColor={bgColor}
               foregroundColor={effectiveFg}
               labelColor={effectiveLabel}
@@ -819,8 +819,8 @@ export default function CartePage() {
               logoText={nom}
               backgroundColor={googleBgColor}
               heroUrl={googleHeroUrl || undefined}
-              previewCropY={googleHeroCropY}
-              previewZoom={googleHeroCropZoom}
+              previewCropY={rawGoogleHeroUrl ? googleHeroCropY : 50}
+              previewZoom={rawGoogleHeroUrl ? googleHeroCropZoom : 1}
               stampsCurrent={stampsCurrent}
               stampsObjective={objectif}
               rewardName={recompense}
