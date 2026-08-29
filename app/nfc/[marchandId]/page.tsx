@@ -23,9 +23,8 @@ type Screen =
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
-  // Auto-refresh désactivé quand l'utilisateur est sur un formulaire
-  const formActive = screen.type === "inscription" || screen.type === "recuperation";
-  useAutoRefresh(!formActive);
+  // Auto-refresh uniquement sur l'écran de chargement initial
+  useAutoRefresh(screen.type === "loading");
 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
