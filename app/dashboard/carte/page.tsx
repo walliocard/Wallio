@@ -925,6 +925,7 @@ export default function CartePage() {
                     <line x1="8" y1="11" x2="14" y2="11"/>
                   </svg>
                   <input type="range" min="1" max="3" step="0.01" value={cropZoom}
+                    className="zoom-slider"
                     onChange={e => setCropZoom(Number(e.target.value))}
                     onPointerDown={() => { isZoomingStripRef.current = true; }}
                     onPointerUp={e => {
@@ -933,7 +934,7 @@ export default function CartePage() {
                       const src = rawStripUrl || (!stripFrom ? stripUrl : "");
                       if (src) applyCrop(src, cropYRef.current, z).then(url => setStripUrl(url)).catch(() => {});
                     }}
-                    style={{ flex: 1, accentColor: "var(--accent)" }}
+                    style={{ flex: 1 }}
                   />
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -1910,6 +1911,7 @@ export default function CartePage() {
                         <line x1="8" y1="11" x2="14" y2="11"/>
                       </svg>
                       <input type="range" min="1" max="3" step="0.01" value={googleHeroCropZoom}
+                        className="zoom-slider"
                         onChange={e => setGoogleHeroCropZoom(Number(e.target.value))}
                         onPointerDown={() => { isZoomingGoogleRef.current = true; }}
                         onPointerUp={e => {
@@ -1918,7 +1920,7 @@ export default function CartePage() {
                           const src = rawGoogleHeroUrl || googleHeroUrl;
                           if (src) applyHeroCrop(src, googleHeroCropYRef.current, z).then(url => setGoogleHeroUrl(url)).catch(() => {});
                         }}
-                        style={{ flex: 1, accentColor: "var(--accent)" }}
+                        style={{ flex: 1 }}
                       />
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
