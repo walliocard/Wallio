@@ -152,7 +152,12 @@ export async function ajouterTampon(
     }
   }
 
-  const nouveauxTampons = client.tampons + 1;
+  // Double tampons : actif si marchand.double_tampons_fin est dans le futur
+  const m = marchand as Record<string, unknown>;
+  const doubleFin = m.double_tampons_fin as string | undefined;
+  const doubleActif = doubleFin ? new Date(doubleFin) > new Date() : false;
+  const increment = doubleActif ? 2 : 1;
+  const nouveauxTampons = client.tampons + increment;
 
   // ── Mode progressif ──────────────────────────────────────────────────────────
   if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {

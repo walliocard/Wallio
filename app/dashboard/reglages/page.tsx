@@ -47,6 +47,14 @@ export default function ReglagesPage() {
     ((marchand as Record<string,unknown>)?.notif_message as string) ||
     `Pour ne manquer aucune de vos récompenses chez ${marchand?.nom || "nous"}, activez les notifications !`
   );
+  const m = marchand as Record<string, unknown>;
+  const doubleFin = m.double_tampons_fin as string | undefined;
+  const [doubleTamponsActif, setDoubleTamponsActif] = useState<boolean>(
+    doubleFin ? new Date(doubleFin) > new Date() : false
+  );
+  const [doubleTamponsFin, setDoubleTamponsFin] = useState<string>(
+    doubleFin ?? new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10)
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [generatingNfc, setGeneratingNfc] = useState(false);
@@ -67,6 +75,7 @@ export default function ReglagesPage() {
       },
       notif_actif: notifActif,
       notif_message: notifMessage,
+      double_tampons_fin: doubleTamponsActif ? doubleTamponsFin : null,
       updated_at: serverTimestamp(),
     });
     setSaving(false); setSaved(true);
@@ -183,6 +192,34 @@ export default function ReglagesPage() {
           <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
             Délai minimum entre deux tampons pour un même client
           </p>
+        </Card>
+
+        {/* Double tampons */}
+        <Card title="Double tampons">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <p className="text-[14px]" style={{ color: "var(--fg)" }}>
+                {doubleTamponsActif
+                  ? `Actif jusqu'au ${new Date(doubleTamponsFin).toLocaleDateString("fr-FR")}`
+                  : "Désactivé"}
+              </p>
+              <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+                Chaque visite ajoute 2 tampons au lieu de 1
+              </p>
+            </div>
+            <Toggle value={doubleTamponsActif} onChange={setDoubleTamponsActif} />
+          </div>
+          {doubleTamponsActif && (
+            <div className="pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+              <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>Actif jusqu'au</p>
+              <input type="date" value={doubleTamponsFin}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={e => setDoubleTamponsFin(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+              />
+            </div>
+          )}
         </Card>
 
         {/* Automatisations */}
