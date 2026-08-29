@@ -307,7 +307,7 @@ ANTHROPIC_API_KEY
 | 13. Automatisations anniversaire + relance | ✅ |
 | 14. Stats + graphiques | ✅ |
 | 15. PWA manifest | ✅ |
-| 16. Google Wallet | ⏳ Désactivé |
+| 16. Google Wallet | ✅ Fonctionnel en demo (UNDER_REVIEW) — demander publishing access pour prod |
 
 ---
 
