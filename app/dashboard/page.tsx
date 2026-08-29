@@ -102,23 +102,23 @@ export default function AccueilPage() {
 
       {/* Header */}
       <div className="mb-8 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl flex-shrink-0 overflow-hidden flex items-center justify-center"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+        <div className="w-14 h-14 rounded-[18px] flex-shrink-0 overflow-hidden flex items-center justify-center"
+          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", boxShadow: "0 4px 16px rgba(0,0,0,0.07)" }}>
           {m.logo_url
             ? <img src={m.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            : <span className="text-[22px] font-bold" style={{ color: "var(--accent)" }}>
+            : <span className="text-[24px] font-bold" style={{ color: "var(--accent)" }}>
                 {(marchand.nom?.[0] || "?").toUpperCase()}
               </span>
           }
         </div>
         <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <WallioLogo size={14} />
-            <p className="text-[12px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>
-              Wallio · Tableau de bord
+          <div className="flex items-center gap-1.5 mb-1">
+            <WallioLogo size={12} />
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--fg-tertiary)" }}>
+              Wallio
             </p>
           </div>
-          <h1 className="text-[28px] lg:text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
+          <h1 className="text-[30px] lg:text-[34px] font-bold tracking-[-0.8px] leading-none" style={{ color: "var(--fg)" }}>
             {marchand.nom}
           </h1>
         </div>
@@ -128,7 +128,11 @@ export default function AccueilPage() {
       {stats.recompenses > 0 && (
         <Link href="/dashboard/clients" className="flex items-center gap-3 rounded-2xl p-4 mb-4 transition-all hover:opacity-90"
           style={{ background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.30)" }}>
-          <span className="text-[20px]">🎁</span>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,159,10,0.18)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+            </svg>
+          </div>
           <div className="flex-1">
             <p className="text-[14px] font-semibold" style={{ color: "#FF9F0A" }}>
               {stats.recompenses} récompense{stats.recompenses > 1 ? "s" : ""} en attente
@@ -144,12 +148,12 @@ export default function AccueilPage() {
       {/* Stats grid — 2 col mobile, 5 col desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         {STAT_CARDS.map(s => (
-          <div key={s.label} className="rounded-2xl p-4 lg:p-5"
+          <div key={s.label} className="rounded-[20px] p-4 lg:p-5"
             style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
-            <p className="text-[28px] lg:text-[34px] font-semibold tracking-tight leading-none mb-1.5" style={{ color: s.color }}>
+            <p className="text-[32px] lg:text-[38px] font-bold tracking-tight leading-none mb-2" style={{ color: s.color }}>
               {s.value}
             </p>
-            <p className="text-[11px] lg:text-[12px]" style={{ color: "var(--fg-secondary)" }}>{s.label}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--fg-tertiary)" }}>{s.label}</p>
           </div>
         ))}
       </div>
@@ -248,9 +252,14 @@ export default function AccueilPage() {
               {(stats.top_client.prenom[0] || "?").toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: "#FF9F0A" }}>
-                ⭐ Meilleur client
-              </p>
+              <div className="flex items-center gap-1 mb-0.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="#FF9F0A">
+                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+                </svg>
+                <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#FF9F0A" }}>
+                  Meilleur client
+                </p>
+              </div>
               <p className="text-[14px] font-medium truncate" style={{ color: "var(--fg)" }}>
                 {stats.top_client.prenom} {stats.top_client.nom}
               </p>
