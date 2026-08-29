@@ -53,7 +53,7 @@ export async function GET(req: Request) {
     if (tokens.length > 0 && message) {
       await messaging.sendEachForMulticast({
         tokens,
-        notification: { title: `Joyeux anniversaire ! 🎂`, body: message },
+        notification: { title: `Joyeux anniversaire !`, body: message },
         webpush: {
           notification: { icon: logoUrl || "/icon-192.png", badge: "/favicon-32.png" },
           fcmOptions: { link: "https://app.wallio.ma" },

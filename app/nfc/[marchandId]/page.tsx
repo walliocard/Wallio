@@ -13,6 +13,7 @@ import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
 import AppleWalletCard from "@/components/AppleWalletCard";
+import QRCode from "qrcode";
 
 type Screen =
   | { type: "loading" }
@@ -73,6 +74,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     <ResultScreen
       result={screen.result}
       marchand={screen.marchand}
+      walletId={screen.client.wallet_id}
       onValiderRecompense={async () => {
         await validerRecompense(
           screen.client.id,
@@ -135,9 +137,10 @@ function Erreur({ message }: { message: string }) {
 
 // ─── Résultat tampon ──────────────────────────────────────────────────────────
 
-function ResultScreen({ result, marchand, onValiderRecompense }: {
+function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
   result: TamponResult;
   marchand: Marchand;
+  walletId: string;
   onValiderRecompense: () => void;
 }) {
   if (result.type === "not_found") return <Erreur message="Client introuvable." />;
@@ -155,11 +158,11 @@ function ResultScreen({ result, marchand, onValiderRecompense }: {
 
       <div className="w-full max-w-[360px] relative text-center">
         <div className="text-6xl mb-6 animate-bounce">
-          {isOk ? marchand.icone_tampons || "⭐" : isRecompense ? "🎁" : "⏳"}
+          {isOk ? marchand.icone_tampons || "+" : isRecompense ? "+" : "!"}
         </div>
 
         <h1 className="text-[28px] font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>
-          {isOk && (result.double ? "2 tampons ajoutés ! 🎉" : "Tampon ajouté !")}
+          {isOk && (result.double ? "2 tampons ajoutés !" : "Tampon ajouté !")}
           {isRecompense && "Récompense débloquée !"}
           {isAntiDoublon && "Déjà enregistré"}
         </h1>
@@ -184,22 +187,46 @@ function ResultScreen({ result, marchand, onValiderRecompense }: {
                   background: i < result.tampons ? "var(--accent)" : "var(--border)",
                   transform: i === result.tampons - 1 ? "scale(1.2)" : "scale(1)",
                 }}>
-                {i < result.tampons ? (marchand.icone_tampons || "⭐") : ""}
+                {i < result.tampons ? (marchand.icone_tampons || "+") : ""}
               </div>
             ))}
           </div>
         )}
 
         {isRecompense && (
-          <div className="rounded-2xl px-5 py-4" style={{ background: "rgba(52,199,89,0.1)", border: "1px solid rgba(52,199,89,0.2)" }}>
-            <p className="text-[15px] font-semibold mb-1" style={{ color: "#34C759" }}>Récompense à retirer</p>
-            <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
-              Montrez cet écran au marchand pour valider votre récompense.
-            </p>
-          </div>
+          <RecompenseQR walletId={walletId} />
         )}
       </div>
     </main>
+  );
+}
+
+// ─── QR Récompense ────────────────────────────────────────────────────────────
+
+function RecompenseQR({ walletId }: { walletId: string }) {
+  const [qr, setQr] = useState("");
+
+  useEffect(() => {
+    QRCode.toDataURL(`https://app.wallio.ma/client/${walletId}`, {
+      width: 600, margin: 1, errorCorrectionLevel: "M",
+      color: { dark: "#1D1D1F", light: "#FFFFFF" },
+    }).then(setQr).catch(() => {});
+  }, [walletId]);
+
+  return (
+    <div className="rounded-2xl px-5 py-5" style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.2)" }}>
+      <p className="text-[15px] font-semibold mb-1" style={{ color: "#34C759" }}>Récompense à valider</p>
+      <p className="text-[13px] mb-4" style={{ color: "var(--fg-secondary)" }}>
+        Faites scanner ce code par le marchand.
+      </p>
+      {qr ? (
+        <div className="flex justify-center">
+          <img src={qr} alt="QR récompense" className="w-36 h-36 rounded-xl" />
+        </div>
+      ) : (
+        <div className="w-36 h-36 mx-auto rounded-xl" style={{ background: "var(--border)" }} />
+      )}
+    </div>
   );
 }
 
