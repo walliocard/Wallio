@@ -41,18 +41,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("[auth] onAuthStateChanged subscribed");
+    const fallback = setTimeout(() => {
+      console.warn("[auth] Firebase timeout — forcing loading=false");
+      setLoading(false);
+    }, 5000);
+
     const unsub = onAuthStateChanged(auth, async (u) => {
-      console.log("[auth] state change →", u ? `user ${u.uid}` : "null");
+      clearTimeout(fallback);
       setUser(u);
       if (u) {
         try {
-          console.log("[auth] getMarchand start", u.uid);
           const timeout = new Promise<null>((_, reject) =>
             setTimeout(() => reject(new Error("getMarchand timeout")), 5000)
           );
           const data = await Promise.race([getMarchand(u.uid), timeout]);
-          console.log("[auth] getMarchand result →", data ? "ok" : "null");
           setMarchand(data as MarchandData | null);
         } catch (e) {
           console.error("[auth] getMarchand failed:", e);
@@ -61,10 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setMarchand(null);
       }
-      console.log("[auth] setLoading(false)");
       setLoading(false);
     });
-    return unsub;
+
+    return () => { unsub(); clearTimeout(fallback); };
   }, []);
 
   return (
