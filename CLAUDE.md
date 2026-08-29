@@ -89,6 +89,9 @@ apns_push_token?: string          ← token APNS pour mise à jour Apple Wallet
 apns_device_lib_id?: string
 apns_last_updated?: string
 wallet_type?: "apple" | "google"
+birthday_bonus?: boolean          ← posé par cron anniversaires
+birthday_bonus_used?: boolean     ← évite le doublon anniversaire sur l'année
+relance_pending?: boolean         ← posé par cron relances
 ```
 
 > Un même client chez deux marchands = deux documents séparés (wallet_id différents).
