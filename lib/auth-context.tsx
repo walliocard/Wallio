@@ -44,8 +44,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        const data = await getMarchand(u.uid);
-        setMarchand(data as MarchandData | null);
+        try {
+          const data = await getMarchand(u.uid);
+          setMarchand(data as MarchandData | null);
+        } catch (e) {
+          console.error("[auth] getMarchand failed:", e);
+          setMarchand(null);
+        }
       } else {
         setMarchand(null);
       }

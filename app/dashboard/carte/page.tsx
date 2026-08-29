@@ -194,7 +194,8 @@ export default function CartePage() {
 
   // Regen canvas when cropY changes (skipped during drag — handled in onStripPointerUp)
   useEffect(() => {
-    const src = rawStripUrl || (!stripFrom ? stripUrl : "");
+    // N'applique le recrop que sur les raw locaux (data:) — pas les URLs Cloudinary au chargement
+    const src = rawStripUrl || (!stripFrom && stripUrl.startsWith("data:") ? stripUrl : "");
     if (!src || isDraggingRef.current || isZoomingStripRef.current) return;
     cropYRef.current = cropY;
     applyCrop(src, cropY, cropZoom).then(url => setStripUrl(url)).catch(() => {});
@@ -386,6 +387,7 @@ export default function CartePage() {
 
   async function sauvegarder() {
     setSaving(true);
+    // Toujours uploader les dataUrls sur Cloudinary avant Firestore (évite documents > 1MB)
     let finalStripUrl = stripUrl;
     if (isUploadedStrip && rawStripUrl) {
       try {
@@ -393,6 +395,11 @@ export default function CartePage() {
         finalStripUrl = await uploadToCloudinary(cropped, `${user!.uid}/strip`);
         setStripUrl(finalStripUrl);
       } catch { /* keep existing */ }
+    } else if (finalStripUrl.startsWith("data:")) {
+      try {
+        finalStripUrl = await uploadToCloudinary(finalStripUrl, `${user!.uid}/strip`);
+        setStripUrl(finalStripUrl);
+      } catch { finalStripUrl = ""; setStripUrl(""); } // si échec, efface plutôt que stocker
     }
     let finalGoogleHeroUrl = googleHeroUrl;
     if (isUploadedGoogleHero && rawGoogleHeroUrl) {
@@ -401,11 +408,11 @@ export default function CartePage() {
         finalGoogleHeroUrl = await uploadToCloudinary(cropped, `${user!.uid}/google_hero`);
         setGoogleHeroUrl(finalGoogleHeroUrl);
       } catch { /* keep existing */ }
-    } else if (googleHeroUrl.startsWith("data:")) {
+    } else if (finalGoogleHeroUrl.startsWith("data:")) {
       try {
-        finalGoogleHeroUrl = await uploadToCloudinary(googleHeroUrl, `${user!.uid}/google_hero`);
+        finalGoogleHeroUrl = await uploadToCloudinary(finalGoogleHeroUrl, `${user!.uid}/google_hero`);
         setGoogleHeroUrl(finalGoogleHeroUrl);
-      } catch { /* keep existing */ }
+      } catch { finalGoogleHeroUrl = ""; setGoogleHeroUrl(""); } // si échec, efface
     }
     await updateDoc(doc(db, "marchands", user!.uid), {
       nom,
