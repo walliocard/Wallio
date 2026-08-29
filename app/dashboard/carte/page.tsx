@@ -409,6 +409,8 @@ export default function CartePage() {
         const cropped = await applyCrop(rawStripUrl, cropY, cropZoom);
         finalStripUrl = await uploadToCloudinary(cropped, `${user!.uid}/strip`);
         setStripUrl(finalStripUrl);
+        setRawStripUrl("");
+        setIsUploadedStrip(false);
       } catch { /* keep existing */ }
     } else if (finalStripUrl.startsWith("data:")) {
       try {
@@ -422,6 +424,8 @@ export default function CartePage() {
         const cropped = await applyHeroCrop(rawGoogleHeroUrl, googleHeroCropY, googleHeroCropZoom);
         finalGoogleHeroUrl = await uploadToCloudinary(cropped, `${user!.uid}/google_hero`);
         setGoogleHeroUrl(finalGoogleHeroUrl);
+        setRawGoogleHeroUrl("");
+        setIsUploadedGoogleHero(false);
       } catch { /* keep existing */ }
     } else if (finalGoogleHeroUrl.startsWith("data:")) {
       try {
