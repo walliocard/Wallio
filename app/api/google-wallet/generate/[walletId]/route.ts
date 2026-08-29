@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/admin";
+import { adminDb, initAdmin } from "@/lib/admin";
 import { getGoogleAccessToken, buildSaveToWalletJwt } from "@/lib/google-wallet/auth";
 
 const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID!;
@@ -19,6 +19,8 @@ export async function GET(
   { params }: { params: Promise<{ walletId: string }> }
 ) {
   const { walletId } = await params;
+
+  initAdmin();
   const db = adminDb();
 
   const clientSnap = await db.collection("clients")
@@ -35,39 +37,50 @@ export async function GET(
   const cid = classId(client.marchand_id);
   const oid = objectId(walletId);
 
-  // Marquer ce client comme utilisateur Google Wallet
   await clientRef.update({ wallet_type: "google" });
 
+  // Créer ou vérifier la classe de fidélité
+  let token: string;
   try {
-    const token = await getGoogleAccessToken();
+    token = await getGoogleAccessToken();
+  } catch (e) {
+    console.error("[Google Wallet] Erreur getGoogleAccessToken:", e);
+    return NextResponse.json({ error: "Impossible de s'authentifier auprès de Google" }, { status: 500 });
+  }
 
-    // Créer la classe si elle n'existe pas encore
-    const classRes = await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
-      headers: { Authorization: `Bearer ${token}` },
+  const classRes = await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (classRes.status === 404) {
+    const createRes = await fetch(`${API}/loyaltyClass`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: cid,
+        issuerName: "Wallio",
+        reviewStatus: "DRAFT",
+        programName: m.nom,
+        ...(m.logo_url && {
+          programLogo: {
+            sourceUri: { uri: m.logo_url },
+            contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
+          },
+        }),
+        hexBackgroundColor: m.couleur_principale || "#1C1C1E",
+        countryCode: "MA",
+      }),
     });
 
-    if (classRes.status === 404) {
-      await fetch(`${API}/loyaltyClass`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: cid,
-          issuerName: "Wallio",
-          reviewStatus: "UNDER_REVIEW",
-          programName: m.nom,
-          ...(m.logo_url && {
-            programLogo: {
-              sourceUri: { uri: m.logo_url },
-              contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
-            },
-          }),
-          hexBackgroundColor: m.couleur_principale || "#1C1C1E",
-          countryCode: "MA",
-        }),
-      });
+    if (!createRes.ok) {
+      const err = await createRes.text();
+      console.error("[Google Wallet] Erreur création classe:", createRes.status, err);
+      return NextResponse.json({ error: "Erreur création classe Google Wallet" }, { status: 500 });
     }
-  } catch {
-    // Si l'API échoue, on continue avec le JWT seul
+  } else if (!classRes.ok) {
+    const err = await classRes.text();
+    console.error("[Google Wallet] Erreur récupération classe:", classRes.status, err);
+    return NextResponse.json({ error: "Erreur Google Wallet API" }, { status: 500 });
   }
 
   const loyaltyObject = {
@@ -89,7 +102,7 @@ export async function GET(
     accountName: `${client.prenom} ${client.nom}`,
     accountId: walletId,
     textModulesData: [
-      { header: "Récompense", body: m.nom_recompense || "Récompense", id: "recompense" },
+      { header: "Recompense", body: m.nom_recompense || "Recompense", id: "recompense" },
     ],
   };
 
