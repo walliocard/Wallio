@@ -52,23 +52,28 @@ export async function GET(
     headers: { Authorization: `Bearer ${token}` },
   });
 
+  const logoUri = (m.logo_url as string | undefined) || "https://wallio-seven.vercel.app/icon-192.png";
+  const bgColor = (m.google_bg_color as string | undefined) || (m.couleur_principale as string | undefined) || "#1C1C1E";
+  const heroUrl = m.google_hero_url as string | undefined;
+
+  const classBody = {
+    issuerName: "Wallio",
+    reviewStatus: "UNDER_REVIEW",
+    programName: m.nom,
+    programLogo: {
+      sourceUri: { uri: logoUri },
+      contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
+    },
+    hexBackgroundColor: bgColor,
+    countryCode: "MA",
+    ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } } } } : {}),
+  };
+
   if (classRes.status === 404) {
-    const logoUri = (m.logo_url as string | undefined) || "https://wallio-seven.vercel.app/icon-192.png";
     const createRes = await fetch(`${API}/loyaltyClass`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: cid,
-        issuerName: "Wallio",
-        reviewStatus: "UNDER_REVIEW",
-        programName: m.nom,
-        programLogo: {
-          sourceUri: { uri: logoUri },
-          contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
-        },
-        hexBackgroundColor: m.couleur_principale || "#1C1C1E",
-        countryCode: "MA",
-      }),
+      body: JSON.stringify({ id: cid, ...classBody }),
     });
 
     if (!createRes.ok) {
@@ -77,11 +82,11 @@ export async function GET(
       return NextResponse.json({ error: "Erreur création classe Google Wallet" }, { status: 500 });
     }
   } else if (classRes.ok) {
-    // Classe existante — s'assurer qu'elle est UNDER_REVIEW (pas DRAFT)
+    // Classe existante — PATCH pour appliquer les dernières modifications du marchand
     await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ reviewStatus: "UNDER_REVIEW" }),
+      body: JSON.stringify(classBody),
     });
   } else {
     const err = await classRes.text();

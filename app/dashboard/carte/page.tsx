@@ -230,6 +230,9 @@ export default function CartePage() {
   const [saved, setSaved] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingStrip, setUploadingStrip] = useState(false);
+  const [uploadingGoogleHero, setUploadingGoogleHero] = useState(false);
+  const [googleBgColor, setGoogleBgColor] = useState<string>((marchand as Record<string, unknown>).google_bg_color as string || couleurPrincipale || "#007AFF");
+  const [googleHeroUrl, setGoogleHeroUrl] = useState<string>((marchand as Record<string, unknown>).google_hero_url as string || "");
   // Verrouillage : true si la carte a déjà été sauvegardée au moins une fois
   const [locked, setLocked] = useState(!!(marchand as Record<string, unknown>)?.apple_bg_color);
 
@@ -288,6 +291,8 @@ export default function CartePage() {
       apple_stamp_logo_opacity: stampLogoOpacity,
       google_primary_label: googlePrimaryLabel,
       google_secondary_label: googleSecondaryLabel,
+      google_bg_color: googleBgColor,
+      google_hero_url: googleHeroUrl,
       apple_milestone_rewards: milestoneRewards,
       updated_at: serverTimestamp(),
     });
@@ -385,6 +390,27 @@ export default function CartePage() {
     }).catch(() => {});
   }
 
+
+  async function handleGoogleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user || !file.type.startsWith("image/")) return;
+    setUploadingGoogleHero(true);
+    try {
+      const raw = await resizeImageRaw(file, 1500);
+      let url: string;
+      try {
+        url = await uploadToStorage(raw, `marchands/${user.uid}/google_hero.jpg`);
+      } catch {
+        url = raw;
+      }
+      setGoogleHeroUrl(url);
+      await updateDoc(doc(db, "marchands", user.uid), { google_hero_url: url });
+    } catch (err) {
+      alert(`Erreur upload : ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setUploadingGoogleHero(false);
+    }
+  }
 
   // Feature 9 — Google Wallet hero image adapter
   async function handleAdaptForGoogle() {
@@ -629,13 +655,13 @@ export default function CartePage() {
             <GoogleWalletCard
               logoUrl={logoUrl}
               logoText={nom}
-              backgroundColor={couleurPrincipale || "#007AFF"}
+              backgroundColor={googleBgColor}
+              heroUrl={googleHeroUrl || undefined}
               stampsCurrent={stampsCurrent}
               stampsObjective={objectif}
               rewardName={recompense}
               primaryLabel={googlePrimaryLabel}
-              rewardLabel={recompense}
-              memberLabel="Membre"
+              secondaryLabel={googleSecondaryLabel}
               previewUid={user.uid}
             />
           )}
@@ -1505,55 +1531,96 @@ export default function CartePage() {
             </Section>
           )}
 
-          {/* Google Wallet — champs éditables */}
+          {/* Google Wallet — personnalisation complète */}
           {walletType === "google" && (
             <>
-              <Section label="Identité Google Wallet">
-                <div style={{
-                  padding: "10px 12px", borderRadius: 10, fontSize: 11,
-                  background: "rgba(66,133,244,0.06)", border: "1px solid rgba(66,133,244,0.2)",
-                  color: "var(--fg-secondary)", lineHeight: 1.6,
-                }}>
-                  <strong style={{ color: "#4285F4" }}>Structure imposée par Google.</strong> Logo, nom et couleur viennent de tes réglages principaux. Seuls les labels ci-dessous sont personnalisables.
+              <div style={{ padding: "10px 12px", borderRadius: 10, fontSize: 11, background: "rgba(66,133,244,0.06)", border: "1px solid rgba(66,133,244,0.2)", color: "var(--fg-secondary)", lineHeight: 1.6 }}>
+                <strong style={{ color: "#4285F4" }}>Google Wallet</strong> — structure fixée par Google. Tu contrôles la couleur, le logo, l&apos;image bannière et les textes.
+              </div>
+
+              <Section label="Couleur de fond">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                  Couleur principale de la carte Google Wallet.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: googleBgColor, border: "2px solid var(--border)", flexShrink: 0 }} />
+                  <input
+                    type="color" value={googleBgColor}
+                    onChange={e => setGoogleBgColor(e.target.value)}
+                    style={{ width: 36, height: 36, border: "none", padding: 0, background: "none", cursor: "pointer", borderRadius: 8 }}
+                  />
+                  <span style={{ fontSize: 12, color: "var(--fg-secondary)", fontFamily: "monospace" }}>{googleBgColor}</span>
                 </div>
-                <Field label="Logo">
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: "50%", overflow: "hidden",
-                      background: couleurPrincipale || "#007AFF",
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                    }}>
-                      {logoUrl
-                        ? <img src={logoUrl} alt="" style={{ width: 36, height: 36, objectFit: "cover" }} />
-                        : <span style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>{nom?.[0] || "W"}</span>
-                      }
-                    </div>
-                    <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
-                      Modifiable dans &quot;Logo &amp; couleurs&quot;
-                    </span>
-                  </div>
-                </Field>
-                <Field label="Nom du programme">
-                  <TextInput value={nom} onChange={setNom} placeholder="Nom affiché sur la carte" />
-                </Field>
-                <Field label="Couleur de fond">
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 6, background: couleurPrincipale || "#007AFF", border: "1px solid var(--border)" }} />
-                    <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
-                      {couleurPrincipale || "#007AFF"} — modifiable dans &quot;Logo &amp; couleurs&quot;
-                    </span>
-                  </div>
-                </Field>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {["#007AFF","#34C759","#FF3B30","#FF9500","#AF52DE","#5AC8FA","#1C1C1E","#2C2C2E","#4A4A4C","#636366"].map(c => (
+                    <button key={c} onClick={() => setGoogleBgColor(c)} style={{
+                      width: 28, height: 28, borderRadius: 7, border: googleBgColor === c ? "2px solid var(--fg)" : "1px solid var(--border)",
+                      background: c, cursor: "pointer", padding: 0,
+                    }} />
+                  ))}
+                </div>
               </Section>
 
-              <Section label="Labels Google Wallet">
+              <Section label="Logo">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                  Affiché en rond dans le coin supérieur gauche.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", background: googleBgColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid var(--border)" }}>
+                    {logoUrl
+                      ? <img src={logoUrl} alt="" style={{ width: 44, height: 44, objectFit: "cover" }} />
+                      : <span style={{ color: "#fff", fontWeight: 700, fontSize: 18 }}>{nom?.[0] || "W"}</span>
+                    }
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--fg-secondary)" }}>Modifiable dans la section &quot;Logo &amp; couleurs&quot;</span>
+                </div>
+              </Section>
+
+              <Section label="Nom du programme">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
+                  Affiché en grand sous le logo. Ex : DADA, Café Central…
+                </p>
+                <TextInput value={nom} onChange={setNom} placeholder="Nom affiché sur la carte" />
+              </Section>
+
+              <Section label="Image bannière">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                  Image large affichée en haut de la carte · Ratio 3:1 · Recommandé : 1032×336px
+                </p>
+                {googleHeroUrl && (
+                  <div style={{ marginBottom: 8, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)" }}>
+                    <img src={googleHeroUrl} alt="Hero" style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }} />
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 6 }}>
+                  <label style={{
+                    flex: 1, display: "block", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
+                    background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)",
+                    cursor: uploadingGoogleHero ? "wait" : "pointer", textAlign: "center",
+                  }}>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleGoogleHeroUpload} disabled={uploadingGoogleHero} />
+                    {uploadingGoogleHero ? "Upload…" : googleHeroUrl ? "Changer" : "Ajouter une bannière"}
+                  </label>
+                  {googleHeroUrl && (
+                    <button onClick={async () => { setGoogleHeroUrl(""); await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: "" }); }}
+                      style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer" }}>
+                      Suppr.
+                    </button>
+                  )}
+                </div>
+              </Section>
+
+              <Section label="Labels">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                  Seuls textes personnalisables — le reste est imposé par Google.
+                </p>
                 <Field label="Label tampons">
                   <TextInput value={googlePrimaryLabel} onChange={setGooglePrimaryLabel} placeholder="ex: Tampons, Points, Visites" />
                 </Field>
                 <Field label="Label objectif">
                   <TextInput value={googleSecondaryLabel} onChange={setGoogleSecondaryLabel} placeholder="ex: Objectif, Sur" />
                 </Field>
-                <Field label="Label récompense">
+                <Field label="Récompense">
                   <TextInput value={recompense} onChange={setRecompense} placeholder="ex: Café offert" />
                 </Field>
               </Section>
