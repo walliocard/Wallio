@@ -88,6 +88,8 @@ export default function CartePage() {
   const stripPreviewRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startY: number; startCrop: number }>({ startY: 0, startCrop: 50 });
   const cropYRef = useRef(50);
+  const isZoomingStripRef = useRef(false);
+  const isZoomingGoogleRef = useRef(false);
 
   const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || "Tampons");
   const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || "Récompense");
@@ -190,10 +192,11 @@ export default function CartePage() {
   // Regen canvas when cropY changes (skipped during drag — handled in onStripPointerUp)
   useEffect(() => {
     const src = rawStripUrl || (!stripFrom ? stripUrl : "");
-    if (!src || isDraggingRef.current) return;
+    if (!src || isDraggingRef.current || isZoomingStripRef.current) return;
     cropYRef.current = cropY;
     applyCrop(src, cropY, cropZoom).then(url => setStripUrl(url)).catch(() => {});
-  }, [cropY, rawStripUrl, isUploadedStrip, applyCrop]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cropY, cropZoom, rawStripUrl, isUploadedStrip, applyCrop]);
 
   // Auto-regen strip when text or options change (gradient active only)
   useEffect(() => {
@@ -916,6 +919,13 @@ export default function CartePage() {
                   <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
                   <input type="range" min="1" max="3" step="0.05" value={cropZoom}
                     onChange={e => setCropZoom(Number(e.target.value))}
+                    onPointerDown={() => { isZoomingStripRef.current = true; }}
+                    onPointerUp={e => {
+                      isZoomingStripRef.current = false;
+                      const z = Number((e.target as HTMLInputElement).value);
+                      const src = rawStripUrl || (!stripFrom ? stripUrl : "");
+                      if (src) applyCrop(src, cropYRef.current, z).then(url => setStripUrl(url)).catch(() => {});
+                    }}
                     style={{ flex: 1, accentColor: "var(--accent)" }}
                   />
                   <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>+</span>
@@ -1880,6 +1890,13 @@ export default function CartePage() {
                       <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
                       <input type="range" min="1" max="3" step="0.05" value={googleHeroCropZoom}
                         onChange={e => setGoogleHeroCropZoom(Number(e.target.value))}
+                        onPointerDown={() => { isZoomingGoogleRef.current = true; }}
+                        onPointerUp={e => {
+                          isZoomingGoogleRef.current = false;
+                          const z = Number((e.target as HTMLInputElement).value);
+                          const src = rawGoogleHeroUrl || googleHeroUrl;
+                          if (src) applyHeroCrop(src, googleHeroCropYRef.current, z).then(url => setGoogleHeroUrl(url)).catch(() => {});
+                        }}
                         style={{ flex: 1, accentColor: "var(--accent)" }}
                       />
                       <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>+</span>
