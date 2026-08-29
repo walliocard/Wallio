@@ -82,7 +82,7 @@ export default function GoogleWalletCard({
       )}
 
       {/* Header : logo rond + émetteur */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 20px 6px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: heroUrl ? "12px 20px 4px" : "16px 20px 6px" }}>
         <div style={{
           width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
           background: surfaceTint, overflow: "hidden",
@@ -97,18 +97,18 @@ export default function GoogleWalletCard({
       </div>
 
       {/* Nom du programme */}
-      <div style={{ padding: "0 20px 16px" }}>
-        <div style={{ fontSize: 28, fontWeight: 700, color: text, letterSpacing: -0.5, lineHeight: 1.1 }}>
+      <div style={{ padding: heroUrl ? "0 20px 10px" : "0 20px 16px" }}>
+        <div style={{ fontSize: heroUrl ? 24 : 28, fontWeight: 700, color: text, letterSpacing: -0.5, lineHeight: 1.1 }}>
           {logoText || "Programme"}
         </div>
       </div>
 
       {/* Progression tampons */}
-      <div style={{ padding: "0 20px 16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+      <div style={{ padding: heroUrl ? "0 20px 12px" : "0 20px 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: heroUrl ? 8 : 10 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ fontSize: 34, fontWeight: 700, color: text, lineHeight: 1 }}>{stampsCurrent}</span>
-            <span style={{ fontSize: 16, color: textSec, fontWeight: 500 }}>/ {stampsObjective}</span>
+            <span style={{ fontSize: heroUrl ? 28 : 34, fontWeight: 700, color: text, lineHeight: 1 }}>{stampsCurrent}</span>
+            <span style={{ fontSize: heroUrl ? 14 : 16, color: textSec, fontWeight: 500 }}>/ {stampsObjective}</span>
           </div>
           <span style={{ fontSize: 12, color: textSec, letterSpacing: 0.3 }}>{primaryLabel}</span>
         </div>
@@ -125,39 +125,28 @@ export default function GoogleWalletCard({
       </div>
 
       {/* Séparateur */}
-      <div style={{ height: 1, background: divider, margin: "0 20px 14px" }} />
+      <div style={{ height: 1, background: divider, margin: heroUrl ? "0 20px 10px" : "0 20px 14px" }} />
 
       {/* Récompense */}
       {rewardName && (
-        <div style={{ padding: "0 20px 16px", display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-            background: surfaceTint,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill={text}>
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
+        <div style={{ padding: heroUrl ? "0 20px 10px" : "0 20px 16px" }}>
+          <div style={{ fontSize: 10, color: textSec, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 600 }}>
+            Récompense
           </div>
-          <div>
-            <div style={{ fontSize: 10, color: textSec, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 600 }}>
-              Récompense
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: text }}>{rewardName}</div>
-          </div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: text }}>{rewardName}</div>
         </div>
       )}
 
       {/* QR code */}
-      <div style={{ padding: "4px 20px 22px", display: "flex", justifyContent: "center" }}>
+      <div style={{ padding: heroUrl ? "2px 20px 16px" : "4px 20px 22px", display: "flex", justifyContent: "center" }}>
         <div style={{
-          background: "#FFFFFF", borderRadius: 16, padding: "14px 14px 10px",
+          background: "#FFFFFF", borderRadius: heroUrl ? 12 : 16, padding: heroUrl ? "10px 10px 7px" : "14px 14px 10px",
           boxShadow: dark ? "0 4px 24px rgba(0,0,0,0.35)" : "0 4px 20px rgba(0,0,0,0.13)",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          display: "flex", flexDirection: "column", alignItems: "center", gap: heroUrl ? 6 : 8,
         }}>
           {qr
-            ? <img src={qr} alt="QR" style={{ width: 110, height: 110, display: "block" }} />
-            : <div style={{ width: 110, height: 110, background: "#f0f0f0", borderRadius: 4 }} />
+            ? <img src={qr} alt="QR" style={{ width: heroUrl ? 90 : 110, height: heroUrl ? 90 : 110, display: "block" }} />
+            : <div style={{ width: heroUrl ? 90 : 110, height: heroUrl ? 90 : 110, background: "#f0f0f0", borderRadius: 4 }} />
           }
           <div style={{ fontSize: 9, color: "rgba(0,0,0,0.3)", letterSpacing: 1.2, textTransform: "uppercase" }}>
             Scanner en caisse

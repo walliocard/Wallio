@@ -83,6 +83,7 @@ export default function CartePage() {
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
   const [cropY, setCropY] = useState<number>(50);
   const [isUploadedStrip, setIsUploadedStrip] = useState<boolean>(false);
+  const [cropZoom, setCropZoom] = useState<number>(1);
   const isDraggingRef = useRef(false);
   const stripPreviewRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startY: number; startCrop: number }>({ startY: 0, startCrop: 50 });
@@ -161,25 +162,20 @@ export default function CartePage() {
     setCanUndo(historyIndexRef.current > 0);
   }
 
-  // Feature 6 — recrop from rawStripUrl
-  const applyCrop = useCallback(async (rawUrl: string, y: number): Promise<string> => {
+  // Feature 6 — recrop from rawStripUrl (y: 0-100 vertical, zoom: 1-3)
+  const applyCrop = useCallback(async (rawUrl: string, y: number, zoom = 1): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         const targetW = 750, targetH = 288;
         const targetRatio = targetW / targetH;
         const imgRatio = img.width / img.height;
-        let sw = img.width, sh = img.height;
-        let sx = 0, sy = 0;
-        if (imgRatio > targetRatio) {
-          sw = Math.round(img.height * targetRatio);
-          sx = Math.round((img.width - sw) / 2);
-          sy = 0;
-        } else {
-          sh = Math.round(img.width / targetRatio);
-          // sy controlled by cropY 0=top 100=bottom
-          sy = Math.round((img.height - sh) * y / 100);
-        }
+        const baseSW = imgRatio > targetRatio ? Math.round(img.height * targetRatio) : img.width;
+        const baseSH = imgRatio > targetRatio ? img.height : Math.round(img.width / targetRatio);
+        const sw = Math.round(baseSW / Math.max(1, zoom));
+        const sh = Math.round(baseSH / Math.max(1, zoom));
+        const sx = Math.round((img.width - sw) / 2);
+        const sy = Math.round((img.height - sh) * y / 100);
         const canvas = document.createElement("canvas");
         canvas.width = targetW; canvas.height = targetH;
         canvas.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
@@ -194,7 +190,7 @@ export default function CartePage() {
   useEffect(() => {
     if (!rawStripUrl || !isUploadedStrip || isDraggingRef.current) return;
     cropYRef.current = cropY;
-    applyCrop(rawStripUrl, cropY).then(url => setStripUrl(url)).catch(() => {});
+    applyCrop(rawStripUrl, cropY, cropZoom).then(url => setStripUrl(url)).catch(() => {});
   }, [cropY, rawStripUrl, isUploadedStrip, applyCrop]);
 
   // Auto-regen strip when text or options change (gradient active only)
@@ -259,6 +255,7 @@ export default function CartePage() {
   const googleHeroPreviewRef = useRef<HTMLDivElement>(null);
   const googleHeroDragRef = useRef<{ startY: number; startCrop: number }>({ startY: 0, startCrop: 50 });
   const googleHeroCropYRef = useRef(50);
+  const [googleHeroCropZoom, setGoogleHeroCropZoom] = useState<number>(1);
 
   // Auto-regen Google hero when text/options change (gradient active only)
   useEffect(() => {
@@ -311,25 +308,23 @@ export default function CartePage() {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
     if (rawStripUrl) {
-      applyCrop(rawStripUrl, cropYRef.current).then(url => setStripUrl(url)).catch(() => {});
+      applyCrop(rawStripUrl, cropYRef.current, cropZoom).then(url => setStripUrl(url)).catch(() => {});
     }
   }
 
-  const applyHeroCrop = useCallback(async (rawUrl: string, y: number): Promise<string> => {
+  const applyHeroCrop = useCallback(async (rawUrl: string, y: number, zoom = 1): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         const targetW = 1032, targetH = 344;
         const targetRatio = targetW / targetH;
         const imgRatio = img.width / img.height;
-        let sw = img.width, sh = img.height, sx = 0, sy = 0;
-        if (imgRatio > targetRatio) {
-          sw = Math.round(img.height * targetRatio);
-          sx = Math.round((img.width - sw) / 2);
-        } else {
-          sh = Math.round(img.width / targetRatio);
-          sy = Math.round((img.height - sh) * y / 100);
-        }
+        const baseSW = imgRatio > targetRatio ? Math.round(img.height * targetRatio) : img.width;
+        const baseSH = imgRatio > targetRatio ? img.height : Math.round(img.width / targetRatio);
+        const sw = Math.round(baseSW / Math.max(1, zoom));
+        const sh = Math.round(baseSH / Math.max(1, zoom));
+        const sx = Math.round((img.width - sw) / 2);
+        const sy = Math.round((img.height - sh) * y / 100);
         const canvas = document.createElement("canvas");
         canvas.width = targetW; canvas.height = targetH;
         canvas.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
@@ -360,7 +355,7 @@ export default function CartePage() {
     if (!isGoogleHeroDraggingRef.current) return;
     isGoogleHeroDraggingRef.current = false;
     if (rawGoogleHeroUrl) {
-      applyHeroCrop(rawGoogleHeroUrl, googleHeroCropYRef.current).then(url => setGoogleHeroUrl(url)).catch(() => {});
+      applyHeroCrop(rawGoogleHeroUrl, googleHeroCropYRef.current, googleHeroCropZoom).then(url => setGoogleHeroUrl(url)).catch(() => {});
     }
   }
 
@@ -383,7 +378,7 @@ export default function CartePage() {
     let finalStripUrl = stripUrl;
     if (isUploadedStrip && rawStripUrl) {
       try {
-        const cropped = await applyCrop(rawStripUrl, cropY);
+        const cropped = await applyCrop(rawStripUrl, cropY, cropZoom);
         finalStripUrl = await uploadToCloudinary(cropped, `${user!.uid}/strip`);
         setStripUrl(finalStripUrl);
       } catch { /* keep existing */ }
@@ -391,7 +386,7 @@ export default function CartePage() {
     let finalGoogleHeroUrl = googleHeroUrl;
     if (isUploadedGoogleHero && rawGoogleHeroUrl) {
       try {
-        const cropped = await applyHeroCrop(rawGoogleHeroUrl, googleHeroCropY);
+        const cropped = await applyHeroCrop(rawGoogleHeroUrl, googleHeroCropY, googleHeroCropZoom);
         finalGoogleHeroUrl = await uploadToCloudinary(cropped, `${user!.uid}/google_hero`);
         setGoogleHeroUrl(finalGoogleHeroUrl);
       } catch { /* keep existing */ }
@@ -530,9 +525,11 @@ export default function CartePage() {
       const raw = await resizeImageRaw(file, 1500);
       setRawGoogleHeroUrl(raw);
       setIsUploadedGoogleHero(true);
+      setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleStripGlass(false);
       setGoogleHeroCropY(50);
       googleHeroCropYRef.current = 50;
       const cropped = await applyHeroCrop(raw, 50);
+      setGoogleHeroUrl(cropped); // aperçu immédiat dans la carte avant upload
       const url = await uploadToCloudinary(cropped, `${user.uid}/google_hero`);
       setGoogleHeroUrl(url);
       await updateDoc(doc(db, "marchands", user.uid), { google_hero_url: url });
@@ -903,6 +900,16 @@ export default function CartePage() {
                   )}
                 </label>
               )}
+              {isUploadedStrip && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
+                  <input type="range" min="1" max="3" step="0.05" value={cropZoom}
+                    onChange={e => setCropZoom(Number(e.target.value))}
+                    style={{ flex: 1, accentColor: "var(--accent)" }}
+                  />
+                  <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>+</span>
+                </div>
+              )}
               <div style={{ display: "flex", gap: 6 }}>
                 <label style={{
                   flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
@@ -915,7 +922,7 @@ export default function CartePage() {
                 {stripUrl && (
                   <button
                     onClick={() => {
-                      setStripUrl(""); setRawStripUrl(""); setIsUploadedStrip(false);
+                      setStripUrl(""); setRawStripUrl(""); setIsUploadedStrip(false); setCropZoom(1);
                       updateDoc(doc(db, "marchands", user!.uid), { strip_url: "" });
                     }}
                     style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", color: "#FF3B30", cursor: "pointer" }}
@@ -1853,6 +1860,16 @@ export default function CartePage() {
                     )}
                   </div>
                 )}
+                {isUploadedGoogleHero && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
+                    <input type="range" min="1" max="3" step="0.05" value={googleHeroCropZoom}
+                      onChange={e => setGoogleHeroCropZoom(Number(e.target.value))}
+                      style={{ flex: 1, accentColor: "var(--accent)" }}
+                    />
+                    <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>+</span>
+                  </div>
+                )}
                 <div style={{ display: "flex", gap: 6 }}>
                   <label style={{
                     flex: 1, display: "block", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
@@ -1865,7 +1882,7 @@ export default function CartePage() {
                   {googleHeroUrl && (
                     <button onClick={async () => {
                       setGoogleHeroUrl(""); setRawGoogleHeroUrl(""); setIsUploadedGoogleHero(false);
-                      setGoogleStripFrom(""); setGoogleStripTo("");
+                      setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleHeroCropZoom(1);
                       await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: "" });
                     }} style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer" }}>
                       Suppr.
