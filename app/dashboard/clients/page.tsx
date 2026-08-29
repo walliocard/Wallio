@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } from "@/lib/loyalty";
 import { Icons } from "@/components/dashboard/icons";
@@ -24,13 +24,24 @@ export default function ClientsPage() {
 
   async function charger() {
     if (!user) return;
-    const snap = await getDocs(query(
-      collection(db, "clients"),
-      where("marchand_id", "==", user.uid),
-      orderBy("date_inscription", "desc"),
-    ));
-    setClients(snap.docs.map(d => ({ id: d.id, ...d.data() } as Client)));
-    setLoading(false);
+    try {
+      const snap = await getDocs(query(
+        collection(db, "clients"),
+        where("marchand_id", "==", user.uid),
+      ));
+      const liste = snap.docs.map(d => ({ id: d.id, ...d.data() } as Client));
+      // Tri par date d'inscription décroissante côté client (évite l'index composite Firestore)
+      liste.sort((a, b) => {
+        const ta = (a.date_inscription as { seconds?: number })?.seconds ?? 0;
+        const tb = (b.date_inscription as { seconds?: number })?.seconds ?? 0;
+        return tb - ta;
+      });
+      setClients(liste);
+    } catch (e) {
+      console.error("Erreur chargement clients:", e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { charger(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -45,7 +56,7 @@ export default function ClientsPage() {
     .sort((a, b) => {
       if (sort === "tampons") return b.tampons - a.tampons;
       if (sort === "alpha") return `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr");
-      return 0; // "recent" already sorted by Firestore
+      // "recent" : déjà trié par date_inscription dans charger()
     });
 
   async function ajouterClient() {
