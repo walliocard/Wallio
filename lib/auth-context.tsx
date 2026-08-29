@@ -45,7 +45,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(u);
       if (u) {
         try {
-          const data = await getMarchand(u.uid);
+          const timeout = new Promise<null>((_, reject) =>
+            setTimeout(() => reject(new Error("getMarchand timeout")), 8000)
+          );
+          const data = await Promise.race([getMarchand(u.uid), timeout]);
           setMarchand(data as MarchandData | null);
         } catch (e) {
           console.error("[auth] getMarchand failed:", e);
