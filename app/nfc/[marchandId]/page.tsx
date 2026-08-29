@@ -12,6 +12,7 @@ import { db } from "@/lib/firebase";
 import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
+import AppleWalletCard from "@/components/AppleWalletCard";
 
 type Screen =
   | { type: "loading" }
@@ -474,53 +475,37 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
           </p>
         </div>
 
-        {/* Carte marchand */}
-        <div className="rounded-[28px] p-6 mb-5 overflow-hidden relative"
-          style={{
-            background: `linear-gradient(145deg, ${couleur}, ${couleur2}cc)`,
-            boxShadow: `0 24px 60px ${couleur}40`,
-          }}>
-          <div className="absolute inset-0 opacity-10"
-            style={{ background: "radial-gradient(circle at 80% 20%, rgba(255,255,255,0.6) 0%, transparent 50%)" }} />
-
-          <div className="flex items-start justify-between mb-6 relative">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-widest mb-0.5" style={{ color: "rgba(255,255,255,0.6)" }}>
-                Carte de fidélité
-              </p>
-              <p className="text-[19px] font-semibold text-white leading-tight">{marchand.nom}</p>
-            </div>
-            {logo ? (
-              <img src={logo} alt={marchand.nom} className="w-11 h-11 rounded-xl object-cover" style={{ background: "rgba(255,255,255,0.15)" }} />
-            ) : (
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center text-[18px] font-bold text-white"
-                style={{ background: "rgba(255,255,255,0.2)" }}>
-                {marchand.nom.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-
-          {/* Tampons */}
-          <div className="flex gap-2 mb-6 flex-wrap relative">
-            {Array.from({ length: marchand.objectif_tampons }).map((_, i) => (
-              <div key={i} className="w-7 h-7 rounded-full transition-all"
-                style={{
-                  background: i === 0 ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.18)",
-                  border: i === 0 ? "none" : "1.5px solid rgba(255,255,255,0.3)",
-                  transform: i === 0 ? "scale(1.1)" : "scale(1)",
-                }} />
-            ))}
-          </div>
-
-          <div className="flex items-end justify-between relative">
-            <div>
-              <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Client</p>
-              <p className="text-[15px] font-medium text-white">{client.prenom} {client.nom}</p>
-            </div>
-            <p className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
-              1 / {marchand.objectif_tampons}
-            </p>
-          </div>
+        {/* Carte Apple Wallet — identique au dashboard */}
+        <div className="mb-5 w-full">
+          <AppleWalletCard
+            logoUrl={logo}
+            logoText={marchand.nom}
+            stripUrl={(m.strip_url as string) || undefined}
+            backgroundColor={(m.apple_bg_color as string) || couleur}
+            foregroundColor={(m.apple_fg_color as string) || undefined}
+            labelColor={(m.apple_label_color as string) || undefined}
+            stampsCurrent={client.tampons ?? 0}
+            stampsObjective={marchand.objectif_tampons}
+            rewardName={(m.nom_recompense as string) || "Récompense"}
+            clientPrenom={client.prenom}
+            clientNom={client.nom}
+            primaryLabel={(m.apple_primary_label as string) || "Tampons"}
+            rewardLabel={(m.apple_reward_label as string) || "Récompense"}
+            memberLabel={(m.apple_member_label as string) || "Membre"}
+            mode="full"
+            stampsOnStrip={(m.stamps_on_strip as boolean) ?? false}
+            stripStampStyle={(m.strip_stamp_style as never) || undefined}
+            stampText={(m.stamp_text as string) || undefined}
+            stampTextBold={(m.stamp_text_bold as boolean) ?? false}
+            stampTextItalic={(m.stamp_text_italic as boolean) ?? false}
+            stampTextSize={(m.stamp_text_size as number) || undefined}
+            stampColor={(m.stamp_color as string) || undefined}
+            stampPosition={(m.stamp_position as never) || undefined}
+            stampSizePreset={(m.stamp_size_preset as never) || undefined}
+            stampThickness={(m.stamp_thickness as number) || undefined}
+            stampLogoOpacity={(m.stamp_logo_opacity as number) || undefined}
+            milestoneRewards={(m.milestone_rewards as never) || undefined}
+          />
         </div>
 
         {/* Notifications */}

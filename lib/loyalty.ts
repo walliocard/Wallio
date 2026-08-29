@@ -86,15 +86,29 @@ export async function getClientByWalletId(walletId: string, marchandId: string):
   return { id: snap.docs[0].id, ...snap.docs[0].data() } as Client;
 }
 
+function normaliseTel(tel: string): string {
+  // Normalise vers +XXXXXXXXXXX pour comparaison
+  const digits = tel.replace(/\D/g, "");
+  if (tel.startsWith("+")) return `+${digits}`;
+  // Numéro marocain local : 0XXXXXXXXX → +212XXXXXXXXX
+  if (digits.startsWith("212") && digits.length === 12) return `+${digits}`;
+  if (digits.startsWith("0") && digits.length === 10) return `+212${digits.slice(1)}`;
+  return tel.trim();
+}
+
 export async function getClientByTelephone(telephone: string, marchandId: string): Promise<Client | null> {
-  const q = query(
+  const telNorm = normaliseTel(telephone);
+  // Requête par marchand_id uniquement (évite l'index composite) + filtrage du téléphone côté client
+  const snap = await getDocs(query(
     collection(db, "clients"),
-    where("telephone", "==", telephone),
-    where("marchand_id", "==", marchandId)
-  );
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  return { id: snap.docs[0].id, ...snap.docs[0].data() } as Client;
+    where("marchand_id", "==", marchandId),
+  ));
+  const doc = snap.docs.find(d => {
+    const stored = normaliseTel(d.data().telephone ?? "");
+    return stored === telNorm;
+  });
+  if (!doc) return null;
+  return { id: doc.id, ...doc.data() } as Client;
 }
 
 export async function creerClient(data: {
