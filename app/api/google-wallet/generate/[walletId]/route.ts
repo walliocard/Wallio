@@ -60,7 +60,7 @@ export async function GET(
       body: JSON.stringify({
         id: cid,
         issuerName: "Wallio",
-        reviewStatus: "DRAFT",
+        reviewStatus: "UNDER_REVIEW",
         programName: m.nom,
         programLogo: {
           sourceUri: { uri: logoUri },
@@ -76,7 +76,14 @@ export async function GET(
       console.error("[Google Wallet] Erreur création classe:", createRes.status, err);
       return NextResponse.json({ error: "Erreur création classe Google Wallet" }, { status: 500 });
     }
-  } else if (!classRes.ok) {
+  } else if (classRes.ok) {
+    // Classe existante — s'assurer qu'elle est UNDER_REVIEW (pas DRAFT)
+    await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ reviewStatus: "UNDER_REVIEW" }),
+    });
+  } else {
     const err = await classRes.text();
     console.error("[Google Wallet] Erreur récupération classe:", classRes.status, err);
     return NextResponse.json({ error: "Erreur Google Wallet API" }, { status: 500 });
