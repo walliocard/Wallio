@@ -21,6 +21,7 @@ export default function ClientsPage() {
   const [form, setForm] = useState({ prenom: "", nom: "", telephone: "", date_naissance: "" });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [fetchError, setFetchError] = useState("");
 
   async function charger() {
     if (!user) return;
@@ -38,7 +39,7 @@ export default function ClientsPage() {
       });
       setClients(liste);
     } catch (e) {
-      console.error("Erreur chargement clients:", e);
+      setFetchError(String(e));
     } finally {
       setLoading(false);
     }
@@ -218,7 +219,11 @@ export default function ClientsPage() {
       </div>
 
       {/* Liste */}
-      {loading ? (
+      {fetchError ? (
+        <div className="py-10 text-center">
+          <p className="text-[13px] font-mono px-4" style={{ color: "#FF453A", wordBreak: "break-all" }}>{fetchError}</p>
+        </div>
+      ) : loading ? (
         <div className="flex justify-center py-20">
           <div className="w-5 h-5 rounded-full border-2 animate-spin"
             style={{ borderColor: "var(--border)", borderTopColor: "var(--accent)" }} />
