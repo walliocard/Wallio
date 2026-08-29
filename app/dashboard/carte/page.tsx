@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase";
 import AppleWalletCard, { type StampStyle, type MilestoneReward } from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
+import CropEditor from "@/components/CropEditor";
 
 // ── History snapshot ──────────────────────────────────
 interface Snapshot {
@@ -84,6 +85,8 @@ export default function CartePage() {
   const [cropY, setCropY] = useState<number>(50);
   const [isUploadedStrip, setIsUploadedStrip] = useState<boolean>(false);
   const [cropZoom, setCropZoom] = useState<number>(1);
+  const [showStripCrop, setShowStripCrop] = useState(false);
+  const [showGoogleCrop, setShowGoogleCrop] = useState(false);
   const isDraggingRef = useRef(false);
   const stripPreviewRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startY: number; startCrop: number }>({ startY: 0, startCrop: 50 });
@@ -612,6 +615,7 @@ export default function CartePage() {
   }
 
   return (
+    <>
     <div style={{ height: "calc(100vh - 0px)", display: "flex", flexDirection: "column" }}>
 
       {/* ── Header ── */}
@@ -959,6 +963,13 @@ export default function CartePage() {
                   <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleStripUpload} disabled={uploadingStrip}/>
                   {uploadingStrip ? "Upload…" : stripUrl ? "Changer" : "Importer"}
                 </label>
+                {(stripUrl || rawStripUrl) && (
+                  <button onClick={() => setShowStripCrop(true)}
+                    style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}
+                  >
+                    Recadrer
+                  </button>
+                )}
                 {stripUrl && (
                   <button
                     onClick={() => {
@@ -1947,6 +1958,12 @@ export default function CartePage() {
                     <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleGoogleHeroUpload} disabled={uploadingGoogleHero} />
                     {uploadingGoogleHero ? "Upload…" : googleHeroUrl ? "Changer" : "Ajouter une photo"}
                   </label>
+                  {(googleHeroUrl || rawGoogleHeroUrl) && (
+                    <button onClick={() => setShowGoogleCrop(true)}
+                      style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>
+                      Recadrer
+                    </button>
+                  )}
                   {googleHeroUrl && (
                     <button onClick={async () => {
                       setGoogleHeroUrl(""); setRawGoogleHeroUrl(""); setIsUploadedGoogleHero(false);
@@ -1988,6 +2005,49 @@ export default function CartePage() {
         </div>}
       </div>
     </div>
+
+    {/* Crop editor Apple Wallet strip (375×144 → 750×288) */}
+    {showStripCrop && (rawStripUrl || stripUrl) && (
+      <CropEditor
+        imageUrl={rawStripUrl || stripUrl}
+        targetW={750} targetH={288}
+        label="Bannière Apple Wallet — 375×144pt (ratio 2.6:1)"
+        onCrop={async (dataUrl) => {
+          setShowStripCrop(false);
+          setStripUrl(dataUrl);
+          setIsUploadedStrip(false);
+          setCropZoom(1); setCropY(50);
+          try {
+            const url = await uploadToCloudinary(dataUrl, `${user!.uid}/strip`);
+            setStripUrl(url);
+            await updateDoc(doc(db, "marchands", user!.uid), { strip_url: url });
+          } catch { /* keep dataUrl */ }
+        }}
+        onClose={() => setShowStripCrop(false)}
+      />
+    )}
+
+    {/* Crop editor Google Wallet hero (3:1 → 1032×344) */}
+    {showGoogleCrop && (rawGoogleHeroUrl || googleHeroUrl) && (
+      <CropEditor
+        imageUrl={rawGoogleHeroUrl || googleHeroUrl}
+        targetW={1032} targetH={344}
+        label="Bannière Google Wallet — ratio 3:1 (1032×344px)"
+        onCrop={async (dataUrl) => {
+          setShowGoogleCrop(false);
+          setGoogleHeroUrl(dataUrl);
+          setIsUploadedGoogleHero(false);
+          setGoogleHeroCropZoom(1); setGoogleHeroCropY(50);
+          try {
+            const url = await uploadToCloudinary(dataUrl, `${user!.uid}/google_hero`);
+            setGoogleHeroUrl(url);
+            await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: url });
+          } catch { /* keep dataUrl */ }
+        }}
+        onClose={() => setShowGoogleCrop(false)}
+      />
+    )}
+    </>
   );
 }
 
