@@ -17,7 +17,7 @@ type Screen =
   | { type: "result"; result: TamponResult; client: Client; marchand: Marchand }
   | { type: "inscription"; marchand: Marchand }
   | { type: "recuperation"; marchand: Marchand }
-  | { type: "carte"; client: Client; marchand: Marchand }
+  | { type: "carte"; client: Client; marchand: Marchand; recuperation?: boolean }
   | { type: "erreur"; message: string };
 
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
@@ -97,14 +97,14 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   if (screen.type === "recuperation") return (
     <RecuperationForm
       marchand={screen.marchand}
-      onSuccess={async (client) => {
+      onSuccess={(client) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
-        await traiterTampon(client, screen.marchand);
+        setScreen({ type: "carte", client, marchand: screen.marchand, recuperation: true });
       }}
       onBack={() => setScreen({ type: "inscription", marchand: screen.marchand })}
     />
   );
-  if (screen.type === "carte") return <CarteCreee client={screen.client} marchand={screen.marchand} />;
+  if (screen.type === "carte") return <CarteCreee client={screen.client} marchand={screen.marchand} recuperation={screen.recuperation} />;
   return null;
 }
 
@@ -393,7 +393,7 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
 
 // ─── Carte créée ──────────────────────────────────────────────────────────────
 
-function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }) {
+function CarteCreee({ client, marchand, recuperation = false }: { client: Client; marchand: Marchand; recuperation?: boolean }) {
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
 
   const m = marchand as Record<string, unknown>;
@@ -429,10 +429,12 @@ function CarteCreee({ client, marchand }: { client: Client; marchand: Marchand }
         {/* Header */}
         <div className="text-center mb-7">
           <h1 className="text-[26px] font-semibold tracking-tight mb-1" style={{ color: "var(--fg)" }}>
-            Bienvenue, {client.prenom} !
+            {recuperation ? `Bonjour, ${client.prenom} !` : `Bienvenue, ${client.prenom} !`}
           </h1>
           <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>
-            Votre carte est créée · 1er tampon ajouté
+            {recuperation
+              ? `${client.tampons} tampon${(client.tampons ?? 0) > 1 ? "s" : ""} · Compte retrouvé`
+              : "Votre carte est créée · 1er tampon ajouté"}
           </p>
         </div>
 
