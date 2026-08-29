@@ -5,7 +5,7 @@ import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { genererNfcId, type PalierConfig } from "@/lib/loyalty";
+import { type PalierConfig } from "@/lib/loyalty";
 
 const ANTI_DOUBLON = [
   { label: "15 minutes", value: 900 },
@@ -43,7 +43,6 @@ export default function ReglagesPage() {
     relance_delai_jours:    Number(autoRaw?.relance?.delai_jours ?? 30),
     relance_message:        String(autoRaw?.relance?.message ?? `Vous nous manquez ! Venez récupérer vos tampons chez ${marchand?.nom || "nous"}.`),
   });
-  const [nfcId, setNfcId] = useState(marchand?.nfc_id || "");
   const [notifActif, setNotifActif] = useState<boolean>((marchand as Record<string,unknown>)?.notif_actif !== false);
   const [notifMessage, setNotifMessage] = useState<string>(
     ((marchand as Record<string,unknown>)?.notif_message as string) ||
@@ -59,7 +58,6 @@ export default function ReglagesPage() {
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [generatingNfc, setGeneratingNfc] = useState(false);
 
   if (!marchand || !user) return null;
 
@@ -82,13 +80,6 @@ export default function ReglagesPage() {
     });
     setSaving(false); setSaved(true);
     setTimeout(() => setSaved(false), 2500);
-  }
-
-  async function genererNfc() {
-    setGeneratingNfc(true);
-    const id = await genererNfcId(user!.uid);
-    setNfcId(id);
-    setGeneratingNfc(false);
   }
 
   return (
@@ -346,39 +337,6 @@ export default function ReglagesPage() {
                 </div>
               </div>
             </div>
-          )}
-        </Card>
-
-        {/* Tag NFC */}
-        <Card title="Tag NFC">
-          {nfcId ? (
-            <>
-              <div className="rounded-2xl p-3.5 mb-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
-                  URL à encoder sur le tag
-                </p>
-                <p className="text-[13px] font-mono break-all" style={{ color: "var(--accent)" }}>
-                  app.wallio.ma/nfc/{nfcId}
-                </p>
-              </div>
-              <button
-                onClick={genererNfc}
-                disabled={generatingNfc}
-                className="text-[12px] font-medium px-3 py-2 rounded-xl"
-                style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30" }}
-              >
-                {generatingNfc ? "Génération…" : "Régénérer (désactive l'ancien)"}
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={genererNfc}
-              disabled={generatingNfc}
-              className="w-full py-3.5 rounded-2xl text-[14px] font-medium text-white"
-              style={{ background: "var(--accent)" }}
-            >
-              {generatingNfc ? "Génération…" : "Générer mon identifiant NFC"}
-            </button>
           )}
         </Card>
 
