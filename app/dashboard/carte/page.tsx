@@ -226,6 +226,8 @@ export default function CartePage() {
   const [saved, setSaved] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingStrip, setUploadingStrip] = useState(false);
+  // Verrouillage : true si la carte a déjà été sauvegardée au moins une fois
+  const [locked, setLocked] = useState(!!(marchand as Record<string, unknown>)?.apple_bg_color);
 
 
   if (!marchand || !user) return null;
@@ -285,6 +287,7 @@ export default function CartePage() {
     });
     setSaving(false);
     setSaved(true);
+    setLocked(true);
     setTimeout(() => setSaved(false), 2500);
   }
 
@@ -462,28 +465,46 @@ export default function CartePage() {
           </h1>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {/* Feature 3 — undo button */}
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            title="Annuler la dernière action"
-            style={{
-              padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+          {locked ? (
+            <button onClick={() => setLocked(false)} style={{
+              padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
               background: "var(--glass-bg)", border: "1px solid var(--border)",
-              color: canUndo ? "var(--fg)" : "var(--fg-tertiary)",
-              cursor: canUndo ? "pointer" : "not-allowed", opacity: canUndo ? 1 : 0.5,
-            }}
-          >
-            ↩ Annuler
-          </button>
-          <button onClick={sauvegarder} disabled={saving} style={{
-            padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
-            background: saved ? "#34C759" : "var(--accent)", color: "white",
-            border: "none", cursor: "pointer",
-            boxShadow: "0 4px 14px rgba(0,122,255,0.25)",
-          }}>
-            {saving ? "…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
-          </button>
+              color: "var(--fg)", cursor: "pointer",
+            }}>
+              Modifier la carte
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                title="Annuler la dernière action"
+                style={{
+                  padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                  background: "var(--glass-bg)", border: "1px solid var(--border)",
+                  color: canUndo ? "var(--fg)" : "var(--fg-tertiary)",
+                  cursor: canUndo ? "pointer" : "not-allowed", opacity: canUndo ? 1 : 0.5,
+                }}
+              >
+                ↩ Annuler
+              </button>
+              <button onClick={() => setLocked(true)} style={{
+                padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                background: "var(--glass-bg)", border: "1px solid var(--border)",
+                color: "var(--fg-secondary)", cursor: "pointer",
+              }}>
+                Annuler les modifs
+              </button>
+              <button onClick={sauvegarder} disabled={saving} style={{
+                padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                background: saved ? "#34C759" : "var(--accent)", color: "white",
+                border: "none", cursor: "pointer",
+                boxShadow: "0 4px 14px rgba(0,122,255,0.25)",
+              }}>
+                {saving ? "…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -626,7 +647,7 @@ export default function CartePage() {
         </div>
 
         {/* ── Panel droit ── */}
-        <div style={{
+        {!locked && <div style={{
           width: 300, borderLeft: "1px solid var(--border)",
           overflowY: "auto", padding: "20px 18px",
           display: "flex", flexDirection: "column", gap: 22, flexShrink: 0,
@@ -1527,7 +1548,7 @@ export default function CartePage() {
             </p>
           </div>
 
-        </div>
+        </div>}
       </div>
     </div>
   );
