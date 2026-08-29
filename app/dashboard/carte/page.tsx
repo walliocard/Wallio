@@ -1953,6 +1953,7 @@ export default function CartePage() {
         onCrop={async (dataUrl) => {
           setShowStripCrop(false);
           setStripUrl(dataUrl);
+          setRawStripUrl("");
           setIsUploadedStrip(false);
           setCropZoom(1); setCropY(50);
           try {
@@ -1974,13 +1975,16 @@ export default function CartePage() {
         onCrop={async (dataUrl) => {
           setShowGoogleCrop(false);
           setGoogleHeroUrl(dataUrl);
+          setRawGoogleHeroUrl("");
           setIsUploadedGoogleHero(false);
           setGoogleHeroCropZoom(1); setGoogleHeroCropY(50);
           try {
             const url = await uploadToCloudinary(dataUrl, `${user!.uid}/google_hero`);
             setGoogleHeroUrl(url);
             await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: url });
-          } catch { /* keep dataUrl */ }
+          } catch (err) {
+            console.error("[GoogleCrop] upload failed:", err);
+          }
         }}
         onClose={() => setShowGoogleCrop(false)}
       />
