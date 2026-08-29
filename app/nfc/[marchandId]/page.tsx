@@ -10,6 +10,7 @@ import {
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { registerFcmToken } from "@/lib/fcm";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 type Screen =
   | { type: "loading" }
@@ -22,6 +23,7 @@ type Screen =
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
+  useAutoRefresh();
 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
