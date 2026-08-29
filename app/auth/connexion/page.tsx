@@ -36,15 +36,19 @@ export default function ConnexionPage() {
     setLoading(true);
     try {
       const { user } = await signInWithEmailAndPassword(auth, form.email, form.password);
-      const marchand = await getMarchand(user.uid);
+      const timeout = new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 5000)
+      );
+      const marchand = await Promise.race([getMarchand(user.uid), timeout]);
       if (!marchand || !marchand.actif) {
         await auth.signOut();
         setError("Votre compte est en attente d'activation par l'équipe Wallio.");
         return;
       }
       router.push("/dashboard");
-    } catch {
-      setError("Email ou mot de passe incorrect.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "";
+      setError(msg === "timeout" ? "Connexion lente, réessaie." : "Email ou mot de passe incorrect.");
     } finally {
       setLoading(false);
     }

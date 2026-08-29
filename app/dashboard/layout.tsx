@@ -14,7 +14,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!loading && (!user || !marchand?.actif)) router.push("/auth/connexion");
   }, [user, marchand, loading, router]);
 
-  if (loading || !marchand || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
         <div
@@ -24,6 +24,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
     );
   }
+
+  if (!marchand || !user) return null;
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
