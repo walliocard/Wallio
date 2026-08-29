@@ -218,6 +218,15 @@ export default function ClientsPage() {
       </div>
 
       {/* Liste */}
+      {/* DEBUG — à supprimer */}
+      <div className="mb-4 p-3 rounded-xl text-[11px] font-mono" style={{ background: "rgba(0,0,0,0.06)", lineHeight: 1.8 }}>
+        <div>user.uid: <b>{user?.uid ?? "NULL"}</b></div>
+        <div>authLoading: <b>{String(authLoading)}</b></div>
+        <div>loading: <b>{String(loading)}</b></div>
+        <div>clients.length: <b>{clients.length}</b></div>
+        {fetchError && <div style={{ color: "#FF453A" }}>error: {fetchError}</div>}
+      </div>
+
       {fetchError ? (
         <div className="py-10 text-center">
           <p className="text-[13px] font-mono px-4" style={{ color: "#FF453A", wordBreak: "break-all" }}>{fetchError}</p>
