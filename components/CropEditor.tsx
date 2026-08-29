@@ -78,20 +78,38 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
 
   async function applyCrop() {
     setCropping(true);
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    await new Promise(resolve => { img.onload = resolve; img.src = imageUrl; });
-    const canvas = document.createElement("canvas");
-    canvas.width = targetW; canvas.height = targetH;
-    const ctx = canvas.getContext("2d")!;
-    const sx = -offset.x / (fitScale * scale);
-    const sy = -offset.y / (fitScale * scale);
-    const sw = CROP_W / (fitScale * scale);
-    const sh = CROP_H / (fitScale * scale);
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-    setCropping(false);
-    onCrop(dataUrl);
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      // Buster cache pour forcer un chargement CORS-aware (évite SecurityError)
+      const src = imageUrl.startsWith("data:")
+        ? imageUrl
+        : `${imageUrl}${imageUrl.includes("?") ? "&" : "?"}_t=${Date.now()}`;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Image non chargeable"));
+        img.src = src;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = targetW; canvas.height = targetH;
+      const ctx = canvas.getContext("2d")!;
+      // Utiliser les refs pour éviter les closures périmées après l'await
+      const ox = offsetRef.current.x;
+      const oy = offsetRef.current.y;
+      const s = scaleRef.current;
+      const sx = -ox / (fitScale * s);
+      const sy = -oy / (fitScale * s);
+      const sw = CROP_W / (fitScale * s);
+      const sh = CROP_H / (fitScale * s);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      onCrop(dataUrl);
+    } catch (e) {
+      console.error("[CropEditor] Erreur recadrage:", e);
+      alert("Erreur lors du recadrage — essaie de re-uploader la photo.");
+    } finally {
+      setCropping(false);
+    }
   }
 
   const dispW = imgSize.w * fitScale * scale;
@@ -126,6 +144,7 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
           {imgSize.w > 0 && (
             <img
               src={imageUrl}
+              crossOrigin="anonymous"
               draggable={false}
               style={{
                 position: "absolute",
