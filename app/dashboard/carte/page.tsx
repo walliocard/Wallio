@@ -717,8 +717,8 @@ export default function CartePage() {
             </p>
           </Section>
 
-          {/* Bannière */}
-          <Section label="Bannière (strip image)">
+          {/* Bannière — Apple uniquement */}
+          {walletType === "apple" && <Section label="Bannière (strip image)">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {stripUrl ? (
                 <div style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "375/144", border: "1px solid var(--border)", position: "relative" }}>
@@ -787,10 +787,10 @@ export default function CartePage() {
                 Format paysage large · min 750×288px · recadrage auto
               </p>
             </div>
-          </Section>
+          </Section>}
 
-          {/* Éditeur bannière dégradée */}
-          <Section label="Éditeur bannière">
+          {/* Éditeur bannière — Apple uniquement */}
+          {walletType === "apple" && <Section label="Éditeur bannière">
 
             {/* Thèmes dégradés */}
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
@@ -1139,10 +1139,10 @@ export default function CartePage() {
                 )}
               </div>
             )}
-          </Section>
+          </Section>}
 
-          {/* Couleurs */}
-          <Section label="Couleurs de la carte">
+          {/* Couleurs — Apple uniquement */}
+          {walletType === "apple" && <Section label="Couleurs de la carte">
 
             {/* Fond */}
             <ColorRow
@@ -1300,17 +1300,17 @@ export default function CartePage() {
                 </div>
               )}
             </div>
-          </Section>
+          </Section>}
 
-          {/* Infos */}
+          {/* Infos — universelles */}
           <Section label="Informations">
             <Field label="Nom de l'établissement">
               <TextInput value={nom} onChange={setNom} placeholder="Café du Centre"/>
             </Field>
           </Section>
 
-          {/* Labels des champs */}
-          <Section label="Labels des champs">
+          {/* Labels des champs — Apple uniquement */}
+          {walletType === "apple" && <Section label="Labels des champs">
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
               Texte affiché au-dessus de chaque valeur — imposé en majuscules par Apple.
             </p>
@@ -1333,9 +1333,9 @@ export default function CartePage() {
               onChange={v => { pushHistory(); setMemberLabel(v); }}
               suggestions={["Membre","Client","Titulaire","Fidèle","Abonné","Nom"]}
             />
-          </Section>
+          </Section>}
 
-          {/* Récompense principale */}
+          {/* Récompense principale — universelle */}
           <Section label="Récompense finale">
             <Field label="Description">
               <TextInput value={recompense} onChange={setRecompense} placeholder="1 café offert"/>
@@ -1576,13 +1576,6 @@ export default function CartePage() {
                 </div>
               </Section>
 
-              <Section label="Nom du programme">
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-                  Affiché en grand sous le logo. Ex : DADA, Café Central…
-                </p>
-                <TextInput value={nom} onChange={setNom} placeholder="Nom affiché sur la carte" />
-              </Section>
-
               <Section label="Image bannière">
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Image large affichée en haut de la carte · Ratio 3:1 · Recommandé : 1032×336px
@@ -1620,9 +1613,9 @@ export default function CartePage() {
                 <Field label="Label objectif">
                   <TextInput value={googleSecondaryLabel} onChange={setGoogleSecondaryLabel} placeholder="ex: Objectif, Sur" />
                 </Field>
-                <Field label="Récompense">
-                  <TextInput value={recompense} onChange={setRecompense} placeholder="ex: Café offert" />
-                </Field>
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
+                  Nom de la récompense modifiable dans "Récompense finale" ci-dessous.
+                </p>
               </Section>
             </>
           )}
