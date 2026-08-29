@@ -751,6 +751,8 @@ export default function CartePage() {
               logoUrl={logoUrl}
               logoText={nom}
               stripUrl={stripUrl || undefined}
+              previewCropY={cropY}
+              previewZoom={cropZoom}
               backgroundColor={bgColor}
               foregroundColor={effectiveFg}
               labelColor={effectiveLabel}
@@ -790,6 +792,8 @@ export default function CartePage() {
               logoText={nom}
               backgroundColor={googleBgColor}
               heroUrl={googleHeroUrl || undefined}
+              previewCropY={googleHeroCropY}
+              previewZoom={googleHeroCropZoom}
               stampsCurrent={stampsCurrent}
               stampsObjective={objectif}
               rewardName={recompense}
@@ -916,8 +920,11 @@ export default function CartePage() {
               )}
               {(isUploadedStrip || (!stripFrom && !!stripUrl)) && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
-                  <input type="range" min="1" max="3" step="0.05" value={cropZoom}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <line x1="8" y1="11" x2="14" y2="11"/>
+                  </svg>
+                  <input type="range" min="1" max="3" step="0.01" value={cropZoom}
                     onChange={e => setCropZoom(Number(e.target.value))}
                     onPointerDown={() => { isZoomingStripRef.current = true; }}
                     onPointerUp={e => {
@@ -928,7 +935,18 @@ export default function CartePage() {
                     }}
                     style={{ flex: 1, accentColor: "var(--accent)" }}
                   />
-                  <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>+</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>
+                  </svg>
+                  <span style={{ fontSize: 11, color: "var(--fg-tertiary)", fontFamily: "monospace", minWidth: 32, textAlign: "right", flexShrink: 0 }}>
+                    {Math.round(cropZoom * 100)}%
+                  </span>
+                  {cropZoom > 1.01 && (
+                    <button onClick={() => setCropZoom(1)} style={{ fontSize: 10, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 0 }}>
+                      reset
+                    </button>
+                  )}
                 </div>
               )}
               <div style={{ display: "flex", gap: 6 }}>
@@ -1887,8 +1905,11 @@ export default function CartePage() {
                   </div>
                   {canCrop && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>−</span>
-                      <input type="range" min="1" max="3" step="0.05" value={googleHeroCropZoom}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <line x1="8" y1="11" x2="14" y2="11"/>
+                      </svg>
+                      <input type="range" min="1" max="3" step="0.01" value={googleHeroCropZoom}
                         onChange={e => setGoogleHeroCropZoom(Number(e.target.value))}
                         onPointerDown={() => { isZoomingGoogleRef.current = true; }}
                         onPointerUp={e => {
@@ -1899,7 +1920,18 @@ export default function CartePage() {
                         }}
                         style={{ flex: 1, accentColor: "var(--accent)" }}
                       />
-                      <span style={{ fontSize: 13, color: "var(--fg-tertiary)", flexShrink: 0 }}>+</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>
+                      </svg>
+                      <span style={{ fontSize: 11, color: "var(--fg-tertiary)", fontFamily: "monospace", minWidth: 32, textAlign: "right", flexShrink: 0 }}>
+                        {Math.round(googleHeroCropZoom * 100)}%
+                      </span>
+                      {googleHeroCropZoom > 1.01 && (
+                        <button onClick={() => setGoogleHeroCropZoom(1)} style={{ fontSize: 10, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 0 }}>
+                          reset
+                        </button>
+                      )}
                     </div>
                   )}
                   </>);

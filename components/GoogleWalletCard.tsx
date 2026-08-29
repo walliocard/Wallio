@@ -8,6 +8,8 @@ export interface GoogleWalletCardProps {
   logoText: string;
   backgroundColor: string;
   heroUrl?: string;
+  previewCropY?: number;
+  previewZoom?: number;
   stampsCurrent: number;
   stampsObjective: number;
   rewardName: string;
@@ -36,6 +38,8 @@ export default function GoogleWalletCard({
   logoText,
   backgroundColor,
   heroUrl,
+  previewCropY = 50,
+  previewZoom = 1,
   stampsCurrent,
   stampsObjective,
   rewardName,
@@ -77,7 +81,12 @@ export default function GoogleWalletCard({
       {/* Hero image en haut — position officielle Google Wallet */}
       {heroUrl && (
         <div style={{ width: "100%", aspectRatio: "3/1", overflow: "hidden" }}>
-          <img src={heroUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <img src={heroUrl} alt="" style={{
+            width: "100%", height: "100%", objectFit: "cover", display: "block",
+            objectPosition: `50% ${previewCropY}%`,
+            transform: previewZoom > 1 ? `scale(${previewZoom})` : "none",
+            transformOrigin: `50% ${previewCropY}%`,
+          }} />
         </div>
       )}
 

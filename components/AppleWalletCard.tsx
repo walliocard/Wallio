@@ -20,6 +20,8 @@ export interface AppleWalletCardProps {
   logoText: string;
   stripContent?: React.ReactNode;
   stripUrl?: string;
+  previewCropY?: number;
+  previewZoom?: number;
   backgroundColor: string;
   foregroundColor?: string;
   labelColor?: string;
@@ -56,6 +58,8 @@ export default function AppleWalletCard({
   logoText,
   stripContent,
   stripUrl,
+  previewCropY = 50,
+  previewZoom = 1,
   backgroundColor,
   foregroundColor,
   labelColor,
@@ -294,7 +298,12 @@ export default function AppleWalletCard({
       {/* ── Strip zone — toujours visible (375 × 144 pt) ── */}
       <div style={{ width: 375, height: 144, overflow: "hidden", position: "relative", flexShrink: 0 }}>
         {stripUrl ? (
-          <img src={stripUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={stripUrl} alt="" style={{
+            width: "100%", height: "100%", objectFit: "cover",
+            objectPosition: `50% ${previewCropY}%`,
+            transform: previewZoom > 1 ? `scale(${previewZoom})` : "none",
+            transformOrigin: `50% ${previewCropY}%`,
+          }} />
         ) : stripContent ? (
           <div style={{ width: 375, height: 144, flexShrink: 0 }}>{stripContent}</div>
         ) : (
