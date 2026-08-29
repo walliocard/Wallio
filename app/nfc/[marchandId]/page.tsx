@@ -11,6 +11,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useTimeTheme } from "@/hooks/useTimeTheme";
 
 type Screen =
   | { type: "loading" }
@@ -23,7 +24,7 @@ type Screen =
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
-  // Auto-refresh uniquement sur l'écran de chargement initial
+  useTimeTheme();
   useAutoRefresh(screen.type === "loading");
 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
@@ -200,6 +201,16 @@ function ResultScreen({ result, marchand, onValiderRecompense }: {
 
 const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
+const PAYS = [
+  { code: "+212", flag: "🇲🇦", label: "Maroc", digits: 9 },
+  { code: "+33",  flag: "🇫🇷", label: "France", digits: 9 },
+  { code: "+32",  flag: "🇧🇪", label: "Belgique", digits: 9 },
+  { code: "+34",  flag: "🇪🇸", label: "Espagne", digits: 9 },
+  { code: "+971", flag: "🇦🇪", label: "Émirats", digits: 9 },
+  { code: "+966", flag: "🇸🇦", label: "Arabie S.", digits: 9 },
+  { code: "+1",   flag: "🇺🇸", label: "USA / Canada", digits: 10 },
+];
+
 function MarchandHeader({ marchand }: { marchand: Marchand }) {
   const m = marchand as Record<string, unknown>;
   const logo = m.logo_url as string | undefined;
@@ -238,7 +249,8 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
 }) {
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
-  const [telephone, setTelephone] = useState("");
+  const [indicatif, setIndicatif] = useState(PAYS[0]);
+  const [numLocal, setNumLocal] = useState("");
   const [dateJ, setDateJ] = useState("");
   const [dateM, setDateM] = useState("");
   const [dateA, setDateA] = useState("");
@@ -251,12 +263,15 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!dateJ || !dateM || !dateA) { setError("Veuillez saisir votre date de naissance."); return; }
+    const numPropre = numLocal.replace(/\D/g, "").replace(/^0/, "");
+    if (numPropre.length < indicatif.digits - 1) { setError(`Numéro invalide (${indicatif.digits} chiffres attendus).`); return; }
+    const telephone = `${indicatif.code}${numPropre}`;
     const date_naissance = `${dateA}-${dateM.padStart(2, "0")}-${dateJ.padStart(2, "0")}`;
     setLoading(true);
     setError("");
     try {
       const { clientId, walletId } = await creerClient({ prenom, nom, telephone, date_naissance, marchand_id: marchand.id });
-      onSuccess({ id: clientId, prenom, nom, telephone, date_naissance, wallet_id: walletId, marchand_id: marchand.id, tampons: 0 });
+      onSuccess({ id: clientId, prenom, nom, telephone: `${indicatif.code}${numPropre}`, date_naissance, wallet_id: walletId, marchand_id: marchand.id, tampons: 0 });
     } catch {
       setError("Une erreur est survenue. Réessayez.");
     } finally {
@@ -277,7 +292,6 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
             {([
               { value: prenom, set: setPrenom, placeholder: "Prénom", type: "text", autoComplete: "given-name" },
               { value: nom, set: setNom, placeholder: "Nom", type: "text", autoComplete: "family-name" },
-              { value: telephone, set: setTelephone, placeholder: "Téléphone", type: "tel", autoComplete: "tel" },
             ] as const).map(f => (
               <input key={f.placeholder} type={f.type} required placeholder={f.placeholder}
                 autoComplete={f.autoComplete} value={f.value}
@@ -288,6 +302,29 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
                 onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
               />
             ))}
+
+            {/* Téléphone : indicatif + numéro */}
+            <div className="flex rounded-2xl overflow-hidden transition-colors"
+              style={{ ...inputStyle, padding: 0, gap: 0 }}>
+              <select
+                value={indicatif.code}
+                onChange={e => setIndicatif(PAYS.find(p => p.code === e.target.value) ?? PAYS[0])}
+                className="outline-none text-[14px] font-medium shrink-0 border-r"
+                style={{ background: "transparent", color: "var(--fg)", borderColor: "rgba(128,128,128,0.2)", padding: "0 10px 0 14px", WebkitAppearance: "none" }}>
+                {PAYS.map(p => (
+                  <option key={p.code} value={p.code} style={{ background: "var(--bg)" }}>
+                    {p.flag} {p.code}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="tel" required placeholder={`Numéro (${indicatif.digits} chiffres)`}
+                autoComplete="tel-national" value={numLocal}
+                onChange={e => setNumLocal(e.target.value.replace(/[^\d\s]/g, ""))}
+                className="flex-1 px-4 py-3.5 text-[15px] outline-none bg-transparent"
+                style={{ color: "var(--fg)" }}
+              />
+            </div>
 
             {/* Date de naissance */}
             <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
