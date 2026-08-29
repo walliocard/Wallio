@@ -170,9 +170,12 @@ export default function NotificationsPage() {
                   Aperçu
                 </p>
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden"
-                    style={{ background: "linear-gradient(135deg, #007AFF, #5856D6)" }}>
-                    <img src="/icon-192.png" alt="" className="w-full h-full object-cover"/>
+                  <div className="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
+                    style={{ background: (marchand as Record<string,unknown>).logo_url ? "var(--bg)" : (marchand.couleur_principale || "var(--accent)") }}>
+                    {(marchand as Record<string,unknown>).logo_url
+                      ? <img src={(marchand as Record<string,unknown>).logo_url as string} alt="" className="w-full h-full object-cover"/>
+                      : <span className="text-white font-bold text-[16px]">{marchand.nom[0]?.toUpperCase()}</span>
+                    }
                   </div>
                   <div>
                     <p className="text-[13px] font-semibold" style={{ color: "var(--fg)" }}>{title || "Titre"}</p>
