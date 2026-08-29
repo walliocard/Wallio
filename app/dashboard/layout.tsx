@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import DashboardNav from "@/components/dashboard/Nav";
+import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, marchand, loading } = useAuth();
@@ -30,6 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="md:ml-[72px] lg:ml-[240px] min-h-screen">
         {children}
       </div>
+      <RecompenseAlert marchand={marchand} marchandId={user.uid} />
     </div>
   );
 }
