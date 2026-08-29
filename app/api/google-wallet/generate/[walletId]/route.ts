@@ -53,6 +53,7 @@ export async function GET(
   });
 
   if (classRes.status === 404) {
+    const logoUri = (m.logo_url as string | undefined) || "https://wallio-seven.vercel.app/icon-192.png";
     const createRes = await fetch(`${API}/loyaltyClass`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -61,12 +62,10 @@ export async function GET(
         issuerName: "Wallio",
         reviewStatus: "DRAFT",
         programName: m.nom,
-        ...(m.logo_url && {
-          programLogo: {
-            sourceUri: { uri: m.logo_url },
-            contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
-          },
-        }),
+        programLogo: {
+          sourceUri: { uri: logoUri },
+          contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
+        },
         hexBackgroundColor: m.couleur_principale || "#1C1C1E",
         countryCode: "MA",
       }),
