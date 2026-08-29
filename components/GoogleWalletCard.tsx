@@ -24,6 +24,13 @@ export interface GoogleWalletCardProps {
   memberLabel?: string;
 }
 
+function isDarkBg(hex: string) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return 0.299 * r + 0.587 * g + 0.114 * b < 140;
+}
+
 export default function GoogleWalletCard({
   logoUrl,
   logoText,
@@ -33,12 +40,19 @@ export default function GoogleWalletCard({
   stampsObjective,
   rewardName,
   primaryLabel = "Tampons",
-  secondaryLabel = "Objectif",
   previewUid,
 }: GoogleWalletCardProps) {
   const [qr, setQr] = useState("");
 
   const bg = /^#[0-9a-f]{6}$/i.test(backgroundColor) ? backgroundColor : "#007AFF";
+  const dark = isDarkBg(bg);
+  const text = dark ? "#FFFFFF" : "#000000";
+  const textSec = dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.45)";
+  const progressTrack = dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.1)";
+  const progressFill = dark ? "#FFFFFF" : "#000000";
+  const divider = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
+  const surfaceTint = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
+  const progress = Math.min(1, stampsCurrent / Math.max(1, stampsObjective));
 
   const qrUrl = previewUid
     ? `https://app.wallio.ma/client/${previewUid}`
@@ -60,69 +74,97 @@ export default function GoogleWalletCard({
       WebkitFontSmoothing: "antialiased",
     }}>
 
-      {/* Header : logo rond + nom émetteur */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 18px 8px" }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-          background: "rgba(255,255,255,0.9)", overflow: "hidden",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          {logoUrl
-            ? <img src={logoUrl} alt="" style={{ width: 36, height: 36, objectFit: "cover" }} />
-            : <span style={{ fontSize: 16, fontWeight: 700, color: bg }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
-          }
-        </div>
-        <span style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.9)", letterSpacing: 0.1 }}>
-          Wallio
-        </span>
-      </div>
-
-      {/* Nom du programme */}
-      <div style={{ padding: "2px 18px 12px" }}>
-        <div style={{ fontSize: 30, fontWeight: 700, color: "#FFFFFF", letterSpacing: -0.5 }}>
-          {logoText || "Programme"}
-        </div>
-      </div>
-
-      {/* Hero image (bannière) si disponible */}
+      {/* Hero image en haut — position officielle Google Wallet */}
       {heroUrl && (
-        <div style={{ width: "100%", height: 120, overflow: "hidden" }}>
+        <div style={{ width: "100%", aspectRatio: "3/1", overflow: "hidden" }}>
           <img src={heroUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         </div>
       )}
 
-      {/* Champs points */}
-      <div style={{ display: "flex", padding: heroUrl ? "14px 18px 12px" : "0 18px 14px", gap: 32 }}>
-        <div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>{primaryLabel}</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#FFFFFF" }}>{stampsCurrent}</div>
+      {/* Header : logo rond + émetteur */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 20px 6px" }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+          background: surfaceTint, overflow: "hidden",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          {logoUrl
+            ? <img src={logoUrl} alt="" style={{ width: 32, height: 32, objectFit: "cover" }} />
+            : <span style={{ fontSize: 14, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
+          }
         </div>
-        <div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>{secondaryLabel}</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#FFFFFF" }}>{stampsObjective}</div>
+        <span style={{ fontSize: 13, fontWeight: 500, color: textSec, letterSpacing: 0.1 }}>Wallio</span>
+      </div>
+
+      {/* Nom du programme */}
+      <div style={{ padding: "0 20px 16px" }}>
+        <div style={{ fontSize: 28, fontWeight: 700, color: text, letterSpacing: -0.5, lineHeight: 1.1 }}>
+          {logoText || "Programme"}
         </div>
       </div>
 
+      {/* Progression tampons */}
+      <div style={{ padding: "0 20px 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+            <span style={{ fontSize: 34, fontWeight: 700, color: text, lineHeight: 1 }}>{stampsCurrent}</span>
+            <span style={{ fontSize: 16, color: textSec, fontWeight: 500 }}>/ {stampsObjective}</span>
+          </div>
+          <span style={{ fontSize: 12, color: textSec, letterSpacing: 0.3 }}>{primaryLabel}</span>
+        </div>
+        {/* Barre de progression */}
+        <div style={{ height: 5, background: progressTrack, borderRadius: 3, overflow: "hidden" }}>
+          <div style={{
+            height: "100%",
+            width: `${progress * 100}%`,
+            background: progressFill,
+            borderRadius: 3,
+            minWidth: progress > 0 ? 8 : 0,
+          }} />
+        </div>
+      </div>
+
+      {/* Séparateur */}
+      <div style={{ height: 1, background: divider, margin: "0 20px 14px" }} />
+
       {/* Récompense */}
       {rewardName && (
-        <div style={{ padding: "0 18px 12px" }}>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 2 }}>Récompense</div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: "#FFFFFF" }}>{rewardName}</div>
+        <div style={{ padding: "0 20px 16px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+            background: surfaceTint,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill={text}>
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 10, color: textSec, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: 600 }}>
+              Récompense
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: text }}>{rewardName}</div>
+          </div>
         </div>
       )}
 
       {/* QR code */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "12px 18px 20px" }}>
+      <div style={{ padding: "4px 20px 22px", display: "flex", justifyContent: "center" }}>
         <div style={{
-          background: "#FFFFFF", borderRadius: 14, padding: 12,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+          background: "#FFFFFF", borderRadius: 16, padding: "14px 14px 10px",
+          boxShadow: dark ? "0 4px 24px rgba(0,0,0,0.35)" : "0 4px 20px rgba(0,0,0,0.13)",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
         }}>
           {qr
-            ? <img src={qr} alt="QR" style={{ width: 120, height: 120, display: "block" }} />
-            : <div style={{ width: 120, height: 120, background: "#f0f0f0", borderRadius: 4 }} />
+            ? <img src={qr} alt="QR" style={{ width: 110, height: 110, display: "block" }} />
+            : <div style={{ width: 110, height: 110, background: "#f0f0f0", borderRadius: 4 }} />
           }
+          <div style={{ fontSize: 9, color: "rgba(0,0,0,0.3)", letterSpacing: 1.2, textTransform: "uppercase" }}>
+            Scanner en caisse
+          </div>
         </div>
       </div>
+
     </div>
   );
 }

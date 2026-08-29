@@ -3,8 +3,7 @@
 import { useAuth } from "@/lib/auth-context";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import AppleWalletCard, { type StampStyle, type MilestoneReward } from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
@@ -48,6 +47,7 @@ export default function CartePage() {
   const [stripFrom, setStripFrom] = useState<string>("");
   const [stripTo, setStripTo]   = useState<string>("");
   const [stripAngle, setStripAngle] = useState<number>(135);
+  const [stripGlass, setStripGlass] = useState<boolean>(false);
   const [stripText, setStripText]   = useState<string>("");
   const [stripTextSize, setStripTextSize] = useState<"s"|"m"|"l">("m");
   const [stripTextColor, setStripTextColor] = useState<string>("#FFFFFF");
@@ -83,6 +83,10 @@ export default function CartePage() {
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
   const [cropY, setCropY] = useState<number>(50);
   const [isUploadedStrip, setIsUploadedStrip] = useState<boolean>(false);
+  const isDraggingRef = useRef(false);
+  const stripPreviewRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ startY: number; startCrop: number }>({ startY: 0, startCrop: 50 });
+  const cropYRef = useRef(50);
 
   const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || "Tampons");
   const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || "Récompense");
@@ -186,9 +190,10 @@ export default function CartePage() {
     });
   }, []);
 
-  // Regen when cropY changes on uploaded strip
+  // Regen canvas when cropY changes (skipped during drag — handled in onStripPointerUp)
   useEffect(() => {
-    if (!rawStripUrl || !isUploadedStrip) return;
+    if (!rawStripUrl || !isUploadedStrip || isDraggingRef.current) return;
+    cropYRef.current = cropY;
     applyCrop(rawStripUrl, cropY).then(url => setStripUrl(url)).catch(() => {});
   }, [cropY, rawStripUrl, isUploadedStrip, applyCrop]);
 
@@ -199,7 +204,8 @@ export default function CartePage() {
       stripFrom, stripTo, stripAngle,
       stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
       stripText2, stripText2Size,
-      stripIncludeLogo ? logoUrl : undefined
+      stripIncludeLogo ? logoUrl : undefined,
+      stripGlass
     ).then(strip => setStripUrl(strip)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stripText, stripTextSize, stripTextColor, stripTextPos, stripTextFont, stripText2, stripText2Size, stripIncludeLogo, logoUrl]);
@@ -233,6 +239,43 @@ export default function CartePage() {
   const [uploadingGoogleHero, setUploadingGoogleHero] = useState(false);
   const [googleBgColor, setGoogleBgColor] = useState<string>((marchand as Record<string, unknown>).google_bg_color as string || couleurPrincipale || "#007AFF");
   const [googleHeroUrl, setGoogleHeroUrl] = useState<string>((marchand as Record<string, unknown>).google_hero_url as string || "");
+  // Google strip builder (éditeur bannière dégradé)
+  const [googleStripFrom, setGoogleStripFrom] = useState<string>("");
+  const [googleStripTo, setGoogleStripTo] = useState<string>("");
+  const [googleStripAngle, setGoogleStripAngle] = useState<number>(135);
+  const [googleStripGlass, setGoogleStripGlass] = useState<boolean>(false);
+  const [googleStripText, setGoogleStripText] = useState<string>("");
+  const [googleStripTextColor, setGoogleStripTextColor] = useState<string>("#FFFFFF");
+  const [googleStripTextSize, setGoogleStripTextSize] = useState<"s"|"m"|"l">("m");
+  const [googleStripTextPos, setGoogleStripTextPos] = useState<"bl"|"bc"|"br"|"c">("bl");
+  const [googleStripFont, setGoogleStripFont] = useState<"sans"|"serif"|"mono">("sans");
+  const [googleStripText2, setGoogleStripText2] = useState<string>("");
+  const [googleStripText2Size, setGoogleStripText2Size] = useState<"s"|"m"|"l">("s");
+  const [googleStripIncludeLogo, setGoogleStripIncludeLogo] = useState<boolean>(false);
+  const [rawGoogleHeroUrl, setRawGoogleHeroUrl] = useState<string>("");
+  const [googleHeroCropY, setGoogleHeroCropY] = useState<number>(50);
+  const [isUploadedGoogleHero, setIsUploadedGoogleHero] = useState<boolean>(false);
+  const isGoogleHeroDraggingRef = useRef(false);
+  const googleHeroPreviewRef = useRef<HTMLDivElement>(null);
+  const googleHeroDragRef = useRef<{ startY: number; startCrop: number }>({ startY: 0, startCrop: 50 });
+  const googleHeroCropYRef = useRef(50);
+
+  // Auto-regen Google hero when text/options change (gradient active only)
+  useEffect(() => {
+    if (!googleStripFrom) return;
+    buildStrip(
+      googleStripFrom, googleStripTo, googleStripAngle,
+      googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont,
+      googleStripText2, googleStripText2Size,
+      googleStripIncludeLogo ? logoUrl : undefined,
+      googleStripGlass, 1032, 344
+    ).then(hero => {
+      setGoogleHeroUrl(hero);
+      setIsUploadedGoogleHero(false);
+      setRawGoogleHeroUrl("");
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [googleStripText, googleStripTextSize, googleStripTextColor, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo, logoUrl]);
   // Verrouillage : true si la carte a déjà été sauvegardée au moins une fois
   const [locked, setLocked] = useState(!!(marchand as Record<string, unknown>)?.apple_bg_color);
 
@@ -248,22 +291,120 @@ export default function CartePage() {
   const contrastLevel: "ok" | "weak" | "fail" =
     contrastRatioValue >= 4.5 ? "ok" : contrastRatioValue >= 3 ? "weak" : "fail";
 
-  // Feature 8 — upload to Firebase Storage (timeout 8s pour fallback si Storage non activé)
-  async function uploadToStorage(dataUrl: string, path: string): Promise<string> {
-    const sRef = storageRef(storage, path);
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("Storage timeout")), 8000)
-    );
-    await Promise.race([uploadString(sRef, dataUrl, "data_url"), timeout]);
-    return getDownloadURL(sRef);
+  function onStripPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    isDraggingRef.current = true;
+    dragRef.current = { startY: e.clientY, startCrop: cropY };
+    cropYRef.current = cropY;
+  }
+
+  function onStripPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!isDraggingRef.current || !stripPreviewRef.current) return;
+    const h = stripPreviewRef.current.offsetHeight;
+    const delta = e.clientY - dragRef.current.startY;
+    const newCrop = Math.max(0, Math.min(100, dragRef.current.startCrop - (delta / h) * 150));
+    cropYRef.current = newCrop;
+    setCropY(newCrop);
+  }
+
+  function onStripPointerUp() {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    if (rawStripUrl) {
+      applyCrop(rawStripUrl, cropYRef.current).then(url => setStripUrl(url)).catch(() => {});
+    }
+  }
+
+  const applyHeroCrop = useCallback(async (rawUrl: string, y: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const targetW = 1032, targetH = 344;
+        const targetRatio = targetW / targetH;
+        const imgRatio = img.width / img.height;
+        let sw = img.width, sh = img.height, sx = 0, sy = 0;
+        if (imgRatio > targetRatio) {
+          sw = Math.round(img.height * targetRatio);
+          sx = Math.round((img.width - sw) / 2);
+        } else {
+          sh = Math.round(img.width / targetRatio);
+          sy = Math.round((img.height - sh) * y / 100);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW; canvas.height = targetH;
+        canvas.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+        resolve(canvas.toDataURL("image/jpeg", 0.88));
+      };
+      img.onerror = reject;
+      img.src = rawUrl;
+    });
+  }, []);
+
+  function onGoogleHeroPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    isGoogleHeroDraggingRef.current = true;
+    googleHeroDragRef.current = { startY: e.clientY, startCrop: googleHeroCropY };
+    googleHeroCropYRef.current = googleHeroCropY;
+  }
+
+  function onGoogleHeroPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!isGoogleHeroDraggingRef.current || !googleHeroPreviewRef.current) return;
+    const h = googleHeroPreviewRef.current.offsetHeight;
+    const delta = e.clientY - googleHeroDragRef.current.startY;
+    const newCrop = Math.max(0, Math.min(100, googleHeroDragRef.current.startCrop - (delta / h) * 150));
+    googleHeroCropYRef.current = newCrop;
+    setGoogleHeroCropY(newCrop);
+  }
+
+  function onGoogleHeroPointerUp() {
+    if (!isGoogleHeroDraggingRef.current) return;
+    isGoogleHeroDraggingRef.current = false;
+    if (rawGoogleHeroUrl) {
+      applyHeroCrop(rawGoogleHeroUrl, googleHeroCropYRef.current).then(url => setGoogleHeroUrl(url)).catch(() => {});
+    }
+  }
+
+  async function uploadToCloudinary(dataUrl: string, publicId: string): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", dataUrl);
+    formData.append("upload_preset", "Wallio");
+    formData.append("public_id", publicId);
+    const res = await fetch("https://api.cloudinary.com/v1_1/youdtjaj/image/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) throw new Error("Cloudinary upload failed");
+    const data = await res.json();
+    return data.secure_url as string;
   }
 
   async function sauvegarder() {
     setSaving(true);
+    let finalStripUrl = stripUrl;
+    if (isUploadedStrip && rawStripUrl) {
+      try {
+        const cropped = await applyCrop(rawStripUrl, cropY);
+        finalStripUrl = await uploadToCloudinary(cropped, `${user!.uid}/strip`);
+        setStripUrl(finalStripUrl);
+      } catch { /* keep existing */ }
+    }
+    let finalGoogleHeroUrl = googleHeroUrl;
+    if (isUploadedGoogleHero && rawGoogleHeroUrl) {
+      try {
+        const cropped = await applyHeroCrop(rawGoogleHeroUrl, googleHeroCropY);
+        finalGoogleHeroUrl = await uploadToCloudinary(cropped, `${user!.uid}/google_hero`);
+        setGoogleHeroUrl(finalGoogleHeroUrl);
+      } catch { /* keep existing */ }
+    } else if (googleHeroUrl.startsWith("data:")) {
+      try {
+        finalGoogleHeroUrl = await uploadToCloudinary(googleHeroUrl, `${user!.uid}/google_hero`);
+        setGoogleHeroUrl(finalGoogleHeroUrl);
+      } catch { /* keep existing */ }
+    }
     await updateDoc(doc(db, "marchands", user!.uid), {
       nom,
       logo_url: logoUrl,
-      strip_url: stripUrl,
+      strip_url: finalStripUrl,
       nom_recompense: recompense,
       objectif_tampons: objectif,
       apple_bg_color: bgColor,
@@ -295,7 +436,7 @@ export default function CartePage() {
       google_primary_label: googlePrimaryLabel,
       google_secondary_label: googleSecondaryLabel,
       google_bg_color: googleBgColor,
-      google_hero_url: googleHeroUrl,
+      google_hero_url: finalGoogleHeroUrl,
       apple_milestone_rewards: milestoneRewards,
       updated_at: serverTimestamp(),
     });
@@ -312,13 +453,7 @@ export default function CartePage() {
     pushHistory();
     try {
       const dataUrl = await resizeImage(file, 320);
-      let url: string;
-      try {
-        url = await uploadToStorage(dataUrl, `marchands/${user.uid}/logo.jpg`);
-      } catch (storageErr) {
-        console.warn("[Logo] Firebase Storage échoué, fallback dataUrl:", storageErr);
-        url = dataUrl;
-      }
+      const url = await uploadToCloudinary(dataUrl, `${user.uid}/logo`);
       setLogoUrl(url);
       await updateDoc(doc(db, "marchands", user.uid), { logo_url: url });
     } catch (err: unknown) {
@@ -356,13 +491,7 @@ export default function CartePage() {
       setStripTo("");
 
       const cropped = await applyCrop(rawUrl, cropY);
-      // Upload to Firebase Storage
-      let finalUrl: string;
-      try {
-        finalUrl = await uploadToStorage(cropped, `marchands/${user.uid}/strip.jpg`);
-      } catch {
-        finalUrl = cropped; // fallback
-      }
+      const finalUrl = await uploadToCloudinary(cropped, `${user.uid}/strip`);
       setStripUrl(finalUrl);
       await updateDoc(doc(db, "marchands", user.uid), { strip_url: finalUrl });
     } catch (err: unknown) {
@@ -399,13 +528,12 @@ export default function CartePage() {
     setUploadingGoogleHero(true);
     try {
       const raw = await resizeImageRaw(file, 1500);
-      let url: string;
-      try {
-        url = await uploadToStorage(raw, `marchands/${user.uid}/google_hero.jpg`);
-      } catch (storageErr) {
-        console.warn("[GoogleHero] Firebase Storage échoué, fallback dataUrl:", storageErr);
-        url = raw;
-      }
+      setRawGoogleHeroUrl(raw);
+      setIsUploadedGoogleHero(true);
+      setGoogleHeroCropY(50);
+      googleHeroCropYRef.current = 50;
+      const cropped = await applyHeroCrop(raw, 50);
+      const url = await uploadToCloudinary(cropped, `${user.uid}/google_hero`);
       setGoogleHeroUrl(url);
       await updateDoc(doc(db, "marchands", user.uid), { google_hero_url: url });
     } catch (err) {
@@ -438,8 +566,9 @@ export default function CartePage() {
     }
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 430, 172);
     const adapted = canvas.toDataURL("image/jpeg", 0.88);
-    setStripUrl(adapted);
-    await updateDoc(doc(db, "marchands", user!.uid), { strip_url: adapted });
+    const adaptedUrl = await uploadToCloudinary(adapted, `${user!.uid}/strip`);
+    setStripUrl(adaptedUrl);
+    await updateDoc(doc(db, "marchands", user!.uid), { strip_url: adaptedUrl });
   }
 
   async function handleComptoirBgUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -448,12 +577,7 @@ export default function CartePage() {
     setUploadingComptoirBg(true);
     try {
       const rawUrl = await resizeImageRaw(file, 1600);
-      let finalUrl: string;
-      try {
-        finalUrl = await uploadToStorage(rawUrl, `marchands/${user.uid}/comptoir-bg.jpg`);
-      } catch {
-        finalUrl = rawUrl;
-      }
+      const finalUrl = await uploadToCloudinary(rawUrl, `${user.uid}/comptoir-bg`);
       setComptoirBgUrl(finalUrl);
       await updateDoc(doc(db, "marchands", user!.uid), { comptoir_bg_url: finalUrl });
     } catch (err: unknown) {
@@ -717,16 +841,47 @@ export default function CartePage() {
               </div>
             </div>
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
-              Affiché en haut à gauche · max 160×50pt · Images stockées sur Firebase Storage
+              Affiché en haut à gauche · max 160×50pt
             </p>
           </Section>
 
           {/* Bannière — Apple uniquement */}
           {walletType === "apple" && <Section label="Bannière (strip image)">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {stripUrl ? (
-                <div style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "375/144", border: "1px solid var(--border)", position: "relative" }}>
-                  <img src={stripUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }}/>
+              {(stripUrl || rawStripUrl) ? (
+                <div
+                  ref={isUploadedStrip ? stripPreviewRef : undefined}
+                  style={{
+                    borderRadius: 10, overflow: "hidden", aspectRatio: "375/144",
+                    border: "1px solid var(--border)", position: "relative",
+                    cursor: isUploadedStrip ? "grab" : "default",
+                    userSelect: "none", touchAction: "none",
+                  }}
+                  onPointerDown={isUploadedStrip ? onStripPointerDown : undefined}
+                  onPointerMove={isUploadedStrip ? onStripPointerMove : undefined}
+                  onPointerUp={isUploadedStrip ? onStripPointerUp : undefined}
+                  onPointerCancel={isUploadedStrip ? onStripPointerUp : undefined}
+                >
+                  <img
+                    src={isUploadedStrip && rawStripUrl ? rawStripUrl : stripUrl}
+                    alt=""
+                    draggable={false}
+                    style={{
+                      width: "100%", height: "100%", objectFit: "cover",
+                      objectPosition: isUploadedStrip ? `50% ${cropY}%` : "center",
+                      pointerEvents: "none", userSelect: "none",
+                    }}
+                  />
+                  {isUploadedStrip && (
+                    <div style={{
+                      position: "absolute", bottom: 6, right: 6,
+                      background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+                      borderRadius: 6, padding: "2px 8px", fontSize: 10, color: "white",
+                      pointerEvents: "none",
+                    }}>
+                      Glissez pour cadrer
+                    </div>
+                  )}
                 </div>
               ) : (
                 <label style={{
@@ -770,23 +925,6 @@ export default function CartePage() {
                 )}
               </div>
 
-              {/* Feature 6 — slider cadrage vertical */}
-              {rawStripUrl && isUploadedStrip && (
-                <div>
-                  <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginBottom: 6 }}>
-                    Cadrage vertical — 0=Haut, 100=Bas
-                  </p>
-                  <input
-                    type="range" min={0} max={100} value={cropY}
-                    onChange={e => setCropY(Number(e.target.value))}
-                    style={{ width: "100%", accentColor: "var(--accent)" }}
-                  />
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--fg-tertiary)" }}>
-                    <span>Haut</span><span>{cropY}%</span><span>Bas</span>
-                  </div>
-                </div>
-              )}
-
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: 0 }}>
                 Format paysage large · min 750×288px · recadrage auto
               </p>
@@ -808,17 +946,22 @@ export default function CartePage() {
                   setStripFrom(t.from); setStripTo(t.to); setStripAngle(angle);
                   setBgColor(t.bg);
                   setIsUploadedStrip(false); setRawStripUrl("");
+                  const glassMode = (t as { glass?: boolean }).glass ?? false;
+                  setStripGlass(glassMode);
                   const strip = await buildStrip(
                     t.from, t.to, angle,
                     stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
                     stripText2, stripText2Size,
-                    stripIncludeLogo ? logoUrl : undefined
+                    stripIncludeLogo ? logoUrl : undefined,
+                    glassMode
                   );
                   setStripUrl(strip);
                   updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip, apple_bg_color: t.bg });
                 }} style={{
                   width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
-                  background: `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
+                  background: (t as { glass?: boolean }).glass
+                    ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 55%), linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`
+                    : `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
                   border: stripFrom === t.from && stripTo === t.to ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.2)",
                   boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
                   flexShrink: 0,
@@ -1120,7 +1263,8 @@ export default function CartePage() {
                       stripFrom, stripTo, stripAngle,
                       stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
                       stripText2, stripText2Size,
-                      stripIncludeLogo ? logoUrl : undefined
+                      stripIncludeLogo ? logoUrl : undefined,
+                      stripGlass
                     );
                     setStripUrl(strip);
                     updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip });
@@ -1153,52 +1297,7 @@ export default function CartePage() {
               label="Fond"
               value={bgColor}
               onChange={handleBgColorChange}
-              presets={[
-                // Noir → Gris foncé (9)
-                "#000000","#050505","#0A0A0A","#111111","#1C1C1E","#2C2C2E","#3A3A3C","#4A4A4C","#636366",
-                // Gris moyen → Blanc (9)
-                "#8E8E93","#AEAEB2","#C7C7CC","#D1D1D6","#E5E5EA","#EBEBEB","#F0F0F0","#F5F5F5","#FFFFFF",
-                // Bleu nuit (9)
-                "#020B18","#0A0A1A","#0D1828","#0F1F33","#16213E","#1B2A4A","#1E3A5F","#0F3460","#243C54",
-                // Bleu vif (9)
-                "#001A6E","#0033AA","#0047AB","#005AE0","#007AFF","#0099FF","#29ABE2","#00B4D8","#64B5F6",
-                // Teal foncé (9)
-                "#001A1A","#003333","#004444","#005555","#006666","#007777","#008888","#009999","#00AAAA",
-                // Teal clair (9)
-                "#00BBBB","#00CED1","#20B2AA","#3DCFCF","#48D1CC","#5CE0D8","#7DE8E8","#9FF0F0","#C0FAF8",
-                // Vert foncé (9)
-                "#041404","#0A1A0A","#122212","#1A3218","#20401E","#285228","#336633","#3D7A3D","#4A8C4A",
-                // Vert vif (9)
-                "#005522","#006633","#008844","#00A550","#14B860","#2ECC71","#48D882","#7EE8A2","#B2F5CC",
-                // Kaki / Olive (9)
-                "#1A1A00","#2A2A00","#3A3800","#4A4A1A","#5C6B3A","#6B8040","#8BAA50","#A0C060","#C8DC80",
-                // Marron / Espresso (9)
-                "#150800","#1C0E05","#2E1A0E","#3A2A1C","#4A3020","#6B4520","#8B5E2A","#A0522D","#C68642",
-                // Orange / Ambre (9)
-                "#3A1A00","#5C2800","#8B3A00","#CC5500","#E65C00","#FF6600","#FF7F00","#FF9500","#FFB300",
-                // Or / Jaune (9)
-                "#3A2E00","#5A4400","#997700","#BB9900","#D4AF37","#E8C840","#FFD700","#FFE44A","#FFF0A0",
-                // Rouge foncé (9)
-                "#0A0000","#1A0508","#2A0A14","#4A1428","#6B1A30","#8B0000","#AA1111","#CC3333","#E85555",
-                // Corail / Saumon (9)
-                "#7A1A0A","#AA3333","#CC4444","#E8553A","#F07060","#F59080","#F7B09A","#FAC8B4","#FDDDD0",
-                // Rose / Magenta (9)
-                "#220011","#440022","#660033","#880044","#AA0055","#CC0066","#EE1188","#FF55AA","#FFB0D8",
-                // Violet foncé (9)
-                "#0A0514","#180A28","#2A1040","#3A1A54","#4A1E6B","#6D28D9","#8B36B0","#9B59B6","#B07CD0",
-                // Violet clair / Lavande (9)
-                "#C8A0E8","#D8C0F8","#E4DEFF","#EDE8F8","#F0E8FF","#F5F0FF","#E8E0FF","#D8D0FF","#CCBFFF",
-                // Crème / Ivoire (9)
-                "#F0E8D8","#F4EDD8","#F5F0E8","#F8F4EF","#FAF8F5","#FFFBF5","#FFFDE8","#FFFFF0","#FAFAF5",
-                // Pastel chaud — pêche / abricot (9)
-                "#FFE8E0","#FFD4BC","#FFC4A4","#FFB8A0","#F5D0B8","#FFECD2","#FFDAB9","#FFE4C4","#FFECC8",
-                // Pastel froid — bleu / lilas (9)
-                "#E0E8FF","#D0DCFF","#D0E4FF","#C0D8FF","#B0CCFF","#E8E0FF","#D8D0FF","#D0C8FF","#C8C0FF",
-                // Pastel vert / menthe (9)
-                "#D0F5EA","#B8EDD8","#A0E4C4","#E8F5E8","#D4ECD4","#C8DCC4","#B8CDB8","#E8F4E4","#D4E8D0",
-                // Pastel rose / pêche (9)
-                "#FFE0EE","#FFD0E4","#FFC0D8","#F5D0E0","#EEC0D0","#FFD4C0","#FFCCB0","#FFC4A0","#FFB890",
-              ]}
+              presets={BG_PRESETS}
             />
 
             {/* Bouton téléchargement bannière depuis palette */}
@@ -1539,32 +1638,20 @@ export default function CartePage() {
           {walletType === "google" && (
             <>
               <div style={{ padding: "10px 12px", borderRadius: 10, fontSize: 11, background: "rgba(66,133,244,0.06)", border: "1px solid rgba(66,133,244,0.2)", color: "var(--fg-secondary)", lineHeight: 1.6 }}>
-                <strong style={{ color: "#4285F4" }}>Google Wallet</strong> — structure fixée par Google. Tu contrôles la couleur, le logo, l&apos;image bannière et les textes.
+                <strong style={{ color: "#4285F4" }}>Google Wallet</strong> — structure fixée par Google. Tu contrôles la couleur de fond, la bannière, le logo et les labels.
               </div>
 
+              {/* Couleur de fond — palette complète */}
               <Section label="Couleur de fond">
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                  Couleur principale de la carte Google Wallet.
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: googleBgColor, border: "2px solid var(--border)", flexShrink: 0 }} />
-                  <input
-                    type="color" value={googleBgColor}
-                    onChange={e => setGoogleBgColor(e.target.value)}
-                    style={{ width: 36, height: 36, border: "none", padding: 0, background: "none", cursor: "pointer", borderRadius: 8 }}
-                  />
-                  <span style={{ fontSize: 12, color: "var(--fg-secondary)", fontFamily: "monospace" }}>{googleBgColor}</span>
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {["#007AFF","#34C759","#FF3B30","#FF9500","#AF52DE","#5AC8FA","#1C1C1E","#2C2C2E","#4A4A4C","#636366"].map(c => (
-                    <button key={c} onClick={() => setGoogleBgColor(c)} style={{
-                      width: 28, height: 28, borderRadius: 7, border: googleBgColor === c ? "2px solid var(--fg)" : "1px solid var(--border)",
-                      background: c, cursor: "pointer", padding: 0,
-                    }} />
-                  ))}
-                </div>
+                <ColorRow
+                  label="Fond"
+                  value={googleBgColor}
+                  onChange={setGoogleBgColor}
+                  presets={BG_PRESETS}
+                />
               </Section>
 
+              {/* Logo */}
               <Section label="Logo">
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Affiché en rond dans le coin supérieur gauche.
@@ -1580,13 +1667,190 @@ export default function CartePage() {
                 </div>
               </Section>
 
-              <Section label="Image bannière">
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                  Image large affichée en haut de la carte · Ratio 3:1 · Recommandé : 1032×336px
+              {/* Éditeur bannière dégradé — même grid que Apple */}
+              <Section label="Éditeur bannière">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
+                  Choisir un thème dégradé
                 </p>
-                {googleHeroUrl && (
-                  <div style={{ marginBottom: 8, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)" }}>
-                    <img src={googleHeroUrl} alt="Hero" style={{ width: "100%", height: 80, objectFit: "cover", display: "block" }} />
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 5 }}>
+                  {GRADIENT_THEMES.map(t => (
+                    <button key={t.name} title={t.name} onClick={async () => {
+                      const angle = t.angle ?? 135;
+                      const glassMode = (t as { glass?: boolean }).glass ?? false;
+                      setGoogleStripFrom(t.from); setGoogleStripTo(t.to);
+                      setGoogleStripAngle(angle); setGoogleStripGlass(glassMode);
+                      setIsUploadedGoogleHero(false); setRawGoogleHeroUrl("");
+                      const hero = await buildStrip(
+                        t.from, t.to, angle,
+                        googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont,
+                        googleStripText2, googleStripText2Size,
+                        googleStripIncludeLogo ? logoUrl : undefined,
+                        glassMode, 1032, 344
+                      );
+                      setGoogleHeroUrl(hero);
+                    }} style={{
+                      width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
+                      background: (t as { glass?: boolean }).glass
+                        ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 55%), linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`
+                        : `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
+                      border: googleStripFrom === t.from && googleStripTo === t.to ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.2)",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.18)", flexShrink: 0,
+                    }}/>
+                  ))}
+                </div>
+
+                {/* Texte sur la bannière */}
+                <Field label="Texte sur la bannière">
+                  <TextInput value={googleStripText} onChange={setGoogleStripText} placeholder="Nom, slogan, accroche…"/>
+                </Field>
+
+                {googleStripText && (<>
+                  <Field label="Taille du texte">
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {(["s","m","l"] as const).map(s => (
+                        <button key={s} onClick={() => setGoogleStripTextSize(s)} style={{
+                          flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                          background: googleStripTextSize === s ? "var(--accent)" : "var(--glass-bg)",
+                          color: googleStripTextSize === s ? "white" : "var(--fg-secondary)",
+                          border: `1px solid ${googleStripTextSize === s ? "var(--accent)" : "var(--border)"}`,
+                          cursor: "pointer",
+                        }}>{s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}</button>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Position du texte">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                      {([["bl","Bas gauche"],["bc","Bas centre"],["br","Bas droite"],["c","Centre"]] as const).map(([v,l]) => (
+                        <button key={v} onClick={() => setGoogleStripTextPos(v)} style={{
+                          padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 500,
+                          background: googleStripTextPos === v ? "var(--accent)" : "var(--glass-bg)",
+                          color: googleStripTextPos === v ? "white" : "var(--fg-secondary)",
+                          border: `1px solid ${googleStripTextPos === v ? "var(--accent)" : "var(--border)"}`,
+                          cursor: "pointer",
+                        }}>{l}</button>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Police">
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {([["sans","Sans"],["serif","Serif"],["mono","Mono"]] as const).map(([v,l]) => (
+                        <button key={v} onClick={() => setGoogleStripFont(v)} style={{
+                          flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12,
+                          fontFamily: v === "serif" ? "Georgia, serif" : v === "mono" ? "monospace" : "inherit",
+                          background: googleStripFont === v ? "var(--accent)" : "var(--glass-bg)",
+                          color: googleStripFont === v ? "white" : "var(--fg-secondary)",
+                          border: `1px solid ${googleStripFont === v ? "var(--accent)" : "var(--border)"}`,
+                          cursor: "pointer",
+                        }}>{l}</button>
+                      ))}
+                    </div>
+                  </Field>
+                  <ColorRow label="Couleur texte" value={googleStripTextColor} onChange={setGoogleStripTextColor}
+                    presets={["#FFFFFF","#F0F0F0","#CCCCCC","#000000","#1C1C1E","#FFD700","#FFB300","#FF9500","#FF6600","#FF3B30","#FF2D55","#AF52DE","#007AFF","#34C759","#5AC8FA"]}
+                  />
+                  <Field label="Sous-titre">
+                    <TextInput value={googleStripText2} onChange={setGoogleStripText2} placeholder="Sous-titre, tagline…"/>
+                  </Field>
+                  {googleStripText2 && (
+                    <Field label="Taille sous-titre">
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {(["s","m","l"] as const).map(s => (
+                          <button key={s} onClick={() => setGoogleStripText2Size(s)} style={{
+                            flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                            background: googleStripText2Size === s ? "var(--accent)" : "var(--glass-bg)",
+                            color: googleStripText2Size === s ? "white" : "var(--fg-secondary)",
+                            border: `1px solid ${googleStripText2Size === s ? "var(--accent)" : "var(--border)"}`,
+                            cursor: "pointer",
+                          }}>{s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}</button>
+                        ))}
+                      </div>
+                    </Field>
+                  )}
+                </>)}
+
+                {/* Inclure logo */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 4 }}>
+                  <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>Inclure le logo</span>
+                  <button onClick={() => setGoogleStripIncludeLogo(v => !v)} style={{
+                    width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer",
+                    background: googleStripIncludeLogo ? "var(--accent)" : "var(--border)", position: "relative", transition: "background 0.2s",
+                  }}>
+                    <div style={{ position: "absolute", top: 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left 0.2s", left: googleStripIncludeLogo ? 22 : 2 }}/>
+                  </button>
+                </div>
+
+                {/* Actions */}
+                {googleStripFrom && (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={async () => {
+                      const hero = await buildStrip(
+                        googleStripFrom, googleStripTo, googleStripAngle,
+                        googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont,
+                        googleStripText2, googleStripText2Size,
+                        googleStripIncludeLogo ? logoUrl : undefined,
+                        googleStripGlass, 1032, 344
+                      );
+                      setGoogleHeroUrl(hero);
+                    }} style={{
+                      flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                      background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer",
+                    }}>↺ Régénérer</button>
+                    {googleHeroUrl && (
+                      <button onClick={() => downloadStrip(googleHeroUrl, `wallio-hero-${nom || "carte"}.jpg`)} style={{
+                        flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                        background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer",
+                      }}>⬇ Télécharger</button>
+                    )}
+                    <button onClick={() => {
+                      setGoogleHeroUrl(""); setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleStripGlass(false);
+                    }} style={{
+                      padding: "8px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                      background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)", color: "#FF3B30", cursor: "pointer",
+                    }}>×</button>
+                  </div>
+                )}
+              </Section>
+
+              {/* Image bannière — photo uploadée */}
+              <Section label="Image bannière (photo)">
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                  Photo uploadée · Ratio 3:1 · Remplace le dégradé si définie
+                </p>
+                {(googleHeroUrl || rawGoogleHeroUrl) && (
+                  <div
+                    ref={isUploadedGoogleHero ? googleHeroPreviewRef : undefined}
+                    style={{
+                      marginBottom: 8, borderRadius: 10, overflow: "hidden",
+                      border: "1px solid var(--border)", aspectRatio: "3/1",
+                      position: "relative",
+                      cursor: isUploadedGoogleHero ? "grab" : "default",
+                      userSelect: "none", touchAction: "none",
+                    }}
+                    onPointerDown={isUploadedGoogleHero ? onGoogleHeroPointerDown : undefined}
+                    onPointerMove={isUploadedGoogleHero ? onGoogleHeroPointerMove : undefined}
+                    onPointerUp={isUploadedGoogleHero ? onGoogleHeroPointerUp : undefined}
+                    onPointerCancel={isUploadedGoogleHero ? onGoogleHeroPointerUp : undefined}
+                  >
+                    <img
+                      src={isUploadedGoogleHero && rawGoogleHeroUrl ? rawGoogleHeroUrl : googleHeroUrl}
+                      alt="Hero"
+                      draggable={false}
+                      style={{
+                        width: "100%", height: "100%", objectFit: "cover", display: "block",
+                        objectPosition: isUploadedGoogleHero ? `50% ${googleHeroCropY}%` : "center",
+                        pointerEvents: "none", userSelect: "none",
+                      }}
+                    />
+                    {isUploadedGoogleHero && (
+                      <div style={{
+                        position: "absolute", bottom: 5, right: 5,
+                        background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+                        borderRadius: 5, padding: "2px 7px", fontSize: 10, color: "white",
+                        pointerEvents: "none",
+                      }}>
+                        Glissez pour cadrer
+                      </div>
+                    )}
                   </div>
                 )}
                 <div style={{ display: "flex", gap: 6 }}>
@@ -1596,17 +1860,21 @@ export default function CartePage() {
                     cursor: uploadingGoogleHero ? "wait" : "pointer", textAlign: "center",
                   }}>
                     <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleGoogleHeroUpload} disabled={uploadingGoogleHero} />
-                    {uploadingGoogleHero ? "Upload…" : googleHeroUrl ? "Changer" : "Ajouter une bannière"}
+                    {uploadingGoogleHero ? "Upload…" : googleHeroUrl ? "Changer" : "Ajouter une photo"}
                   </label>
                   {googleHeroUrl && (
-                    <button onClick={async () => { setGoogleHeroUrl(""); await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: "" }); }}
-                      style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer" }}>
+                    <button onClick={async () => {
+                      setGoogleHeroUrl(""); setRawGoogleHeroUrl(""); setIsUploadedGoogleHero(false);
+                      setGoogleStripFrom(""); setGoogleStripTo("");
+                      await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: "" });
+                    }} style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer" }}>
                       Suppr.
                     </button>
                   )}
                 </div>
               </Section>
 
+              {/* Labels */}
               <Section label="Labels">
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Seuls textes personnalisables — le reste est imposé par Google.
@@ -1638,9 +1906,36 @@ export default function CartePage() {
   );
 }
 
+// ── Color presets shared Apple + Google ──────────────
+const BG_PRESETS = [
+  "#000000","#050505","#0A0A0A","#111111","#1C1C1E","#2C2C2E","#3A3A3C","#4A4A4C","#636366",
+  "#8E8E93","#AEAEB2","#C7C7CC","#D1D1D6","#E5E5EA","#EBEBEB","#F0F0F0","#F5F5F5","#FFFFFF",
+  "#020B18","#0A0A1A","#0D1828","#0F1F33","#16213E","#1B2A4A","#1E3A5F","#0F3460","#243C54",
+  "#001A6E","#0033AA","#0047AB","#005AE0","#007AFF","#0099FF","#29ABE2","#00B4D8","#64B5F6",
+  "#001A1A","#003333","#004444","#005555","#006666","#007777","#008888","#009999","#00AAAA",
+  "#00BBBB","#00CED1","#20B2AA","#3DCFCF","#48D1CC","#5CE0D8","#7DE8E8","#9FF0F0","#C0FAF8",
+  "#041404","#0A1A0A","#122212","#1A3218","#20401E","#285228","#336633","#3D7A3D","#4A8C4A",
+  "#005522","#006633","#008844","#00A550","#14B860","#2ECC71","#48D882","#7EE8A2","#B2F5CC",
+  "#1A1A00","#2A2A00","#3A3800","#4A4A1A","#5C6B3A","#6B8040","#8BAA50","#A0C060","#C8DC80",
+  "#150800","#1C0E05","#2E1A0E","#3A2A1C","#4A3020","#6B4520","#8B5E2A","#A0522D","#C68642",
+  "#3A1A00","#5C2800","#8B3A00","#CC5500","#E65C00","#FF6600","#FF7F00","#FF9500","#FFB300",
+  "#3A2E00","#5A4400","#997700","#BB9900","#D4AF37","#E8C840","#FFD700","#FFE44A","#FFF0A0",
+  "#0A0000","#1A0508","#2A0A14","#4A1428","#6B1A30","#8B0000","#AA1111","#CC3333","#E85555",
+  "#7A1A0A","#AA3333","#CC4444","#E8553A","#F07060","#F59080","#F7B09A","#FAC8B4","#FDDDD0",
+  "#220011","#440022","#660033","#880044","#AA0055","#CC0066","#EE1188","#FF55AA","#FFB0D8",
+  "#1A0A3A","#2A1040","#3A1A54","#4A1E6B","#6D28D9","#8B36B0","#9B59B6","#B07CD0","#C8A0E8",
+  "#D8C0F8","#E4DEFF","#EDE8F8","#F0E8FF","#F5F0FF","#E8E0FF","#D8D0FF","#CCBFFF","#F0E8D8",
+  "#FFE8E0","#FFD4BC","#FFC4A4","#FFB8A0","#F5D0B8","#FFECD2","#FFDAB9","#FFE4C4","#FFECC8",
+  "#E0E8FF","#D0DCFF","#D0E4FF","#C0D8FF","#B0CCFF","#E8E0FF","#D8D0FF","#D0C8FF","#C8C0FF",
+  "#D0F5EA","#B8EDD8","#A0E4C4","#E8F5E8","#D4ECD4","#C8DCC4","#B8CDB8","#E8F4E4","#D4E8D0",
+  "#FFE0EE","#FFD0E4","#FFC0D8","#F5D0E0","#EEC0D0","#FFD4C0","#FFCCB0","#FFC4A0","#FFB890",
+];
+
 // ── Gradient themes ──────────────────────────────────
 
 const GRADIENT_THEMES = [
+  // Wallio DA — liquid glass iOS 26
+  { name: "Wallio",      from: "#007AFF", to: "#8B5CF6",   bg: "#1A0A3A",   angle: 135, glass: true  },
   // Noir / Gris (5)
   { name: "Minuit",      from: "#1A1A2E", to: "#0A0A0A",   bg: "#0A0A0A",   angle: 160 },
   { name: "Charbon",     from: "#2C2C2E", to: "#0A0A0A",   bg: "#0A0A0A",   angle: 140 },
@@ -1737,8 +2032,11 @@ async function buildStrip(
   text2 = "",
   text2Size: "s"|"m"|"l" = "s",
   logoUrl?: string,
+  glass = false,
+  canvasW = 750,
+  canvasH = 288,
 ): Promise<string> {
-  const W = 750, H = 288;
+  const W = canvasW, H = canvasH;
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d")!;
@@ -1754,6 +2052,29 @@ async function buildStrip(
   grad.addColorStop(1, to);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
+
+  // Effet liquid glass iOS 26
+  if (glass) {
+    // Reflet spéculaire haut
+    const sheen = ctx.createLinearGradient(0, 0, 0, H * 0.58);
+    sheen.addColorStop(0, "rgba(255,255,255,0.28)");
+    sheen.addColorStop(0.5, "rgba(255,255,255,0.07)");
+    sheen.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, W, H);
+    // Liseré gauche
+    const edge = ctx.createLinearGradient(0, 0, W * 0.32, 0);
+    edge.addColorStop(0, "rgba(255,255,255,0.14)");
+    edge.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = edge;
+    ctx.fillRect(0, 0, W, H);
+    // Vignette bas pour profondeur
+    const vignette = ctx.createLinearGradient(0, H * 0.6, 0, H);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,0,0.22)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
+  }
 
   // Feature 4 — Logo en bas à gauche
   if (logoUrl) {
