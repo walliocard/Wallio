@@ -105,6 +105,34 @@ export async function GET(
     ],
   };
 
+  // Créer ou mettre à jour l'objet dans Google avant de générer le JWT
+  const objRes = await fetch(`${API}/loyaltyObject/${encodeURIComponent(oid)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (objRes.status === 404) {
+    const createObj = await fetch(`${API}/loyaltyObject`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(loyaltyObject),
+    });
+    if (!createObj.ok) {
+      const err = await createObj.text();
+      console.error("[Google Wallet] Erreur création objet:", createObj.status, err);
+      return NextResponse.json({ error: "Erreur création objet Google Wallet" }, { status: 500 });
+    }
+  } else if (objRes.ok) {
+    await fetch(`${API}/loyaltyObject/${encodeURIComponent(oid)}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        loyaltyPoints: loyaltyObject.loyaltyPoints,
+        secondaryLoyaltyPoints: loyaltyObject.secondaryLoyaltyPoints,
+        state: "ACTIVE",
+      }),
+    });
+  }
+
   const jwt = buildSaveToWalletJwt([loyaltyObject]);
   return NextResponse.redirect(`https://pay.google.com/gp/v/save/${jwt}`, 302);
 }
