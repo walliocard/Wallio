@@ -47,7 +47,7 @@ export type Client = {
 };
 
 export type TamponResult =
-  | { type: "ok"; tampons: number; objectif: number; prenom: string }
+  | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean }
   | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number }
   | { type: "anti_doublon"; prenom: string; secondes_restantes: number }
   | { type: "not_found" };
@@ -128,7 +128,7 @@ export async function creerClient(data: {
     niveau: 0,
     recompense_en_attente: false,
     date_inscription: serverTimestamp(),
-    derniere_visite: null,
+    derniere_visite: serverTimestamp(),
   });
   return { clientId: ref.id, walletId };
 }
@@ -167,7 +167,7 @@ export async function ajouterTampon(
     if (!palier) {
       // Tous les paliers déjà complétés — tampon bonus
       await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp() });
-      return { type: "ok", tampons: nouveauxTampons, objectif: nouveauxTampons, prenom: client.prenom };
+      return { type: "ok", tampons: nouveauxTampons, objectif: nouveauxTampons, prenom: client.prenom, double: doubleActif };
     }
 
     if (nouveauxTampons >= palier.tampons) {
@@ -180,7 +180,7 @@ export async function ajouterTampon(
     }
 
     await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp() });
-    return { type: "ok", tampons: nouveauxTampons, objectif: palier.tampons, prenom: client.prenom };
+    return { type: "ok", tampons: nouveauxTampons, objectif: palier.tampons, prenom: client.prenom, double: doubleActif };
   }
 
   // ── Mode cyclique ────────────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ export async function ajouterTampon(
   }
 
   await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp() });
-  return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom };
+  return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif };
 }
 
 export async function validerRecompense(

@@ -159,10 +159,16 @@ function ResultScreen({ result, marchand, onValiderRecompense }: {
         </div>
 
         <h1 className="text-[28px] font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>
-          {isOk && "Tampon ajouté !"}
+          {isOk && (result.double ? "2 tampons ajoutés ! 🎉" : "Tampon ajouté !")}
           {isRecompense && "Récompense débloquée !"}
           {isAntiDoublon && "Déjà enregistré"}
         </h1>
+
+        {isOk && result.double && (
+          <p className="text-[13px] font-medium mb-2 px-3 py-1.5 rounded-full inline-block" style={{ background: "rgba(0,122,255,0.1)", color: "var(--accent)" }}>
+            Offre spéciale x2 tampons active
+          </p>
+        )}
 
         <p className="text-[17px] mb-8" style={{ color: "var(--fg-secondary)" }}>
           {isOk && `${result.prenom} — ${result.tampons}/${result.objectif} tampons`}
@@ -185,13 +191,12 @@ function ResultScreen({ result, marchand, onValiderRecompense }: {
         )}
 
         {isRecompense && (
-          <button
-            onClick={onValiderRecompense}
-            className="w-full py-4 rounded-2xl text-[17px] font-semibold text-white"
-            style={{ background: "#34C759", boxShadow: "0 8px 24px rgba(52,199,89,0.3)" }}
-          >
-            Valider la récompense
-          </button>
+          <div className="rounded-2xl px-5 py-4" style={{ background: "rgba(52,199,89,0.1)", border: "1px solid rgba(52,199,89,0.2)" }}>
+            <p className="text-[15px] font-semibold mb-1" style={{ color: "#34C759" }}>Récompense à retirer</p>
+            <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
+              Montrez cet écran au marchand pour valider votre récompense.
+            </p>
+          </div>
         )}
       </div>
     </main>

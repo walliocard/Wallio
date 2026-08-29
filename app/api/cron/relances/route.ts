@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
-import { adminDb } from "@/lib/admin";
+import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
 
 export async function GET(req: Request) {
   if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  initAdmin();
   const db = adminDb();
+  const messaging = adminMessaging();
 
   const marchandsSnap = await db.collection("marchands")
     .where("actif", "==", true)
@@ -19,6 +21,8 @@ export async function GET(req: Request) {
   for (const marchandDoc of marchandsSnap.docs) {
     const marchand = marchandDoc.data();
     const delaiJours = marchand.automatisations?.relance?.delai_jours ?? 30;
+    const message = marchand.automatisations?.relance?.message as string | undefined;
+    const logoUrl = marchand.logo_url as string | undefined;
     const seuil = Timestamp.fromMillis(Date.now() - delaiJours * 86400 * 1000);
 
     const clientsSnap = await db.collection("clients")
@@ -26,11 +30,27 @@ export async function GET(req: Request) {
       .where("derniere_visite", "<", seuil)
       .get();
 
+    const tokens: string[] = [];
+
     for (const clientDoc of clientsSnap.docs) {
-      if (!clientDoc.data().relance_pending) {
-        await clientDoc.ref.update({ relance_pending: true });
-        traites++;
-      }
+      const client = clientDoc.data();
+      if (client.relance_pending) continue;
+
+      await clientDoc.ref.update({ relance_pending: true });
+
+      if (client.fcm_token) tokens.push(client.fcm_token);
+      traites++;
+    }
+
+    if (tokens.length > 0 && message) {
+      await messaging.sendEachForMulticast({
+        tokens,
+        notification: { title: `${marchand.nom} vous manque 👋`, body: message },
+        webpush: {
+          notification: { icon: logoUrl || "/icon-192.png", badge: "/favicon-32.png" },
+          fcmOptions: { link: "https://app.wallio.ma" },
+        },
+      });
     }
   }
 
