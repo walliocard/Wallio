@@ -540,12 +540,11 @@ export default function CartePage() {
         setStripRawCloudinaryUrl(rawCloud);
       } catch { /* non bloquant */ }
 
-      const cropped = await applyCrop(rawUrl, cropY);
-      const finalUrl = await uploadToCloudinary(cropped, `${user.uid}/strip`);
-      setStripUrl(finalUrl);
-
-      // N'écrire en Firestore que si l'utilisateur n'a pas déjà sauvegardé entre-temps
+      // Si l'utilisateur a déjà sauvegardé entre-temps, ne pas écraser son crop
       if (!savedAfterUploadRef.current) {
+        const cropped = await applyCrop(rawUrl, cropY);
+        const finalUrl = await uploadToCloudinary(cropped, `${user.uid}/strip`);
+        setStripUrl(finalUrl);
         await updateDoc(doc(db, "marchands", user.uid), {
           strip_url: finalUrl,
           strip_raw_url: rawCloud,
