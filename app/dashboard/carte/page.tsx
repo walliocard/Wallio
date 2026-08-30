@@ -89,11 +89,15 @@ export default function CartePage() {
 
   // Feature 6 — cadrage image uploadée
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
+  const [stripRawCloudinaryUrl, setStripRawCloudinaryUrl] = useState<string>(
+    ((marchand as Record<string, unknown>).strip_raw_url as string) || ""
+  );
   const [cropY, setCropY] = useState<number>(((marchand as Record<string, unknown>).apple_strip_crop_y as number) ?? 50);
   const [isUploadedStrip, setIsUploadedStrip] = useState<boolean>(false);
   const [cropZoom, setCropZoom] = useState<number>(1);
   const [showStripCrop, setShowStripCrop] = useState(false);
   const [showGoogleCrop, setShowGoogleCrop] = useState(false);
+  const savedAfterUploadRef = useRef(false);
   const isDraggingRef = useRef(false);
   const stripPreviewRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startY: number; startCrop: number }>({ startY: 0, startCrop: 50 });
@@ -401,6 +405,7 @@ export default function CartePage() {
 
   async function sauvegarder() {
     setSaving(true);
+    savedAfterUploadRef.current = true;
     try {
     // Toujours uploader les dataUrls sur Cloudinary avant Firestore (évite documents > 1MB)
     let finalStripUrl = stripUrl;
@@ -467,6 +472,7 @@ export default function CartePage() {
       apple_stamp_logo_opacity: stampLogoOpacity,
       apple_strip_text_y: stripTextY,
       apple_strip_crop_y: cropY,
+      strip_raw_url: stripRawCloudinaryUrl,
       google_primary_label: googlePrimaryLabel,
       google_secondary_label: googleSecondaryLabel,
       google_bg_color: googleBgColor,
@@ -522,19 +528,34 @@ export default function CartePage() {
     const file = e.target.files?.[0];
     if (!file || !user || !file.type.startsWith("image/")) return;
     setUploadingStrip(true);
+    savedAfterUploadRef.current = false;
     pushHistory();
     try {
-      // Store raw resized (maintain aspect) for cropping
       const rawUrl = await resizeImageRaw(file, 1500);
       setRawStripUrl(rawUrl);
       setIsUploadedStrip(true);
-      setStripFrom(""); // clear gradient mode
+      setStripFrom("");
       setStripTo("");
+
+      // Upload raw pour repositionnement futur
+      let rawCloud = "";
+      try {
+        rawCloud = await uploadToCloudinary(rawUrl, `${user.uid}/strip_raw`);
+        setStripRawCloudinaryUrl(rawCloud);
+      } catch { /* non bloquant */ }
 
       const cropped = await applyCrop(rawUrl, cropY);
       const finalUrl = await uploadToCloudinary(cropped, `${user.uid}/strip`);
       setStripUrl(finalUrl);
-      await updateDoc(doc(db, "marchands", user.uid), { strip_url: finalUrl });
+
+      // N'écrire en Firestore que si l'utilisateur n'a pas déjà sauvegardé entre-temps
+      if (!savedAfterUploadRef.current) {
+        await updateDoc(doc(db, "marchands", user.uid), {
+          strip_url: finalUrl,
+          strip_raw_url: rawCloud,
+          apple_strip_crop_y: cropY,
+        });
+      }
     } catch (err: unknown) {
       alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -1008,11 +1029,20 @@ export default function CartePage() {
                     Recadrer
                   </button>
                 )}
+                {/* Repositionner — réactive le drag depuis l'image raw sauvegardée */}
+                {stripUrl && !rawStripUrl && stripRawCloudinaryUrl && (
+                  <button
+                    onClick={() => { setRawStripUrl(stripRawCloudinaryUrl); setIsUploadedStrip(true); }}
+                    style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--accent)", color: "var(--accent)", cursor: "pointer" }}
+                  >
+                    Repositionner
+                  </button>
+                )}
                 {stripUrl && (
                   <button
                     onClick={() => {
-                      setStripUrl(""); setRawStripUrl(""); setIsUploadedStrip(false); setCropZoom(1);
-                      updateDoc(doc(db, "marchands", user!.uid), { strip_url: "" });
+                      setStripUrl(""); setRawStripUrl(""); setStripRawCloudinaryUrl(""); setIsUploadedStrip(false); setCropZoom(1);
+                      updateDoc(doc(db, "marchands", user!.uid), { strip_url: "", strip_raw_url: "" });
                     }}
                     style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", color: "#FF3B30", cursor: "pointer" }}
                   >
@@ -2029,7 +2059,7 @@ export default function CartePage() {
     {/* Crop editor Apple Wallet strip (375×144 → 750×288) */}
     {showStripCrop && (rawStripUrl || stripUrl) && (
       <CropEditor
-        imageUrl={rawStripUrl || stripUrl}
+        imageUrl={rawStripUrl || stripRawCloudinaryUrl || stripUrl}
         targetW={750} targetH={288}
         label="Bannière Apple Wallet — 375×144pt (ratio 2.6:1)"
         onCrop={async (dataUrl) => {
