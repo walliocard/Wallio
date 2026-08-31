@@ -127,10 +127,11 @@ export async function creerClient(data: {
 
 export async function ajouterTampon(
   client: Client,
-  marchand: Marchand
+  marchand: Marchand,
+  forceOverride = false
 ): Promise<TamponResult> {
-  // Anti-doublon
-  if (client.derniere_visite) {
+  // Anti-doublon — ignoré si le marchand force manuellement
+  if (!forceOverride && client.derniere_visite) {
     const maintenant = Date.now() / 1000;
     const ecoulee = maintenant - client.derniere_visite.seconds;
     if (ecoulee < marchand.anti_doublon_delai) {

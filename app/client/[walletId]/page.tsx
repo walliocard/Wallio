@@ -40,20 +40,18 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     init();
   }, [user, marchandAuth, authLoading, walletId]);
 
-  async function handleAjouterTampon() {
+  async function handleAjouterTampon(forceOverride = false) {
     if (!client || !marchand || ajoutEnCours) return;
     setAjoutEnCours(true);
-    const r = await ajouterTampon(client, marchand);
+    const r = await ajouterTampon(client, marchand, forceOverride);
     setResult(r);
-    if (r.type === "ok") {
-      setClient(prev => prev ? { ...prev, tampons: r.tampons, derniere_visite: { seconds: Date.now() / 1000 } as never } : prev);
-      const body = JSON.stringify({ walletId: client.wallet_id });
-      const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
-      fetch("/api/apple-wallet/push-update", opts).catch(() => {});
-      fetch("/api/google-wallet/push-update", opts).catch(() => {});
-    }
-    if (r.type === "recompense") {
-      setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: true, derniere_visite: { seconds: Date.now() / 1000 } as never } : prev);
+    if (r.type === "ok" || r.type === "recompense") {
+      setClient(prev => prev ? {
+        ...prev,
+        tampons: r.type === "ok" ? r.tampons : 0,
+        recompense_en_attente: r.type === "recompense" ? true : prev.recompense_en_attente,
+        derniere_visite: { seconds: Date.now() / 1000 } as never,
+      } : prev);
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       fetch("/api/apple-wallet/push-update", opts).catch(() => {});
@@ -226,14 +224,24 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
               }}
             >
               {result.type === "ok"          && `Tampon ajouté — ${result.tampons}/${result.objectif}`}
-              {result.type === "anti_doublon" && "Déjà enregistré récemment"}
+              {result.type === "anti_doublon" && "Déjà scanné récemment"}
               {result.type === "recompense"   && `${result.nom_recompense} débloqué !`}
             </p>
             <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
               {result.type === "ok" && result.objectif > result.tampons && `${result.objectif - result.tampons} tampon${result.objectif - result.tampons > 1 ? "s" : ""} restant avant la récompense`}
-              {result.type === "anti_doublon" && `Prochain tampon dans ${formatTemps(result.secondes_restantes)}`}
+              {result.type === "anti_doublon" && `Scanné il y a ${formatTemps(marchand!.anti_doublon_delai - result.secondes_restantes)} — prochain dans ${formatTemps(result.secondes_restantes)}`}
               {result.type === "recompense" && "Validez la récompense pour continuer"}
             </p>
+            {result.type === "anti_doublon" && (
+              <button
+                onClick={() => handleAjouterTampon(true)}
+                disabled={ajoutEnCours}
+                className="mt-3 w-full py-2.5 rounded-xl text-[13px] font-semibold"
+                style={{ background: "rgba(255,159,10,0.15)", color: "#FF9F0A", border: "1px solid rgba(255,159,10,0.3)" }}
+              >
+                Ajouter quand même
+              </button>
+            )}
           </div>
         )}
 
