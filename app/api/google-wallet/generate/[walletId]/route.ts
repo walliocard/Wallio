@@ -82,12 +82,20 @@ export async function GET(
       return NextResponse.json({ error: "Erreur création classe Google Wallet" }, { status: 500 });
     }
   } else if (classRes.ok) {
-    // Classe existante — PATCH pour appliquer les dernières modifications du marchand
-    await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(classBody),
-    });
+    // Classe existante — PATCH avec updateMask (requis par l'API Google)
+    const fields = ["programName", "hexBackgroundColor", "programLogo", "issuerName"];
+    if (heroUrl) fields.push("heroImage");
+    const patchRes = await fetch(
+      `${API}/loyaltyClass/${encodeURIComponent(cid)}?updateMask=${fields.join(",")}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(classBody),
+      }
+    );
+    if (!patchRes.ok) {
+      console.error("[Google Wallet] PATCH classe échoué:", patchRes.status, await patchRes.text());
+    }
   } else {
     const err = await classRes.text();
     console.error("[Google Wallet] Erreur récupération classe:", classRes.status, err);
