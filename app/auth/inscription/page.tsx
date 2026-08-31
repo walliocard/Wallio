@@ -26,7 +26,6 @@ export default function InscriptionPage() {
         date_inscription: serverTimestamp(),
         objectif_tampons: 10,
         nom_recompense: "Récompense offerte",
-        mode_recompense: "cyclique",
         icone_tampons: "⭐",
         couleur_principale: "#007AFF",
         couleur_secondaire: "#F5F5F7",
