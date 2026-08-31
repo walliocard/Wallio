@@ -327,6 +327,13 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
     setLoading(true);
     setError("");
     try {
+      const existing = await getClientByTelephone(telephone, marchand.id);
+      if (existing &&
+          existing.prenom.trim().toLowerCase() === prenom.trim().toLowerCase() &&
+          existing.nom.trim().toLowerCase() === nom.trim().toLowerCase()) {
+        onSuccess(existing);
+        return;
+      }
       const { clientId, walletId } = await creerClient({ prenom, nom, telephone, date_naissance, marchand_id: marchand.id });
       onSuccess({ id: clientId, prenom, nom, telephone: `${indicatif.code}${numPropre}`, date_naissance, wallet_id: walletId, marchand_id: marchand.id, tampons: 0 });
     } catch {

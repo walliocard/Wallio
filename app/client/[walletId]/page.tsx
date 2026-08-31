@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import {
   getClientByWalletId, getMarchandById,
   ajouterTampon, validerRecompense, setTampons,
@@ -21,6 +24,8 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   const [ajoutEnCours, setAjoutEnCours] = useState(false);
   const [validationEnCours, setValidationEnCours] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (authLoading) return;
@@ -158,7 +163,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
               {client.tampons} / {objectif} tampons
             </p>
             <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
-              {marchand?.icone_tampons} {nomRecompense}
+              {nomRecompense}
             </p>
           </div>
           <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "var(--border)" }}>
@@ -173,9 +178,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
                 key={i}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-300"
                 style={{ background: i < client.tampons ? "var(--accent)" : "var(--border)" }}
-              >
-                {i < client.tampons ? (marchand?.icone_tampons || "⭐") : ""}
-              </div>
+              />
             ))}
           </div>
         </div>
@@ -204,9 +207,9 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
                   "var(--accent)",
               }}
             >
-              {result.type === "ok"          && `✅ Tampon ajouté — ${result.tampons}/${result.objectif}`}
-              {result.type === "anti_doublon" && "⏳ Déjà enregistré récemment"}
-              {result.type === "recompense"   && `🎁 ${result.nom_recompense} débloqué !`}
+              {result.type === "ok"          && `Tampon ajouté — ${result.tampons}/${result.objectif}`}
+              {result.type === "anti_doublon" && "Déjà enregistré récemment"}
+              {result.type === "recompense"   && `${result.nom_recompense} débloqué !`}
             </p>
             <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
               {result.type === "ok" && result.objectif > result.tampons && `${result.objectif - result.tampons} tampon${result.objectif - result.tampons > 1 ? "s" : ""} restant avant la récompense`}
@@ -224,7 +227,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
             className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-3"
             style={{ background: "#34C759", boxShadow: "0 4px 18px rgba(52,199,89,0.35)" }}
           >
-            {validationEnCours ? "Validation…" : "🎁 Valider la récompense"}
+            {validationEnCours ? "Validation…" : "Valider la récompense"}
           </button>
         ) : (
           <button
@@ -275,6 +278,21 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
             </button>
           </div>
         </div>
+
+        {/* Supprimer le client */}
+        <button
+          onClick={async () => {
+            if (!confirm(`Supprimer définitivement ${client.prenom} ${client.nom} ?`)) return;
+            setDeleting(true);
+            await deleteDoc(doc(db, "clients", client.id));
+            router.push("/dashboard");
+          }}
+          disabled={deleting}
+          className="w-full py-3.5 rounded-2xl text-[14px] font-medium mt-3"
+          style={{ background: "rgba(255,59,48,0.07)", color: "#FF3B30", border: "1px solid rgba(255,59,48,0.2)" }}
+        >
+          {deleting ? "Suppression…" : "Supprimer ce client"}
+        </button>
 
       </div>
     </main>
