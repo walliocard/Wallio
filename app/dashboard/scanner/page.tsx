@@ -4,10 +4,12 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
 import { getClientByTelephone, type Client } from "@/lib/loyalty";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import Link from "next/link";
 import jsQR from "jsqr";
 
-type Tab = "qr" | "telephone";
+type Tab = "qr" | "telephone" | "nom";
 
 export default function ScannerPage() {
   const { user } = useAuth();
@@ -24,6 +26,11 @@ export default function ScannerPage() {
   const [phone, setPhone] = useState("");
   const [searching, setSearching] = useState(false);
   const [phoneResult, setPhoneResult] = useState<Client | "not_found" | null>(null);
+
+  // Nom
+  const [nom, setNom] = useState("");
+  const [searchingNom, setSearchingNom] = useState(false);
+  const [nomResults, setNomResults] = useState<Client[] | null>(null);
 
   const scan = useCallback(() => {
     const video = videoRef.current;
@@ -51,7 +58,11 @@ export default function ScannerPage() {
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      if (videoRef.current) videoRef.current.srcObject = stream;
+      // videoRef.current est toujours disponible car <video> est toujours dans le DOM
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
       setScanning(true);
       animRef.current = requestAnimationFrame(scan);
     } catch { setScanning(false); }
@@ -76,6 +87,20 @@ export default function ScannerPage() {
     const client = await getClientByTelephone(phone.trim(), user.uid);
     setPhoneResult(client || "not_found");
     setSearching(false);
+  }
+
+  async function rechercherParNom() {
+    if (!user || !nom.trim()) return;
+    setSearchingNom(true);
+    setNomResults(null);
+    const q = query(collection(db, "clients"), where("marchand_id", "==", user.uid));
+    const snap = await getDocs(q);
+    const terme = nom.trim().toLowerCase();
+    const resultats = snap.docs
+      .map(d => ({ id: d.id, ...d.data() } as Client))
+      .filter(c => `${c.prenom} ${c.nom}`.toLowerCase().includes(terme));
+    setNomResults(resultats);
+    setSearchingNom(false);
   }
 
   // QR détecté
@@ -112,10 +137,15 @@ export default function ScannerPage() {
 
         {/* Onglets */}
         <div className="flex gap-2 mt-4">
-          {([["qr", "QR Code"], ["telephone", "Téléphone"]] as [Tab, string][]).map(([t, label]) => (
+          {([["qr", "QR Code"], ["telephone", "Téléphone"], ["nom", "Nom"]] as [Tab, string][]).map(([t, label]) => (
             <button
               key={t}
-              onClick={() => { setTab(t); setPhoneResult(null); setPhone(""); if (scanning) stopCamera(); }}
+              onClick={() => {
+                setTab(t);
+                setPhoneResult(null); setPhone("");
+                setNomResults(null); setNom("");
+                if (scanning) stopCamera();
+              }}
               className="px-4 py-2 rounded-2xl text-[13px] font-medium transition-all"
               style={{
                 background: tab === t ? "var(--accent)" : "var(--glass-bg)",
@@ -135,31 +165,33 @@ export default function ScannerPage() {
         {tab === "qr" && (
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <div className="w-full md:max-w-md">
-              {scanning ? (
-                <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: "1" }}>
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                  <canvas ref={canvasRef} className="hidden" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="relative w-52 h-52">
-                      {[
-                        "top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl",
-                        "top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl",
-                        "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl",
-                        "bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl",
-                      ].map((cls, i) => (
-                        <div key={i} className={`absolute w-8 h-8 ${cls}`} style={{ borderColor: "var(--accent)" }} />
-                      ))}
-                    </div>
+              {/* Conteneur caméra — toujours dans le DOM pour que videoRef soit disponible */}
+              <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: "1", display: scanning ? "block" : "none" }}>
+                <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
+                <canvas ref={canvasRef} className="hidden" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative w-52 h-52">
+                    {[
+                      "top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl",
+                      "top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl",
+                      "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl",
+                      "bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl",
+                    ].map((cls, i) => (
+                      <div key={i} className={`absolute w-8 h-8 ${cls}`} style={{ borderColor: "var(--accent)" }} />
+                    ))}
                   </div>
-                  <button
-                    onClick={stopCamera}
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
-                    style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(10px)" }}
-                  >
-                    Arrêter
-                  </button>
                 </div>
-              ) : (
+                <button
+                  onClick={stopCamera}
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
+                  style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(10px)" }}
+                >
+                  Arrêter
+                </button>
+              </div>
+
+              {/* État idle */}
+              {!scanning && (
                 <div
                   className="rounded-3xl flex flex-col items-center justify-center text-center p-10"
                   style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", aspectRatio: "1" }}
@@ -268,7 +300,7 @@ export default function ScannerPage() {
                     </p>
                     <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
                       {phoneResult.tampons} tampon{phoneResult.tampons > 1 ? "s" : ""}
-                      {phoneResult.recompense_en_attente && " · 🎁 Récompense en attente"}
+                      {phoneResult.recompense_en_attente && " · Récompense en attente"}
                     </p>
                   </div>
                 </div>
@@ -279,6 +311,80 @@ export default function ScannerPage() {
                 >
                   Accéder au profil →
                 </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Tab Nom ── */}
+        {tab === "nom" && (
+          <div className="max-w-md">
+            <p className="text-[14px] mb-4" style={{ color: "var(--fg-secondary)" }}>
+              Recherchez un client par son prénom ou nom.
+            </p>
+
+            <div className="flex gap-2 mb-5">
+              <input
+                type="text"
+                placeholder="Prénom ou nom..."
+                value={nom}
+                onChange={e => { setNom(e.target.value); setNomResults(null); }}
+                onKeyDown={e => e.key === "Enter" && rechercherParNom()}
+                className="flex-1 px-4 py-3.5 rounded-2xl text-[15px] outline-none"
+                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                onBlur={e => (e.target.style.borderColor = "var(--border)")}
+              />
+              <button
+                onClick={rechercherParNom}
+                disabled={searchingNom || !nom.trim()}
+                className="px-5 py-3.5 rounded-2xl font-semibold text-white text-[14px]"
+                style={{ background: "var(--accent)", opacity: !nom.trim() ? 0.5 : 1 }}
+              >
+                {searchingNom ? "…" : "Chercher"}
+              </button>
+            </div>
+
+            {nomResults !== null && nomResults.length === 0 && (
+              <div className="rounded-2xl p-5 text-center"
+                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                <p className="text-[16px] font-semibold mb-1" style={{ color: "var(--fg)" }}>Aucun résultat</p>
+                <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
+                  Aucun client ne correspond à &quot;{nom}&quot;.
+                </p>
+              </div>
+            )}
+
+            {nomResults && nomResults.length > 0 && (
+              <div className="rounded-2xl overflow-hidden"
+                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                {nomResults.map((c, i) => (
+                  <Link
+                    key={c.id}
+                    href={`/client/${c.wallet_id}`}
+                    className="flex items-center gap-3.5 px-5 py-4 transition-opacity active:opacity-70"
+                    style={{ borderBottom: i < nomResults.length - 1 ? "1px solid var(--border)" : "none" }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[13px] flex-shrink-0"
+                      style={{ background: "var(--accent)" }}
+                    >
+                      {(c.prenom?.[0] || "").toUpperCase()}{(c.nom?.[0] || "").toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-semibold truncate" style={{ color: "var(--fg)" }}>
+                        {c.prenom} {c.nom}
+                      </p>
+                      <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>
+                        {c.tampons} tampon{c.tampons > 1 ? "s" : ""}
+                        {c.recompense_en_attente && " · Récompense en attente"}
+                      </p>
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                      <path d="M9 18l6-6-6-6" stroke="var(--fg-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </Link>
+                ))}
               </div>
             )}
           </div>

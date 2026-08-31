@@ -78,6 +78,10 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     await setTampons(client.id, next);
     setClient(prev => prev ? { ...prev, tampons: next } : prev);
     setResult(null);
+    const body = JSON.stringify({ walletId: client.wallet_id });
+    const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+    fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+    fetch("/api/google-wallet/push-update", opts).catch(() => {});
     setAdjusting(false);
   }
 

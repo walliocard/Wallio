@@ -575,17 +575,17 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
             rewardLabel={(m.apple_reward_label as string) || "Récompense"}
             memberLabel={(m.apple_member_label as string) || "Membre"}
             mode="full"
-            stampsOnStrip={(m.stamps_on_strip as boolean) ?? false}
-            stripStampStyle={(m.strip_stamp_style as never) || undefined}
-            stampText={(m.stamp_text as string) || undefined}
-            stampTextBold={(m.stamp_text_bold as boolean) ?? false}
-            stampTextItalic={(m.stamp_text_italic as boolean) ?? false}
-            stampTextSize={(m.stamp_text_size as number) || undefined}
-            stampColor={(m.stamp_color as string) || undefined}
-            stampPosition={typeof m.stamp_position === "number" ? m.stamp_position : m.stamp_position === "top" ? 20 : m.stamp_position === "bottom" ? 80 : 50}
-            stampSizePreset={(m.stamp_size_preset as never) || undefined}
-            stampThickness={(m.stamp_thickness as number) || undefined}
-            stampLogoOpacity={(m.stamp_logo_opacity as number) || undefined}
+            stampsOnStrip={(m.apple_stamps_on_strip as boolean) ?? false}
+            stripStampStyle={(m.apple_strip_stamp_style as never) || undefined}
+            stampText={(m.apple_stamp_text as string) || undefined}
+            stampTextBold={(m.apple_stamp_text_bold as boolean) ?? false}
+            stampTextItalic={(m.apple_stamp_text_italic as boolean) ?? false}
+            stampTextSize={(m.apple_stamp_text_size as number) || undefined}
+            stampColor={(m.apple_stamp_color as string) || undefined}
+            stampPosition={typeof m.apple_stamp_position === "number" ? m.apple_stamp_position : m.apple_stamp_position === "top" ? 20 : m.apple_stamp_position === "bottom" ? 80 : 50}
+            stampSizePreset={(m.apple_stamp_size as never) || undefined}
+            stampThickness={(m.apple_stamp_thickness as number) || undefined}
+            stampLogoOpacity={(m.apple_stamp_logo_opacity as number) || undefined}
           />
         </div>
 
