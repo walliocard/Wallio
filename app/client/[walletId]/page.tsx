@@ -169,15 +169,18 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "var(--border)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${pct}%`, background: "var(--accent)" }}
+              style={{ width: `${pct}%`, background: "var(--wallio-gradient)" }}
             />
           </div>
           <div className="flex flex-wrap gap-2">
             {Array.from({ length: objectif }).map((_, i) => (
               <div
                 key={i}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-300"
-                style={{ background: i < client.tampons ? "var(--accent)" : "var(--border)" }}
+                className="w-8 h-8 rounded-full transition-all duration-300"
+                style={i < client.tampons
+                  ? { background: "var(--wallio-gradient)", boxShadow: "0 2px 8px rgba(139,92,246,0.35)" }
+                  : { background: "transparent", border: "1.5px solid var(--border)" }
+                }
               />
             ))}
           </div>
