@@ -53,8 +53,13 @@ export async function GET(
   });
 
   const logoUri = (m.logo_url as string | undefined) || "https://wallio-seven.vercel.app/icon-192.png";
-  const bgColor = (m.google_bg_color as string | undefined) || (m.couleur_principale as string | undefined) || "#1C1C1E";
-  const heroUrl = m.google_hero_url as string | undefined;
+  // Fallback : google_bg_color → apple_bg_color → couleur_principale → noir
+  const bgColor = (m.google_bg_color as string | undefined)
+    || (m.apple_bg_color as string | undefined)
+    || (m.couleur_principale as string | undefined)
+    || "#1C1C1E";
+  // Fallback : google_hero_url → strip_url (bannière Apple Wallet)
+  const heroUrl = (m.google_hero_url as string | undefined) || (m.strip_url as string | undefined);
 
   const classBody = {
     issuerName: "Wallio",
