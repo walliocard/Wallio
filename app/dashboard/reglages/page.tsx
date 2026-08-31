@@ -26,6 +26,7 @@ export default function ReglagesPage() {
   const { user, marchand } = useAuth();
   const autoRaw = (marchand as Record<string, unknown>)?.automatisations as Record<string, Record<string, unknown>> | undefined;
 
+  const [nomEtablissement, setNomEtablissement] = useState<string>(marchand?.nom || "");
   const [objectif, setObjectif] = useState<number>(marchand?.objectif_tampons || 10);
   const [nomRecompense, setNomRecompense] = useState<string>(marchand?.nom_recompense || "");
   const [config, setConfig] = useState({
@@ -64,6 +65,7 @@ export default function ReglagesPage() {
   async function sauvegarder() {
     setSaving(true);
     await updateDoc(doc(db, "marchands", user!.uid), {
+      nom: nomEtablissement,
       objectif_tampons: objectif,
       nom_recompense: nomRecompense,
       ...config,
@@ -96,6 +98,21 @@ export default function ReglagesPage() {
         {/* Programme fidélité */}
         <Card title="Programme de fidélité" className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="md:col-span-2">
+              <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                Nom de l'établissement
+              </p>
+              <input
+                type="text"
+                value={nomEtablissement}
+                onChange={e => setNomEtablissement(e.target.value)}
+                placeholder="ex : Café du Centre"
+                className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                onBlur={e => (e.target.style.borderColor = "var(--border)")}
+              />
+            </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
                 Récompense

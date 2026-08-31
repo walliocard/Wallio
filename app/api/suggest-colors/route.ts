@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { initAdmin, adminAuth } from "@/lib/admin";
 
 export async function POST(request: Request) {
+  // Vérification Firebase idToken
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  try {
+    initAdmin();
+    await adminAuth().verifyIdToken(token);
+  } catch {
+    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(

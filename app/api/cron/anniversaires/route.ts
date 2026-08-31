@@ -23,8 +23,11 @@ export async function GET(req: Request) {
     const joursAvant = marchand.automatisations?.anniversaire?.jours_avant ?? 0;
     const message = marchand.automatisations?.anniversaire?.message as string | undefined;
     const logoUrl = marchand.logo_url as string | undefined;
+    const fuseau = (marchand.fuseau_horaire as string) || "Africa/Casablanca";
 
-    const dateRef = new Date(today);
+    // "Aujourd'hui" dans le fuseau du marchand
+    const localToday = new Date(today.toLocaleString("en-US", { timeZone: fuseau }));
+    const dateRef = new Date(localToday);
     dateRef.setDate(dateRef.getDate() + joursAvant);
     const suffixRef = `${String(dateRef.getMonth() + 1).padStart(2, "0")}-${String(dateRef.getDate()).padStart(2, "0")}`;
 

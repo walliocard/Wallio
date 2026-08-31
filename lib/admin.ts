@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert, getApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
+import { getAuth } from "firebase-admin/auth";
 
 export function initAdmin() {
   if (!getApps().length) {
@@ -23,4 +24,9 @@ export function adminDb() {
 export function adminMessaging() {
   initAdmin();
   return getMessaging();
+}
+
+export function adminAuth() {
+  initAdmin();
+  return getAuth();
 }

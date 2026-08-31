@@ -17,7 +17,6 @@ interface Snapshot {
   stripTo: string;
   stripAngle: number;
   logoUrl: string;
-  nom: string;
   primaryLabel: string;
   rewardLabel: string;
   memberLabel: string;
@@ -29,7 +28,7 @@ interface Snapshot {
 export default function CartePage() {
   const { user, marchand } = useAuth();
 
-  const [nom, setNom] = useState<string>((marchand?.nom as string) || "");
+  const nom = (marchand?.nom as string) || "";
   const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
   const [stripUrl, setStripUrl] = useState<string>((marchand?.strip_url as string) || "");
   const recompense = (marchand?.nom_recompense as string) || "";
@@ -148,7 +147,7 @@ export default function CartePage() {
   const [canUndo, setCanUndo] = useState<boolean>(false);
 
   function makeSnapshot(): Snapshot {
-    return { bgColor, stripUrl, stripFrom, stripTo, stripAngle, logoUrl, nom, primaryLabel, rewardLabel, memberLabel, fgColor, labelColor };
+    return { bgColor, stripUrl, stripFrom, stripTo, stripAngle, logoUrl, primaryLabel, rewardLabel, memberLabel, fgColor, labelColor };
   }
 
   function pushHistory() {
@@ -171,7 +170,6 @@ export default function CartePage() {
     setStripTo(snap.stripTo);
     setStripAngle(snap.stripAngle);
     setLogoUrl(snap.logoUrl);
-    setNom(snap.nom);
     setPrimaryLabel(snap.primaryLabel);
     setRewardLabel(snap.rewardLabel);
     setMemberLabel(snap.memberLabel);
@@ -404,7 +402,6 @@ export default function CartePage() {
       } catch { /* keep existing */ }
     }
     await updateDoc(doc(db, "marchands", user!.uid), {
-      nom,
       logo_url: logoUrl,
       strip_url: finalStripUrl,
       apple_bg_color: bgColor,
@@ -1460,13 +1457,6 @@ export default function CartePage() {
               )}
             </div>
           </Section>}
-
-          {/* Infos — universelles */}
-          <Section label="Informations">
-            <Field label="Nom de l'établissement">
-              <TextInput value={nom} onChange={setNom} placeholder="Café du Centre"/>
-            </Field>
-          </Section>
 
           {/* Labels des champs — Apple uniquement */}
           {walletType === "apple" && <Section label="Labels des champs">
