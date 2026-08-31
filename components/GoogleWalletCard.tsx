@@ -46,6 +46,7 @@ export default function GoogleWalletCard({
   stampsObjective,
   rewardName,
   primaryLabel = "Tampons",
+  secondaryLabel = "Objectif",
   textModules = [],
   links = [],
   previewUid,
@@ -118,7 +119,7 @@ export default function GoogleWalletCard({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: heroUrl ? 8 : 10 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
             <span style={{ fontSize: heroUrl ? 28 : 34, fontWeight: 700, color: text, lineHeight: 1 }}>{stampsCurrent}</span>
-            <span style={{ fontSize: heroUrl ? 14 : 16, color: textSec, fontWeight: 500 }}>/ {stampsObjective}</span>
+            <span style={{ fontSize: heroUrl ? 14 : 16, color: textSec, fontWeight: 500 }}>/ {stampsObjective} {secondaryLabel}</span>
           </div>
           <span style={{ fontSize: 12, color: textSec, letterSpacing: 0.3 }}>{primaryLabel}</span>
         </div>
