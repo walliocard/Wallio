@@ -95,9 +95,7 @@ export default function AppleWalletCard({
   const labelClr = labelColor ?? (dark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.42)");
   const sep = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)";
 
-  const qrUrl = previewUid
-    ? `https://app.wallio.ma/client/${previewUid}`
-    : "https://app.wallio.ma/client/demo";
+  const qrUrl = previewUid ? `WALLIO:${previewUid}` : "WALLIO:demo";
 
   useEffect(() => {
     QRCode.toDataURL(qrUrl, {

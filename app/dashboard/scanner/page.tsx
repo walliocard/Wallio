@@ -40,8 +40,10 @@ export default function ScannerPage() {
     const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const code = jsQR(img.data, img.width, img.height);
     if (code?.data) {
-      const match = code.data.match(/\/client\/([a-f0-9-]+)/);
-      if (match) { setDetected(match[1]); stopCamera(); return; }
+      const walletId =
+        code.data.match(/^WALLIO:([a-f0-9-]+)/)?.[1] ??
+        code.data.match(/\/client\/([a-f0-9-]+)/)?.[1];
+      if (walletId) { setDetected(walletId); stopCamera(); return; }
     }
     animRef.current = requestAnimationFrame(scan);
   }, []);

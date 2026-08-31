@@ -108,7 +108,7 @@ export async function GET(
     },
     barcode: {
       type: "QR_CODE",
-      value: `${BASE_URL}/client/${walletId}`,
+      value: `WALLIO:${walletId}`,
       alternateText: "",
     },
     accountName: `${client.prenom} ${client.nom}`,

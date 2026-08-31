@@ -100,9 +100,9 @@ export function generatePassJson(input: PassInput): object {
       ],
       barcode: {
         format: "PKBarcodeFormatQR",
-        message: `https://app.wallio.ma/client/${input.walletId}`,
+        message: `WALLIO:${input.walletId}`,
         messageEncoding: "iso-8859-1",
-        altText: input.walletId,
+        altText: "",
       },
     },
   };
