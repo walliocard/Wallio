@@ -5,19 +5,12 @@ import {
 } from "firebase/firestore";
 import { v4 as uuid } from "uuid";
 
-export type PalierConfig = {
-  tampons: number;    // tampons nécessaires depuis le palier précédent
-  recompense: string;
-};
-
 export type Marchand = {
   id: string;
   nom: string;
   actif: boolean;
   objectif_tampons: number;
   nom_recompense: string;
-  mode_recompense: "cyclique" | "progressif";
-  paliers?: PalierConfig[];
   icone_tampons: string;
   couleur_principale: string;
   couleur_secondaire: string;
@@ -39,8 +32,6 @@ export type Client = {
   wallet_id: string;
   marchand_id: string;
   tampons: number;
-  niveau?: number;
-  paliers_valides?: boolean[];
   date_inscription?: Timestamp;
   derniere_visite?: Timestamp;
   recompense_en_attente?: boolean;
@@ -125,7 +116,6 @@ export async function creerClient(data: {
     wallet_id: walletId,
     wallet_type: "apple",
     tampons: 0,
-    niveau: 0,
     recompense_en_attente: false,
     date_inscription: serverTimestamp(),
     derniere_visite: serverTimestamp(),
@@ -159,31 +149,6 @@ export async function ajouterTampon(
   const increment = doubleActif ? 2 : 1;
   const nouveauxTampons = client.tampons + increment;
 
-  // ── Mode progressif ──────────────────────────────────────────────────────────
-  if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {
-    const niveau = client.niveau ?? 0;
-    const palier = marchand.paliers[niveau];
-
-    if (!palier) {
-      // Tous les paliers déjà complétés — tampon bonus
-      await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp() });
-      return { type: "ok", tampons: nouveauxTampons, objectif: nouveauxTampons, prenom: client.prenom, double: doubleActif };
-    }
-
-    if (nouveauxTampons >= palier.tampons) {
-      await updateDoc(doc(db, "clients", client.id), {
-        tampons: nouveauxTampons,
-        recompense_en_attente: true,
-        derniere_visite: serverTimestamp(),
-      });
-      return { type: "recompense", prenom: client.prenom, nom_recompense: palier.recompense, tampons: nouveauxTampons };
-    }
-
-    await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp() });
-    return { type: "ok", tampons: nouveauxTampons, objectif: palier.tampons, prenom: client.prenom, double: doubleActif };
-  }
-
-  // ── Mode cyclique ────────────────────────────────────────────────────────────
   const objectif = marchand.objectif_tampons;
   if (nouveauxTampons >= objectif) {
     await updateDoc(doc(db, "clients", client.id), {
@@ -198,20 +163,8 @@ export async function ajouterTampon(
   return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif };
 }
 
-export async function validerRecompense(
-  clientId: string,
-  marchand: Marchand,
-  niveau = 0,
-  paliers_valides: boolean[] = []
-) {
-  const updates: Record<string, unknown> = { recompense_en_attente: false, tampons: 0 };
-  if (marchand.mode_recompense === "progressif") {
-    const newPaliersValides = [...paliers_valides];
-    newPaliersValides[niveau] = true;
-    updates.niveau = niveau + 1;
-    updates.paliers_valides = newPaliersValides;
-  }
-  await updateDoc(doc(db, "clients", clientId), updates);
+export async function validerRecompense(clientId: string) {
+  await updateDoc(doc(db, "clients", clientId), { recompense_en_attente: false, tampons: 0 });
 }
 
 // ─── Utils ────────────────────────────────────────────────────────────────────

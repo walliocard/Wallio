@@ -13,7 +13,6 @@ function relativeLuminance(hex: string): number {
 }
 
 export type StampStyle = "dot"|"ring"|"plus"|"check"|"heart"|"star"|"text"|"logo";
-export interface MilestoneReward { at: number; label: string }
 
 export interface AppleWalletCardProps {
   logoUrl?: string;
@@ -50,7 +49,6 @@ export interface AppleWalletCardProps {
   stampSizePreset?: "s"|"m"|"l";
   stampThickness?: number;
   stampLogoOpacity?: number;
-  milestoneRewards?: MilestoneReward[];
 }
 
 export default function AppleWalletCard({
@@ -88,7 +86,6 @@ export default function AppleWalletCard({
   stampSizePreset = "m",
   stampThickness = 2,
   stampLogoOpacity = 1,
-  milestoneRewards = [],
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -403,41 +400,6 @@ export default function AppleWalletCard({
         </div>
       )}
 
-      {/* ── Paliers de récompenses ── */}
-      {milestoneRewards.length > 0 && (
-        <div style={{ padding: "12px 16px 14px", borderBottom: `1px solid ${sep}` }}>
-          <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
-            À débloquer
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {milestoneRewards.sort((a, b) => a.at - b.at).map((r, i) => {
-              const done = stampsCurrent >= r.at;
-              return (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{
-                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-                    background: done ? fg : "transparent",
-                    border: `1.5px solid ${done ? fg : sep}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    {done && (
-                      <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                        <polyline points="2,6 5,9 10,3" stroke={bg} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 13, color: done ? fg : labelClr, flex: 1, fontWeight: done ? 500 : 400 }}>
-                    {r.label}
-                  </span>
-                  <span style={{ fontSize: 11, color: labelClr, flexShrink: 0 }}>
-                    {r.at} ✦
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* ── Barcode (Apple Wallet impose cette zone en bas, centrée) ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px 24px" }}>

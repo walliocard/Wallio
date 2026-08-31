@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import AppleWalletCard, { type StampStyle, type MilestoneReward } from "@/components/AppleWalletCard";
+import AppleWalletCard, { type StampStyle } from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
 import CropEditor from "@/components/CropEditor";
@@ -83,9 +83,6 @@ export default function CartePage() {
   const [stampSizePreset, setStampSizePreset] = useState<"s"|"m"|"l">(((marchand as Record<string, unknown>).apple_stamp_size as "s"|"m"|"l") || "m");
   const [stampThickness, setStampThickness] = useState<number>(((marchand as Record<string, unknown>).apple_stamp_thickness as number) ?? 2);
   const [stampLogoOpacity, setStampLogoOpacity] = useState<number>(((marchand as Record<string, unknown>).apple_stamp_logo_opacity as number) ?? 1);
-  const [milestoneRewards, setMilestoneRewards] = useState<MilestoneReward[]>(((marchand as Record<string, unknown>).apple_milestone_rewards as MilestoneReward[]) || []);
-  const [newRewardLabel, setNewRewardLabel] = useState("");
-  const [newRewardAt, setNewRewardAt] = useState<number>(objectif);
 
   // Feature 6 — cadrage image uploadée
   const [rawStripUrl, setRawStripUrl] = useState<string>("");
@@ -448,7 +445,6 @@ export default function CartePage() {
       google_hero_url: finalGoogleHeroUrl,
       google_text_modules: googleTextModules,
       google_links: googleLinks,
-      apple_milestone_rewards: milestoneRewards,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -789,7 +785,6 @@ export default function CartePage() {
               stampSizePreset={stampSizePreset}
               stampThickness={stampThickness}
               stampLogoOpacity={stampLogoOpacity}
-              milestoneRewards={milestoneRewards}
             />
           ) : (
             <GoogleWalletCard
@@ -1526,76 +1521,6 @@ export default function CartePage() {
             </Field>
           </Section>
 
-          {/* Paliers intermédiaires — Apple uniquement */}
-          {walletType === "apple" && <Section label="Paliers à débloquer">
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-              Cadeaux intermédiaires visibles sur la carte du client.
-            </p>
-
-            {/* Liste existante */}
-            {milestoneRewards.sort((a, b) => a.at - b.at).map((r, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <div style={{
-                  flexShrink: 0, padding: "3px 8px", borderRadius: 20, fontSize: 11, fontWeight: 600,
-                  background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)",
-                }}>
-                  {r.at} ✦
-                </div>
-                <span style={{ flex: 1, fontSize: 13, color: "var(--fg)" }}>{r.label}</span>
-                <button onClick={() => setMilestoneRewards(prev => prev.filter((_, j) => j !== i))} style={{
-                  width: 26, height: 26, borderRadius: 6, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                  background: "none", border: "1px solid var(--border)", color: "var(--fg-tertiary)", cursor: "pointer",
-                }}>×</button>
-              </div>
-            ))}
-
-            {/* Ajouter un palier */}
-            <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-              <input type="number" min={1} max={objectif - 1} value={newRewardAt}
-                onChange={e => setNewRewardAt(Math.min(objectif - 1, Math.max(1, +e.target.value)))}
-                style={{
-                  width: 52, padding: "7px 8px", borderRadius: 8, fontSize: 12, textAlign: "center",
-                  background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none",
-                }}
-              />
-              <input type="text" value={newRewardLabel} onChange={e => setNewRewardLabel(e.target.value)}
-                placeholder="ex : Café offert" maxLength={40}
-                style={{
-                  flex: 1, padding: "7px 10px", borderRadius: 8, fontSize: 12,
-                  background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none",
-                }}
-                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-                onBlur={e => (e.target.style.borderColor = "var(--border)")}
-                onKeyDown={e => {
-                  if (e.key === "Enter" && newRewardLabel.trim()) {
-                    setMilestoneRewards(prev => [...prev, { at: newRewardAt, label: newRewardLabel.trim() }]);
-                    setNewRewardLabel("");
-                    setNewRewardAt(objectif);
-                  }
-                }}
-              />
-              <button
-                disabled={!newRewardLabel.trim()}
-                onClick={() => {
-                  if (!newRewardLabel.trim()) return;
-                  setMilestoneRewards(prev => [...prev, { at: newRewardAt, label: newRewardLabel.trim() }]);
-                  setNewRewardLabel("");
-                  setNewRewardAt(objectif);
-                }}
-                style={{
-                  padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-                  background: newRewardLabel.trim() ? "var(--accent)" : "var(--glass-bg)",
-                  border: "1px solid var(--border)",
-                  color: newRewardLabel.trim() ? "white" : "var(--fg-tertiary)", cursor: "pointer",
-                }}
-              >
-                +
-              </button>
-            </div>
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginTop: 6 }}>
-              Le chiffre = nombre de tampons requis. Entrez et appuyez sur +.
-            </p>
-          </Section>}
 
           {/* Champ en-tête — Apple uniquement */}
           {walletType === "apple" && (

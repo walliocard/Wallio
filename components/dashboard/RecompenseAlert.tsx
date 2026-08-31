@@ -37,14 +37,10 @@ export default function RecompenseAlert({ marchand, marchandId }: { marchand: Ma
 
   if (!alerte) return null;
 
-  const nomRecompense = marchand.mode_recompense === "progressif" && marchand.paliers?.length
-    ? marchand.paliers[alerte.niveau ?? 0]?.recompense ?? marchand.nom_recompense
-    : marchand.nom_recompense;
-
   async function handleValider() {
     if (!alerte) return;
     setValidating(true);
-    await validerRecompense(alerte.id, marchand, alerte.niveau ?? 0, alerte.paliers_valides ?? []);
+    await validerRecompense(alerte.id);
     setValidating(false);
     setAlerte(null);
   }
@@ -75,7 +71,7 @@ export default function RecompenseAlert({ marchand, marchandId }: { marchand: Ma
           {alerte.prenom} {alerte.nom}
         </h2>
         <p className="text-[15px] mb-6" style={{ color: "var(--fg-secondary)" }}>
-          {nomRecompense}
+          {marchand.nom_recompense}
         </p>
 
         <div className="flex gap-2.5">

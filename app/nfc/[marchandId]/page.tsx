@@ -76,12 +76,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       marchand={screen.marchand}
       walletId={screen.client.wallet_id}
       onValiderRecompense={async () => {
-        await validerRecompense(
-          screen.client.id,
-          screen.marchand,
-          screen.client.niveau ?? 0,
-          screen.client.paliers_valides ?? []
-        );
+        await validerRecompense(screen.client.id);
         setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
       }}
     />
@@ -584,7 +579,6 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
             stampSizePreset={(m.stamp_size_preset as never) || undefined}
             stampThickness={(m.stamp_thickness as number) || undefined}
             stampLogoOpacity={(m.stamp_logo_opacity as number) || undefined}
-            milestoneRewards={(m.milestone_rewards as never) || undefined}
           />
         </div>
 

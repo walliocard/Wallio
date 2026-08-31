@@ -1,25 +1,19 @@
 import type { ReactElement } from "react";
 
-/* ── Palier (mode progressif) ── */
-export interface Palier {
-  tampons: number;      // tampons nécessaires pour CE palier (depuis le précédent)
-  recompense: string;   // "Café offert"
-}
-
 /* ── Données marchand ── */
 export interface CardData {
   nom: string;
   slogan?: string;
   logo_url?: string;
-  tampons: number;           // tampons en cours (palier actuel ou total cyclique)
-  objectif_tampons: number;  // objectif du palier actuel (ou total cyclique)
-  nom_recompense: string;    // récompense du palier actuel
+  tampons: number;
+  objectif_tampons: number;
+  nom_recompense: string;
 
-  /* Mode progressif */
-  mode?: "cyclique" | "progressif";
-  paliers?: Palier[];                 // tous les paliers configurés
-  palier_actuel?: number;             // index 0-based du palier en cours
-  paliers_valides?: boolean[];        // paliers déjà réclamés
+  /* Champs progressif conservés pour compatibilité templates — toujours undefined en production */
+  mode?: never;
+  paliers?: never;
+  palier_actuel?: number;
+  paliers_valides?: never;
 
   /* Photo de couverture horizontale */
   photo_url?: string;

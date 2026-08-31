@@ -49,8 +49,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
       fetch("/api/google-wallet/push-update", opts).catch(() => {});
     }
     if (r.type === "recompense") {
-      const newTampons = marchand.mode_recompense === "cyclique" ? 0 : r.tampons;
-      setClient(prev => prev ? { ...prev, tampons: newTampons, recompense_en_attente: true, derniere_visite: { seconds: Date.now() / 1000 } as never } : prev);
+      setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: true, derniere_visite: { seconds: Date.now() / 1000 } as never } : prev);
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       fetch("/api/apple-wallet/push-update", opts).catch(() => {});
@@ -62,30 +61,15 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   async function handleValiderRecompense() {
     if (!client || !marchand || validationEnCours) return;
     setValidationEnCours(true);
-    const niveau = client.niveau ?? 0;
-    const paliers_valides = client.paliers_valides ?? [];
-    await validerRecompense(client.id, marchand, niveau, paliers_valides);
+    await validerRecompense(client.id);
     setResult(null);
-    if (marchand.mode_recompense === "progressif") {
-      const newPaliersValides = [...paliers_valides];
-      newPaliersValides[niveau] = true;
-      setClient(prev => prev ? {
-        ...prev, tampons: 0, niveau: niveau + 1,
-        paliers_valides: newPaliersValides, recompense_en_attente: false,
-      } : prev);
-    } else {
-      setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
-    }
+    setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
     setValidationEnCours(false);
   }
 
   async function handleAjuster(delta: number) {
     if (!client || !marchand || adjusting) return;
-    const palierActuel = marchand.mode_recompense === "progressif" && marchand.paliers?.length
-      ? marchand.paliers[client.niveau ?? 0]
-      : null;
-    const maxTampons = palierActuel ? palierActuel.tampons : marchand.objectif_tampons;
-    const next = Math.max(0, Math.min(client.tampons + delta, maxTampons));
+    const next = Math.max(0, Math.min(client.tampons + delta, marchand.objectif_tampons));
     setAdjusting(true);
     await setTampons(client.id, next);
     setClient(prev => prev ? { ...prev, tampons: next } : prev);
@@ -97,10 +81,8 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   if (!user || !marchandAuth?.actif) return <Erreur message="Connectez-vous pour accéder à cette page." />;
   if (!client) return <Erreur message="Client introuvable pour cet établissement." />;
 
-  const estProgressif = marchand?.mode_recompense === "progressif" && !!marchand?.paliers?.length;
-  const palierActuel = estProgressif ? marchand!.paliers![client.niveau ?? 0] : null;
-  const objectif = palierActuel ? palierActuel.tampons : (marchand?.objectif_tampons || 10);
-  const nomRecompense = palierActuel ? palierActuel.recompense : (marchand?.nom_recompense || "");
+  const objectif = marchand?.objectif_tampons || 10;
+  const nomRecompense = marchand?.nom_recompense || "";
   const pct = Math.min((client.tampons / objectif) * 100, 100);
   const restants = objectif - client.tampons;
 
@@ -170,48 +152,6 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         {/* Tampons */}
         <div className="rounded-2xl p-5 mb-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
 
-          {/* Roadmap paliers (mode progressif) */}
-          {estProgressif && marchand?.paliers && (
-            <div className="mb-4">
-              <div className="flex items-center gap-0 mb-2">
-                {marchand.paliers.map((p, i) => {
-                  const valide = client.paliers_valides?.[i] ?? false;
-                  const actuel = i === (client.niveau ?? 0);
-                  return (
-                    <div key={i} className="flex items-center flex-1 min-w-0">
-                      <div className="flex flex-col items-center flex-shrink-0">
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
-                          style={{
-                            background: valide ? "var(--accent)" : actuel ? "rgba(0,122,255,0.12)" : "var(--border)",
-                            border: `1.5px solid ${valide || actuel ? "var(--accent)" : "var(--border)"}`,
-                            color: valide ? "white" : actuel ? "var(--accent)" : "var(--fg-tertiary)",
-                          }}
-                        >
-                          {valide ? "✓" : i + 1}
-                        </div>
-                        <p className="text-[9px] mt-1 max-w-[50px] text-center truncate" style={{ color: valide ? "var(--accent)" : actuel ? "var(--fg-secondary)" : "var(--fg-tertiary)" }}>
-                          {p.recompense || `Palier ${i + 1}`}
-                        </p>
-                      </div>
-                      {i < marchand.paliers!.length - 1 && (
-                        <div className="flex-1 h-px mx-1" style={{ background: valide ? "var(--accent)" : "var(--border)" }} />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {palierActuel ? (
-                <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
-                  Palier {(client.niveau ?? 0) + 1} sur {marchand.paliers.length}
-                </p>
-              ) : (
-                <p className="text-[12px] font-medium" style={{ color: "var(--accent)" }}>
-                  🏆 Fidélité complète — tous les paliers atteints
-                </p>
-              )}
-            </div>
-          )}
 
           <div className="flex items-center justify-between mb-3">
             <p className="text-[15px] font-semibold" style={{ color: "var(--fg)" }}>
