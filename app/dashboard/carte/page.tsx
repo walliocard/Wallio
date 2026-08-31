@@ -411,6 +411,10 @@ export default function CartePage() {
     let finalStripUrl = stripUrl;
     if (isUploadedStrip && rawStripUrl) {
       try {
+        // Upload raw pour repositionnement futur (non bloquant)
+        uploadToCloudinary(rawStripUrl, `${user!.uid}/strip_raw`)
+          .then(url => setStripRawCloudinaryUrl(url))
+          .catch(() => {});
         const cropped = await applyCrop(rawStripUrl, cropY, cropZoom);
         finalStripUrl = await uploadToCloudinary(cropped, `${user!.uid}/strip`);
         setStripUrl(finalStripUrl);
@@ -524,7 +528,6 @@ export default function CartePage() {
     const file = e.target.files?.[0];
     if (!file || !user || !file.type.startsWith("image/")) return;
     setUploadingStrip(true);
-    savedAfterUploadRef.current = false;
     pushHistory();
     try {
       const rawUrl = await resizeImageRaw(file, 1500);
@@ -532,25 +535,8 @@ export default function CartePage() {
       setIsUploadedStrip(true);
       setStripFrom("");
       setStripTo("");
-
-      // Upload raw pour repositionnement futur
-      let rawCloud = "";
-      try {
-        rawCloud = await uploadToCloudinary(rawUrl, `${user.uid}/strip_raw`);
-        setStripRawCloudinaryUrl(rawCloud);
-      } catch { /* non bloquant */ }
-
-      // Si l'utilisateur a déjà sauvegardé entre-temps, ne pas écraser son crop
-      if (!savedAfterUploadRef.current) {
-        const cropped = await applyCrop(rawUrl, cropY);
-        const finalUrl = await uploadToCloudinary(cropped, `${user.uid}/strip`);
-        setStripUrl(finalUrl);
-        await updateDoc(doc(db, "marchands", user.uid), {
-          strip_url: finalUrl,
-          strip_raw_url: rawCloud,
-          apple_strip_crop_y: cropY,
-        });
-      }
+      // L'upload Cloudinary se fait uniquement dans sauvegarder()
+      // pour éviter d'écraser le crop repositionné par l'utilisateur
     } catch (err: unknown) {
       alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
