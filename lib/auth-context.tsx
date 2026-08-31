@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "./firebase";
-import { getMarchand } from "./firestore";
+import { onSnapshot, doc } from "firebase/firestore";
+import { auth, db } from "./firebase";
 
 type MarchandData = {
   id: string;
@@ -39,32 +39,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fallback = setTimeout(() => {
-      console.warn("[auth] Firebase timeout — forcing loading=false");
-      setLoading(false);
-    }, 5000);
+    let unsubSnap: (() => void) | null = null;
 
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const fallback = setTimeout(() => setLoading(false), 5000);
+
+    const unsubAuth = onAuthStateChanged(auth, (u) => {
       clearTimeout(fallback);
       setUser(u);
+
+      // Annuler l'éventuel snapshot précédent
+      unsubSnap?.();
+      unsubSnap = null;
+
       if (u) {
-        try {
-          const timeout = new Promise<null>((_, reject) =>
-            setTimeout(() => reject(new Error("getMarchand timeout")), 5000)
-          );
-          const data = await Promise.race([getMarchand(u.uid), timeout]);
-          setMarchand(data as MarchandData | null);
-        } catch (e) {
-          console.error("[auth] getMarchand failed:", e);
-          setMarchand(null);
-        }
+        // onSnapshot garde le marchand toujours à jour
+        unsubSnap = onSnapshot(
+          doc(db, "marchands", u.uid),
+          (snap) => {
+            if (snap.exists()) {
+              setMarchand({ id: snap.id, ...snap.data() } as MarchandData);
+            } else {
+              setMarchand(null);
+            }
+            setLoading(false);
+          },
+          () => { setMarchand(null); setLoading(false); }
+        );
       } else {
         setMarchand(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => { unsub(); clearTimeout(fallback); };
+    return () => {
+      unsubAuth();
+      unsubSnap?.();
+      clearTimeout(fallback);
+    };
   }, []);
 
   return (

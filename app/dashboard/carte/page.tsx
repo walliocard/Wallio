@@ -18,7 +18,6 @@ interface Snapshot {
   stripAngle: number;
   logoUrl: string;
   nom: string;
-  recompense: string;
   primaryLabel: string;
   rewardLabel: string;
   memberLabel: string;
@@ -33,8 +32,8 @@ export default function CartePage() {
   const [nom, setNom] = useState<string>((marchand?.nom as string) || "");
   const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
   const [stripUrl, setStripUrl] = useState<string>((marchand?.strip_url as string) || "");
-  const [recompense, setRecompense] = useState<string>((marchand?.nom_recompense as string) || "");
-  const [objectif, setObjectif] = useState<number>((marchand?.objectif_tampons as number) || 10);
+  const recompense = (marchand?.nom_recompense as string) || "";
+  const objectif = (marchand?.objectif_tampons as number) || 10;
   const couleurPrincipale = (marchand as Record<string, unknown>).couleur_principale as string || "#007AFF";
 
   // Couleurs Apple Wallet — 3 champs officiels
@@ -149,7 +148,7 @@ export default function CartePage() {
   const [canUndo, setCanUndo] = useState<boolean>(false);
 
   function makeSnapshot(): Snapshot {
-    return { bgColor, stripUrl, stripFrom, stripTo, stripAngle, logoUrl, nom, recompense, primaryLabel, rewardLabel, memberLabel, fgColor, labelColor };
+    return { bgColor, stripUrl, stripFrom, stripTo, stripAngle, logoUrl, nom, primaryLabel, rewardLabel, memberLabel, fgColor, labelColor };
   }
 
   function pushHistory() {
@@ -173,7 +172,6 @@ export default function CartePage() {
     setStripAngle(snap.stripAngle);
     setLogoUrl(snap.logoUrl);
     setNom(snap.nom);
-    setRecompense(snap.recompense);
     setPrimaryLabel(snap.primaryLabel);
     setRewardLabel(snap.rewardLabel);
     setMemberLabel(snap.memberLabel);
@@ -409,8 +407,6 @@ export default function CartePage() {
       nom,
       logo_url: logoUrl,
       strip_url: finalStripUrl,
-      nom_recompense: recompense,
-      objectif_tampons: objectif,
       apple_bg_color: bgColor,
       apple_fg_color: fgAuto ? null : fgColor,
       apple_label_color: labelAuto ? null : labelColor,
@@ -1498,28 +1494,6 @@ export default function CartePage() {
             />
           </Section>}
 
-          {/* Récompense principale — universelle */}
-          <Section label="Récompense finale">
-            <Field label="Description">
-              <TextInput value={recompense} onChange={setRecompense} placeholder="1 café offert"/>
-            </Field>
-            <Field label={`Tampons nécessaires — ${objectif}`}>
-              <input type="range" min={5} max={20} value={objectif}
-                onChange={e => setObjectif(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--accent)" }}/>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                {[5,6,8,10,12,15,20].map(n => (
-                  <button key={n} onClick={() => setObjectif(n)} style={{
-                    fontSize: 10, padding: "2px 5px", borderRadius: 5,
-                    background: objectif === n ? "var(--accent)" : "var(--glass-bg)",
-                    border: "1px solid var(--border)",
-                    color: objectif === n ? "white" : "var(--fg-tertiary)",
-                    cursor: "pointer",
-                  }}>{n}</button>
-                ))}
-              </div>
-            </Field>
-          </Section>
 
 
           {/* Champ en-tête — Apple uniquement */}

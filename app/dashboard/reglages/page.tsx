@@ -26,6 +26,8 @@ export default function ReglagesPage() {
   const { user, marchand } = useAuth();
   const autoRaw = (marchand as Record<string, unknown>)?.automatisations as Record<string, Record<string, unknown>> | undefined;
 
+  const [objectif, setObjectif] = useState<number>(marchand?.objectif_tampons || 10);
+  const [nomRecompense, setNomRecompense] = useState<string>(marchand?.nom_recompense || "");
   const [config, setConfig] = useState({
     anti_doublon_delai: marchand?.anti_doublon_delai || 86400,
     fuseau_horaire:   marchand?.fuseau_horaire || Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -62,6 +64,8 @@ export default function ReglagesPage() {
   async function sauvegarder() {
     setSaving(true);
     await updateDoc(doc(db, "marchands", user!.uid), {
+      objectif_tampons: objectif,
+      nom_recompense: nomRecompense,
       ...config,
       automatisations: {
         anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant, message: auto.anniversaire_message },
@@ -89,6 +93,48 @@ export default function ReglagesPage() {
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
 
+        {/* Programme fidélité */}
+        <Card title="Programme de fidélité" className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                Récompense
+              </p>
+              <input
+                type="text"
+                value={nomRecompense}
+                onChange={e => setNomRecompense(e.target.value)}
+                placeholder="ex : 1 café offert"
+                className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                onBlur={e => (e.target.style.borderColor = "var(--border)")}
+              />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                Tampons nécessaires — <span style={{ color: "var(--accent)" }}>{objectif}</span>
+              </p>
+              <input type="range" min={5} max={20} value={objectif}
+                onChange={e => setObjectif(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--accent)", marginBottom: 8 }}
+              />
+              <div className="flex justify-between">
+                {[5, 6, 8, 10, 12, 15, 20].map(n => (
+                  <button key={n} onClick={() => setObjectif(n)}
+                    className="text-[11px] px-2 py-1 rounded-lg transition-all"
+                    style={{
+                      background: objectif === n ? "var(--accent)" : "var(--bg)",
+                      border: "1px solid var(--border)",
+                      color: objectif === n ? "white" : "var(--fg-tertiary)",
+                    }}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Anti-doublon */}
         <Card title="Anti-doublon">
