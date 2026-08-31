@@ -389,54 +389,24 @@ export default function CartePage() {
     }
   }
 
-  async function uploadToCloudinary(dataUrl: string, publicId: string): Promise<string> {
-    const formData = new FormData();
-    formData.append("file", dataUrl);
-    formData.append("upload_preset", "Wallio");
-    formData.append("public_id", publicId);
-    const res = await fetch("https://api.cloudinary.com/v1_1/youdtjaj/image/upload", {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) throw new Error("Cloudinary upload failed");
-    const data = await res.json();
-    return data.secure_url as string;
-  }
 
   async function sauvegarder() {
     setSaving(true);
     savedAfterUploadRef.current = true;
     try {
-    // Toujours uploader les dataUrls sur Cloudinary avant Firestore (évite documents > 1MB)
     let finalStripUrl = stripUrl;
     if (isUploadedStrip && rawStripUrl) {
       try {
-        // Upload raw pour repositionnement futur (non bloquant)
-        uploadToCloudinary(rawStripUrl, `${user!.uid}/strip_raw`)
-          .then(url => setStripRawCloudinaryUrl(url))
-          .catch(() => {});
-        const cropped = await applyCrop(rawStripUrl, cropY, cropZoom);
-        finalStripUrl = await uploadToCloudinary(cropped, `${user!.uid}/strip`);
+        finalStripUrl = await applyCrop(rawStripUrl, cropY, cropZoom);
         setStripUrl(finalStripUrl);
       } catch { /* keep existing */ }
-    } else if (finalStripUrl.startsWith("data:")) {
-      try {
-        finalStripUrl = await uploadToCloudinary(finalStripUrl, `${user!.uid}/strip`);
-        setStripUrl(finalStripUrl);
-      } catch { finalStripUrl = ""; setStripUrl(""); } // si échec, efface plutôt que stocker
     }
     let finalGoogleHeroUrl = googleHeroUrl;
     if (isUploadedGoogleHero && rawGoogleHeroUrl) {
       try {
-        const cropped = await applyHeroCrop(rawGoogleHeroUrl, googleHeroCropY, googleHeroCropZoom);
-        finalGoogleHeroUrl = await uploadToCloudinary(cropped, `${user!.uid}/google_hero`);
+        finalGoogleHeroUrl = await applyHeroCrop(rawGoogleHeroUrl, googleHeroCropY, googleHeroCropZoom);
         setGoogleHeroUrl(finalGoogleHeroUrl);
       } catch { /* keep existing */ }
-    } else if (finalGoogleHeroUrl.startsWith("data:")) {
-      try {
-        finalGoogleHeroUrl = await uploadToCloudinary(finalGoogleHeroUrl, `${user!.uid}/google_hero`);
-        setGoogleHeroUrl(finalGoogleHeroUrl);
-      } catch { finalGoogleHeroUrl = ""; setGoogleHeroUrl(""); } // si échec, efface
     }
     await updateDoc(doc(db, "marchands", user!.uid), {
       nom,
@@ -472,7 +442,6 @@ export default function CartePage() {
       apple_stamp_logo_opacity: stampLogoOpacity,
       apple_strip_text_y: stripTextY,
       apple_strip_crop_y: cropY,
-      strip_raw_url: stripRawCloudinaryUrl,
       google_primary_label: googlePrimaryLabel,
       google_secondary_label: googleSecondaryLabel,
       google_bg_color: googleBgColor,
@@ -500,9 +469,8 @@ export default function CartePage() {
     pushHistory();
     try {
       const dataUrl = await resizeImage(file, 320);
-      const url = await uploadToCloudinary(dataUrl, `${user.uid}/logo`);
-      setLogoUrl(url);
-      await updateDoc(doc(db, "marchands", user.uid), { logo_url: url });
+      setLogoUrl(dataUrl);
+      await updateDoc(doc(db, "marchands", user.uid), { logo_url: dataUrl });
     } catch (err: unknown) {
       console.error("[Logo] Erreur upload:", err);
       alert(`Erreur upload logo : ${err instanceof Error ? err.message : String(err)}`);
@@ -578,10 +546,7 @@ export default function CartePage() {
       setGoogleHeroCropY(50);
       googleHeroCropYRef.current = 50;
       const cropped = await applyHeroCrop(raw, 50);
-      setGoogleHeroUrl(cropped); // aperçu immédiat dans la carte avant upload
-      const url = await uploadToCloudinary(cropped, `${user.uid}/google_hero`);
-      setGoogleHeroUrl(url);
-      await updateDoc(doc(db, "marchands", user.uid), { google_hero_url: url });
+      setGoogleHeroUrl(cropped);
     } catch (err) {
       console.error("[GoogleHero] Erreur upload:", err);
       alert(`Erreur upload bannière Google : ${err instanceof Error ? err.message : String(err)}`);
@@ -612,9 +577,8 @@ export default function CartePage() {
     }
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 430, 172);
     const adapted = canvas.toDataURL("image/jpeg", 0.88);
-    const adaptedUrl = await uploadToCloudinary(adapted, `${user!.uid}/strip`);
-    setStripUrl(adaptedUrl);
-    await updateDoc(doc(db, "marchands", user!.uid), { strip_url: adaptedUrl });
+    setStripUrl(adapted);
+    await updateDoc(doc(db, "marchands", user!.uid), { strip_url: adapted });
   }
 
   async function handleComptoirBgUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -622,8 +586,7 @@ export default function CartePage() {
     if (!file || !user || !file.type.startsWith("image/")) return;
     setUploadingComptoirBg(true);
     try {
-      const rawUrl = await resizeImageRaw(file, 1600);
-      const finalUrl = await uploadToCloudinary(rawUrl, `${user.uid}/comptoir-bg`);
+      const finalUrl = await resizeImage(file, 860);
       setComptoirBgUrl(finalUrl);
       await updateDoc(doc(db, "marchands", user!.uid), { comptoir_bg_url: finalUrl });
     } catch (err: unknown) {
@@ -2049,11 +2012,7 @@ export default function CartePage() {
           setRawStripUrl("");
           setIsUploadedStrip(false);
           setCropZoom(1); setCropY(50);
-          try {
-            const url = await uploadToCloudinary(dataUrl, `${user!.uid}/strip`);
-            setStripUrl(url);
-            await updateDoc(doc(db, "marchands", user!.uid), { strip_url: url });
-          } catch { /* keep dataUrl */ }
+          await updateDoc(doc(db, "marchands", user!.uid), { strip_url: dataUrl });
         }}
         onClose={() => setShowStripCrop(false)}
       />
@@ -2071,13 +2030,7 @@ export default function CartePage() {
           setRawGoogleHeroUrl("");
           setIsUploadedGoogleHero(false);
           setGoogleHeroCropZoom(1); setGoogleHeroCropY(50);
-          try {
-            const url = await uploadToCloudinary(dataUrl, `${user!.uid}/google_hero`);
-            setGoogleHeroUrl(url);
-            await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: url });
-          } catch (err) {
-            console.error("[GoogleCrop] upload failed:", err);
-          }
+          await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: dataUrl });
         }}
         onClose={() => setShowGoogleCrop(false)}
       />
