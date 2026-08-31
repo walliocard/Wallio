@@ -56,11 +56,8 @@ export default function GoogleWalletCard({
   const dark = isDarkBg(bg);
   const text = dark ? "#FFFFFF" : "#000000";
   const textSec = dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.45)";
-  const progressTrack = dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.1)";
-  const progressFill = dark ? "#FFFFFF" : "#000000";
   const divider = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.07)";
   const surfaceTint = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)";
-  const progress = Math.min(1, stampsCurrent / Math.max(1, stampsObjective));
 
   const qrUrl = previewUid
     ? `https://app.wallio.ma/client/${previewUid}`
@@ -125,16 +122,6 @@ export default function GoogleWalletCard({
           </div>
           <span style={{ fontSize: 12, color: textSec, letterSpacing: 0.3 }}>{primaryLabel}</span>
         </div>
-        {/* Barre de progression */}
-        <div style={{ height: 5, background: progressTrack, borderRadius: 3, overflow: "hidden" }}>
-          <div style={{
-            height: "100%",
-            width: `${progress * 100}%`,
-            background: progressFill,
-            borderRadius: 3,
-            minWidth: progress > 0 ? 8 : 0,
-          }} />
-        </div>
       </div>
 
       {/* Séparateur */}
@@ -190,9 +177,6 @@ export default function GoogleWalletCard({
             ? <img src={qr} alt="QR" style={{ width: heroUrl ? 90 : 110, height: heroUrl ? 90 : 110, display: "block" }} />
             : <div style={{ width: heroUrl ? 90 : 110, height: heroUrl ? 90 : 110, background: "#f0f0f0", borderRadius: 4 }} />
           }
-          <div style={{ fontSize: 9, color: "rgba(0,0,0,0.3)", letterSpacing: 1.2, textTransform: "uppercase" }}>
-            Scanner en caisse
-          </div>
         </div>
       </div>
 
