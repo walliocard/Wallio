@@ -872,6 +872,7 @@ export default function CartePage() {
                   ref={canCrop ? stripPreviewRef : undefined}
                   style={{
                     borderRadius: 10, overflow: "hidden", aspectRatio: "375/144",
+                    minHeight: 200,
                     border: "1px solid var(--border)", position: "relative",
                     cursor: canCrop ? "grab" : "default",
                     userSelect: "none", touchAction: "none",
@@ -907,7 +908,7 @@ export default function CartePage() {
                 );
               })() : (
                 <label style={{
-                  borderRadius: 10, aspectRatio: "375/144",
+                  borderRadius: 10, aspectRatio: "375/144", minHeight: 200,
                   border: "2px dashed var(--border)",
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                   background: "var(--glass-bg)", cursor: uploadingStrip ? "wait" : "pointer", gap: 6,
@@ -973,20 +974,11 @@ export default function CartePage() {
                     Recadrer
                   </button>
                 )}
-                {/* Repositionner — réactive le drag depuis l'image raw sauvegardée */}
-                {stripUrl && !rawStripUrl && stripRawCloudinaryUrl && (
-                  <button
-                    onClick={() => { setRawStripUrl(stripRawCloudinaryUrl); setIsUploadedStrip(true); }}
-                    style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--accent)", color: "var(--accent)", cursor: "pointer" }}
-                  >
-                    Repositionner
-                  </button>
-                )}
                 {stripUrl && (
                   <button
                     onClick={() => {
                       setStripUrl(""); setRawStripUrl(""); setStripRawCloudinaryUrl(""); setIsUploadedStrip(false); setCropZoom(1);
-                      updateDoc(doc(db, "marchands", user!.uid), { strip_url: "", strip_raw_url: "" });
+                      updateDoc(doc(db, "marchands", user!.uid), { strip_url: "" });
                     }}
                     style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", color: "#FF3B30", cursor: "pointer" }}
                   >
@@ -1723,7 +1715,7 @@ export default function CartePage() {
                     ref={canCrop ? googleHeroPreviewRef : undefined}
                     style={{
                       marginBottom: 8, borderRadius: 10, overflow: "hidden",
-                      border: "1px solid var(--border)", aspectRatio: "3/1",
+                      border: "1px solid var(--border)", aspectRatio: "3/1", minHeight: 160,
                       position: "relative",
                       cursor: canCrop ? "grab" : "default",
                       userSelect: "none", touchAction: "none",
