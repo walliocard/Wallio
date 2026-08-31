@@ -569,6 +569,7 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
             stampsCurrent={client.tampons ?? 0}
             stampsObjective={marchand.objectif_tampons}
             rewardName={(m.nom_recompense as string) || "Récompense"}
+            previewUid={client.wallet_id}
             clientPrenom={client.prenom}
             clientNom={client.nom}
             primaryLabel={(m.apple_primary_label as string) || "Tampons"}
