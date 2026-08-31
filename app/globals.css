@@ -11,6 +11,7 @@
   --glass-border: rgba(255,255,255,0.5);
   --accent: #007AFF;
   --accent-hover: #0A84FF;
+  --wallio-gradient: linear-gradient(135deg, #007AFF 0%, #8B5CF6 100%);
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
   --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
   --shadow-lg: 0 20px 60px rgba(0,0,0,0.08);

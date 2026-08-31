@@ -89,8 +89,11 @@ export default function AccueilPage() {
 
   const m = marchand as Record<string, unknown>;
 
+  const doubleFin = m.double_tampons_fin as string | undefined;
+  const doubleActif = doubleFin ? new Date(doubleFin) > new Date() : false;
+
   const STAT_CARDS = [
-    { label: "Aujourd'hui",   value: stats.aujourd_hui,  color: "var(--accent)" },
+    { label: "Aujourd'hui",   value: stats.aujourd_hui,  gradient: true },
     { label: "Ce mois",       value: stats.ce_mois,      color: "#34C759" },
     { label: "Total clients", value: stats.total,        color: "var(--fg)" },
     { label: "Tampons",       value: stats.tampons_total, color: "var(--fg)" },
@@ -145,15 +148,45 @@ export default function AccueilPage() {
         </Link>
       )}
 
+      {/* Bandeau double tampons */}
+      {doubleActif && (
+        <div className="flex items-center gap-3 rounded-2xl p-4 mb-4"
+          style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.10),rgba(139,92,246,0.10))", border: "1px solid rgba(139,92,246,0.25)" }}>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "var(--wallio-gradient)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-[14px] font-semibold" style={{ background: "var(--wallio-gradient)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Double tampons actif
+            </p>
+            <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>
+              Jusqu'au {new Date(doubleFin!).toLocaleDateString("fr-FR")} — chaque visite vaut 2 tampons
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Stats grid — 2 col mobile, 5 col desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         {STAT_CARDS.map(s => (
           <div key={s.label} className="rounded-[20px] p-4 lg:p-5"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
-            <p className="text-[32px] lg:text-[38px] font-bold tracking-tight leading-none mb-2" style={{ color: s.color }}>
+            style={{
+              background: s.gradient ? "var(--wallio-gradient)" : "var(--glass-bg)",
+              border: s.gradient ? "none" : "1px solid var(--border)",
+              backdropFilter: "blur(20px)",
+              boxShadow: s.gradient ? "0 4px 20px rgba(139,92,246,0.25)" : "none",
+            }}>
+            <p className="text-[32px] lg:text-[38px] font-bold tracking-tight leading-none mb-2"
+              style={{ color: s.gradient ? "white" : s.color }}>
               {s.value}
             </p>
-            <p className="text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--fg-tertiary)" }}>{s.label}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wider"
+              style={{ color: s.gradient ? "rgba(255,255,255,0.75)" : "var(--fg-tertiary)" }}>
+              {s.label}
+            </p>
           </div>
         ))}
       </div>

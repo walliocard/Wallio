@@ -43,8 +43,8 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           style={{ borderBottom: "1px solid var(--border)" }}
         >
           <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#EDE8FF 0%,#F0F0FF 100%)" }}>
-            <WallioLogo size={26} />
+            style={{ background: "var(--wallio-gradient)", boxShadow: "0 2px 8px rgba(139,92,246,0.35)" }}>
+            <WallioLogo size={20} color="#fff" />
           </div>
           <span className="hidden lg:block font-semibold text-[15px] tracking-tight" style={{ color: "var(--fg)" }}>
             Wallio
@@ -74,8 +74,9 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
                 href={href}
                 className="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 group"
                 style={{
-                  background: isActive ? "var(--accent)" : "transparent",
+                  background: isActive ? "var(--wallio-gradient)" : "transparent",
                   color: isActive ? "white" : "var(--fg-secondary)",
+                  boxShadow: isActive ? "0 2px 12px rgba(139,92,246,0.25)" : "none",
                 }}
               >
                 <span className="flex-shrink-0">
@@ -134,7 +135,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               key={href}
               href={href}
               className="flex-1 flex flex-col items-center gap-1 py-2.5 transition-all duration-150"
-              style={{ color: isActive ? "var(--accent)" : "var(--fg-tertiary)" }}
+              style={{ color: isActive ? "#8B5CF6" : "var(--fg-tertiary)" }}
             >
               <Icon size={22} />
               <span className="text-[10px] font-medium tracking-wide">{label}</span>
