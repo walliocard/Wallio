@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -25,7 +24,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   const [validationEnCours, setValidationEnCours] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const router = useRouter();
+  const [deleted, setDeleted] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -90,6 +89,18 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   const nomRecompense = marchand?.nom_recompense || "";
   const pct = Math.min((client.tampons / objectif) * 100, 100);
   const restants = objectif - client.tampons;
+
+  if (deleted) return (
+    <main className="min-h-screen pb-10" style={{ background: "var(--bg)" }}>
+      <div className="max-w-lg mx-auto px-5 pt-6">
+        <Link href="/dashboard/clients" className="inline-flex items-center gap-1.5 mb-10 text-[14px]" style={{ color: "var(--accent)" }}>
+          <Icons.ArrowLeft size={15} />
+          Clients
+        </Link>
+        <p className="text-[15px] font-medium" style={{ color: "var(--fg-secondary)" }}>Client supprimé.</p>
+      </div>
+    </main>
+  );
 
   return (
     <main className="min-h-screen pb-10" style={{ background: "var(--bg)" }}>
@@ -288,7 +299,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
             if (!confirm(`Supprimer définitivement ${client.prenom} ${client.nom} ?`)) return;
             setDeleting(true);
             await deleteDoc(doc(db, "clients", client.id));
-            router.push("/dashboard");
+            setDeleted(true);
           }}
           disabled={deleting}
           className="w-full py-3.5 rounded-2xl text-[14px] font-medium mt-3"
