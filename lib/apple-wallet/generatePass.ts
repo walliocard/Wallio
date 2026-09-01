@@ -59,8 +59,8 @@ export function generatePassJson(input: PassInput): object {
 
   return {
     formatVersion: 1,
-    passTypeIdentifier: "pass.ma.wallio.loyalty",
-    teamIdentifier: process.env.APPLE_TEAM_ID ?? "XXXXXXXXXX",
+    passTypeIdentifier: process.env.APPLE_PASS_TYPE_ID ?? "pass.com.walliocard.loyalty",
+    teamIdentifier: process.env.APPLE_TEAM_ID ?? "V922LM2G7C",
     serialNumber: input.walletId,
     webServiceURL: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com"}/api/apple-wallet`,
     authenticationToken: input.authToken,

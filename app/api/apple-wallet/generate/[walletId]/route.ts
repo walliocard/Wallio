@@ -39,6 +39,7 @@ export async function GET(
     walletId,
     authToken,
     merchantName: m.nom,
+    stripUrl: (m.strip_url as string | undefined) || undefined,
     backgroundColor: m.apple_bg_color || m.couleur_principale || "#1C1C1E",
     foregroundColor: m.apple_fg_color || undefined,
     labelColorHex: m.apple_label_color || undefined,

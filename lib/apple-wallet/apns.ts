@@ -1,47 +1,45 @@
 import * as http2 from "http2";
+import * as crypto from "crypto";
 
-// TODO (Apple Developer requis) : déposer la clé APNs .p8 dans /private/AuthKey_XXXXXXXXXX.p8
-// et renseigner APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_PATH dans les variables d'environnement Vercel.
-// Sans ces valeurs, pushPassUpdate() loggue un avertissement et ne fait rien.
-
-const PASS_TYPE_ID = "pass.ma.wallio.loyalty";
-const APNS_HOST_PROD = "api.push.apple.com";
-const APNS_HOST_DEV  = "api.development.push.apple.com";
+const PASS_TYPE_ID = process.env.APPLE_PASS_TYPE_ID || "pass.com.walliocard.loyalty";
+const APNS_HOST = "api.push.apple.com";
 
 function missingConfig(): boolean {
-  return !process.env.APNS_KEY_ID || !process.env.APNS_TEAM_ID || !process.env.APNS_KEY;
+  return !process.env.APNS_KEY_ID || !process.env.APPLE_TEAM_ID || !process.env.APNS_KEY;
 }
 
-// Génère un JWT APNS signé avec la clé p8 (requis par Apple)
+// Cache JWT (valide 55 min — Apple exige renouvellement avant 60 min)
+let _jwtCache: { token: string; exp: number } | null = null;
+
 function buildJwt(): string {
-  // TODO : générer le JWT avec APNS_KEY (contenu de la clé .p8), APNS_KEY_ID, APNS_TEAM_ID
-  // Algorithme : ES256
-  // Header : { alg: "ES256", kid: APNS_KEY_ID }
-  // Payload : { iss: APNS_TEAM_ID, iat: Math.floor(Date.now() / 1000) }
-  throw new Error("APNS JWT non implémenté — Apple Developer requis");
+  if (_jwtCache && Date.now() < _jwtCache.exp) return _jwtCache.token;
+
+  const keyId  = process.env.APNS_KEY_ID!;
+  const teamId = process.env.APPLE_TEAM_ID!;
+  const pemKey = Buffer.from(process.env.APNS_KEY!, "base64").toString("utf8");
+
+  const header  = Buffer.from(JSON.stringify({ alg: "ES256", kid: keyId })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ iss: teamId, iat: Math.floor(Date.now() / 1000) })).toString("base64url");
+  const input   = `${header}.${payload}`;
+
+  const sig = crypto.createSign("SHA256").update(input).sign({ key: pemKey, dsaEncoding: "ieee-p1363" });
+  const token = `${input}.${sig.toString("base64url")}`;
+
+  _jwtCache = { token, exp: Date.now() + 55 * 60 * 1000 };
+  return token;
 }
 
-// Envoie le signal "please update" à Apple pour le pushToken donné.
-// Apple appellera ensuite notre endpoint GET /api/apple-wallet/passes/... pour télécharger le pass mis à jour.
 export async function pushPassUpdate(pushToken: string): Promise<void> {
   if (missingConfig()) {
-    console.warn("[APNS] Variables manquantes (APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY) — push ignoré");
+    console.warn("[APNS] Variables manquantes — push ignoré");
     return;
   }
 
-  const host = process.env.NODE_ENV === "production" ? APNS_HOST_PROD : APNS_HOST_DEV;
+  const jwt  = buildJwt();
   const path = `/3/device/${pushToken}`;
-  let jwt: string;
-  try {
-    jwt = buildJwt();
-  } catch (e) {
-    console.warn("[APNS] buildJwt échoué — Apple Developer requis", e);
-    return;
-  }
 
   return new Promise((resolve, reject) => {
-    const client = http2.connect(`https://${host}`);
-
+    const client = http2.connect(`https://${APNS_HOST}`);
     client.on("error", reject);
 
     const req = client.request({
@@ -49,26 +47,20 @@ export async function pushPassUpdate(pushToken: string): Promise<void> {
       ":path": path,
       "authorization": `bearer ${jwt}`,
       "apns-push-type": "background",
-      "apns-topic": PASS_TYPE_ID, // Pour les passes Wallet, le topic = passTypeIdentifier exact
+      "apns-topic": PASS_TYPE_ID,
       "content-type": "application/json",
     });
 
-    req.write(JSON.stringify({})); // Corps vide — Apple demande juste de mettre à jour le pass
+    req.write(JSON.stringify({}));
     req.end();
 
     req.on("response", (headers) => {
       const status = headers[":status"] as number;
       client.close();
-      if (status === 200) {
-        resolve();
-      } else {
-        reject(new Error(`APNS a répondu ${status}`));
-      }
+      if (status === 200) resolve();
+      else reject(new Error(`APNS status ${status}`));
     });
 
-    req.on("error", (err) => {
-      client.close();
-      reject(err);
-    });
+    req.on("error", (err) => { client.close(); reject(err); });
   });
 }
