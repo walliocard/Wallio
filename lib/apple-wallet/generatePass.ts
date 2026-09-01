@@ -38,8 +38,7 @@ export interface PassInput {
   primaryLabel?: string;
   rewardLabel?: string;
   memberLabel?: string;
-  headerField?: PassField;            // champ en-tête (haut droite)
-  auxiliaryFields?: PassField[];      // champs auxiliaires (max 4, entre secondary et barcode)
+  auxiliaryFields?: PassField[];
   backInfo?: string;
   description?: string;
 }
@@ -49,18 +48,11 @@ export function generatePassJson(input: PassInput): object {
   const fg = input.foregroundColor ?? (dark ? "#FFFFFF" : "#000000");
   const lc = input.labelColorHex ?? (dark ? "#AAAAAA" : "#666666");
 
-  // Apple Wallet storeCard : max 1 headerField → toujours les tampons
-  // Le champ custom du marchand (apple_header_value) est mis en auxiliary
-  const merchantHeaderAsAux = input.headerField?.value
-    ? [{ key: "header_custom", label: input.headerField.label.toUpperCase(), value: input.headerField.value }]
-    : [];
-
-  const auxiliaryFields = [
-    ...merchantHeaderAsAux,
-    ...(input.auxiliaryFields ?? [])
-      .filter(f => f.value)
-      .map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value })),
-  ].slice(0, 4); // Apple Wallet : max 4 auxiliary fields
+  // Apple Wallet storeCard : max 4 auxiliary fields
+  const auxiliaryFields = (input.auxiliaryFields ?? [])
+    .filter(f => f.value)
+    .slice(0, 4)
+    .map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
 
   return {
     formatVersion: 1,

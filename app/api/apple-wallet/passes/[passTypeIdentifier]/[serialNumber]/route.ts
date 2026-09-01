@@ -51,10 +51,9 @@ export async function GET(
     primaryLabel: m.apple_primary_label || "Tampons",
     rewardLabel: m.apple_reward_label || "Récompense",
     memberLabel: m.apple_member_label || "Membre",
-    headerField: m.apple_header_value ? { label: m.apple_header_label || "INFO", value: m.apple_header_value } : undefined,
     auxiliaryFields: [
-      m.apple_aux1_value ? { label: m.apple_aux1_label || "INFOS", value: m.apple_aux1_value } : null,
-      m.apple_aux2_value ? { label: m.apple_aux2_label || "INFOS", value: m.apple_aux2_value } : null,
+      m.apple_aux1_value ? { label: m.apple_aux1_label || "INFO", value: m.apple_aux1_value } : null,
+      m.apple_aux2_value ? { label: m.apple_aux2_label || "INFO", value: m.apple_aux2_value } : null,
     ].filter(Boolean) as { label: string; value: string }[],
     backInfo: m.apple_back_info || undefined,
     description: m.apple_description || undefined,
