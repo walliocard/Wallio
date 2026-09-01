@@ -49,13 +49,18 @@ export function generatePassJson(input: PassInput): object {
   const fg = input.foregroundColor ?? (dark ? "#FFFFFF" : "#000000");
   const lc = input.labelColorHex ?? (dark ? "#AAAAAA" : "#666666");
 
-  const headerFields = input.headerField?.value
-    ? [{ key: "header1", label: input.headerField.label.toUpperCase(), value: input.headerField.value }]
+  // Apple Wallet storeCard : max 1 headerField → toujours les tampons
+  // Le champ custom du marchand (apple_header_value) est mis en auxiliary
+  const merchantHeaderAsAux = input.headerField?.value
+    ? [{ key: "header_custom", label: input.headerField.label.toUpperCase(), value: input.headerField.value }]
     : [];
 
-  const auxiliaryFields = (input.auxiliaryFields ?? [])
-    .filter(f => f.value)
-    .map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
+  const auxiliaryFields = [
+    ...merchantHeaderAsAux,
+    ...(input.auxiliaryFields ?? [])
+      .filter(f => f.value)
+      .map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value })),
+  ].slice(0, 4); // Apple Wallet : max 4 auxiliary fields
 
   return {
     formatVersion: 1,
@@ -71,9 +76,7 @@ export function generatePassJson(input: PassInput): object {
     foregroundColor: hexToRgb(fg),
     labelColor: hexToRgb(lc),
     storeCard: {
-      // Compteur de tampons en headerField (haut droite) pour ne pas couvrir la bannière strip
       headerFields: [
-        ...headerFields,
         {
           key: "stamps",
           label: (input.primaryLabel ?? "TAMPONS").toUpperCase(),
@@ -81,7 +84,6 @@ export function generatePassJson(input: PassInput): object {
           changeMessage: "Nouveau tampon ! Vous avez maintenant %@",
         },
       ],
-      primaryFields: [],
       secondaryFields: [
         {
           key: "reward",
