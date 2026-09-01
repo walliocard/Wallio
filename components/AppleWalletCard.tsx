@@ -277,17 +277,15 @@ export default function AppleWalletCard({
             {logoText}
           </span>
         )}
-        {/* Champ en-tête haut droite — officiel Apple Wallet */}
-        {headerField?.value && (
-          <div style={{ flexShrink: 0, textAlign: "right" }}>
-            <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
-              {headerField.label}
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: fg }}>
-              {headerField.value}
-            </div>
+        {/* Tampons en header — reproduit fidèlement le layout Apple Wallet réel */}
+        <div style={{ flexShrink: 0, textAlign: "right" }}>
+          <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
+            {headerField?.value ? headerField.label : primaryLabel}
           </div>
-        )}
+          <div style={{ fontSize: 13, fontWeight: 600, color: fg }}>
+            {headerField?.value ? headerField.value : `${stampsCurrent}/${stampsObjective}`}
+          </div>
+        </div>
       </div>
 
       {/* ── Strip zone — toujours visible (375 × 144 pt) ── */}
@@ -326,40 +324,6 @@ export default function AppleWalletCard({
             thickness={stampThickness} logoUrl={logoUrl} logoOpacity={stampLogoOpacity}
           />
         )}
-      </div>
-
-      {/* ── Primary field ── */}
-      <div
-        style={{
-          padding: "14px 16px 12px",
-          borderBottom: `1px solid ${sep}`,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 10,
-            color: labelClr,
-            textTransform: "uppercase",
-            letterSpacing: "0.07em",
-            marginBottom: 5,
-          }}
-        >
-          {primaryLabel}
-        </div>
-        <div
-          style={{
-            fontSize: 40,
-            fontWeight: 700,
-            color: fg,
-            letterSpacing: -1.5,
-            lineHeight: 1,
-          }}
-        >
-          {stampsCurrent}
-          <span style={{ fontSize: 24, fontWeight: 400, opacity: 0.55, marginLeft: 6 }}>
-            / {stampsObjective}
-          </span>
-        </div>
       </div>
 
       {/* ── Secondary fields ── */}
