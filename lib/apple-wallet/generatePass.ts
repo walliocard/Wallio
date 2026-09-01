@@ -48,11 +48,21 @@ export function generatePassJson(input: PassInput): object {
   const fg = input.foregroundColor ?? (dark ? "#FFFFFF" : "#000000");
   const lc = input.labelColorHex ?? (dark ? "#AAAAAA" : "#666666");
 
-  // Apple Wallet storeCard : max 4 auxiliary fields
-  const auxiliaryFields = (input.auxiliaryFields ?? [])
+  // Champ auto : tampons restants avant récompense
+  const restants = input.stampsObjective - input.stampsCurrent;
+  const autoAux = {
+    key: "restant",
+    label: "PROCHAINE RÉCOMPENSE",
+    value: restants > 0 ? `${restants} tampon${restants > 1 ? "s" : ""} restant${restants > 1 ? "s" : ""}` : "Récompense débloquée !",
+  };
+
+  // Champs configurés par le marchand (adresse, horaires, etc.) — max 3
+  const marchandAux = (input.auxiliaryFields ?? [])
     .filter(f => f.value)
-    .slice(0, 4)
+    .slice(0, 3)
     .map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
+
+  const auxiliaryFields = [autoAux, ...marchandAux];
 
   return {
     formatVersion: 1,

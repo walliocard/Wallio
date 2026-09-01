@@ -764,8 +764,8 @@ export default function CartePage() {
               description={description}
               headerField={headerValue ? { label: headerLabel || "INFO", value: headerValue } : undefined}
               auxiliaryFields={[
-                { label: aux1Label || "INFOS", value: aux1Value },
-                { label: aux2Label || "INFOS", value: aux2Value },
+                { label: aux1Label || "INFO", value: aux1Value },
+                { label: aux2Label || "INFO", value: aux2Value },
               ]}
               stampsOnStrip={stampsOnStrip}
               stripStampStyle={stripStampStyle}
@@ -1503,21 +1503,28 @@ export default function CartePage() {
 
           {/* Champs auxiliaires — Apple uniquement */}
           {walletType === "apple" && (
-            <Section label="Champs auxiliaires">
-              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
-                Ligne supplémentaire entre les champs et le QR code.
+            <Section label="Info établissement">
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                Affichés sous la récompense et le membre, avant le QR code.
               </p>
-              <Field label="Label 1">
-                <TextInput value={aux1Label} onChange={setAux1Label} placeholder="ex : VALABLE"/>
+              {/* Champ auto toujours présent */}
+              <div style={{
+                padding: "8px 10px", borderRadius: 10,
+                background: "var(--glass-bg)", border: "1px solid var(--border)",
+                marginBottom: 10,
+              }}>
+                <p style={{ fontSize: 9, color: "var(--fg-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 3px", fontWeight: 600 }}>
+                  Automatique
+                </p>
+                <p style={{ fontSize: 12, color: "var(--fg)", fontWeight: 500, margin: 0 }}>
+                  Tampons restants avant récompense
+                </p>
+              </div>
+              <Field label="Info 1 (optionnel)">
+                <TextInput value={aux1Value} onChange={setAux1Value} placeholder="ex : Valable dans tous nos établissements"/>
               </Field>
-              <Field label="Valeur 1 (obligatoire pour afficher)">
-                <TextInput value={aux1Value} onChange={setAux1Value} placeholder="ex : Tous établissements"/>
-              </Field>
-              <Field label="Label 2">
-                <TextInput value={aux2Label} onChange={setAux2Label} placeholder="ex : CODE"/>
-              </Field>
-              <Field label="Valeur 2">
-                <TextInput value={aux2Value} onChange={setAux2Value} placeholder=""/>
+              <Field label="Info 2 (optionnel)">
+                <TextInput value={aux2Value} onChange={setAux2Value} placeholder="ex : Avantage exclusif membre"/>
               </Field>
             </Section>
           )}

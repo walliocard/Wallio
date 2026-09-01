@@ -346,21 +346,29 @@ export default function AppleWalletCard({
         </div>
       </div>
 
-      {/* ── Auxiliary fields (entre secondary et barcode — officiel Apple Wallet) ── */}
-      {auxiliaryFields.filter(f => f.value).length > 0 && (
-        <div style={{ display: "flex", padding: "10px 16px 12px", borderBottom: `1px solid ${sep}`, gap: 8 }}>
-          {auxiliaryFields.filter(f => f.value).slice(0, 4).map((f, i) => (
-            <div key={i} style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>
-                {f.label}
+      {/* ── Auxiliary fields — champ auto restant + champs marchand ── */}
+      {(() => {
+        const restants = stampsObjective - stampsCurrent;
+        const autoField = {
+          label: "PROCHAINE RÉCOMPENSE",
+          value: restants > 0 ? `${restants} tampon${restants > 1 ? "s" : ""} restant${restants > 1 ? "s" : ""}` : "Récompense débloquée !",
+        };
+        const allAux = [autoField, ...auxiliaryFields.filter(f => f.value)].slice(0, 4);
+        return (
+          <div style={{ display: "flex", padding: "10px 16px 12px", borderBottom: `1px solid ${sep}`, gap: 8 }}>
+            {allAux.map((f, i) => (
+              <div key={i} style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>
+                  {f.label}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {f.value}
+                </div>
               </div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {f.value}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        );
+      })()}
 
 
       {/* ── Barcode (Apple Wallet impose cette zone en bas, centrée) ── */}
