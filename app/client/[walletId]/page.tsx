@@ -257,7 +257,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           </button>
         ) : (
           <button
-            onClick={handleAjouterTampon}
+            onClick={() => handleAjouterTampon()}
             disabled={ajoutEnCours}
             className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-5"
             style={{ background: "var(--wallio-gradient)", boxShadow: "0 4px 18px rgba(139,92,246,0.3)" }}
