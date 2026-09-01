@@ -35,7 +35,9 @@ export async function GET(
     await clientDoc.ref.update({ apns_auth_token: authToken });
   }
 
-  const pkpass = await buildPkpass({
+  let pkpass: Buffer;
+  try {
+    pkpass = await buildPkpass({
     walletId,
     authToken,
     merchantName: m.nom,
@@ -58,7 +60,11 @@ export async function GET(
     ].filter(Boolean) as { label: string; value: string }[],
     backInfo: m.apple_back_info || undefined,
     description: m.apple_description || undefined,
-  });
+    });
+  } catch (e) {
+    console.error("[Apple Wallet] buildPkpass error:", e);
+    return NextResponse.json({ error: String(e) }, { status: 500 });
+  }
 
   return new Response(new Uint8Array(pkpass), {
     status: 200,
