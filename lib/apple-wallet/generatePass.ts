@@ -94,13 +94,14 @@ export function generatePassJson(input: PassInput): object {
         { key: "rgpd", label: "VOS DONNÉES", value: "Vos données sont gérées conformément au RGPD. Suppression disponible depuis l'application." },
         { key: "contact", label: "CONTACT", value: "support@walliocard.com" },
       ],
-      barcodes: [
-        {
-          format: "PKBarcodeFormatQR",
-          message: `WALLIO:${input.walletId}`,
-          messageEncoding: "iso-8859-1",
-        },
-      ],
     },
+    // barcodes au niveau racine (spec Apple Wallet)
+    barcodes: [
+      {
+        format: "PKBarcodeFormatQR",
+        message: `WALLIO:${input.walletId}`,
+        messageEncoding: "iso-8859-1",
+      },
+    ],
   };
 }
