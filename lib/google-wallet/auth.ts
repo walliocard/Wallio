@@ -56,7 +56,7 @@ export function buildSaveToWalletJwt(loyaltyObjects: object[]): string {
       aud: "google",
       typ: "savetowallet",
       iat: Math.floor(Date.now() / 1000),
-      origins: ["https://app.walliocard.com", "https://app.walliocard.com"],
+      origins: ["https://app.walliocard.com", "https://wallio-seven.vercel.app"],
       payload: { loyaltyObjects },
     },
     key.private_key
