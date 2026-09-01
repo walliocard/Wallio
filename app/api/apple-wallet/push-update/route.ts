@@ -26,11 +26,14 @@ export async function POST(req: Request) {
 
   const pushToken: string | undefined = client.apns_push_token;
   if (!pushToken) {
-    // Client sans carte Apple Wallet → pas de push à envoyer
-    return NextResponse.json({ pushed: false, reason: "Pas de push token Apple" });
+    return NextResponse.json({ pushed: false, reason: "no_push_token" });
   }
 
-  await pushPassUpdate(pushToken);
-
-  return NextResponse.json({ pushed: true });
+  try {
+    await pushPassUpdate(pushToken);
+    return NextResponse.json({ pushed: true });
+  } catch (err) {
+    console.error("[push-update] APNS error:", err);
+    return NextResponse.json({ pushed: false, reason: "apns_error", detail: String(err) }, { status: 500 });
+  }
 }
