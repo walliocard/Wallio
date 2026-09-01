@@ -64,7 +64,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "application/vnd.apple.pkpass",
-      "Content-Disposition": `attachment; filename="wallio-${walletId}.pkpass"`,
+      "Content-Disposition": `inline; filename="wallio-${walletId}.pkpass"`,
       "Content-Length": String(pkpass.length),
     },
   });

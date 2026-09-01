@@ -624,7 +624,7 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
         {/* Boutons Wallet */}
         <div className="flex flex-col gap-2.5">
           {process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" ? (
-            <a href={`/api/apple-wallet/generate/${client.wallet_id}`} download
+            <a href={`/api/apple-wallet/generate/${client.wallet_id}`}
               className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
               style={{ background: "#000", border: "1px solid rgba(255,255,255,0.15)" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
