@@ -175,10 +175,10 @@ export default function AppleWalletCard({
 
     const backFields: Array<{ label: string; value: string }> = [];
     if (backInfo) backFields.push({ label: "Informations", value: backInfo });
-    backFields.push({ label: "Contact", value: "support@wallio.ma" });
+    backFields.push({ label: "Contact", value: "support@walliocard.com" });
     backFields.push({
       label: "Données personnelles",
-      value: "Vos données sont traitées conformément au RGPD. Vous pouvez demander leur suppression à tout moment via support@wallio.ma.",
+      value: "Vos données sont traitées conformément au RGPD. Vous pouvez demander leur suppression à tout moment via support@walliocard.com.",
     });
     if (description) backFields.push({ label: "Programme", value: description });
 
@@ -233,7 +233,7 @@ export default function AppleWalletCard({
           borderTop: `1px solid ${backSep}`,
           display: "flex", justifyContent: "center",
         }}>
-          <span style={{ fontSize: 11, color: backLabel }}>wallio.ma</span>
+          <span style={{ fontSize: 11, color: backLabel }}>walliocard.com</span>
         </div>
       </div>
     );

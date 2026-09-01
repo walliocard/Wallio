@@ -208,7 +208,7 @@ function RecompenseQR({ walletId }: { walletId: string }) {
   const [qr, setQr] = useState("");
 
   useEffect(() => {
-    QRCode.toDataURL(`https://app.wallio.ma/client/${walletId}`, {
+    QRCode.toDataURL(`https://app.walliocard.com/client/${walletId}`, {
       width: 600, margin: 1, errorCorrectionLevel: "M",
       color: { dark: "#1D1D1F", light: "#FFFFFF" },
     }).then(setQr).catch(() => {});

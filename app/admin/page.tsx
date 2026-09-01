@@ -110,7 +110,7 @@ function drawNfcCard(canvas: HTMLCanvasElement, marchand: Marchand) {
   ctx.font = "400 28px Inter, Arial, sans-serif";
   ctx.fillStyle = "rgba(255,255,255,0.25)";
   ctx.textAlign = "center";
-  ctx.fillText("app.wallio.ma", W / 2, H - 60);
+  ctx.fillText("app.walliocard.com", W / 2, H - 60);
 }
 
 function Row({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
@@ -156,7 +156,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<"marchands" | "impression">("marchands");
 
   // Impression
-  const [impUrl, setImpUrl] = useState("https://app.wallio.ma/nfc/demo");
+  const [impUrl, setImpUrl] = useState("https://app.walliocard.com/nfc/demo");
   const [impUrls, setImpUrls] = useState("");
   const [impGenerating, setImpGenerating] = useState(false);
   const [impProgress, setImpProgress] = useState(0);
@@ -224,7 +224,7 @@ export default function AdminPage() {
     if (!m.nfc_id) return;
     setDownloadingCard(true);
     const canvas = document.createElement("canvas");
-    await drawPrintCard(canvas, `https://app.wallio.ma/nfc/${m.nfc_id}`, 3);
+    await drawPrintCard(canvas, `https://app.walliocard.com/nfc/${m.nfc_id}`, 3);
     const link = document.createElement("a");
     link.download = `wallio-carte-${slugify(m.nom || m.id)}.png`;
     link.href = canvas.toDataURL("image/png");
@@ -254,7 +254,7 @@ export default function AdminPage() {
   }
 
   async function copierNfc(nfc_id: string) {
-    await navigator.clipboard.writeText(`https://app.wallio.ma/nfc/${nfc_id}`);
+    await navigator.clipboard.writeText(`https://app.walliocard.com/nfc/${nfc_id}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -465,7 +465,7 @@ export default function AdminPage() {
                     {/* URL */}
                     <div className="rounded-2xl px-4 py-3 font-mono text-[12px] break-all"
                       style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>
-                      app.wallio.ma/nfc/<span style={{ color: "var(--fg)", fontWeight: 600 }}>{selected.nfc_id}</span>
+                      app.walliocard.com/nfc/<span style={{ color: "var(--fg)", fontWeight: 600 }}>{selected.nfc_id}</span>
                     </div>
 
                     {/* Copier — grand bouton pour iPhone */}
@@ -747,7 +747,7 @@ export default function AdminPage() {
                   URL unique — aperçu
                 </p>
                 <input type="text" value={impUrl} onChange={e => setImpUrl(e.target.value)}
-                  placeholder="https://app.wallio.ma/nfc/xxx"
+                  placeholder="https://app.walliocard.com/nfc/xxx"
                   className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none mb-3"
                   style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", boxSizing: "border-box" }} />
                 <button onClick={impDownloadSingle} disabled={impGenerating}
@@ -763,7 +763,7 @@ export default function AdminPage() {
                   Batch — une URL par ligne
                 </p>
                 <textarea value={impUrls} onChange={e => setImpUrls(e.target.value)} rows={8}
-                  placeholder={"https://app.wallio.ma/nfc/abc\nhttps://app.wallio.ma/nfc/def\n…"}
+                  placeholder={"https://app.walliocard.com/nfc/abc\nhttps://app.walliocard.com/nfc/def\n…"}
                   className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none mb-2"
                   style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", fontFamily: "monospace", boxSizing: "border-box" }} />
                 <p className="text-[11px] mb-3" style={{ color: "var(--fg-tertiary)" }}>

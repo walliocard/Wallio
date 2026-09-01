@@ -14,7 +14,7 @@ export default function WallioQR({ uid, size = 56, bg = "#ffffff", fg = "#000000
   const [dataUrl, setDataUrl] = useState<string>("");
 
   useEffect(() => {
-    const url = `https://app.wallio.ma/c/${uid}`;
+    const url = `https://app.walliocard.com/c/${uid}`;
     QRCode.toDataURL(url, {
       width: size * 3,
       margin: 1,

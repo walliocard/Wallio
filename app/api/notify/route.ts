@@ -59,7 +59,7 @@ export async function POST(req: Request) {
         notification: { title, body },
         webpush: {
           notification: { icon: (logoUrl as string | null) || "/icon-192.png", badge: "/favicon-32.png" },
-          fcmOptions: { link: `https://app.wallio.ma` },
+          fcmOptions: { link: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com"}` },
         },
       });
       sent += result.successCount;

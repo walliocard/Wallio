@@ -133,7 +133,7 @@ export async function drawEnseigne(
   ctx.fillText(texteDisplay, textX, textCY + H * 0.06);
 
   // URL discrète
-  const url = nfc_id ? `app.wallio.ma/nfc/${nfc_id}` : "app.wallio.ma";
+  const url = nfc_id ? `app.walliocard.com/nfc/${nfc_id}` : "app.walliocard.com";
   ctx.font = `400 ${H * 0.038}px Arial, sans-serif`;
   ctx.fillStyle = `${textColor}30`;
   ctx.fillText(url, textX, textCY + H * 0.2);
@@ -141,7 +141,7 @@ export async function drawEnseigne(
   // --- QR code (droite) ---
   if (showQR && nfc_id) {
     const qrSize = Math.round(H * 0.38);
-    const qrImg = await generateQRImage(`https://app.wallio.ma/nfc/${nfc_id}`, qrSize);
+    const qrImg = await generateQRImage(`https://app.walliocard.com/nfc/${nfc_id}`, qrSize);
     if (qrImg) {
       const pad = Math.round(H * 0.025);
       const labelH = Math.round(H * 0.06);
@@ -220,7 +220,7 @@ export async function drawChevaleret(canvas: HTMLCanvasElement, couleur_principa
   if (nom) { ctx.font = `${W * 0.038}px Arial, sans-serif`; ctx.fillStyle = `${textColor}70`; ctx.fillText(nom, W / 2 + W * 0.04, H * 0.635); }
   if (showQR && nfc_id) {
     const qrSize = Math.round(W * 0.22);
-    const qrImg = await generateQRImage(`https://app.wallio.ma/nfc/${nfc_id}`, qrSize);
+    const qrImg = await generateQRImage(`https://app.walliocard.com/nfc/${nfc_id}`, qrSize);
     if (qrImg) {
       const pad = Math.round(W * 0.022), boxW = qrSize + pad * 2, boxH = qrSize + pad * 2 + Math.round(W * 0.04);
       const bx = (W - boxW) / 2, by = H * 0.67;
@@ -228,7 +228,7 @@ export async function drawChevaleret(canvas: HTMLCanvasElement, couleur_principa
       ctx.drawImage(qrImg, bx + pad, by + pad, qrSize, qrSize);
     }
   }
-  const url = nfc_id ? `app.wallio.ma/nfc/${nfc_id}` : "app.wallio.ma";
+  const url = nfc_id ? `app.walliocard.com/nfc/${nfc_id}` : "app.walliocard.com";
   ctx.font = `${W * 0.025}px Arial, sans-serif`; ctx.fillStyle = `${textColor}28`; ctx.textAlign = "center"; ctx.fillText(url, W / 2, H * 0.93);
 }
 
@@ -256,7 +256,7 @@ export async function drawComptoir(canvas: HTMLCanvasElement, couleur_principale
   ctx.font = `400 ${H * 0.045}px Arial, sans-serif`; ctx.fillStyle = `${textColor}60`; ctx.fillText("pour gagner vos points", tx, H / 2 - 10 + H * 0.41);
   if (showQR && nfc_id) {
     const qrSize = Math.round(H * 0.22);
-    const qrImg = await generateQRImage(`https://app.wallio.ma/nfc/${nfc_id}`, qrSize);
+    const qrImg = await generateQRImage(`https://app.walliocard.com/nfc/${nfc_id}`, qrSize);
     if (qrImg) {
       const pad = Math.round(H * 0.022), labelH = Math.round(H * 0.045);
       const boxW = qrSize + pad * 2, boxH = qrSize + pad * 2 + labelH;
@@ -265,6 +265,6 @@ export async function drawComptoir(canvas: HTMLCanvasElement, couleur_principale
       ctx.drawImage(qrImg, bx + pad, by + pad, qrSize, qrSize);
     }
   }
-  const url = nfc_id ? `app.wallio.ma/nfc/${nfc_id}` : "app.wallio.ma";
+  const url = nfc_id ? `app.walliocard.com/nfc/${nfc_id}` : "app.walliocard.com";
   ctx.font = `${H * 0.032}px Arial, sans-serif`; ctx.fillStyle = `${textColor}25`; ctx.textAlign = "center"; ctx.fillText(url, W / 2, H - 60);
 }

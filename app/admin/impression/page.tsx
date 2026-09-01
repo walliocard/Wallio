@@ -10,7 +10,7 @@ const PRINT_SCALE   = 3; // 4500×3000px — 4K print quality
 export default function ImpressionPage() {
   const router = useRouter();
   const [urls, setUrls] = useState<string>("");
-  const [previewUrl, setPreviewUrl] = useState("https://app.wallio.ma/nfc/demo");
+  const [previewUrl, setPreviewUrl] = useState("https://app.walliocard.com/nfc/demo");
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const previewRef = useRef<HTMLCanvasElement>(null);
@@ -111,7 +111,7 @@ export default function ImpressionPage() {
               type="text"
               value={previewUrl}
               onChange={e => setPreviewUrl(e.target.value)}
-              placeholder="https://app.wallio.ma/nfc/xxx"
+              placeholder="https://app.walliocard.com/nfc/xxx"
               style={{
                 width: "100%", padding: "9px 12px", borderRadius: 10, fontSize: 13,
                 border: "1px solid rgba(0,0,0,0.12)", outline: "none",
@@ -140,7 +140,7 @@ export default function ImpressionPage() {
               value={urls}
               onChange={e => setUrls(e.target.value)}
               rows={10}
-              placeholder={"https://app.wallio.ma/nfc/abc\nhttps://app.wallio.ma/nfc/def\n…"}
+              placeholder={"https://app.walliocard.com/nfc/abc\nhttps://app.walliocard.com/nfc/def\n…"}
               style={{
                 width: "100%", padding: "9px 12px", borderRadius: 10, fontSize: 12,
                 border: "1px solid rgba(0,0,0,0.12)", outline: "none", resize: "vertical",

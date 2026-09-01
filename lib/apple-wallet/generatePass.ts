@@ -62,7 +62,7 @@ export function generatePassJson(input: PassInput): object {
     passTypeIdentifier: "pass.ma.wallio.loyalty",
     teamIdentifier: process.env.APPLE_TEAM_ID ?? "XXXXXXXXXX",
     serialNumber: input.walletId,
-    webServiceURL: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.wallio.ma"}/api/apple-wallet`,
+    webServiceURL: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com"}/api/apple-wallet`,
     authenticationToken: input.authToken,
     organizationName: "Wallio",
     description: input.description || `Carte de fidélité — ${input.merchantName}`,
@@ -96,7 +96,7 @@ export function generatePassJson(input: PassInput): object {
       backFields: [
         ...(input.backInfo ? [{ key: "info", label: "À PROPOS", value: input.backInfo }] : []),
         { key: "rgpd", label: "VOS DONNÉES", value: "Vos données sont gérées conformément au RGPD. Suppression disponible depuis l'application." },
-        { key: "contact", label: "CONTACT", value: "support@wallio.ma" },
+        { key: "contact", label: "CONTACT", value: "support@walliocard.com" },
       ],
       barcode: {
         format: "PKBarcodeFormatQR",

@@ -3,7 +3,7 @@ import { adminDb, initAdmin } from "@/lib/admin";
 import { getGoogleAccessToken, buildSaveToWalletJwt } from "@/lib/google-wallet/auth";
 
 const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID!;
-const BASE_URL = "https://app.wallio.ma";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
 const API = "https://walletobjects.googleapis.com/walletobjects/v1";
 
 function classId(marchandId: string) {
@@ -52,7 +52,7 @@ export async function GET(
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const logoUri = (m.logo_url as string | undefined) || "https://wallio-seven.vercel.app/icon-192.png";
+  const logoUri = (m.logo_url as string | undefined) || "https://app.walliocard.com/icon-192.png";
   // Fallback : google_bg_color → apple_bg_color → couleur_principale → noir
   const bgColor = (m.google_bg_color as string | undefined)
     || (m.apple_bg_color as string | undefined)
