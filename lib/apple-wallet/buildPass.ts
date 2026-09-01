@@ -70,7 +70,7 @@ const ICON_29 = Buffer.from(
   "base64"
 );
 
-export async function buildPkpass(input: PassInput & { stripUrl?: string }): Promise<Buffer> {
+export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string }): Promise<Buffer> {
   const passJson = JSON.stringify(generatePassJson(input), null, 2);
 
   const files: Record<string, Buffer> = {
@@ -80,6 +80,20 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string }): Pro
     "icon@3x.png":  ICON_29,
   };
 
+  // Logo marchand (coin supérieur gauche de la carte)
+  if (input.logoUrl) {
+    try {
+      const res = await fetch(input.logoUrl);
+      if (res.ok) {
+        const buf = Buffer.from(await res.arrayBuffer());
+        files["logo.png"]    = buf;
+        files["logo@2x.png"] = buf;
+        files["logo@3x.png"] = buf;
+      }
+    } catch { /* logo optionnel */ }
+  }
+
+  // Bannière strip
   if (input.stripUrl) {
     try {
       const res = await fetch(input.stripUrl);

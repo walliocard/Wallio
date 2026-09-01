@@ -71,15 +71,17 @@ export function generatePassJson(input: PassInput): object {
     foregroundColor: hexToRgb(fg),
     labelColor: hexToRgb(lc),
     storeCard: {
-      headerFields,
-      primaryFields: [
+      // Compteur de tampons en headerField (haut droite) pour ne pas couvrir la bannière strip
+      headerFields: [
+        ...headerFields,
         {
           key: "stamps",
           label: (input.primaryLabel ?? "TAMPONS").toUpperCase(),
-          value: `${input.stampsCurrent} / ${input.stampsObjective}`,
+          value: `${input.stampsCurrent}/${input.stampsObjective}`,
           changeMessage: "Nouveau tampon ! Vous avez maintenant %@",
         },
       ],
+      primaryFields: [],
       secondaryFields: [
         {
           key: "reward",
