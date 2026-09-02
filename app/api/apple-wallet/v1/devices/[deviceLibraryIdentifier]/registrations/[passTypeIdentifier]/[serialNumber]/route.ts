@@ -23,10 +23,16 @@ export async function POST(req: Request, { params }: { params: RouteParams }) {
     .limit(1)
     .get();
 
-  if (snap.empty) return new Response(null, { status: 401 });
+  if (snap.empty) {
+    console.error("[register] 401 — wallet_id:", serialNumber, "authToken:", authToken.slice(0, 8) + "...");
+    return new Response(null, { status: 401 });
+  }
 
   const { pushToken } = await req.json().catch(() => ({})) as { pushToken?: string };
-  if (!pushToken) return new Response(null, { status: 400 });
+  if (!pushToken) {
+    console.error("[register] 400 — pas de pushToken dans le body");
+    return new Response(null, { status: 400 });
+  }
 
   await snap.docs[0].ref.update({
     apns_push_token: pushToken,
@@ -34,6 +40,7 @@ export async function POST(req: Request, { params }: { params: RouteParams }) {
     apns_registered_at: new Date().toISOString(),
   });
 
+  console.log("[register] 201 OK — wallet_id:", serialNumber, "pushToken:", pushToken.slice(0, 8) + "...");
   return new Response(null, { status: 201 });
 }
 
