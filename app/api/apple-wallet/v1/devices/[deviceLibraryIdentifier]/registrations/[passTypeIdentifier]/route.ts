@@ -12,20 +12,26 @@ export async function GET(
 
   const db = adminDb();
 
-  let query = db
+  // Filtre sur apns_device_lib_id seul (pas d'index composite nécessaire)
+  // Le filtre temporel se fait côté JS pour éviter FAILED_PRECONDITION Firestore
+  const snap = await db
     .collection("clients")
-    .where("apns_device_lib_id", "==", deviceLibraryIdentifier);
-
-  if (passesUpdatedSince) {
-    const sinceDate = new Date(Number(passesUpdatedSince) * 1000);
-    query = query.where("apns_last_updated", ">=", sinceDate.toISOString()) as typeof query;
-  }
-
-  const snap = await query.get();
+    .where("apns_device_lib_id", "==", deviceLibraryIdentifier)
+    .get();
 
   if (snap.empty) return new Response(null, { status: 204 });
 
-  const serialNumbers = snap.docs.map((d) => d.data().wallet_id as string);
+  const sinceMs = passesUpdatedSince ? Number(passesUpdatedSince) * 1000 : 0;
+  const docs = sinceMs
+    ? snap.docs.filter(d => {
+        const updated = d.data().apns_last_updated;
+        return updated && new Date(updated).getTime() >= sinceMs;
+      })
+    : snap.docs;
+
+  if (docs.length === 0) return new Response(null, { status: 204 });
+
+  const serialNumbers = docs.map((d) => d.data().wallet_id as string);
   const lastUpdated = Math.floor(Date.now() / 1000).toString();
 
   return NextResponse.json({ serialNumbers, lastUpdated }, { status: 200 });
