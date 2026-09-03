@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import Link from "next/link";
+
 
 interface CardData {
   walletId: string;
@@ -15,6 +15,7 @@ interface CardData {
   stampsObjective: number;
   rewardName: string;
   prenom: string;
+  hasPushToken: boolean;
 }
 
 export default function MesCartesPage() {
@@ -55,6 +56,7 @@ export default function MesCartesPage() {
             stampsObjective: m.objectif_tampons || 10,
             rewardName: m.nom_recompense || "Récompense",
             prenom: client.prenom || "",
+            hasPushToken: !!client.apns_push_token,
           });
         } catch { /* ignorer les erreurs individuelles */ }
       }));
@@ -160,23 +162,33 @@ export default function MesCartesPage() {
               </div>
 
               {/* Card bottom */}
-              <div style={{ background: "white", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <a
-                  href={`/api/apple-wallet/generate/${card.walletId}`}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    background: "#000", borderRadius: 12, padding: "9px 16px",
-                    textDecoration: "none",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8">
-                    <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="white" stroke="none"/>
-                  </svg>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "white" }}>Apple Wallet</span>
-                </a>
-                <span style={{ fontSize: 12, color: "#8E8E93" }}>
-                  {pct === 100 ? "Récompense prête" : `${pct}% complété`}
-                </span>
+              <div style={{ background: "white", padding: "14px 20px" }}>
+                {!card.hasPushToken && (
+                  <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 10, background: "rgba(255,149,0,0.08)", border: "1px solid rgba(255,149,0,0.2)", display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span style={{ fontSize: 11, color: "#FF9500", fontWeight: 500 }}>Re-téléchargez pour activer les mises à jour auto</span>
+                  </div>
+                )}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <a
+                    href={`/api/apple-wallet/generate/${card.walletId}`}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      background: "#000", borderRadius: 12, padding: "9px 16px",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8">
+                      <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="white" stroke="none"/>
+                    </svg>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "white" }}>
+                      {card.hasPushToken ? "Apple Wallet" : "Mettre à jour"}
+                    </span>
+                  </a>
+                  <span style={{ fontSize: 12, color: "#8E8E93" }}>
+                    {pct === 100 ? "Récompense prête" : `${pct}% complété`}
+                  </span>
+                </div>
               </div>
             </div>
           );

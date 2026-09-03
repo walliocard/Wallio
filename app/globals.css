@@ -77,11 +77,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-geist), Inter, system-ui, sans-serif;
   transition: background 0.3s ease;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 ::selection {
