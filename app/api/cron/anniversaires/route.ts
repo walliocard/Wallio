@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
 
 export async function GET(req: Request) {
-  if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  initAdmin();
   const db = adminDb();
   const messaging = adminMessaging();
 

@@ -1,5 +1,7 @@
 import JSZip from "jszip";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import forge from "node-forge";
 import { generatePassJson, type PassInput } from "./generatePass";
 
@@ -7,18 +9,12 @@ function sha1(data: Buffer | string): string {
   return crypto.createHash("sha1").update(data).digest("hex");
 }
 
-// Cache du certificat WWDR G4 (public Apple, téléchargé une fois)
-let _wwdrCache: forge.pki.Certificate | null = null;
-
-async function getWwdrCert(): Promise<forge.pki.Certificate> {
-  if (_wwdrCache) return _wwdrCache;
-  // Apple WWDR G4 — DER format
-  const res = await fetch("https://www.apple.com/certificateauthority/AppleWWDRCAG4.cer");
-  if (!res.ok) throw new Error(`WWDR fetch failed: ${res.status}`);
-  const der  = Buffer.from(await res.arrayBuffer());
+// WWDR G4 bundlé dans public/ — plus de fetch réseau à chaque cold start
+function getWwdrCert(): forge.pki.Certificate {
+  const cerPath = path.join(process.cwd(), "public", "AppleWWDRCAG4.cer");
+  const der = fs.readFileSync(cerPath);
   const asn1 = forge.asn1.fromDer(forge.util.binary.raw.encode(der));
-  _wwdrCache = forge.pki.certificateFromAsn1(asn1);
-  return _wwdrCache;
+  return forge.pki.certificateFromAsn1(asn1);
 }
 
 async function signManifest(manifestJson: string): Promise<Buffer> {
@@ -26,8 +22,7 @@ async function signManifest(manifestJson: string): Promise<Buffer> {
   const p12Pwd = process.env.APPLE_PASS_CERT_PASSWORD || "";
 
   if (!p12B64) {
-    console.warn("[PassKit] APPLE_PASS_CERT_P12 manquant — signature vide");
-    return Buffer.alloc(0);
+    throw new Error("[PassKit] APPLE_PASS_CERT_P12 manquant — impossible de signer le pass");
   }
 
   const p12Der  = forge.util.decode64(p12B64);
@@ -41,7 +36,7 @@ async function signManifest(manifestJson: string): Promise<Buffer> {
 
   if (!privateKey || !cert) throw new Error("[PassKit] Impossible d'extraire clé/cert du p12");
 
-  const wwdr = await getWwdrCert();
+  const wwdr = getWwdrCert();
 
   const p7 = forge.pkcs7.createSignedData();
   p7.content = forge.util.createBuffer(manifestJson, "utf8");

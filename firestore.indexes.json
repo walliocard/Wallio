@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "clients",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "marchand_id", "order": "ASCENDING" },
+        { "fieldPath": "derniere_visite", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "clients",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "apns_device_lib_id", "order": "ASCENDING" },
+        { "fieldPath": "apns_last_updated", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

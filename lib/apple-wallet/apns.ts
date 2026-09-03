@@ -47,7 +47,7 @@ export async function pushPassUpdate(pushToken: string): Promise<void> {
       ":path": path,
       "authorization": `bearer ${jwt}`,
       "apns-push-type": "background",
-      "apns-priority": "10",
+      "apns-priority": "5",
       "apns-topic": PASS_TYPE_ID,
       "content-type": "application/json",
     });

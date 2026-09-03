@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json() as { description?: string };
-  const description = body.description?.trim();
+  const description = body.description?.trim().slice(0, 500);
   if (!description) {
     return NextResponse.json({ error: "description requise" }, { status: 400 });
   }

@@ -12,7 +12,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
     }
 
-    initAdmin();
     const db = adminDb();
     const auth = getAdminAuth();
 

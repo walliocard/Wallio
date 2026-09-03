@@ -93,6 +93,12 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           };
           localStorage.setItem(WALLET_KEY(marchandId), newWalletId);
           const result = await ajouterTampon(newClient, marchand);
+          if (result.type === "ok" || result.type === "recompense") {
+            const body = JSON.stringify({ walletId: newWalletId });
+            const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+            fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+            fetch("/api/google-wallet/push-update", opts).catch(() => {});
+          }
           setScreen({ type: "carte", client: { ...newClient, tampons: result.type === "ok" ? result.tampons : 1 }, marchand });
           return;
         }
