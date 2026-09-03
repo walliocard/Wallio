@@ -37,25 +37,25 @@ export async function POST(req: Request) {
     }
 
     const snap = await query.get();
-    const tokens: string[] = [];
+    const tokenDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
     snap.forEach(doc => {
       const token = doc.data().fcm_token;
-      if (token) tokens.push(token);
+      if (token) tokenDocs.push({ token, ref: doc.ref });
     });
 
-    if (tokens.length === 0) {
+    if (tokenDocs.length === 0) {
       return NextResponse.json({ sent: 0, message: "Aucun client avec notifications activées" });
     }
 
-    // Envoi en batch (max 500 par appel FCM)
+    // Envoi en batch (max 500 par appel FCM) + nettoyage tokens expirés
     const messaging = adminMessaging();
     let sent = 0;
     let failed = 0;
 
-    for (let i = 0; i < tokens.length; i += 500) {
-      const batch = tokens.slice(i, i + 500);
+    for (let i = 0; i < tokenDocs.length; i += 500) {
+      const batch = tokenDocs.slice(i, i + 500);
       const result = await messaging.sendEachForMulticast({
-        tokens: batch,
+        tokens: batch.map(d => d.token),
         notification: { title, body },
         webpush: {
           notification: { icon: (logoUrl as string | null) || "/icon-192.png", badge: "/favicon-32.png" },
@@ -64,9 +64,21 @@ export async function POST(req: Request) {
       });
       sent += result.successCount;
       failed += result.failureCount;
+
+      // Supprimer les tokens invalides/expirés de Firestore
+      const cleanups: Promise<unknown>[] = [];
+      result.responses.forEach((r, idx) => {
+        if (!r.success && r.error?.code && (
+          r.error.code === "messaging/registration-token-not-registered" ||
+          r.error.code === "messaging/invalid-registration-token"
+        )) {
+          cleanups.push(batch[idx].ref.update({ fcm_token: null }));
+        }
+      });
+      if (cleanups.length > 0) await Promise.all(cleanups);
     }
 
-    return NextResponse.json({ sent, failed, total: tokens.length });
+    return NextResponse.json({ sent, failed, total: tokenDocs.length });
   } catch (err) {
     console.error("Notify error:", err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
