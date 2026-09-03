@@ -512,6 +512,66 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
 
 // ─── Carte créée ──────────────────────────────────────────────────────────────
 
+function InstallBanner() {
+  const [show, setShow] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+
+  useEffect(() => {
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as unknown as Record<string, unknown>).standalone === true;
+    if (standalone) return;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    setIsIos(ios);
+    setShow(true);
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <div style={{
+      borderRadius: 20, padding: "16px 18px", marginBottom: 12,
+      background: "rgba(0,122,255,0.07)", border: "1px solid rgba(0,122,255,0.18)",
+    }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <div style={{
+          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+          background: "linear-gradient(135deg,#007AFF,#8B5CF6)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+            <rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>
+          </svg>
+        </div>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)", marginBottom: 3 }}>
+            Installez Wallio — gratuit
+          </p>
+          <p style={{ fontSize: 12, color: "var(--fg-secondary)", lineHeight: 1.5, marginBottom: 10 }}>
+            Retrouvez toutes vos cartes de fidélité en un clin d&apos;œil et recevez des offres exclusives.
+          </p>
+          {isIos ? (
+            <p style={{ fontSize: 12, color: "var(--fg-secondary)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+              Appuyez sur
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ display: "inline-block" }}>
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+              puis <strong>&quot;Sur l&apos;écran d&apos;accueil&quot;</strong>
+            </p>
+          ) : (
+            <p style={{ fontSize: 12, color: "var(--fg-secondary)" }}>
+              Appuyez sur <strong>⋮</strong> puis <strong>&quot;Ajouter à l&apos;écran d&apos;accueil&quot;</strong>
+            </p>
+          )}
+        </div>
+        <button onClick={() => setShow(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg-tertiary)", padding: 2, flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CarteCreee({ client, marchand, recuperation = false }: { client: Client; marchand: Marchand; recuperation?: boolean }) {
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
 
@@ -620,6 +680,8 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
             <p className="text-[13px] font-medium" style={{ color: "#34C759" }}>Notifications activées</p>
           </div>
         )}
+
+        <InstallBanner />
 
         {/* Boutons Wallet */}
         <div className="flex flex-col gap-2.5">
