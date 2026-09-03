@@ -17,11 +17,26 @@ interface CardData {
 }
 
 const PHONE_KEY = "wallio_client_phone";
-const COUNTRY_CODES = [
+const PAYS = [
   { code: "+212", flag: "🇲🇦", label: "Maroc" },
+  { code: "+213", flag: "🇩🇿", label: "Algérie" },
+  { code: "+216", flag: "🇹🇳", label: "Tunisie" },
   { code: "+33",  flag: "🇫🇷", label: "France" },
   { code: "+32",  flag: "🇧🇪", label: "Belgique" },
+  { code: "+34",  flag: "🇪🇸", label: "Espagne" },
+  { code: "+39",  flag: "🇮🇹", label: "Italie" },
   { code: "+41",  flag: "🇨🇭", label: "Suisse" },
+  { code: "+44",  flag: "🇬🇧", label: "Royaume-Uni" },
+  { code: "+49",  flag: "🇩🇪", label: "Allemagne" },
+  { code: "+31",  flag: "🇳🇱", label: "Pays-Bas" },
+  { code: "+351", flag: "🇵🇹", label: "Portugal" },
+  { code: "+90",  flag: "🇹🇷", label: "Turquie" },
+  { code: "+971", flag: "🇦🇪", label: "Émirats" },
+  { code: "+966", flag: "🇸🇦", label: "Arabie S." },
+  { code: "+974", flag: "🇶🇦", label: "Qatar" },
+  { code: "+965", flag: "🇰🇼", label: "Koweït" },
+  { code: "+221", flag: "🇸🇳", label: "Sénégal" },
+  { code: "+225", flag: "🇨🇮", label: "Côte d'Ivoire" },
   { code: "+1",   flag: "🇺🇸", label: "USA/CA" },
 ];
 
@@ -89,10 +104,9 @@ export default function MesCartesPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const digits = phoneInput.replace(/\D/g, "");
-    if (!digits) return;
-    // Normalise : retire le 0 initial si présent
-    const local = digits.startsWith("0") ? digits.slice(1) : digits;
+    // Normalisation identique à la page NFC
+    const local = phoneInput.replace(/\D/g, "").replace(/^0/, "");
+    if (!local) return;
     const full = `${countryCode}${local}`;
     setPhone(full);
     localStorage.setItem(PHONE_KEY, full);
@@ -150,7 +164,7 @@ export default function MesCartesPage() {
                     color: "#1D1D1F", outline: "none", cursor: "pointer", flexShrink: 0,
                   }}
                 >
-                  {COUNTRY_CODES.map(c => (
+                  {PAYS.map(c => (
                     <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
                   ))}
                 </select>
@@ -289,11 +303,9 @@ export default function MesCartesPage() {
 function Logo() {
   return (
     <div style={{ padding: "52px 24px 0", maxWidth: 430, width: "100%", margin: "0 auto" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
-        </div>
-        <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, color: "#1D1D1F" }}>Wallio</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <img src="/icon.svg" alt="Wallio" style={{ width: 36, height: 36, borderRadius: 10 }} />
+        <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: -0.3, color: "#1D1D1F" }}>Wallio</span>
       </div>
     </div>
   );
