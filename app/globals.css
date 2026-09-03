@@ -80,6 +80,7 @@
 html {
   overflow-x: hidden;
   overscroll-behavior-x: none;
+  touch-action: pan-y;
 }
 
 body {
@@ -89,6 +90,7 @@ body {
   transition: background 0.3s ease;
   overflow-x: hidden;
   overscroll-behavior-x: none;
+  touch-action: pan-y;
 }
 
 ::selection {
