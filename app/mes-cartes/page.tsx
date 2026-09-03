@@ -304,7 +304,7 @@ function Logo() {
   return (
     <div style={{ padding: "52px 24px 0", maxWidth: 430, width: "100%", margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <img src="/icon.svg" alt="Wallio" style={{ width: 36, height: 36, borderRadius: 10 }} />
+        <img src="/icon-192.png" alt="Wallio" style={{ width: 36, height: 36, borderRadius: 10 }} />
         <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: -0.3, color: "#1D1D1F" }}>Wallio</span>
       </div>
     </div>
