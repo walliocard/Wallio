@@ -60,6 +60,43 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           localStorage.removeItem(WALLET_KEY(marchandId));
         }
 
+        // Identité Wallio connue → inscription automatique chez ce marchand
+        const cachedPhone  = localStorage.getItem("wallio_client_phone");
+        const cachedPrenom = localStorage.getItem("wallio_client_prenom");
+        const cachedNom    = localStorage.getItem("wallio_client_nom");
+        const cachedDob    = localStorage.getItem("wallio_client_dob");
+        if (cachedPhone && cachedPrenom && cachedNom) {
+          // Peut-être déjà inscrit ici (localStorage perdu / nouvel appareil)
+          const existing = await getClientByTelephone(cachedPhone, marchandId);
+          if (existing) {
+            localStorage.setItem(WALLET_KEY(marchandId), existing.wallet_id);
+            await traiterTampon(existing, marchand);
+            return;
+          }
+          // Nouveau chez ce marchand → on crée la carte automatiquement
+          const { clientId, walletId: newWalletId } = await creerClient({
+            prenom: cachedPrenom,
+            nom: cachedNom,
+            telephone: cachedPhone,
+            date_naissance: cachedDob || "",
+            marchand_id: marchandId,
+          });
+          const newClient: Client = {
+            id: clientId,
+            prenom: cachedPrenom,
+            nom: cachedNom,
+            telephone: cachedPhone,
+            date_naissance: cachedDob || "",
+            wallet_id: newWalletId,
+            marchand_id: marchandId,
+            tampons: 0,
+          };
+          localStorage.setItem(WALLET_KEY(marchandId), newWalletId);
+          const result = await ajouterTampon(newClient, marchand);
+          setScreen({ type: "carte", client: { ...newClient, tampons: result.type === "ok" ? result.tampons : 1 }, marchand });
+          return;
+        }
+
         setScreen({ type: "inscription", marchand });
       } catch (e) {
         setScreen({ type: "erreur", message: `Erreur de connexion. Réessayez. (${String(e).slice(0, 60)})` });
@@ -86,7 +123,10 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       marchand={screen.marchand}
       onSuccess={async (client) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
-        if (client.telephone) localStorage.setItem("wallio_client_phone", client.telephone);
+        if (client.telephone)    localStorage.setItem("wallio_client_phone", client.telephone);
+        if (client.prenom)       localStorage.setItem("wallio_client_prenom", client.prenom);
+        if (client.nom)          localStorage.setItem("wallio_client_nom", client.nom);
+        if (client.date_naissance) localStorage.setItem("wallio_client_dob", client.date_naissance);
         const result = await ajouterTampon(client, screen.marchand);
         setScreen({ type: "carte", client: { ...client, tampons: result.type === "ok" ? result.tampons : 1 }, marchand: screen.marchand });
       }}
