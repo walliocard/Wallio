@@ -86,6 +86,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       marchand={screen.marchand}
       onSuccess={async (client) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
+        if (client.telephone) localStorage.setItem("wallio_client_phone", client.telephone);
         const result = await ajouterTampon(client, screen.marchand);
         setScreen({ type: "carte", client: { ...client, tampons: result.type === "ok" ? result.tampons : 1 }, marchand: screen.marchand });
       }}
@@ -97,6 +98,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       marchand={screen.marchand}
       onSuccess={(client) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
+        if (client.telephone) localStorage.setItem("wallio_client_phone", client.telephone);
         setScreen({ type: "carte", client, marchand: screen.marchand, recuperation: true });
       }}
       onBack={() => setScreen({ type: "inscription", marchand: screen.marchand })}
