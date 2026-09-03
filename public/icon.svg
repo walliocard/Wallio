@@ -20,21 +20,23 @@
   <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
 
   <!-- Halo / glow derrière le W -->
-  <text x="256" y="345"
+  <text x="256" y="256"
         font-size="320"
         font-family="system-ui,-apple-system,BlinkMacSystemFont,sans-serif"
         font-weight="800"
         fill="url(#wGrad)"
         text-anchor="middle"
+        dominant-baseline="central"
         opacity="0.18"
         filter="url(#glow)">W</text>
 
   <!-- W principal avec ombre colorée -->
-  <text x="256" y="340"
+  <text x="256" y="256"
         font-size="300"
         font-family="system-ui,-apple-system,BlinkMacSystemFont,sans-serif"
         font-weight="800"
         fill="url(#wGrad)"
         text-anchor="middle"
+        dominant-baseline="central"
         filter="url(#shadow)">W</text>
 </svg>
