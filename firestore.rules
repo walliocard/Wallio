@@ -6,13 +6,14 @@ service cloud.firestore {
       allow write: if false;
     }
     match /clients/{clientId} {
-      // Dashboard marchand — lecture de ses propres clients
-      allow read: if request.auth != null && resource.data.marchand_id == request.auth.uid;
-      // NFC/QR flow — création client sans auth
+      // Lecture ouverte : flux NFC sans auth + dashboard marchand
+      allow read: if true;
+      // Création — flux NFC sans auth
       allow create: if request.resource.data.marchand_id is string;
-      // Mise à jour (NFC ou dashboard) — marchand_id immuable
+      // Mise à jour — marchand_id immuable (NFC + dashboard)
       allow update: if resource.data.marchand_id == request.resource.data.marchand_id;
-      allow delete: if false;
+      // Suppression — marchand authentifié uniquement
+      allow delete: if request.auth != null && resource.data.marchand_id == request.auth.uid;
     }
   }
 }
