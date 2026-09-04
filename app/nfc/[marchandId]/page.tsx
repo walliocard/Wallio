@@ -200,27 +200,51 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
       </div>
 
       <div className="w-full max-w-[360px] relative text-center">
-        <div className="text-6xl mb-6 animate-bounce">
-          {isOk ? marchand.icone_tampons || "+" : isRecompense ? "+" : "!"}
-        </div>
 
-        <h1 className="text-[28px] font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>
-          {isOk && (result.double ? "2 tampons ajoutés !" : "Tampon ajouté !")}
-          {isRecompense && "Récompense débloquée !"}
-          {isAntiDoublon && "Déjà enregistré"}
-        </h1>
-
-        {isOk && result.double && (
-          <p className="text-[13px] font-medium mb-2 px-3 py-1.5 rounded-full inline-block" style={{ background: "rgba(0,122,255,0.1)", color: "var(--accent)" }}>
-            Offre spéciale x2 tampons active
-          </p>
+        {isAntiDoublon ? (
+          <>
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+              style={{ background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.28)" }}>
+              <span className="text-[28px] font-bold leading-none" style={{ color: "#FF9F0A" }}>!</span>
+            </div>
+            <h1 className="text-[26px] font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>
+              Déjà enregistré
+            </h1>
+            <p className="text-[16px] mb-6" style={{ color: "var(--fg-secondary)" }}>
+              Bonjour {result.prenom} !
+            </p>
+            {result.secondes_restantes > 0 && (
+              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl mb-8"
+                style={{ background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.22)" }}>
+                <span className="text-[13px] font-medium" style={{ color: "#FF9F0A" }}>
+                  Prochain tampon dans
+                </span>
+                <span className="text-[15px] font-bold" style={{ color: "#FF9F0A" }}>
+                  {formatTemps(result.secondes_restantes)}
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="text-6xl mb-6 animate-bounce">
+              {isOk ? marchand.icone_tampons || "+" : "+"}
+            </div>
+            <h1 className="text-[28px] font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>
+              {isOk && (result.double ? "2 tampons ajoutés !" : "Tampon ajouté !")}
+              {isRecompense && "Récompense débloquée !"}
+            </h1>
+            {isOk && result.double && (
+              <p className="text-[13px] font-medium mb-2 px-3 py-1.5 rounded-full inline-block" style={{ background: "rgba(0,122,255,0.1)", color: "var(--accent)" }}>
+                Offre spéciale x2 tampons active
+              </p>
+            )}
+            <p className="text-[17px] mb-8" style={{ color: "var(--fg-secondary)" }}>
+              {isOk && `${result.prenom} — ${result.tampons}/${result.objectif} tampons`}
+              {isRecompense && `${result.prenom} — ${result.nom_recompense}`}
+            </p>
+          </>
         )}
-
-        <p className="text-[17px] mb-8" style={{ color: "var(--fg-secondary)" }}>
-          {isOk && `${result.prenom} — ${result.tampons}/${result.objectif} tampons`}
-          {isRecompense && `${result.prenom} — ${result.nom_recompense}`}
-          {isAntiDoublon && `${result.prenom} a déjà été enregistré${result.secondes_restantes ? ` · Reviens dans ${formatTemps(result.secondes_restantes)}` : ""}`}
-        </p>
 
         {isOk && (
           <div className="flex justify-center gap-2 flex-wrap mb-8">
