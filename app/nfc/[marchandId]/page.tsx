@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, use } from "react";
 import {
-  getMarchandByNfcId, getClientByWalletId, getClientByTelephone,
+  getMarchandByNfcId, getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
   creerClient, ajouterTampon, validerRecompense,
   formatTemps, WALLET_KEY,
   type Marchand, type Client, type TamponResult,
@@ -54,6 +54,15 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         if (walletId) {
           const client = await getClientByWalletId(walletId, marchandId);
           if (client) {
+            // Si ce client n'est pas dans Apple Wallet, chercher le bon par téléphone
+            if (!client.apns_push_token && client.telephone) {
+              const walletClient = await getWalletClientByTelephone(client.telephone, marchandId);
+              if (walletClient && walletClient.wallet_id !== walletId) {
+                localStorage.setItem(WALLET_KEY(marchandId), walletClient.wallet_id);
+                await traiterTampon(walletClient, marchand);
+                return;
+              }
+            }
             await traiterTampon(client, marchand);
             return;
           }

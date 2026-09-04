@@ -35,6 +35,10 @@ export type Client = {
   date_inscription?: Timestamp;
   derniere_visite?: Timestamp;
   recompense_en_attente?: boolean;
+  apns_push_token?: string;
+  apns_device_lib_id?: string;
+  wallet_type?: "apple" | "google";
+  fcm_token?: string;
 };
 
 export type TamponResult =
@@ -89,17 +93,22 @@ function normaliseTel(tel: string): string {
 
 export async function getClientByTelephone(telephone: string, marchandId: string): Promise<Client | null> {
   const telNorm = normaliseTel(telephone);
-  // Requête par marchand_id uniquement (évite l'index composite) + filtrage du téléphone côté client
-  const snap = await getDocs(query(
-    collection(db, "clients"),
-    where("marchand_id", "==", marchandId),
-  ));
-  const doc = snap.docs.find(d => {
-    const stored = normaliseTel(d.data().telephone ?? "");
-    return stored === telNorm;
-  });
-  if (!doc) return null;
-  return { id: doc.id, ...doc.data() } as Client;
+  const snap = await getDocs(query(collection(db, "clients"), where("marchand_id", "==", marchandId)));
+  const matches = snap.docs.filter(d => normaliseTel(d.data().telephone ?? "") === telNorm);
+  if (matches.length === 0) return null;
+  // Préférer le client enregistré dans Apple Wallet (apns_push_token présent)
+  const best = matches.find(d => d.data().apns_push_token) ?? matches[0];
+  return { id: best.id, ...best.data() } as Client;
+}
+
+// Trouve le client Apple Wallet actif parmi les doublons (même téléphone, même marchand)
+export async function getWalletClientByTelephone(telephone: string, marchandId: string): Promise<Client | null> {
+  const telNorm = normaliseTel(telephone);
+  const snap = await getDocs(query(collection(db, "clients"), where("marchand_id", "==", marchandId)));
+  const matches = snap.docs
+    .filter(d => normaliseTel(d.data().telephone ?? "") === telNorm)
+    .map(d => ({ id: d.id, ...d.data() } as Client));
+  return matches.find(c => c.apns_push_token) ?? null;
 }
 
 export async function creerClient(data: {
