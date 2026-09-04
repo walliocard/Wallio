@@ -1,15 +1,18 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Marchands — lecture publique (pour la page discovery)
     match /marchands/{marchandId} {
       allow read: if true;
       allow write: if false;
     }
-    // Clients — accès uniquement via Admin SDK (serveur)
     match /clients/{clientId} {
-      allow read: if false;
-      allow write: if false;
+      // Dashboard marchand — lecture de ses propres clients
+      allow read: if request.auth != null && resource.data.marchand_id == request.auth.uid;
+      // NFC/QR flow — création client sans auth
+      allow create: if request.resource.data.marchand_id is string;
+      // Mise à jour (NFC ou dashboard) — marchand_id immuable
+      allow update: if resource.data.marchand_id == request.resource.data.marchand_id;
+      allow delete: if false;
     }
   }
 }

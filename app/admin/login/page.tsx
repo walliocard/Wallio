@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import WallioLogo from "@/components/WallioLogo";
+import WallioIcon from "@/components/WallioIcon";
 
 export default function AdminLoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -39,10 +39,7 @@ export default function AdminLoginPage() {
 
       <div className="w-full max-w-[380px] relative">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
-            style={{ background: "linear-gradient(135deg,#EDE8FF 0%,#F0F0FF 100%)", boxShadow: "0 8px 24px rgba(94,92,230,0.25)" }}>
-            <WallioLogo size={46} />
-          </div>
+          <WallioIcon size={56} className="mb-5 mx-auto" />
           <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Wallio</h1>
           <p className="text-[15px] mt-1.5" style={{ color: "var(--fg-secondary)" }}>Administration</p>
         </div>

@@ -6,7 +6,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
-import WallioLogo from "@/components/WallioLogo";
+import WallioIcon from "@/components/WallioIcon";
 
 type TopClient = { prenom: string; nom: string; tampons: number; id: string };
 
@@ -116,7 +116,7 @@ export default function AccueilPage() {
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-1">
-            <WallioLogo size={12} />
+            <WallioIcon size={14} />
             <p className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--fg-tertiary)" }}>
               Wallio
             </p>
