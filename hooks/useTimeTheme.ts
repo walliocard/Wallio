@@ -1,10 +1,10 @@
 "use client";
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 // Applique une classe de thème sur <html>. Se retire au démontage.
 // force: "light" | "dark" | "auto" (auto = heure du jour)
 export function useTimeTheme(force: "light" | "dark" | "auto" = "auto") {
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cls: string;
     if (force === "light" || force === "dark") {
       cls = force;
