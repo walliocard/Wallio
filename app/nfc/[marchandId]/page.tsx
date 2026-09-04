@@ -200,12 +200,6 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
   walletId: string;
   onValiderRecompense: () => void;
 }) {
-  useEffect(() => {
-    if (result.type === "ok" || result.type === "anti_doublon") {
-      const t = setTimeout(() => { try { window.close(); } catch {} }, 2500);
-      return () => clearTimeout(t);
-    }
-  }, [result.type]);
 
   if (result.type === "not_found") return <Erreur message="Client introuvable." />;
 
@@ -288,9 +282,9 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
         {/* QR récompense */}
         {isRecompense && <RecompenseQR walletId={walletId} />}
 
-        <p className="mt-10 text-[11px]" style={{ color: "#C7C7CC" }}>
-          Vous pouvez fermer cette page
-        </p>
+        <a href={`/preferences/${walletId}`} className="block mt-10 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
+          Gérer mes notifications
+        </a>
       </div>
     </main>
   );
