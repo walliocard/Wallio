@@ -154,13 +154,15 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   return null;
 }
 
+const NFC_BG = "#F0F4FF";
+
 // ─── Loading ──────────────────────────────────────────────────────────────────
 
 function Loading() {
   return (
-    <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
+    <main className="min-h-screen flex items-center justify-center" style={{ background: NFC_BG }}>
       <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
+        style={{ borderColor: "#007AFF", borderTopColor: "transparent" }} />
     </main>
   );
 }
@@ -169,10 +171,13 @@ function Loading() {
 
 function Erreur({ message }: { message: string }) {
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
+    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: NFC_BG }}>
       <div className="text-center max-w-sm">
-        <div className="text-5xl mb-4">⚠️</div>
-        <p className="text-[17px]" style={{ color: "var(--fg-secondary)" }}>{message}</p>
+        <div className="w-14 h-14 mx-auto mb-5 rounded-2xl flex items-center justify-center"
+          style={{ background: "rgba(255,59,48,0.10)", border: "1.5px solid rgba(255,59,48,0.2)" }}>
+          <span className="text-[24px] font-bold" style={{ color: "#FF3B30" }}>!</span>
+        </div>
+        <p className="text-[17px]" style={{ color: "#3C3C43" }}>{message}</p>
       </div>
     </main>
   );
@@ -186,6 +191,13 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
   walletId: string;
   onValiderRecompense: () => void;
 }) {
+  useEffect(() => {
+    if (result.type === "ok" || result.type === "anti_doublon") {
+      const t = setTimeout(() => { try { window.close(); } catch {} }, 2500);
+      return () => clearTimeout(t);
+    }
+  }, [result.type]);
+
   if (result.type === "not_found") return <Erreur message="Client introuvable." />;
 
   const isOk = result.type === "ok";
@@ -193,82 +205,83 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
   const isAntiDoublon = result.type === "anti_doublon";
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[600px] h-[500px] rounded-full opacity-25"
-          style={{ background: `radial-gradient(circle, ${isAntiDoublon ? "rgba(255,159,10,0.3)" : isRecompense ? "rgba(52,199,89,0.3)" : "rgba(0,122,255,0.2)"} 0%, transparent 70%)` }} />
-      </div>
+    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: NFC_BG }}>
+      <div className="w-full max-w-[360px] text-center">
 
-      <div className="w-full max-w-[360px] relative text-center">
-
-        {isAntiDoublon ? (
-          <>
-            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-              style={{ background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.28)" }}>
-              <span className="text-[28px] font-bold leading-none" style={{ color: "#FF9F0A" }}>!</span>
-            </div>
-            <h1 className="text-[26px] font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>
-              Déjà enregistré
-            </h1>
-            <p className="text-[16px] mb-6" style={{ color: "var(--fg-secondary)" }}>
-              Bonjour {result.prenom} !
-            </p>
-            {result.secondes_restantes > 0 && (
-              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl mb-8"
-                style={{ background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.22)" }}>
-                <span className="text-[13px] font-medium" style={{ color: "#FF9F0A" }}>
-                  Prochain tampon dans
-                </span>
-                <span className="text-[15px] font-bold" style={{ color: "#FF9F0A" }}>
-                  {formatTemps(result.secondes_restantes)}
-                </span>
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="text-6xl mb-6 animate-bounce">
-              {isOk ? marchand.icone_tampons || "+" : "+"}
-            </div>
-            <h1 className="text-[28px] font-semibold tracking-tight mb-2" style={{ color: "var(--fg)" }}>
-              {isOk && (result.double ? "2 tampons ajoutés !" : "Tampon ajouté !")}
-              {isRecompense && "Récompense débloquée !"}
-            </h1>
-            {isOk && result.double && (
-              <p className="text-[13px] font-medium mb-2 px-3 py-1.5 rounded-full inline-block" style={{ background: "rgba(0,122,255,0.1)", color: "var(--accent)" }}>
-                Offre spéciale x2 tampons active
-              </p>
-            )}
-            <p className="text-[17px] mb-8" style={{ color: "var(--fg-secondary)" }}>
-              {isOk && `${result.prenom} — ${result.tampons}/${result.objectif} tampons`}
-              {isRecompense && `${result.prenom} — ${result.nom_recompense}`}
-            </p>
-          </>
-        )}
-
+        {/* Badge icône */}
         {isOk && (
-          <div className="flex justify-center gap-2 flex-wrap mb-8">
-            {Array.from({ length: result.objectif }).map((_, i) => (
-              <div key={i} className="w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all"
-                style={{
-                  background: i < result.tampons ? "var(--accent)" : "var(--border)",
-                  transform: i === result.tampons - 1 ? "scale(1.2)" : "scale(1)",
-                }}>
-                {i < result.tampons ? (marchand.icone_tampons || "+") : ""}
-              </div>
-            ))}
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.28)" }}>
+            <span className="text-[22px] font-bold text-white">+{result.double ? "2" : "1"}</span>
+          </div>
+        )}
+        {isRecompense && (
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,#34C759,#30D158)", boxShadow: "0 8px 24px rgba(52,199,89,0.28)" }}>
+            <span className="text-[22px] font-bold text-white">+1</span>
+          </div>
+        )}
+        {isAntiDoublon && (
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+            style={{ background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.28)" }}>
+            <span className="text-[28px] font-bold leading-none" style={{ color: "#FF9F0A" }}>!</span>
           </div>
         )}
 
-        {isRecompense && (
-          <RecompenseQR walletId={walletId} />
+        {/* Titre */}
+        <h1 className="text-[26px] font-semibold tracking-tight mb-2" style={{ color: "#1D1D1F" }}>
+          {isOk && (result.double ? "2 tampons ajoutés" : "Tampon ajouté")}
+          {isRecompense && "Récompense débloquée"}
+          {isAntiDoublon && "Déjà enregistré"}
+        </h1>
+
+        {/* Sous-titre */}
+        <p className="text-[16px] mb-6" style={{ color: "#6E6E73" }}>
+          {isOk && `Bonjour ${result.prenom}`}
+          {isRecompense && `Bonjour ${result.prenom} — ${result.nom_recompense}`}
+          {isAntiDoublon && `Bonjour ${result.prenom}`}
+        </p>
+
+        {/* Barre de progression (ok) */}
+        {isOk && (
+          <div className="mb-6">
+            {result.double && (
+              <p className="text-[12px] font-medium mb-3 px-3 py-1.5 rounded-full inline-block"
+                style={{ background: "rgba(0,122,255,0.08)", color: "#007AFF" }}>
+                Offre x2 tampons active
+              </p>
+            )}
+            <div className="flex justify-between text-[12px] mb-2" style={{ color: "#AEAEB2" }}>
+              <span>{result.tampons} tampon{result.tampons > 1 ? "s" : ""}</span>
+              <span>Objectif {result.objectif}</span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#E5E5EA" }}>
+              <div className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.min((result.tampons / result.objectif) * 100, 100)}%`, background: "linear-gradient(90deg,#007AFF,#8B5CF6)" }} />
+            </div>
+            {result.tampons < result.objectif && (
+              <p className="text-[12px] mt-2" style={{ color: "#AEAEB2" }}>
+                {result.objectif - result.tampons} avant {marchand.nom_recompense}
+              </p>
+            )}
+          </div>
         )}
 
-        <a href={`/preferences/${walletId}`}
-          className="block mt-8 text-[12px] text-center"
-          style={{ color: "var(--fg-tertiary)" }}>
-          Gérer mes notifications
-        </a>
+        {/* Anti-doublon countdown */}
+        {isAntiDoublon && result.secondes_restantes > 0 && (
+          <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl mb-6"
+            style={{ background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.22)" }}>
+            <span className="text-[13px] font-medium" style={{ color: "#FF9F0A" }}>Prochain tampon dans</span>
+            <span className="text-[15px] font-bold" style={{ color: "#FF9F0A" }}>{formatTemps(result.secondes_restantes)}</span>
+          </div>
+        )}
+
+        {/* QR récompense */}
+        {isRecompense && <RecompenseQR walletId={walletId} />}
+
+        <p className="mt-10 text-[11px]" style={{ color: "#C7C7CC" }}>
+          Vous pouvez fermer cette page
+        </p>
       </div>
     </main>
   );
