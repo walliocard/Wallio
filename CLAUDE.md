@@ -12,12 +12,10 @@ Fondateur/CEO : Karim. Claude = CTO/co-fondateur technique.
 
 | App | URL prod | URL dev |
 |---|---|---|
-| Dashboard marchand | app.wallio.ma | wallio-seven.vercel.app |
-| Super admin | admin.wallio.ma | wallio-seven.vercel.app/admin |
-| NFC client | app.wallio.ma/nfc/[nfc_id] | wallio-seven.vercel.app/nfc/[nfc_id] |
-| QR client | app.wallio.ma/client/[wallet_id] | wallio-seven.vercel.app/client/[wallet_id] |
-
-> Domaine wallio.ma pas encore acheté. Tout passe par wallio-seven.vercel.app.
+| Dashboard marchand | app.walliocard.com | wallio-seven.vercel.app |
+| Super admin | admin.walliocard.com | wallio-seven.vercel.app/admin |
+| NFC client | app.walliocard.com/nfc/[nfc_id] | wallio-seven.vercel.app/nfc/[nfc_id] |
+| QR client | app.walliocard.com/client/[wallet_id] | wallio-seven.vercel.app/client/[wallet_id] |
 
 ---
 
