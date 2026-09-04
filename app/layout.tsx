@@ -9,13 +9,27 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Wallio",
-  description: "Cartes de fidélité digitales",
+  title: "Wallio — Cartes de fidélité digitales",
+  description: "Gagnez des tampons et débloquez des récompenses chez vos établissements préférés. Sans app à télécharger.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Wallio",
+  },
+  openGraph: {
+    title: "Wallio — Cartes de fidélité digitales",
+    description: "Gagnez des tampons et débloquez des récompenses chez vos établissements préférés.",
+    url: "https://app.walliocard.com",
+    siteName: "Wallio",
+    images: [{ url: "https://app.walliocard.com/og-image.png", width: 1200, height: 630, alt: "Wallio" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Wallio — Cartes de fidélité digitales",
+    description: "Gagnez des tampons et débloquez des récompenses.",
+    images: ["https://app.walliocard.com/og-image.png"],
   },
   icons: {
     icon: [
@@ -34,7 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full bg-[#0A0A0A] text-white font-[family-name:var(--font-geist)]">
+      <body className="min-h-full font-[family-name:var(--font-geist)]">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
