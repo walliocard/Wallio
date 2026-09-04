@@ -657,7 +657,21 @@ function InstallBanner() {
 }
 
 function CarteCreee({ client, marchand, recuperation = false }: { client: Client; marchand: Marchand; recuperation?: boolean }) {
-  const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
+  const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">(() => {
+    if (typeof window === "undefined") return "idle";
+    if (!("Notification" in window)) return "denied";
+    if (Notification.permission === "granted") return "granted";
+    if (Notification.permission === "denied") return "denied";
+    return "idle";
+  });
+
+  // Si déjà accordé, masquer après 2s pour ne pas encombrer
+  useEffect(() => {
+    if (notifState === "granted") {
+      const t = setTimeout(() => setNotifState("denied"), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [notifState]);
 
   const m = marchand as Record<string, unknown>;
   const notifActif = m.notif_actif !== false;
