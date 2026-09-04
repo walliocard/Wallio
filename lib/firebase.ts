@@ -14,8 +14,18 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const db = getApps().length === 1
-  ? initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }) })
-  : getFirestore(app);
+function initDb() {
+  if (getApps().length > 1) return getFirestore(app);
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }),
+    });
+  } catch {
+    // Fallback : Samsung Browser, mode privé, IndexedDB indisponible
+    return getFirestore(app);
+  }
+}
+
+export const db = initDb();
 export const auth = getAuth(app);
 export const storage = getStorage(app);

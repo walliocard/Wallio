@@ -26,13 +26,16 @@ export async function POST(req: Request) {
 
   try {
     const token = await getGoogleAccessToken();
-    const res = await fetch(`${API}/loyaltyObject/${encodeURIComponent(objectId(walletId))}`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        loyaltyPoints: { balance: { int: client.tampons || 0 }, label: "Tampons" },
-      }),
-    });
+    const res = await fetch(
+      `${API}/loyaltyObject/${encodeURIComponent(objectId(walletId))}?updateMask=loyaltyPoints`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          loyaltyPoints: { balance: { int: client.tampons || 0 }, label: "Tampons" },
+        }),
+      }
+    );
 
     if (!res.ok) {
       const err = await res.text();
