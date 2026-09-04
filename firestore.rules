@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Marchands — lecture publique (pour la page discovery)
+    match /marchands/{marchandId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // Clients — accès uniquement via Admin SDK (serveur)
+    match /clients/{clientId} {
+      allow read: if false;
+      allow write: if false;
+    }
+  }
+}
