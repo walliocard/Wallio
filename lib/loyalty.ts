@@ -108,7 +108,7 @@ export async function getWalletClientByTelephone(telephone: string, marchandId: 
   const matches = snap.docs
     .filter(d => normaliseTel(d.data().telephone ?? "") === telNorm)
     .map(d => ({ id: d.id, ...d.data() } as Client));
-  return matches.find(c => c.apns_push_token) ?? null;
+  return matches.find(c => c.apns_push_token || c.wallet_type) ?? null;
 }
 
 export async function creerClient(data: {

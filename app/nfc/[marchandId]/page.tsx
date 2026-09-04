@@ -54,8 +54,9 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         if (walletId) {
           const client = await getClientByWalletId(walletId, marchand.id);
           if (client) {
-            // Si ce client n'est pas dans Apple Wallet, chercher le bon par téléphone
-            if (!client.apns_push_token && client.telephone) {
+            // Si ce client n'est pas dans Apple/Google Wallet, chercher le bon par téléphone
+            const hasWallet = client.apns_push_token || client.wallet_type;
+            if (!hasWallet && client.telephone) {
               const walletClient = await getWalletClientByTelephone(client.telephone, marchand.id);
               if (walletClient && walletClient.wallet_id !== walletId) {
                 localStorage.setItem(WALLET_KEY(marchandId), walletClient.wallet_id);
@@ -153,7 +154,10 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       marchand={screen.marchand}
       onSuccess={(client) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
-        if (client.telephone) localStorage.setItem("wallio_client_phone", client.telephone);
+        if (client.telephone)      localStorage.setItem("wallio_client_phone", client.telephone);
+        if (client.prenom)         localStorage.setItem("wallio_client_prenom", client.prenom);
+        if (client.nom)            localStorage.setItem("wallio_client_nom", client.nom);
+        if (client.date_naissance) localStorage.setItem("wallio_client_dob", client.date_naissance);
         setScreen({ type: "carte", client, marchand: screen.marchand, recuperation: true });
       }}
       onBack={() => setScreen({ type: "inscription", marchand: screen.marchand })}
