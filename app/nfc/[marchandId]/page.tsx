@@ -52,11 +52,11 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
 
         const walletId = localStorage.getItem(WALLET_KEY(marchandId));
         if (walletId) {
-          const client = await getClientByWalletId(walletId, marchandId);
+          const client = await getClientByWalletId(walletId, marchand.id);
           if (client) {
             // Si ce client n'est pas dans Apple Wallet, chercher le bon par téléphone
             if (!client.apns_push_token && client.telephone) {
-              const walletClient = await getWalletClientByTelephone(client.telephone, marchandId);
+              const walletClient = await getWalletClientByTelephone(client.telephone, marchand.id);
               if (walletClient && walletClient.wallet_id !== walletId) {
                 localStorage.setItem(WALLET_KEY(marchandId), walletClient.wallet_id);
                 await traiterTampon(walletClient, marchand);
@@ -76,7 +76,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         const cachedDob    = localStorage.getItem("wallio_client_dob");
         if (cachedPhone && cachedPrenom && cachedNom) {
           // Peut-être déjà inscrit ici (localStorage perdu / nouvel appareil)
-          const existing = await getClientByTelephone(cachedPhone, marchandId);
+          const existing = await getClientByTelephone(cachedPhone, marchand.id);
           if (existing) {
             localStorage.setItem(WALLET_KEY(marchandId), existing.wallet_id);
             await traiterTampon(existing, marchand);
@@ -88,7 +88,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             nom: cachedNom,
             telephone: cachedPhone,
             date_naissance: cachedDob || "",
-            marchand_id: marchandId,
+            marchand_id: marchand.id,
           });
           const newClient: Client = {
             id: clientId,
@@ -97,7 +97,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             telephone: cachedPhone,
             date_naissance: cachedDob || "",
             wallet_id: newWalletId,
-            marchand_id: marchandId,
+            marchand_id: marchand.id,
             tampons: 0,
           };
           localStorage.setItem(WALLET_KEY(marchandId), newWalletId);
