@@ -52,17 +52,16 @@ export function generatePassJson(input: PassInput): object {
   const restants = input.stampsObjective - input.stampsCurrent;
   const autoAux = {
     key: "restant",
-    label: "PROCHAINE RÉCOMPENSE",
-    value: restants > 0 ? `${restants} tampon${restants > 1 ? "s" : ""} restant${restants > 1 ? "s" : ""}` : "Récompense débloquée !",
+    label: "RESTANTS",
+    value: restants > 0 ? `${restants} tampon${restants > 1 ? "s" : ""}` : "Récompense disponible !",
   };
 
-  // Champs configurés par le marchand (adresse, horaires, etc.) — max 3
-  const marchandAux = (input.auxiliaryFields ?? [])
-    .filter(f => f.value)
-    .slice(0, 3)
-    .map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
+  // Champs marchand : 1 max en face (le reste va au dos)
+  const allMarchandAux = (input.auxiliaryFields ?? []).filter(f => f.value);
+  const frontAux = allMarchandAux.slice(0, 1).map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
+  const backAux  = allMarchandAux.slice(1).map((f, i)  => ({ key: `back_aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
 
-  const auxiliaryFields = [autoAux, ...marchandAux];
+  const auxiliaryFields = [autoAux, ...frontAux];
 
   return {
     formatVersion: 1,
@@ -101,6 +100,7 @@ export function generatePassJson(input: PassInput): object {
       auxiliaryFields,
       backFields: [
         ...(input.backInfo ? [{ key: "info", label: "À PROPOS", value: input.backInfo }] : []),
+        ...backAux,
         { key: "rgpd", label: "VOS DONNÉES", value: "Vos données sont gérées conformément au RGPD. Suppression disponible depuis l'application." },
         { key: "contact", label: "CONTACT", value: "support@walliocard.com" },
       ],
