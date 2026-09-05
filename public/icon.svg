@@ -1,43 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <radialGradient id="bgGrad" cx="50%" cy="42%" r="68%">
+    <radialGradient id="bg" cx="50%" cy="44%" r="70%">
       <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#EDE8FF"/>
+      <stop offset="100%" stop-color="#EAE4FF"/>
     </radialGradient>
-    <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="w" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%"   stop-color="#007AFF"/>
       <stop offset="50%"  stop-color="#5E5CE6"/>
       <stop offset="100%" stop-color="#BF5AF2"/>
     </linearGradient>
-    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="18"/>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="22" result="blur"/>
+      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
     </filter>
-    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#5E2FD4" flood-opacity="0.20"/>
+    <filter id="drop" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#4A3AFF" flood-opacity="0.18"/>
     </filter>
   </defs>
 
   <!-- Fond -->
-  <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
 
-  <!-- Halo -->
-  <text x="256" y="256"
-        font-size="310"
-        font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif"
-        font-weight="800"
-        fill="url(#wGrad)"
-        text-anchor="middle"
-        dominant-baseline="central"
-        opacity="0.14"
-        filter="url(#glow)">W</text>
+  <!-- Glow derrière le W -->
+  <path d="M 80,134 L 188,378 L 256,206 L 324,378 L 432,134 L 380,134 L 312,350 L 256,238 L 200,350 L 132,134 Z"
+        fill="url(#w)" opacity="0.13" filter="url(#glow)"/>
 
-  <!-- W principal -->
-  <text x="256" y="256"
-        font-size="310"
-        font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif"
-        font-weight="800"
-        fill="url(#wGrad)"
-        text-anchor="middle"
-        dominant-baseline="central"
-        filter="url(#shadow)">W</text>
+  <!-- W vectoriel principal -->
+  <path d="M 80,134 L 188,378 L 256,206 L 324,378 L 432,134 L 380,134 L 312,350 L 256,238 L 200,350 L 132,134 Z"
+        fill="url(#w)" filter="url(#drop)"/>
 </svg>
