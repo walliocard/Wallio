@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <radialGradient id="bgGrad" cx="50%" cy="50%" r="72%">
+    <radialGradient id="bgGrad" cx="50%" cy="42%" r="68%">
       <stop offset="0%" stop-color="#FFFFFF"/>
       <stop offset="100%" stop-color="#EDE8FF"/>
     </radialGradient>
@@ -10,29 +10,30 @@
       <stop offset="100%" stop-color="#BF5AF2"/>
     </linearGradient>
     <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="20"/>
+      <feGaussianBlur stdDeviation="18"/>
     </filter>
     <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="6" stdDeviation="14" flood-color="#5E2FD4" flood-opacity="0.22"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#5E2FD4" flood-opacity="0.20"/>
     </filter>
   </defs>
 
+  <!-- Fond -->
   <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
 
-  <!-- Halo derrière le W -->
-  <text x="256" y="330"
-        font-size="340"
+  <!-- Halo -->
+  <text x="256" y="256"
+        font-size="310"
         font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif"
         font-weight="800"
         fill="url(#wGrad)"
         text-anchor="middle"
         dominant-baseline="central"
-        opacity="0.15"
+        opacity="0.14"
         filter="url(#glow)">W</text>
 
   <!-- W principal -->
-  <text x="256" y="330"
-        font-size="340"
+  <text x="256" y="256"
+        font-size="310"
         font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif"
         font-weight="800"
         fill="url(#wGrad)"
