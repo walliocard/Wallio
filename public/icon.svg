@@ -9,19 +9,10 @@
       <stop offset="50%"  stop-color="#5E5CE6"/>
       <stop offset="100%" stop-color="#BF5AF2"/>
     </linearGradient>
-    <filter id="drop" x="-15%" y="-15%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#3A2FD4" flood-opacity="0.20"/>
+    <filter id="drop" x="-15%" y="-10%" width="130%" height="125%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#3A2FD4" flood-opacity="0.18"/>
     </filter>
   </defs>
-
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-
-  <text x="256" y="256"
-        font-size="340"
-        font-family="SF Pro Display,Helvetica Neue,Helvetica,Arial,sans-serif"
-        font-weight="800"
-        fill="url(#w)"
-        text-anchor="middle"
-        dominant-baseline="central"
-        filter="url(#drop)">W</text>
+  <path d="M218.82 387.88L137.92 387.88L68.00 124.12L148.02 124.12L169.08 226.44Q172.62 243.79 175.90 261.22Q179.17 278.66 182.36 296.01L182.36 296.01Q185.72 278.66 189.35 261.22Q192.98 243.79 196.87 226.44L196.87 226.44L220.24 124.12L291.76 124.12L315.13 226.44Q319.02 243.79 322.65 261.05Q326.28 278.31 329.64 295.48L329.64 295.48Q332.65 278.31 335.93 261.05Q339.20 243.79 342.74 226.44L342.74 226.44L363.98 124.12L444.00 124.12L374.08 387.88L293.18 387.88L263.26 266.09Q261.49 259.19 259.81 250.69Q258.12 242.19 256.00 231.92L256.00 231.92Q253.88 242.19 252.19 250.69Q250.51 259.19 248.74 266.09L248.74 266.09L218.82 387.88Z" fill="url(#w)" filter="url(#drop)"/>
 </svg>
