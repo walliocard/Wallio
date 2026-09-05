@@ -4,9 +4,9 @@ export default function WallioLogo({ size = 32, color }: { size?: number; color?
       {!color && (
         <defs>
           <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#007AFF"/>
-            <stop offset="50%" stopColor="#5E5CE6"/>
-            <stop offset="100%" stopColor="#BF5AF2"/>
+            <stop offset="0%"   stopColor="#007AFF" />
+            <stop offset="50%"  stopColor="#5E5CE6" />
+            <stop offset="100%" stopColor="#BF5AF2" />
           </linearGradient>
         </defs>
       )}
