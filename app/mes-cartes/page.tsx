@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient } from "@/lib/loyalty";
+import WallioIcon from "@/components/WallioIcon";
 
 interface CardData {
   walletId: string;
@@ -253,7 +254,9 @@ export default function MesCartesPage() {
         {tab === "cartes" && (
           cards.length === 0 ? (
             <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
-              <div style={{ fontSize: 44, marginBottom: 12 }}>🃏</div>
+              <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(91,124,250,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="#5B7CFA" stroke="none"/></svg>
+              </div>
               <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Aucune carte</p>
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>Scannez le tag NFC d'un établissement ou découvrez-en un dans l'onglet Découvrir.</p>
             </div>
@@ -264,7 +267,9 @@ export default function MesCartesPage() {
         {tab === "decouvrir" && (
           merchants.length === 0 ? (
             <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
-              <div style={{ fontSize: 44, marginBottom: 12 }}>🎉</div>
+              <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(52,199,89,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="1.8" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
               <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Vous êtes partout !</p>
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>Vous avez une carte dans tous les établissements Wallio.</p>
             </div>
@@ -355,12 +360,18 @@ function CardItem({ card, delay }: { card: CardData; delay: number }) {
             <span style={{ fontSize: 11, color: "#FF9500", fontWeight: 500 }}>Re-téléchargez pour activer les mises à jour auto</span>
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <a href={`/api/apple-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", gap: 8, background: "#000", borderRadius: 12, padding: "9px 16px", textDecoration: "none" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <a href={`/api/apple-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#000", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="white" stroke="none"/></svg>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "white" }}>{card.hasPushToken ? "Apple Wallet" : "Mettre à jour"}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>Ajouter à Apple Wallet</span>
           </a>
-          <span style={{ fontSize: 12, color: "#8E9BB5", fontWeight: 500 }}>{pct === 100 ? "Récompense prête !" : `${pct}% complété`}</span>
+          {process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
+            <a href={`/api/google-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#1a73e8", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>Ajouter à Google Wallet</span>
+            </a>
+          )}
+          <p style={{ fontSize: 11, color: "#AEAEB2", textAlign: "center" }}>{pct === 100 ? "Récompense disponible !" : `${pct}% complété`}</p>
         </div>
       </div>
     </div>
@@ -370,7 +381,7 @@ function CardItem({ card, delay }: { card: CardData; delay: number }) {
 function Header() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <img src="/icon.svg" alt="Wallio" style={{ width: 34, height: 34, borderRadius: 10 }} />
+      <WallioIcon size={34} />
       <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, color: "#1C2333" }}>Wallio</span>
     </div>
   );
