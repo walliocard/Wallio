@@ -13,6 +13,7 @@ import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
 import AppleWalletCard from "@/components/AppleWalletCard";
+import WallioIcon from "@/components/WallioIcon";
 import QRCode from "qrcode";
 
 type Screen =
@@ -628,7 +629,7 @@ function InstallBanner() {
       {/* Header banner */}
       <div style={{ padding: "16px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/icon.svg" alt="" style={{ width: 34, height: 34, borderRadius: 10 }} />
+          <WallioIcon size={34} />
           <div>
             <p style={{ fontSize: 15, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.2 }}>
               Installez Wallio
@@ -644,13 +645,13 @@ function InstallBanner() {
       {/* Benefits */}
       <div style={{ padding: "0 18px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         {[
-          { icon: "🎂", text: "Offre d'anniversaire automatique" },
-          { icon: "🎁", text: "Offres exclusives de vos établissements" },
-          { icon: "🃏", text: "Toutes vos cartes au même endroit" },
-        ].map(b => (
-          <div key={b.icon} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 16, flexShrink: 0 }}>{b.icon}</span>
-            <span style={{ fontSize: 13, color: "var(--fg)", fontWeight: 500 }}>{b.text}</span>
+          "Offre d'anniversaire automatique",
+          "Offres exclusives de vos établissements",
+          "Toutes vos cartes au même endroit",
+        ].map(text => (
+          <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 6, height: 6, borderRadius: 99, flexShrink: 0, background: "linear-gradient(135deg,#007AFF,#8B5CF6)" }} />
+            <span style={{ fontSize: 13, color: "var(--fg)", fontWeight: 500 }}>{text}</span>
           </div>
         ))}
       </div>
