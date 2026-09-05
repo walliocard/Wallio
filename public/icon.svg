@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="44%" r="70%">
+    <radialGradient id="bg" cx="50%" cy="44%" r="68%">
       <stop offset="0%" stop-color="#FFFFFF"/>
       <stop offset="100%" stop-color="#EAE4FF"/>
     </radialGradient>
@@ -9,23 +9,19 @@
       <stop offset="50%"  stop-color="#5E5CE6"/>
       <stop offset="100%" stop-color="#BF5AF2"/>
     </linearGradient>
-    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="22" result="blur"/>
-      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
-    </filter>
-    <filter id="drop" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#4A3AFF" flood-opacity="0.18"/>
+    <filter id="drop" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#3A2FD4" flood-opacity="0.20"/>
     </filter>
   </defs>
 
-  <!-- Fond -->
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
 
-  <!-- Glow derrière le W -->
-  <path d="M 80,134 L 188,378 L 256,206 L 324,378 L 432,134 L 380,134 L 312,350 L 256,238 L 200,350 L 132,134 Z"
-        fill="url(#w)" opacity="0.13" filter="url(#glow)"/>
-
-  <!-- W vectoriel principal -->
-  <path d="M 80,134 L 188,378 L 256,206 L 324,378 L 432,134 L 380,134 L 312,350 L 256,238 L 200,350 L 132,134 Z"
-        fill="url(#w)" filter="url(#drop)"/>
+  <text x="256" y="256"
+        font-size="340"
+        font-family="SF Pro Display,Helvetica Neue,Helvetica,Arial,sans-serif"
+        font-weight="800"
+        fill="url(#w)"
+        text-anchor="middle"
+        dominant-baseline="central"
+        filter="url(#drop)">W</text>
 </svg>
