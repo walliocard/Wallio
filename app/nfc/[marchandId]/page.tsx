@@ -13,7 +13,6 @@ import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
 import AppleWalletCard from "@/components/AppleWalletCard";
-import WallioIcon from "@/components/WallioIcon";
 import QRCode from "qrcode";
 
 type Screen =
@@ -634,7 +633,7 @@ function InstallBanner() {
       {/* Header banner */}
       <div style={{ padding: "16px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <WallioIcon size={34} />
+          <img src="/icon-192.png" alt="Wallio" style={{ width: 34, height: 34, borderRadius: 8, display: "block" }} />
           <div>
             <p style={{ fontSize: 15, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.2 }}>
               Installez Wallio
@@ -783,6 +782,11 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
             primaryLabel={(m.apple_primary_label as string) || "Tampons"}
             rewardLabel={(m.apple_reward_label as string) || "Récompense"}
             memberLabel={(m.apple_member_label as string) || "Membre"}
+            auxiliaryFields={[
+              { label: (m.apple_aux1_label as string) || "INFO", value: (m.apple_aux1_value as string) || "" },
+              { label: (m.apple_aux2_label as string) || "INFO", value: (m.apple_aux2_value as string) || "" },
+              { label: (m.apple_aux3_label as string) || "INFO", value: (m.apple_aux3_value as string) || "" },
+            ]}
             mode="full"
             stampsOnStrip={(m.apple_stamps_on_strip as boolean) ?? false}
             stripStampStyle={(m.apple_strip_stamp_style as never) || undefined}
