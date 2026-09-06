@@ -745,7 +745,15 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
       setNotifState("granted");
       const token = await registerFcmToken();
       if (token && client.id) {
+        // Sauvegarde sur le client courant
         await updateDoc(doc(db, "clients", client.id), { fcm_token: token });
+        // Propage aux autres cartes du même téléphone (tous marchands)
+        const cachedPhone = localStorage.getItem("wallio_client_phone");
+        if (cachedPhone) {
+          const { collection, query, where, getDocs } = await import("firebase/firestore");
+          const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", cachedPhone)));
+          await Promise.all(snap.docs.filter(d => d.id !== client.id).map(d => updateDoc(d.ref, { fcm_token: token })));
+        }
       }
     } else {
       setNotifState("denied");

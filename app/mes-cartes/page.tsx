@@ -207,7 +207,7 @@ export default function MesCartesPage() {
 
   const [enablingNotif, setEnablingNotif] = useState(false);
 
-  async function enableNotifications(targetClientId: string) {
+  async function enableNotifications(_targetClientId: string) {
     if (enablingNotif) return;
     setEnablingNotif(true);
     try {
@@ -216,9 +216,9 @@ export default function MesCartesPage() {
       const { registerFcmToken } = await import("@/lib/fcm");
       const token = await registerFcmToken();
       if (!token) { setEnablingNotif(false); return; }
-      // Sauvegarde le token sur ce client uniquement
-      await updateDoc(doc(db, "clients", targetClientId), { fcm_token: token });
-      setCards(prev => prev.map(c => c.clientId === targetClientId ? { ...c, hasFcmToken: true } : c));
+      // Sauvegarde le token sur TOUTES les cartes du client (tous marchands)
+      await Promise.all(cards.map(c => updateDoc(doc(db, "clients", c.clientId), { fcm_token: token })));
+      setCards(prev => prev.map(c => ({ ...c, hasFcmToken: true })));
     } catch (err) {
       console.error("enableNotifications:", err);
     }
