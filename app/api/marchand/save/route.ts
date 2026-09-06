@@ -18,7 +18,8 @@ async function patchGoogleWalletClass(uid: string) {
 
   const logoUri = `${BASE_URL}/api/logo/${uid}`;
   const bgColor = (m.google_bg_color as string) || (m.apple_bg_color as string) || (m.couleur_principale as string) || "#1C1C1E";
-  const heroUrl = (m.google_hero_url as string) || (m.strip_url as string) || undefined;
+  const hasHero = !!(m.google_hero_url || m.strip_url);
+  const heroUrl = hasHero ? `${BASE_URL}/api/google-hero/${uid}` : undefined;
   const textModules = (m.google_text_modules as { header: string; body: string; id: string }[] | undefined) || [];
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
 

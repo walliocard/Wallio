@@ -52,15 +52,15 @@ export async function GET(
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  // Proxy logo via notre API — évite les URLs Firebase (base64/token) que Google ne peut pas fetcher
+  // Proxies publics HTTPS — Google ne peut pas fetcher des data URLs base64
   const logoUri = `${BASE_URL}/api/logo/${client.marchand_id}`;
-  // Fallback : google_bg_color → apple_bg_color → couleur_principale → noir
   const bgColor = (m.google_bg_color as string | undefined)
     || (m.apple_bg_color as string | undefined)
     || (m.couleur_principale as string | undefined)
     || "#1C1C1E";
-  // Fallback : google_hero_url → strip_url (bannière Apple Wallet)
-  const heroUrl = (m.google_hero_url as string | undefined) || (m.strip_url as string | undefined);
+  // Hero via proxy uniquement si une bannière est configurée
+  const hasHero = !!(m.google_hero_url || m.strip_url);
+  const heroUrl = hasHero ? `${BASE_URL}/api/google-hero/${client.marchand_id}` : undefined;
 
   const textModules = (m.google_text_modules as { header: string; body: string; id: string }[] | undefined) || [];
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
