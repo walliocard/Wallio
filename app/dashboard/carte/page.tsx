@@ -640,6 +640,56 @@ export default function CartePage() {
     setComptoirDownloading(false);
   }
 
+  function resetToSaved() {
+    const m = marchand as Record<string, unknown>;
+    setLogoUrl((m.logo_url as string) || "");
+    setStripUrl((m.strip_url as string) || "");
+    setBgColor((m.apple_bg_color as string) || "#1C1C1E");
+    setFgAuto(!(m.apple_fg_color));
+    setFgColor((m.apple_fg_color as string) || "#FFFFFF");
+    setLabelAuto(!(m.apple_label_color));
+    setLabelColor((m.apple_label_color as string) || "rgba(255,255,255,0.55)");
+    setStripFrom(""); setStripTo(""); setStripAngle(135); setStripGlass(false);
+    setStripText(""); setStripTextSize("m"); setStripTextColor("#FFFFFF");
+    setStripTextPos("bl"); setStripTextFont("sans"); setStripText2(""); setStripText2Size("s");
+    setStripTextY((m.apple_strip_text_y as number) ?? 88);
+    setStripIncludeLogo(false);
+    setStampsOnStrip(m.apple_stamps_on_strip === true);
+    setStripStampStyle((m.apple_strip_stamp_style as StampStyle) || "dot");
+    setStampText((m.apple_stamp_text as string) || "");
+    setStampTextBold(m.apple_stamp_text_bold === true);
+    setStampTextItalic(m.apple_stamp_text_italic === true);
+    setStampTextSize((m.apple_stamp_text_size as number) || 1);
+    setStampColor((m.apple_stamp_color as string) || "#FFFFFF");
+    const sp = m.apple_stamp_position;
+    setStampPosition(typeof sp === "number" ? sp : sp === "top" ? 20 : sp === "bottom" ? 80 : 50);
+    setStampSizePreset((m.apple_stamp_size as "s"|"m"|"l") || "m");
+    setStampThickness((m.apple_stamp_thickness as number) ?? 2);
+    setStampLogoOpacity((m.apple_stamp_logo_opacity as number) ?? 1);
+    setRawStripUrl(""); setIsUploadedStrip(false); setCropZoom(1);
+    setCropY((m.apple_strip_crop_y as number) ?? 50);
+    setPrimaryLabel((m.apple_primary_label as string) || "Tampons");
+    setRewardLabel((m.apple_reward_label as string) || "Récompense");
+    setMemberLabel((m.apple_member_label as string) || "Membre");
+    setDescription((m.apple_description as string) || "");
+    setBackInfo((m.apple_back_info as string) || "");
+    setHeaderLabel((m.apple_header_label as string) || "");
+    setHeaderValue((m.apple_header_value as string) || "");
+    setAux1Label((m.apple_aux1_label as string) || ""); setAux1Value((m.apple_aux1_value as string) || "");
+    setAux2Label((m.apple_aux2_label as string) || ""); setAux2Value((m.apple_aux2_value as string) || "");
+    setAux3Label((m.apple_aux3_label as string) || ""); setAux3Value((m.apple_aux3_value as string) || "");
+    setIconUrl((m.apple_icon_url as string) || "");
+    setStoreLocation((m.apple_location as { latitude: number; longitude: number; relevantText: string } | null) ?? null);
+    setGoogleBgColor((m.google_bg_color as string) || couleurPrincipale || "#007AFF");
+    setGoogleHeroUrl((m.google_hero_url as string) || "");
+    setGooglePrimaryLabel((m.google_primary_label as string) || "Tampons");
+    setGoogleSecondaryLabel((m.google_secondary_label as string) || "Objectif");
+    setGoogleTextModules((m.google_text_modules as {header: string; body: string; id: string}[]) || []);
+    setGoogleLinks((m.google_links as {uri: string; description: string}[]) || []);
+    historyRef.current = []; historyIndexRef.current = -1; setCanUndo(false);
+    setLocked(true);
+  }
+
   return (
     <>
     <div style={{ height: "calc(100vh - 0px)", display: "flex", flexDirection: "column" }}>
@@ -683,7 +733,7 @@ export default function CartePage() {
               >
                 ↩ Annuler
               </button>
-              <button onClick={() => setLocked(true)} style={{
+              <button onClick={resetToSaved} style={{
                 padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
                 background: "var(--glass-bg)", border: "1px solid var(--border)",
                 color: "var(--fg-secondary)", cursor: "pointer",
