@@ -81,7 +81,8 @@ html {
   overflow-x: hidden;
   overscroll-behavior: none;
   touch-action: pan-y;
-  background: linear-gradient(160deg, #EEF2F7 0%, #E8EDF8 50%, #EAE8F5 100%);
+  background: linear-gradient(160deg, #EEF2F7 0%, #E8EDF8 50%, #EAE8F5 100%) fixed;
+  min-height: 100%;
 }
 
 body {
@@ -90,8 +91,9 @@ body {
   font-family: var(--font-geist), Inter, system-ui, sans-serif;
   transition: background 0.3s ease;
   overflow-x: hidden;
-  overscroll-behavior-x: none;
+  overscroll-behavior: none;
   touch-action: pan-y;
+  min-height: 100dvh;
 }
 
 ::selection {
