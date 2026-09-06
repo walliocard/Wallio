@@ -115,6 +115,8 @@ export default function CartePage() {
   const [aux1Value, setAux1Value] = useState<string>((marchand?.apple_aux1_value as string) || "");
   const [aux2Label, setAux2Label] = useState<string>((marchand?.apple_aux2_label as string) || "");
   const [aux2Value, setAux2Value] = useState<string>((marchand?.apple_aux2_value as string) || "");
+  const [aux3Label, setAux3Label] = useState<string>(((marchand as Record<string, unknown>).apple_aux3_label as string) || "");
+  const [aux3Value, setAux3Value] = useState<string>(((marchand as Record<string, unknown>).apple_aux3_value as string) || "");
 
   // Icône notification (29×29px — affiché dans les pushs)
   const [iconUrl, setIconUrl] = useState<string>((marchand?.apple_icon_url as string) || "");
@@ -126,10 +128,6 @@ export default function CartePage() {
   );
   const [detectingLocation, setDetectingLocation] = useState(false);
 
-  // Date de mise en avant (lock screen)
-  const [relevantDate, setRelevantDate] = useState<string>(
-    ((marchand as Record<string, unknown>).apple_relevant_date as string) || ""
-  );
 
   // Preview mode
   const [previewMode, setPreviewMode] = useState<"full" | "compact" | "back">("full");
@@ -429,6 +427,8 @@ export default function CartePage() {
       apple_aux1_value: aux1Value,
       apple_aux2_label: aux2Label,
       apple_aux2_value: aux2Value,
+      apple_aux3_label: aux3Label,
+      apple_aux3_value: aux3Value,
       apple_icon_url: iconUrl,
       apple_stamps_on_strip: stampsOnStrip,
       apple_strip_stamp_style: stripStampStyle,
@@ -450,7 +450,6 @@ export default function CartePage() {
       google_text_modules: googleTextModules,
       google_links: googleLinks,
       apple_location: storeLocation || null,
-      apple_relevant_date: relevantDate || null,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -802,6 +801,7 @@ export default function CartePage() {
               auxiliaryFields={[
                 { label: aux1Label || "INFO", value: aux1Value },
                 { label: aux2Label || "INFO", value: aux2Value },
+                { label: aux3Label || "INFO", value: aux3Value },
               ]}
               stampsOnStrip={stampsOnStrip}
               stripStampStyle={stripStampStyle}
@@ -1541,10 +1541,13 @@ export default function CartePage() {
                 Affichés sous la récompense et le membre, avant le QR code.
               </p>
               <Field label="Info 1 (optionnel)">
-                <TextInput value={aux1Value} onChange={setAux1Value} placeholder="ex : Valable dans tous nos établissements"/>
+                <TextInput value={aux1Value} onChange={setAux1Value} placeholder="ex : Du lundi au vendredi"/>
               </Field>
               <Field label="Info 2 (optionnel)">
-                <TextInput value={aux2Value} onChange={setAux2Value} placeholder="ex : Avantage exclusif membre"/>
+                <TextInput value={aux2Value} onChange={setAux2Value} placeholder="ex : 8h-18h"/>
+              </Field>
+              <Field label="Info 3 (optionnel)">
+                <TextInput value={aux3Value} onChange={setAux3Value} placeholder="ex : 06 00 00 00 00"/>
               </Field>
             </Section>
           )}
@@ -1626,34 +1629,6 @@ export default function CartePage() {
                   cursor: detectingLocation ? "wait" : "pointer",
                 }}>
                   {detectingLocation ? "Détection en cours…" : "Détecter ma position actuelle"}
-                </button>
-              )}
-            </Section>
-          )}
-
-          {/* Date de mise en avant — Apple uniquement */}
-          {walletType === "apple" && (
-            <Section label="Mise en avant (lock screen)">
-              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                La carte remonte automatiquement sur l'écran de verrouillage à cette date et heure.
-              </p>
-              <input
-                type="datetime-local"
-                value={relevantDate ? relevantDate.slice(0, 16) : ""}
-                onChange={e => setRelevantDate(e.target.value ? e.target.value + ":00" : "")}
-                style={{
-                  width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 12,
-                  background: "var(--glass-bg)", border: "1px solid var(--border)",
-                  color: relevantDate ? "var(--fg)" : "var(--fg-tertiary)",
-                  outline: "none", boxSizing: "border-box", cursor: "pointer",
-                }}
-              />
-              {relevantDate && (
-                <button onClick={() => setRelevantDate("")} style={{
-                  marginTop: 6, width: "100%", padding: "6px 0", borderRadius: 10, fontSize: 11,
-                  background: "none", border: "none", color: "#FF3B30", cursor: "pointer",
-                }}>
-                  Supprimer
                 </button>
               )}
             </Section>

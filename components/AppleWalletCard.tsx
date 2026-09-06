@@ -326,20 +326,33 @@ export default function AppleWalletCard({
         )}
       </div>
 
-      {/* ── Champs — une seule ligne de 4 max (rendu réel Apple Wallet storeCard + strip) ── */}
+      {/* ── Secondary fields (ligne 1 — toujours 2 champs) ── */}
+      <div style={{ display: "flex", padding: "12px 16px 8px", gap: 8 }}>
+        {[
+          { label: rewardLabel, value: rewardName || "—" },
+          { label: memberLabel, value: clientName },
+        ].map((f, i) => (
+          <div key={i} style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+              {f.label}
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {f.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Auxiliary fields (ligne 2 — jusqu'à 3 champs marchand) ── */}
       {(() => {
-        const frontAux = auxiliaryFields.filter(f => f.value).slice(0, 1);
-        const allFields = [
-          { label: rewardLabel,  value: rewardName || "—" },
-          { label: memberLabel,  value: clientName },
-          ...frontAux,
-        ];
+        const frontAux = auxiliaryFields.filter(f => f.value).slice(0, 3);
+        if (!frontAux.length) return null;
         return (
-          <div style={{ display: "flex", padding: "11px 16px 11px", gap: 6 }}>
-            {allFields.map((f, i) => (
+          <div style={{ display: "flex", padding: "0 16px 12px", gap: 6 }}>
+            {frontAux.map((f, i) => (
               <div key={i} style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-                  {f.label}
+                  {f.label || "INFO"}
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {f.value}

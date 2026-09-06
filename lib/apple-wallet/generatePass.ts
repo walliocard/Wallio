@@ -48,7 +48,6 @@ export interface PassInput {
   backInfo?: string;
   description?: string;
   locations?: PassLocation[];
-  relevantDate?: string;
 }
 
 export function generatePassJson(input: PassInput): object {
@@ -58,8 +57,8 @@ export function generatePassJson(input: PassInput): object {
 
   // Champs marchand : 1 max en face (le reste va au dos)
   const allMarchandAux = (input.auxiliaryFields ?? []).filter(f => f.value);
-  const frontAux = allMarchandAux.slice(0, 1).map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
-  const backAux  = allMarchandAux.slice(1).map((f, i)  => ({ key: `back_aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
+  const frontAux = allMarchandAux.slice(0, 3).map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
+  const backAux  = allMarchandAux.slice(3).map((f, i)  => ({ key: `back_aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
 
   const auxiliaryFields = [...frontAux];
 
@@ -122,7 +121,5 @@ export function generatePassJson(input: PassInput): object {
       })),
       maxDistance: 200, // mètres
     } : {}),
-    // Date de mise en avant sur l'écran de verrouillage
-    ...(input.relevantDate ? { relevantDate: input.relevantDate } : {}),
   };
 }
