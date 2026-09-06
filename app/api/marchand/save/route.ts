@@ -1,6 +1,58 @@
 import { NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { getGoogleAccessToken } from "@/lib/google-wallet/auth";
+
+const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID;
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
+const API = "https://walletobjects.googleapis.com/walletobjects/v1";
+
+async function patchGoogleWalletClass(uid: string) {
+  if (!ISSUER_ID || !process.env.GOOGLE_WALLET_KEY_JSON) return;
+  const snap = await adminDb().collection("marchands").doc(uid).get();
+  if (!snap.exists) return;
+  const m = snap.data()!;
+
+  const cid = `${ISSUER_ID}.wallio_${uid.replace(/[^a-zA-Z0-9_]/g, "_")}`;
+  const token = await getGoogleAccessToken();
+
+  const logoUri = `${BASE_URL}/api/logo/${uid}`;
+  const bgColor = (m.google_bg_color as string) || (m.apple_bg_color as string) || (m.couleur_principale as string) || "#1C1C1E";
+  const heroUrl = (m.google_hero_url as string) || (m.strip_url as string) || undefined;
+
+  const classBody = {
+    issuerName: "Wallio",
+    reviewStatus: "UNDER_REVIEW",
+    programName: m.nom,
+    programLogo: {
+      sourceUri: { uri: logoUri },
+      contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
+    },
+    hexBackgroundColor: bgColor,
+    countryCode: "MA",
+    ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } } } } : {}),
+  };
+
+  const checkRes = await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (checkRes.status === 404) {
+    await fetch(`${API}/loyaltyClass`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: cid, ...classBody }),
+    });
+  } else if (checkRes.ok) {
+    const fields = ["programName", "hexBackgroundColor", "programLogo", "issuerName"];
+    if (heroUrl) fields.push("heroImage");
+    await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}?updateMask=${fields.join(",")}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(classBody),
+    });
+  }
+}
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get("Authorization");
@@ -60,6 +112,12 @@ export async function POST(req: Request) {
 
   // set(merge) fonctionne pour création (inscription) ET mise à jour
   await adminDb().collection("marchands").doc(uid).set(data, { merge: true });
+
+  // Sync Google Wallet class si des champs visuels ont changé
+  const triggerGW = ["google_bg_color", "google_hero_url", "logo_url", "google_primary_label", "nom"].some(f => f in body);
+  if (triggerGW) {
+    patchGoogleWalletClass(uid).catch(e => console.error("[save] GW class patch failed:", e));
+  }
 
   return NextResponse.json({ ok: true });
 }
