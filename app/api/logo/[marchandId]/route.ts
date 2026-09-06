@@ -17,7 +17,7 @@ export async function GET(
 
     const logoUrl = snap.data()?.logo_url as string | undefined;
     if (!logoUrl) {
-      return new Response(null, { status: 404 });
+      return NextResponse.redirect("https://app.walliocard.com/icon-192.png");
     }
 
     // Logo stocké en base64 data URL

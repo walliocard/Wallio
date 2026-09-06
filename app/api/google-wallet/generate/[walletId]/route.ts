@@ -52,7 +52,8 @@ export async function GET(
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const logoUri = (m.logo_url as string | undefined) || "https://app.walliocard.com/icon-192.png";
+  // Proxy logo via notre API — évite les URLs Firebase (base64/token) que Google ne peut pas fetcher
+  const logoUri = `${BASE_URL}/api/logo/${client.marchand_id}`;
   // Fallback : google_bg_color → apple_bg_color → couleur_principale → noir
   const bgColor = (m.google_bg_color as string | undefined)
     || (m.apple_bg_color as string | undefined)
@@ -112,12 +113,8 @@ export async function GET(
     classId: cid,
     state: "ACTIVE",
     loyaltyPoints: {
-      balance: { int: client.tampons || 0 },
+      balance: { string: `${client.tampons || 0} / ${m.objectif_tampons || 10}` },
       label: (m.google_primary_label as string) || "Tampons",
-    },
-    secondaryLoyaltyPoints: {
-      balance: { int: m.objectif_tampons || 10 },
-      label: (m.google_secondary_label as string) || "Objectif",
     },
     barcode: {
       type: "QR_CODE",
