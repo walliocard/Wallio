@@ -591,36 +591,36 @@ export default function AdminPage() {
 
       <div className="max-w-6xl mx-auto relative">
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-10 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 md:w-11 md:h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
               style={{ background: "linear-gradient(135deg,#EDE8FF 0%,#F0F0FF 100%)" }}>
-              <WallioLogo size={36} />
+              <WallioLogo size={32} />
             </div>
             <div>
-              <h1 className="text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Administration</h1>
-              <p className="text-[15px] mt-1" style={{ color: "var(--fg-secondary)" }}>
-                {actifs} marchand{actifs !== 1 ? "s" : ""} actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
+              <h1 className="text-[24px] md:text-[32px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Administration</h1>
+              <p className="text-[13px] md:text-[15px]" style={{ color: "var(--fg-secondary)" }}>
+                {actifs} actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
               </p>
             </div>
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-2 items-center">
             <ThemeToggle />
             <button onClick={() => setShowCreate(true)}
-              className="text-[13px] px-4 py-2 rounded-xl font-semibold text-white"
+              className="text-[13px] px-3 md:px-4 py-2 rounded-xl font-semibold text-white"
               style={{ background: "var(--accent)" }}>
-              + Nouveau marchand
+              + Nouveau
             </button>
             <button onClick={logout}
-              className="text-[13px] px-4 py-2 rounded-xl"
+              className="text-[13px] px-3 md:px-4 py-2 rounded-xl"
               style={{ color: "var(--fg-secondary)", background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-              Déconnexion
+              Sortir
             </button>
           </div>
         </div>
 
         {/* Onglets */}
-        <div className="flex gap-2 mb-8 p-1 rounded-2xl w-fit"
+        <div className="flex gap-2 mb-6 md:mb-8 p-1 rounded-2xl w-full md:w-fit"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
           {([["marchands", "Marchands"], ["impression", "Cartes comptoir"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
@@ -636,17 +636,17 @@ export default function AdminPage() {
 
         {tab === "marchands" && <>
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
           {[
-            { label: "Total marchands", value: String(marchands.length), color: "var(--fg)" },
-            { label: "Comptes actifs", value: String(actifs), color: "var(--accent)" },
+            { label: "Total", value: String(marchands.length), color: "var(--fg)" },
+            { label: "Actifs", value: String(actifs), color: "var(--accent)" },
             { label: "En attente", value: String(marchands.length - actifs), color: "#FF9F0A" },
             { label: "Revenus / mois", value: `${revenus.toLocaleString("fr-FR")} DH`, color: "#30D158" },
           ].map(s => (
-            <div key={s.label} className="rounded-[24px] p-6"
-              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)", boxShadow: "var(--shadow-sm)" }}>
-              <p className="text-[30px] font-semibold tracking-tight leading-none" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-[12px] mt-2" style={{ color: "var(--fg-secondary)" }}>{s.label}</p>
+            <div key={s.label} className="rounded-[20px] md:rounded-[24px] p-4 md:p-6"
+              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)" }}>
+              <p className="text-[24px] md:text-[30px] font-semibold tracking-tight leading-none" style={{ color: s.color }}>{s.value}</p>
+              <p className="text-[11px] md:text-[12px] mt-1.5 md:mt-2" style={{ color: "var(--fg-secondary)" }}>{s.label}</p>
             </div>
           ))}
         </div>
@@ -658,21 +658,55 @@ export default function AdminPage() {
             placeholder="Rechercher un marchand…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full max-w-xs px-4 py-2.5 rounded-2xl text-[14px] outline-none"
+            className="w-full md:max-w-xs px-4 py-2.5 rounded-2xl text-[14px] outline-none"
             style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
             onFocus={e => (e.target.style.borderColor = "var(--accent)")}
             onBlur={e => (e.target.style.borderColor = "var(--border)")}
           />
         </div>
 
-        {/* Table */}
-        <div className="rounded-[24px] overflow-hidden"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)", boxShadow: "var(--shadow-md)" }}>
-          {filtered.length === 0 ? (
-            <div className="py-20 text-center" style={{ color: "var(--fg-tertiary)" }}>
-              <p className="text-[15px]">{search ? "Aucun résultat." : "Aucun marchand inscrit."}</p>
-            </div>
-          ) : (
+        {filtered.length === 0 ? (
+          <div className="py-20 text-center rounded-[24px]"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-tertiary)" }}>
+            <p className="text-[15px]">{search ? "Aucun résultat." : "Aucun marchand inscrit."}</p>
+          </div>
+        ) : (<>
+
+          {/* ── Cards mobile ── */}
+          <div className="md:hidden space-y-2">
+            {filtered.map(m => (
+              <button key={m.id} onClick={() => setSelected(m)}
+                className="w-full text-left rounded-2xl p-4 flex items-center gap-3 active:opacity-70 transition-opacity"
+                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[14px] text-white flex-shrink-0"
+                  style={{ background: m.actif ? "var(--accent)" : "var(--border)" }}>
+                  {(m.nom?.[0] || "?").toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-semibold truncate" style={{ color: "var(--fg)" }}>{m.nom || "—"}</p>
+                  <p className="text-[11px] truncate" style={{ color: "var(--fg-tertiary)" }}>{m.email || "—"}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{
+                      background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)",
+                      color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A",
+                    }}>
+                    {m.abonnement_statut === "actif" ? "Payé" : "Attente"}
+                  </span>
+                  <span className="text-[10px] font-medium" style={{ color: m.actif ? "var(--accent)" : "var(--fg-tertiary)" }}>
+                    {m.actif ? "● Actif" : "● Inactif"}
+                  </span>
+                </div>
+                <span style={{ color: "var(--fg-tertiary)", fontSize: 16 }}>›</span>
+              </button>
+            ))}
+          </div>
+
+          {/* ── Table desktop ── */}
+          <div className="hidden md:block rounded-[24px] overflow-hidden"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)", boxShadow: "var(--shadow-md)" }}>
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
@@ -684,76 +718,42 @@ export default function AdminPage() {
               </thead>
               <tbody>
                 {filtered.map((m, i) => (
-                  <tr
-                    key={m.id}
-                    className="cursor-pointer"
-                    onClick={() => setSelected(m)}
+                  <tr key={m.id} className="cursor-pointer" onClick={() => setSelected(m)}
                     style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}
                     onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                  >
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                     <td className="px-5 py-4 text-[15px] font-medium" style={{ color: "var(--fg)" }}>{m.nom || "—"}</td>
                     <td className="px-5 py-4 text-[13px]" style={{ color: "var(--fg-secondary)" }}>{m.email || "—"}</td>
                     <td className="px-5 py-4">
-                      {m.nfc_id ? (
-                        <span className="text-[11px] font-medium px-2 py-1 rounded-lg"
-                          style={{ background: "rgba(0,245,160,0.08)", color: "#00F5A0" }}>✓ NFC</span>
-                      ) : (
-                        <span className="text-[11px] px-2 py-1 rounded-lg"
-                          style={{ background: "rgba(255,255,255,0.04)", color: "var(--fg-tertiary)" }}>—</span>
-                      )}
+                      {m.nfc_id
+                        ? <span className="text-[11px] font-medium px-2 py-1 rounded-lg" style={{ background: "rgba(0,245,160,0.08)", color: "#00F5A0" }}>✓ NFC</span>
+                        : <span className="text-[11px] px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)", color: "var(--fg-tertiary)" }}>—</span>
+                      }
                     </td>
                     <td className="px-5 py-4 text-[13px]" style={{ color: "var(--fg-secondary)" }}>{formatDate(m.date_inscription)}</td>
                     <td className="px-5 py-4">
                       <span className="text-[12px] font-medium px-2.5 py-1 rounded-full"
-                        style={{
-                          background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)",
-                          color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A",
-                        }}>
+                        style={{ background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)", color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A" }}>
                         {m.abonnement_statut === "actif" ? "Payé" : "En attente"}
                       </span>
                     </td>
                     <td className="px-5 py-4">
                       <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full"
-                        style={{
-                          background: m.actif ? "rgba(0,122,255,0.1)" : "rgba(142,142,147,0.12)",
-                          color: m.actif ? "var(--accent)" : "var(--fg-secondary)",
-                        }}>
-                        <span className="w-1.5 h-1.5 rounded-full"
-                          style={{ background: m.actif ? "var(--accent)" : "var(--fg-tertiary)" }} />
+                        style={{ background: m.actif ? "rgba(0,122,255,0.1)" : "rgba(142,142,147,0.12)", color: m.actif ? "var(--accent)" : "var(--fg-secondary)" }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.actif ? "var(--accent)" : "var(--fg-tertiary)" }} />
                         {m.actif ? "Actif" : "Inactif"}
                       </span>
                     </td>
-                    {/* Bouton carte comptoir */}
                     <td className="px-3 py-4">
-                      <button
-                        onClick={async e => {
-                          e.stopPropagation();
-                          if (!m.nfc_id) return;
-                          const btn = e.currentTarget;
-                          btn.textContent = "…";
-                          btn.setAttribute("disabled", "true");
-                          await telechargerCarte(m);
-                          btn.textContent = "⬇ Carte";
-                          btn.removeAttribute("disabled");
-                        }}
+                      <button onClick={async e => { e.stopPropagation(); if (!m.nfc_id) return; const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarte(m); btn.textContent = "⬇ Carte"; btn.removeAttribute("disabled"); }}
                         disabled={!m.nfc_id}
-                        title={m.nfc_id ? "Télécharger la carte comptoir 4K" : "Générer d'abord un NFC ID"}
                         className="text-[12px] font-semibold px-3 py-2 rounded-xl whitespace-nowrap"
-                        style={{
-                          background: m.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)",
-                          border: `1px solid ${m.nfc_id ? "var(--accent)" : "var(--border)"}`,
-                          color: m.nfc_id ? "var(--accent)" : "var(--fg-tertiary)",
-                          cursor: m.nfc_id ? "pointer" : "not-allowed",
-                          opacity: m.nfc_id ? 1 : 0.5,
-                        }}>
+                        style={{ background: m.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)", border: `1px solid ${m.nfc_id ? "var(--accent)" : "var(--border)"}`, color: m.nfc_id ? "var(--accent)" : "var(--fg-tertiary)", cursor: m.nfc_id ? "pointer" : "not-allowed", opacity: m.nfc_id ? 1 : 0.5 }}>
                         ⬇ Carte
                       </button>
                     </td>
-
                     <td className="px-3 py-4">
-                      <button
-                        onClick={e => { e.stopPropagation(); setSelected(m); }}
+                      <button onClick={e => { e.stopPropagation(); setSelected(m); }}
                         className="text-[13px] font-medium px-4 py-2 rounded-xl"
                         style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
                         Voir →
@@ -763,8 +763,8 @@ export default function AdminPage() {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        </>)}
         </>}
 
         {/* ── Onglet Cartes comptoir ── */}
