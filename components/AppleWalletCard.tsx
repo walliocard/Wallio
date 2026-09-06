@@ -99,7 +99,7 @@ export default function AppleWalletCard({
 
   useEffect(() => {
     QRCode.toDataURL(qrUrl, {
-      width: 300,
+      width: 400,
       margin: 0,
       color: { dark: "#000000", light: "#FFFFFF" },
       errorCorrectionLevel: "M",
@@ -326,42 +326,28 @@ export default function AppleWalletCard({
         )}
       </div>
 
-      {/* ── Secondary fields ── */}
-      <div style={{ display: "flex", padding: "12px 16px 14px", borderBottom: `1px solid ${sep}` }}>
-        <div style={{ flex: 1, paddingRight: 8 }}>
-          <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>
-            {rewardLabel}
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {rewardName || "—"}
-          </div>
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>
-            {memberLabel}
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {clientName}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Auxiliary fields — champ auto restant + champs marchand ── */}
+      {/* ── Champs — une seule ligne de 4 max (rendu réel Apple Wallet storeCard + strip) ── */}
       {(() => {
         const restants = stampsObjective - stampsCurrent;
-        const autoField = {
+        const autoAux = {
           label: "PROCHAINE RÉCOMPENSE",
           value: restants > 0 ? `${restants} tampon${restants > 1 ? "s" : ""} restant${restants > 1 ? "s" : ""}` : "Récompense débloquée !",
         };
-        const allAux = [autoField, ...auxiliaryFields.filter(f => f.value)].slice(0, 4);
+        const frontAux = auxiliaryFields.filter(f => f.value).slice(0, 1);
+        const allFields = [
+          { label: rewardLabel,  value: rewardName || "—" },
+          { label: memberLabel,  value: clientName },
+          autoAux,
+          ...frontAux,
+        ];
         return (
-          <div style={{ display: "flex", padding: "10px 16px 12px", borderBottom: `1px solid ${sep}`, gap: 8 }}>
-            {allAux.map((f, i) => (
+          <div style={{ display: "flex", padding: "11px 16px 11px", gap: 6 }}>
+            {allFields.map((f, i) => (
               <div key={i} style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>
+                <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
                   {f.label}
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {f.value}
                 </div>
               </div>
@@ -370,14 +356,16 @@ export default function AppleWalletCard({
         );
       })()}
 
+      {/* ── Séparateur ── */}
+      <div style={{ height: 1, background: sep, margin: "0 16px" }} />
 
-      {/* ── Barcode (Apple Wallet impose cette zone en bas, centrée) ── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px 24px" }}>
-        <div style={{ background: "#FFFFFF", borderRadius: 10, padding: 8, border: "1px solid rgba(0,0,0,0.08)" }}>
+      {/* ── Barcode — centré, 200×200 comme Apple Wallet réel ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px 24px" }}>
+        <div style={{ background: "#FFFFFF", borderRadius: 12, padding: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.10)" }}>
           {qr ? (
-            <img src={qr} alt="QR Code" style={{ width: 100, height: 100, display: "block" }} />
+            <img src={qr} alt="QR Code" style={{ width: 200, height: 200, display: "block" }} />
           ) : (
-            <div style={{ width: 100, height: 100, background: "#f0f0f0", borderRadius: 4 }} />
+            <div style={{ width: 200, height: 200, background: "#f0f0f0", borderRadius: 4 }} />
           )}
         </div>
       </div>
