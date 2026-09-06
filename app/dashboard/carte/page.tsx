@@ -2,24 +2,11 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { User } from "firebase/auth";
+import { saveMarchandFields } from "@/lib/save-marchand";
 import AppleWalletCard, { type StampStyle } from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
 import CropEditor from "@/components/CropEditor";
-
-async function saveMarchandFields(user: User, fields: Record<string, unknown>) {
-  const idToken = await user.getIdToken();
-  const res = await fetch("/api/marchand/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-    body: JSON.stringify(fields),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `HTTP ${res.status}`);
-  }
-}
 
 // ── History snapshot ──────────────────────────────────
 interface Snapshot {

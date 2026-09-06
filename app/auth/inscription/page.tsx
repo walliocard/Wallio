@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
+import { saveMarchandFields } from "@/lib/save-marchand";
 import Link from "next/link";
 import WallioIcon from "@/components/WallioIcon";
 
@@ -19,11 +19,9 @@ export default function InscriptionPage() {
     setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
-      await setDoc(doc(db, "marchands", user.uid), {
+      await saveMarchandFields(user, {
         nom: form.nom,
         email: form.email,
-        actif: false,
-        date_inscription: serverTimestamp(),
         objectif_tampons: 10,
         nom_recompense: "Récompense offerte",
         icone_tampons: "⭐",

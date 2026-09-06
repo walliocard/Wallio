@@ -3,8 +3,7 @@
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { saveMarchandFields } from "@/lib/save-marchand";
 
 const ANTI_DOUBLON = [
   { label: "15 minutes", value: 900 },
@@ -64,22 +63,27 @@ export default function ReglagesPage() {
 
   async function sauvegarder() {
     setSaving(true);
-    await updateDoc(doc(db, "marchands", user!.uid), {
-      nom: nomEtablissement,
-      objectif_tampons: objectif,
-      nom_recompense: nomRecompense,
-      ...config,
-      automatisations: {
-        anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant, message: auto.anniversaire_message },
-        relance: { actif: auto.relance_actif, delai_jours: auto.relance_delai_jours, message: auto.relance_message },
-      },
-      notif_actif: notifActif,
-      notif_message: notifMessage,
-      double_tampons_fin: doubleTamponsActif ? doubleTamponsFin : null,
-      updated_at: serverTimestamp(),
-    });
-    setSaving(false); setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    try {
+      await saveMarchandFields(user!, {
+        nom: nomEtablissement,
+        objectif_tampons: objectif,
+        nom_recompense: nomRecompense,
+        ...config,
+        automatisations: {
+          anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant, message: auto.anniversaire_message },
+          relance: { actif: auto.relance_actif, delai_jours: auto.relance_delai_jours, message: auto.relance_message },
+        },
+        notif_actif: notifActif,
+        notif_message: notifMessage,
+        double_tampons_fin: doubleTamponsActif ? doubleTamponsFin : null,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

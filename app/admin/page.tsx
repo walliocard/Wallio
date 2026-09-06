@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, getDocs, doc, updateDoc, deleteDoc, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -180,10 +180,28 @@ export default function AdminPage() {
     setMarchands(snap.docs.map(d => ({ id: d.id, nom: "", email: "", actif: false, ...d.data() } as Marchand)));
   }
 
+  async function adminPatch(marchandId: string, fields: Record<string, unknown>) {
+    const res = await fetch("/api/admin/update-marchand", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ marchandId, fields }),
+    });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+  }
+
+  async function adminDelete(marchandId: string) {
+    const res = await fetch("/api/admin/update-marchand", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ marchandId }),
+    });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+  }
+
   async function toggleActif(m: Marchand) {
     setToggling(m.id);
     const newActif = !m.actif;
-    await updateDoc(doc(db, "marchands", m.id), { actif: newActif });
+    await adminPatch(m.id, { actif: newActif });
     const updated = { ...m, actif: newActif };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     if (selected?.id === m.id) setSelected(updated);
@@ -192,7 +210,7 @@ export default function AdminPage() {
 
   async function supprimerMarchand(id: string) {
     setDeleting(id);
-    await deleteDoc(doc(db, "marchands", id));
+    await adminDelete(id);
     setMarchands(prev => prev.filter(m => m.id !== id));
     setConfirmDelete(null);
     setDeleting(null);
@@ -202,7 +220,7 @@ export default function AdminPage() {
   async function genererNfc(m: Marchand) {
     setGeneratingNfc(true);
     const nfc_id = genNfcId(m.nom);
-    await updateDoc(doc(db, "marchands", m.id), { nfc_id });
+    await adminPatch(m.id, { nfc_id });
     const updated = { ...m, nfc_id };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     setSelected(updated);
@@ -213,7 +231,7 @@ export default function AdminPage() {
     setUpdatingAbo(true);
     const newStatut: Marchand["abonnement_statut"] =
       m.abonnement_statut === "actif" ? "en_attente" : "actif";
-    await updateDoc(doc(db, "marchands", m.id), { abonnement_statut: newStatut });
+    await adminPatch(m.id, { abonnement_statut: newStatut });
     const updated = { ...m, abonnement_statut: newStatut };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     setSelected(updated);
