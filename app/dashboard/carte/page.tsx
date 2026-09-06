@@ -267,6 +267,25 @@ export default function CartePage() {
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [syncingGW, setSyncingGW] = useState(false);
+  const [syncedGW, setSyncedGW] = useState(false);
+
+  async function forcerSyncGoogleWallet() {
+    setSyncingGW(true); setSyncedGW(false);
+    try {
+      const idToken = await user!.getIdToken();
+      const res = await fetch("/api/google-wallet/sync-class", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setSyncedGW(true);
+      setTimeout(() => setSyncedGW(false), 3000);
+    } catch (e) {
+      alert(`Erreur sync : ${e instanceof Error ? e.message : e}`);
+    }
+    setSyncingGW(false);
+  }
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingStrip, setUploadingStrip] = useState(false);
   const [uploadingGoogleHero, setUploadingGoogleHero] = useState(false);
@@ -1745,6 +1764,25 @@ export default function CartePage() {
           {/* Google Wallet — même trame qu'Apple : Bannière → Éditeur → Couleur → Labels */}
           {walletType === "google" && (
             <>
+              {/* Bouton sync Google Wallet */}
+              <div style={{ padding: "12px 14px", borderRadius: 14, background: syncedGW ? "rgba(52,199,89,0.08)" : "rgba(0,122,255,0.06)", border: `1px solid ${syncedGW ? "rgba(52,199,89,0.25)" : "rgba(0,122,255,0.15)"}` }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: "var(--fg)", marginBottom: 6 }}>
+                  Synchroniser la classe Google Wallet
+                </p>
+                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 10, lineHeight: 1.5 }}>
+                  Pousse nom, couleur, logo, bannière et récompense vers Google. Après la sync, le testeur doit supprimer sa carte et la re-ajouter.
+                </p>
+                <button
+                  onClick={forcerSyncGoogleWallet}
+                  disabled={syncingGW}
+                  style={{
+                    width: "100%", padding: "10px 0", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                    background: syncedGW ? "#34C759" : "var(--accent)", color: "white",
+                    border: "none", cursor: syncingGW ? "wait" : "pointer",
+                  }}>
+                  {syncingGW ? "Sync en cours…" : syncedGW ? "✓ Synchronisé — re-ajouter la carte" : "Forcer la sync Google Wallet"}
+                </button>
+              </div>
               {/* 1/4 — Bannière photo */}
               <Section label="Bannière">
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
