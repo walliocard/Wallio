@@ -328,16 +328,10 @@ export default function AppleWalletCard({
 
       {/* ── Champs — une seule ligne de 4 max (rendu réel Apple Wallet storeCard + strip) ── */}
       {(() => {
-        const restants = stampsObjective - stampsCurrent;
-        const autoAux = {
-          label: "PROCHAINE RÉCOMPENSE",
-          value: restants > 0 ? `${restants} tampon${restants > 1 ? "s" : ""} restant${restants > 1 ? "s" : ""}` : "Récompense débloquée !",
-        };
         const frontAux = auxiliaryFields.filter(f => f.value).slice(0, 1);
         const allFields = [
           { label: rewardLabel,  value: rewardName || "—" },
           { label: memberLabel,  value: clientName },
-          autoAux,
           ...frontAux,
         ];
         return (

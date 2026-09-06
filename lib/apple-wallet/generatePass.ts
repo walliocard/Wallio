@@ -48,20 +48,12 @@ export function generatePassJson(input: PassInput): object {
   const fg = input.foregroundColor ?? (dark ? "#FFFFFF" : "#000000");
   const lc = input.labelColorHex ?? (dark ? "#AAAAAA" : "#666666");
 
-  // Champ auto : tampons restants avant récompense
-  const restants = input.stampsObjective - input.stampsCurrent;
-  const autoAux = {
-    key: "restant",
-    label: "RESTANTS",
-    value: restants > 0 ? `${restants} tampon${restants > 1 ? "s" : ""}` : "Récompense disponible !",
-  };
-
   // Champs marchand : 1 max en face (le reste va au dos)
   const allMarchandAux = (input.auxiliaryFields ?? []).filter(f => f.value);
   const frontAux = allMarchandAux.slice(0, 1).map((f, i) => ({ key: `aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
   const backAux  = allMarchandAux.slice(1).map((f, i)  => ({ key: `back_aux${i + 1}`, label: f.label.toUpperCase(), value: f.value }));
 
-  const auxiliaryFields = [autoAux, ...frontAux];
+  const auxiliaryFields = [...frontAux];
 
   return {
     formatVersion: 1,
