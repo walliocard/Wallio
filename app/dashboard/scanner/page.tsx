@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
 import { getClientByTelephone, type Client } from "@/lib/loyalty";
@@ -13,6 +14,7 @@ type Tab = "qr" | "telephone" | "nom";
 
 export default function ScannerPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("qr");
 
   // QR
@@ -50,7 +52,13 @@ export default function ScannerPage() {
       const walletId =
         code.data.match(/^WALLIO:([a-f0-9-]+)/)?.[1] ??
         code.data.match(/\/client\/([a-f0-9-]+)/)?.[1];
-      if (walletId) { setDetected(walletId); stopCamera(); return; }
+      if (walletId) {
+      setDetected(walletId);
+      stopCamera();
+      // Auto-redirect après 1s sur mobile
+      setTimeout(() => router.push(`/client/${walletId}`), 1000);
+      return;
+    }
     }
     animRef.current = requestAnimationFrame(scan);
   }, []);
@@ -165,19 +173,20 @@ export default function ScannerPage() {
         {tab === "qr" && (
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <div className="w-full md:max-w-md">
-              {/* Conteneur caméra — toujours dans le DOM pour que videoRef soit disponible */}
-              <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: "1", display: scanning ? "block" : "none" }}>
+              {/* Zone caméra — hauteur fixe sur mobile, carré sur desktop */}
+              <div className="relative rounded-3xl overflow-hidden h-[300px] md:h-auto md:aspect-square"
+                style={{ display: scanning ? "block" : "none" }}>
                 <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
                 <canvas ref={canvasRef} className="hidden" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative w-52 h-52">
+                  <div className="relative w-48 h-48 md:w-52 md:h-52">
                     {[
                       "top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl",
                       "top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl",
                       "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl",
                       "bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl",
                     ].map((cls, i) => (
-                      <div key={i} className={`absolute w-8 h-8 ${cls}`} style={{ borderColor: "var(--accent)" }} />
+                      <div key={i} className={`absolute w-8 h-8 ${cls}`} style={{ borderColor: "white", opacity: 0.8 }} />
                     ))}
                   </div>
                 </div>
@@ -192,22 +201,20 @@ export default function ScannerPage() {
 
               {/* État idle */}
               {!scanning && (
-                <div
-                  className="rounded-3xl flex flex-col items-center justify-center text-center p-10"
-                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", aspectRatio: "1" }}
-                >
+                <div className="rounded-3xl flex flex-col items-center justify-center text-center h-[300px] md:h-auto md:aspect-square p-8"
+                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
                   <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
                     style={{ background: "rgba(0,122,255,0.08)", color: "var(--accent)" }}>
                     <Icons.Camera size={28} />
                   </div>
-                  <p className="text-[16px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>Prêt à scanner</p>
-                  <p className="text-[13px] mb-6 max-w-[200px]" style={{ color: "var(--fg-secondary)" }}>
-                    Pointez la caméra vers le QR code du client
+                  <p className="text-[16px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>Scanner un QR</p>
+                  <p className="text-[13px] mb-6 max-w-[220px]" style={{ color: "var(--fg-secondary)" }}>
+                    Pointez vers le QR de la carte du client
                   </p>
                   <button
                     onClick={startCamera}
-                    className="px-6 py-3 rounded-2xl text-white font-semibold text-[14px]"
-                    style={{ background: "var(--accent)", boxShadow: "0 6px 20px rgba(0,122,255,0.28)" }}
+                    className="w-full max-w-[200px] py-4 rounded-2xl text-white font-bold text-[15px]"
+                    style={{ background: "var(--accent)", boxShadow: "0 6px 24px rgba(0,122,255,0.35)" }}
                   >
                     Activer la caméra
                   </button>
