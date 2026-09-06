@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Wallio",
   },
+  themeColor: "#EEF2F7",
   openGraph: {
     title: "Wallio — Cartes de fidélité digitales",
     description: "Gagnez des tampons et débloquez des récompenses chez vos établissements préférés.",

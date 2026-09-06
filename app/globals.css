@@ -81,12 +81,15 @@ html {
   overflow-x: hidden;
   overscroll-behavior: none;
   touch-action: pan-y;
-  background: linear-gradient(160deg, #EEF2F7 0%, #E8EDF8 50%, #EAE8F5 100%) fixed;
+  /* Couleur solide pour les zones overscroll iOS (fixed gradient cassé sur Safari) */
+  background-color: #EEF2F7;
   min-height: 100%;
 }
 
 body {
-  background: linear-gradient(160deg, #EEF2F7 0%, #E8EDF8 50%, #EAE8F5 100%) fixed;
+  /* Gradient sans fixed — iOS Safari ne supporte pas background-attachment:fixed */
+  background: linear-gradient(160deg, #EEF2F7 0%, #E8EDF8 50%, #EAE8F5 100%);
+  background-color: #EEF2F7;
   color: var(--fg);
   font-family: var(--font-geist), Inter, system-ui, sans-serif;
   transition: background 0.3s ease;

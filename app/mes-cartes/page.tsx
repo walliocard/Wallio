@@ -388,13 +388,11 @@ function Header() {
 
 const bg: React.CSSProperties = {
   minHeight: "100dvh",
-  background: "linear-gradient(160deg, #EEF2F7 0%, #E4ECF8 50%, #EAE8F5 100%)",
   fontFamily: "-apple-system, 'SF Pro Display', sans-serif",
   WebkitFontSmoothing: "antialiased",
   display: "flex", flexDirection: "column",
   paddingTop: "env(safe-area-inset-top)",
   paddingBottom: "env(safe-area-inset-bottom)",
-  overscrollBehavior: "none",
 } as React.CSSProperties;
 
 const glass: React.CSSProperties = {
