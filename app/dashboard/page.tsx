@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
@@ -19,6 +19,9 @@ type Stats = {
   semaine_precedente: number[];
   recompenses: number;
   top_client: TopClient | null;
+  taux_fidelite: number;       // % clients avec tampons >= 2 (revenus au moins une fois)
+  nouvelles_semaine: number;   // inscriptions dans les 7 derniers jours
+  proches_recompense: number;  // clients à 1-2 tampons du but
 };
 
 const JOURS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -29,7 +32,12 @@ export default function AccueilPage() {
     total: 0, aujourd_hui: 0, tampons_total: 0, ce_mois: 0,
     semaine: [0,0,0,0,0,0,0], semaine_precedente: [0,0,0,0,0,0,0],
     recompenses: 0, top_client: null,
+    taux_fidelite: 0, nouvelles_semaine: 0, proches_recompense: 0,
   });
+
+  // Ref pour avoir objectif_tampons toujours à jour dans le callback onSnapshot
+  const objectifRef = useRef<number>(marchand?.objectif_tampons || 10);
+  useEffect(() => { objectifRef.current = marchand?.objectif_tampons || 10; }, [marchand?.objectif_tampons]);
 
   useEffect(() => {
     if (!user) return;
@@ -38,7 +46,11 @@ export default function AccueilPage() {
       const now = new Date();
       const today = new Date(now); today.setHours(0, 0, 0, 0);
       const moisDebut = new Date(now.getFullYear(), now.getMonth(), 1);
+      const semaineDebut = new Date(today); semaineDebut.setDate(semaineDebut.getDate() - 7);
+      const objectif = objectifRef.current;
+
       let aujourd_hui = 0, tampons_total = 0, ce_mois = 0, recompenses = 0;
+      let fideles = 0, nouvelles_semaine = 0, proches_recompense = 0;
       const semaine = [0, 0, 0, 0, 0, 0, 0];
       const semaine_precedente = [0, 0, 0, 0, 0, 0, 0];
       let top_client: TopClient | null = null;
@@ -48,12 +60,16 @@ export default function AccueilPage() {
         const t = data.tampons || 0;
         tampons_total += t;
         if (data.recompense_en_attente) recompenses++;
+        if (t >= 2) fideles++;
+        if (t >= objectif - 2 && t < objectif) proches_recompense++;
         if (!top_client || t > top_client.tampons) {
           top_client = { prenom: data.prenom || "", nom: data.nom || "", tampons: t, id: d.id };
         }
         const dv = (data.derniere_visite?.seconds || 0) * 1000;
+        const di = (data.date_inscription?.seconds || 0) * 1000;
         if (dv >= today.getTime()) aujourd_hui++;
         if (dv >= moisDebut.getTime()) ce_mois++;
+        if (di >= semaineDebut.getTime()) nouvelles_semaine++;
         for (let i = 0; i < 7; i++) {
           const debut = new Date(today); debut.setDate(debut.getDate() - (6 - i));
           const fin = new Date(debut); fin.setDate(fin.getDate() + 1);
@@ -65,7 +81,10 @@ export default function AccueilPage() {
           if (dv >= debut.getTime() && dv < fin.getTime()) semaine_precedente[i]++;
         }
       });
-      setStats({ total: snap.size, aujourd_hui, tampons_total, ce_mois, semaine, semaine_precedente, recompenses, top_client });
+
+      const total = snap.size;
+      const taux_fidelite = total > 0 ? Math.round((fideles / total) * 100) : 0;
+      setStats({ total, aujourd_hui, tampons_total, ce_mois, semaine, semaine_precedente, recompenses, top_client, taux_fidelite, nouvelles_semaine, proches_recompense });
     });
     return unsub;
   }, [user]);
@@ -251,6 +270,70 @@ export default function AccueilPage() {
             </div>
           </Link>
         </div>
+      </div>
+
+      {/* ── Widgets analytiques ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+
+        {/* Taux de fidélité */}
+        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Fidélité</p>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+              style={{
+                background: stats.taux_fidelite >= 50 ? "rgba(52,199,89,0.12)" : stats.taux_fidelite >= 25 ? "rgba(255,159,10,0.12)" : "rgba(142,142,147,0.12)",
+                color: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--fg-tertiary)",
+              }}>
+              {stats.taux_fidelite >= 50 ? "Bon" : stats.taux_fidelite >= 25 ? "Moyen" : "Faible"}
+            </span>
+          </div>
+          <p className="text-[32px] font-bold tracking-tight leading-none mb-1" style={{ color: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--fg-tertiary)" }}>
+            {stats.taux_fidelite}<span className="text-[18px] font-normal">%</span>
+          </p>
+          <div className="h-1.5 rounded-full overflow-hidden mt-2" style={{ background: "var(--border)" }}>
+            <div className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${stats.taux_fidelite}%`, background: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--border)" }} />
+          </div>
+          <p className="text-[11px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>
+            clients revenus ≥ 2×
+          </p>
+        </div>
+
+        {/* Nouvelles inscriptions */}
+        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Nouveaux</p>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(0,122,255,0.10)", color: "var(--accent)" }}>
+              7 jours
+            </span>
+          </div>
+          <p className="text-[32px] font-bold tracking-tight leading-none mb-1" style={{ color: stats.nouvelles_semaine > 0 ? "var(--accent)" : "var(--fg-tertiary)" }}>
+            {stats.nouvelles_semaine > 0 ? `+${stats.nouvelles_semaine}` : "0"}
+          </p>
+          <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
+            inscription{stats.nouvelles_semaine > 1 ? "s" : ""} cette semaine
+          </p>
+        </div>
+
+        {/* Proches de la récompense */}
+        <Link href="/dashboard/clients"
+          className="rounded-2xl p-4 transition-all hover:opacity-90 active:scale-[0.98] block"
+          style={{ background: stats.proches_recompense > 0 ? "rgba(255,159,10,0.06)" : "var(--glass-bg)", border: `1px solid ${stats.proches_recompense > 0 ? "rgba(255,159,10,0.25)" : "var(--border)"}`, backdropFilter: "blur(20px)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Presque là</p>
+            {stats.proches_recompense > 0 && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#FF9F0A"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+            )}
+          </div>
+          <p className="text-[32px] font-bold tracking-tight leading-none mb-1"
+            style={{ color: stats.proches_recompense > 0 ? "#FF9F0A" : "var(--fg-tertiary)" }}>
+            {stats.proches_recompense}
+          </p>
+          <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
+            client{stats.proches_recompense > 1 ? "s" : ""} à 1–2 tampons du but
+          </p>
+        </Link>
       </div>
 
       {/* Bottom row — top client + voir tous */}
