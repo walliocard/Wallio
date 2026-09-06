@@ -32,7 +32,7 @@ async function patchGoogleWalletClass(uid: string) {
 
   const classBody: Record<string, unknown> = {
     issuerName: "Wallio",
-    reviewStatus: "UNDER_REVIEW",
+    reviewStatus: "APPROVED",
     programName: m.nom,
     programLogo: {
       sourceUri: { uri: logoUri },
