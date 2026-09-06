@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, getFirestore } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -14,18 +14,6 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-function initDb() {
-  if (getApps().length > 1) return getFirestore(app);
-  try {
-    return initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }),
-    });
-  } catch {
-    // Fallback : Samsung Browser, mode privé, IndexedDB indisponible
-    return getFirestore(app);
-  }
-}
-
-export const db = initDb();
+export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
