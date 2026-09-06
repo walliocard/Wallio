@@ -819,7 +819,7 @@ export default function CartePage() {
             border: "1px solid var(--border)", borderRadius: 20,
           }}>
             <p style={{ fontSize: 11, color: "var(--fg-tertiary)", letterSpacing: "0.04em" }}>
-              Aperçu fidèle · iPhone · {walletType === "apple" ? "Apple Wallet" : "Google Wallet"}
+              Aperçu fidèle · {walletType === "apple" ? "iPhone · Apple Wallet" : "Android · Google Wallet"}
             </p>
           </div>
 
