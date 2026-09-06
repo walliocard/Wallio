@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { useEffect, useState, useRef } from "react";
+import { collection, query, where, onSnapshot, getDocs, doc, getDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient } from "@/lib/loyalty";
 
@@ -60,55 +60,80 @@ export default function MesCartesPage() {
   const [notFound, setNotFound] = useState(false);
   const [joining, setJoining]   = useState<Set<string>>(new Set());
   const [joined, setJoined]     = useState<Set<string>>(new Set());
+  const unsubRef = useRef<(() => void) | null>(null);
+  const marchandCacheRef = useRef<Map<string, Record<string, unknown>>>(new Map());
 
   useEffect(() => {
     const saved = localStorage.getItem(PHONE_KEY);
     if (saved) { setPhone(saved); loadCards(saved); }
     else setStep("login");
+    return () => { unsubRef.current?.(); };
   }, []);
 
   async function loadCards(fullPhone: string) {
+    // Annuler l'éventuel listener précédent
+    unsubRef.current?.();
+    marchandCacheRef.current.clear();
     setFetching(true); setNotFound(false);
-    try {
-      const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", fullPhone)));
-      if (snap.empty) { setNotFound(true); setStep("login"); setFetching(false); return; }
+
+    const q = query(collection(db, "clients"), where("telephone", "==", fullPhone));
+    let firstSnapshot = true;
+
+    unsubRef.current = onSnapshot(q, async (snap) => {
+      if (snap.empty) {
+        setNotFound(true); setStep("login");
+        if (firstSnapshot) setFetching(false);
+        firstSnapshot = false;
+        return;
+      }
+
       const results: CardData[] = [];
       let p = "", n = "", d = "";
+
       await Promise.all(snap.docs.map(async (clientDoc) => {
         const client = clientDoc.data();
         if (!p && client.prenom) { p = client.prenom; n = client.nom || ""; d = client.date_naissance || ""; }
         try {
-          const marchandSnap = await getDoc(doc(db, "marchands", client.marchand_id));
-          if (!marchandSnap.exists()) return;
-          const m = marchandSnap.data();
+          // Cache marchand pour ne pas re-fetcher à chaque tampon
+          let m = marchandCacheRef.current.get(client.marchand_id);
+          if (!m) {
+            const marchandSnap = await getDoc(doc(db, "marchands", client.marchand_id));
+            if (!marchandSnap.exists()) return;
+            m = marchandSnap.data();
+            marchandCacheRef.current.set(client.marchand_id, m);
+          }
           results.push({
             walletId: client.wallet_id,
             marchandId: client.marchand_id,
-            marchandNom: m.nom || "Établissement",
-            logoUrl: m.logo_url || undefined,
-            couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E",
+            marchandNom: (m.nom as string) || "Établissement",
+            logoUrl: (m.logo_url as string) || undefined,
+            couleur: (m.apple_bg_color as string) || (m.couleur_principale as string) || "#1C1C1E",
             stampsCurrent: client.tampons || 0,
-            stampsObjective: m.objectif_tampons || 10,
-            rewardName: m.nom_recompense || "Récompense",
+            stampsObjective: (m.objectif_tampons as number) || 10,
+            rewardName: (m.nom_recompense as string) || "Récompense",
             hasPushToken: !!client.apns_push_token,
           });
         } catch { /* skip */ }
       }));
+
       setPrenom(p); setNom(n); setDob(d);
       if (p) { localStorage.setItem(PRENOM_KEY, p); localStorage.setItem(NOM_KEY, n); if (d) localStorage.setItem(DOB_KEY, d); }
       setCards(results);
       setStep("main");
-      loadMerchants(results.map(c => c.marchandId));
-    } catch { setNotFound(true); setStep("login"); }
-    setFetching(false);
+      if (firstSnapshot) {
+        loadMerchants(results.map(c => c.marchandId));
+        setFetching(false);
+        firstSnapshot = false;
+      }
+    }, () => { setNotFound(true); setStep("login"); setFetching(false); });
   }
 
   async function loadMerchants(registeredIds: string[]) {
     try {
       const snap = await getDocs(query(collection(db, "marchands"), where("actif", "==", true)));
       const list: MarchandDiscover[] = snap.docs
-        .filter(d => !registeredIds.includes(d.id))
-        .map(d => {
+        .filter((d: QueryDocumentSnapshot<DocumentData>) => !registeredIds.includes(d.id))
+        .map((d: QueryDocumentSnapshot<DocumentData>) => {
           const m = d.data();
           return { id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined, couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id };
         });
@@ -152,6 +177,9 @@ export default function MesCartesPage() {
   }
 
   function handleLogout() {
+    unsubRef.current?.();
+    unsubRef.current = null;
+    marchandCacheRef.current.clear();
     localStorage.removeItem(PHONE_KEY);
     setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom(""); setPhoneInput(""); setNotFound(false); setStep("login");
   }
