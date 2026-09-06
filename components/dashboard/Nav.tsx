@@ -10,12 +10,12 @@ import WallioIcon from "@/components/WallioIcon";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV = [
-  { href: "/dashboard",                   label: "Accueil",       Icon: Icons.Home },
-  { href: "/dashboard/scanner",           label: "Scanner",       Icon: Icons.Camera },
-  { href: "/dashboard/clients",           label: "Clients",       Icon: Icons.Users },
-  { href: "/dashboard/carte",             label: "Ma carte",      Icon: Icons.Card },
-  { href: "/dashboard/notifications",     label: "Notifications", Icon: Icons.Bell },
-  { href: "/dashboard/reglages",          label: "Réglages",      Icon: Icons.Settings },
+  { href: "/dashboard",                   label: "Accueil",       Icon: Icons.Home,     mobile: true  },
+  { href: "/dashboard/scanner",           label: "Scanner",       Icon: Icons.Camera,   mobile: true  },
+  { href: "/dashboard/clients",           label: "Clients",       Icon: Icons.Users,    mobile: true  },
+  { href: "/dashboard/notifications",     label: "Notifs",        Icon: Icons.Bell,     mobile: true  },
+  { href: "/dashboard/carte",             label: "Ma carte",      Icon: Icons.Card,     mobile: false },
+  { href: "/dashboard/reglages",          label: "Réglages",      Icon: Icons.Settings, mobile: true  },
 ];
 
 function active(pathname: string, href: string) {
@@ -125,17 +125,17 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
-        {NAV.map(({ href, label, Icon }) => {
+        {NAV.filter(n => n.mobile).map(({ href, label, Icon }) => {
           const isActive = active(pathname, href);
           return (
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center gap-1 py-2.5 transition-all duration-150"
+              className="flex-1 flex flex-col items-center gap-1 py-3 transition-all duration-150"
               style={{ color: isActive ? "#8B5CF6" : "var(--fg-tertiary)" }}
             >
               <Icon size={22} />
-              <span className="text-[10px] font-medium tracking-wide">{label}</span>
+              <span className="text-[10px] font-semibold">{label}</span>
             </Link>
           );
         })}
