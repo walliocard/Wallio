@@ -130,6 +130,15 @@ export default function CartePage() {
 
   // Preview mode
   const [previewMode, setPreviewMode] = useState<"full" | "compact" | "back">("full");
+  // Mobile
+  const [mobileTab, setMobileTab] = useState<"preview" | "settings">("preview");
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   // Wallet type
   const [walletType, setWalletType] = useState<"apple" | "google">("apple");
   // Google Wallet labels
@@ -699,7 +708,7 @@ export default function CartePage() {
 
   return (
     <>
-    <div style={{ height: "calc(100vh - 0px)", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: isMobile ? "auto" : "calc(100vh)", minHeight: "100svh", display: "flex", flexDirection: "column" }}>
 
       {/* ── Header ── */}
       <div style={{
@@ -718,7 +727,7 @@ export default function CartePage() {
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {locked ? (
-            <button onClick={() => setLocked(false)} style={{
+            <button onClick={() => { setLocked(false); if (isMobile) setMobileTab("settings"); }} style={{
               padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
               background: "var(--glass-bg)", border: "1px solid var(--border)",
               color: "var(--fg)", cursor: "pointer",
@@ -727,47 +736,68 @@ export default function CartePage() {
             </button>
           ) : (
             <>
-              <button
-                onClick={undo}
-                disabled={!canUndo}
-                title="Annuler la dernière action"
-                style={{
+              {/* Boutons secondaires — desktop uniquement */}
+              <span className="hidden md:contents">
+                <button
+                  onClick={undo}
+                  disabled={!canUndo}
+                  title="Annuler la dernière action"
+                  style={{
+                    padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
+                    background: "var(--glass-bg)", border: "1px solid var(--border)",
+                    color: canUndo ? "var(--fg)" : "var(--fg-tertiary)",
+                    cursor: canUndo ? "pointer" : "not-allowed", opacity: canUndo ? 1 : 0.5,
+                  }}
+                >
+                  ↩ Annuler
+                </button>
+                <button onClick={resetToSaved} style={{
                   padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
                   background: "var(--glass-bg)", border: "1px solid var(--border)",
-                  color: canUndo ? "var(--fg)" : "var(--fg-tertiary)",
-                  cursor: canUndo ? "pointer" : "not-allowed", opacity: canUndo ? 1 : 0.5,
-                }}
-              >
-                ↩ Annuler
-              </button>
-              <button onClick={resetToSaved} style={{
-                padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
-                background: "var(--glass-bg)", border: "1px solid var(--border)",
-                color: "var(--fg-secondary)", cursor: "pointer",
-              }}>
-                Annuler les modifs
-              </button>
+                  color: "var(--fg-secondary)", cursor: "pointer",
+                }}>
+                  Annuler les modifs
+                </button>
+              </span>
               <button onClick={sauvegarder} disabled={saving} style={{
                 padding: "8px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600,
                 background: saved ? "#34C759" : "var(--accent)", color: "white",
                 border: "none", cursor: "pointer",
                 boxShadow: "0 4px 14px rgba(0,122,255,0.25)",
               }}>
-                {saving ? "…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
+                {saving ? "…" : saved ? "✓" : "Sauvegarder"}
               </button>
             </>
           )}
         </div>
       </div>
 
+      {/* ── Tab bar mobile ── */}
+      {!locked && (
+        <div className="md:hidden flex flex-shrink-0" style={{ borderBottom: "1px solid var(--border)", background: "var(--glass-bg)" }}>
+          {(["preview", "settings"] as const).map(t => (
+            <button key={t} onClick={() => setMobileTab(t)} style={{
+              flex: 1, padding: "12px 0", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              color: mobileTab === t ? "var(--accent)" : "var(--fg-tertiary)",
+              background: "none", border: "none",
+              borderBottom: mobileTab === t ? "2px solid var(--accent)" : "2px solid transparent",
+            }}>
+              {t === "preview" ? "Aperçu" : "Personnaliser"}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── Contenu ── */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", overflow: isMobile ? "visible" : "hidden", flexDirection: isMobile ? "column" : "row" }}>
 
         {/* ── Preview ── */}
         <div style={{
-          flex: 1, display: "flex", flexDirection: "column",
+          flex: 1, display: isMobile && mobileTab === "settings" ? "none" : "flex",
+          flexDirection: "column",
           alignItems: "center", justifyContent: "flex-start",
-          padding: "32px 32px 48px", gap: 14, background: "var(--bg)", overflowY: "auto",
+          padding: isMobile ? "20px 16px 120px" : "32px 32px 48px",
+          gap: 14, background: "var(--bg)", overflowY: "auto",
         }}>
 
           {/* Toggle Apple / Google Wallet */}
@@ -901,9 +931,12 @@ export default function CartePage() {
 
         {/* ── Panel droit ── */}
         {!locked && <div style={{
-          width: 300, borderLeft: "1px solid var(--border)",
-          overflowY: "auto", padding: "20px 18px",
-          display: "flex", flexDirection: "column", gap: 22, flexShrink: 0,
+          width: isMobile ? "100%" : 300,
+          borderLeft: isMobile ? "none" : "1px solid var(--border)",
+          overflowY: "auto",
+          padding: isMobile ? "16px 16px 120px" : "20px 18px",
+          display: isMobile && mobileTab === "preview" ? "none" : "flex",
+          flexDirection: "column", gap: 22, flexShrink: 0,
         }}>
 
           {/* Logo */}
