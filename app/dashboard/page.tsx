@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
@@ -33,8 +33,8 @@ export default function AccueilPage() {
 
   useEffect(() => {
     if (!user) return;
-    async function charger() {
-      const snap = await getDocs(query(collection(db, "clients"), where("marchand_id", "==", user!.uid)));
+    const q = query(collection(db, "clients"), where("marchand_id", "==", user.uid));
+    const unsub = onSnapshot(q, snap => {
       const now = new Date();
       const today = new Date(now); today.setHours(0, 0, 0, 0);
       const moisDebut = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -48,34 +48,26 @@ export default function AccueilPage() {
         const t = data.tampons || 0;
         tampons_total += t;
         if (data.recompense_en_attente) recompenses++;
-
-        // Top client par tampons
         if (!top_client || t > top_client.tampons) {
           top_client = { prenom: data.prenom || "", nom: data.nom || "", tampons: t, id: d.id };
         }
-
         const dv = (data.derniere_visite?.seconds || 0) * 1000;
         if (dv >= today.getTime()) aujourd_hui++;
         if (dv >= moisDebut.getTime()) ce_mois++;
-
-        // Semaine actuelle (j-6 à aujourd'hui)
         for (let i = 0; i < 7; i++) {
           const debut = new Date(today); debut.setDate(debut.getDate() - (6 - i));
           const fin = new Date(debut); fin.setDate(fin.getDate() + 1);
           if (dv >= debut.getTime() && dv < fin.getTime()) semaine[i]++;
         }
-
-        // Semaine précédente (j-13 à j-7)
         for (let i = 0; i < 7; i++) {
           const debut = new Date(today); debut.setDate(debut.getDate() - (13 - i));
           const fin = new Date(debut); fin.setDate(fin.getDate() + 1);
           if (dv >= debut.getTime() && dv < fin.getTime()) semaine_precedente[i]++;
         }
       });
-
       setStats({ total: snap.size, aujourd_hui, tampons_total, ce_mois, semaine, semaine_precedente, recompenses, top_client });
-    }
-    charger();
+    });
+    return unsub;
   }, [user]);
 
   if (!marchand || !user) return null;

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -165,20 +165,19 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
+    let unsubSnap: (() => void) | null = null;
     async function init() {
       const res = await fetch("/api/admin/check");
       if (!res.ok) { router.push("/admin/login"); return; }
-      await chargerMarchands();
-      setLoading(false);
+      const q = query(collection(db, "marchands"), orderBy("date_inscription", "desc"));
+      unsubSnap = onSnapshot(q, snap => {
+        setMarchands(snap.docs.map(d => ({ id: d.id, nom: "", email: "", actif: false, ...d.data() } as Marchand)));
+        setLoading(false);
+      });
     }
     init();
+    return () => { unsubSnap?.(); };
   }, [router]);
-
-  async function chargerMarchands() {
-    const q = query(collection(db, "marchands"), orderBy("date_inscription", "desc"));
-    const snap = await getDocs(q);
-    setMarchands(snap.docs.map(d => ({ id: d.id, nom: "", email: "", actif: false, ...d.data() } as Marchand)));
-  }
 
   async function adminPatch(marchandId: string, fields: Record<string, unknown>) {
     const res = await fetch("/api/admin/update-marchand", {
@@ -199,31 +198,43 @@ export default function AdminPage() {
   }
 
   async function toggleActif(m: Marchand) {
-    setToggling(m.id);
+    // Optimistic : UI immédiate
     const newActif = !m.actif;
-    await adminPatch(m.id, { actif: newActif });
     const updated = { ...m, actif: newActif };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     if (selected?.id === m.id) setSelected(updated);
+    setToggling(m.id);
+    try { await adminPatch(m.id, { actif: newActif }); }
+    catch { // Rollback
+      setMarchands(prev => prev.map(x => x.id === m.id ? m : x));
+      if (selected?.id === m.id) setSelected(m);
+    }
     setToggling(null);
   }
 
   async function supprimerMarchand(id: string) {
     setDeleting(id);
-    await adminDelete(id);
+    // Optimistic
     setMarchands(prev => prev.filter(m => m.id !== id));
-    setConfirmDelete(null);
-    setDeleting(null);
     if (selected?.id === id) setSelected(null);
+    setConfirmDelete(null);
+    try { await adminDelete(id); }
+    catch (e) { alert(`Erreur : ${e instanceof Error ? e.message : e}`); }
+    setDeleting(null);
   }
 
   async function genererNfc(m: Marchand) {
     setGeneratingNfc(true);
     const nfc_id = genNfcId(m.nom);
-    await adminPatch(m.id, { nfc_id });
+    // Optimistic
     const updated = { ...m, nfc_id };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     setSelected(updated);
+    try { await adminPatch(m.id, { nfc_id }); }
+    catch { // Rollback
+      setMarchands(prev => prev.map(x => x.id === m.id ? m : x));
+      setSelected(m);
+    }
     setGeneratingNfc(false);
   }
 
@@ -231,10 +242,15 @@ export default function AdminPage() {
     setUpdatingAbo(true);
     const newStatut: Marchand["abonnement_statut"] =
       m.abonnement_statut === "actif" ? "en_attente" : "actif";
-    await adminPatch(m.id, { abonnement_statut: newStatut });
+    // Optimistic
     const updated = { ...m, abonnement_statut: newStatut };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     setSelected(updated);
+    try { await adminPatch(m.id, { abonnement_statut: newStatut }); }
+    catch { // Rollback
+      setMarchands(prev => prev.map(x => x.id === m.id ? m : x));
+      setSelected(m);
+    }
     setUpdatingAbo(false);
   }
 
@@ -260,12 +276,11 @@ export default function AdminPage() {
     });
     const data = await res.json();
     if (!res.ok) { setCreateError(data.error || "Erreur"); setCreating(false); return; }
-    await chargerMarchands();
+    // onSnapshot met à jour la liste automatiquement
     setShowCreate(false);
     setCreateNom(""); setCreateEmail(""); setCreatePassword("");
     setCreating(false);
-    // chargerMarchands() met à jour le state — on cherche dans la collection Firestore directement
-    // via l'uid retourné par l'API pour ouvrir le drawer immédiatement
+    // Ouvrir le nouveau marchand dans le drawer
     const { getDoc, doc } = await import("firebase/firestore");
     const snap = await getDoc(doc((await import("@/lib/firebase")).db, "marchands", data.uid));
     if (snap.exists()) setSelected({ id: snap.id, nom: "", email: "", actif: false, ...snap.data() } as Marchand);
