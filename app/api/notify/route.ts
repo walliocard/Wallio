@@ -21,6 +21,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
+    // Récupère le nom du marchand pour l'afficher dans la notif
+    const marchandSnap = await db.collection("marchands").doc(marchandId).get();
+    const marchandNom = (marchandSnap.data()?.nom as string) || "Wallio";
+    const notifTitle = `${marchandNom} — ${title}`;
+
     // Récupère les clients avec un token FCM
     let query = db.collection("clients").where("marchand_id", "==", marchandId);
 
@@ -55,7 +60,7 @@ export async function POST(req: Request) {
       const batch = tokenDocs.slice(i, i + 500);
       const result = await messaging.sendEachForMulticast({
         tokens: batch.map(d => d.token),
-        notification: { title, body },
+        notification: { title: notifTitle, body },
         webpush: {
           notification: { icon: (logoUrl as string | null) || "/icon-192.png", badge: "/favicon-32.png" },
           fcmOptions: { link: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com"}` },

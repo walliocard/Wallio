@@ -224,7 +224,7 @@ export default function NotificationsPage() {
             boxShadow: canSend ? "0 8px 24px rgba(0,122,255,0.25)" : "none",
             cursor: canSend ? "pointer" : "not-allowed",
           }}>
-          {sendState === "sending" ? "Envoi en cours…" : `📤 Envoyer aux ${SEGMENTS.find(s => s.id === segment)?.label.toLowerCase()}`}
+          {sendState === "sending" ? "Envoi en cours..." : `Envoyer aux ${SEGMENTS.find(s => s.id === segment)?.label.toLowerCase()}`}
         </button>
 
       </div>
