@@ -87,7 +87,7 @@ export default function ReglagesPage() {
   }
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-3xl">
+    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-40 md:pb-10 max-w-3xl">
 
       {/* Header */}
       <div className="mb-6">
@@ -138,15 +138,17 @@ export default function ReglagesPage() {
               </p>
               <input type="range" min={5} max={20} value={objectif}
                 onChange={e => setObjectif(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--accent)", marginBottom: 8 }}
+                style={{ width: "100%", accentColor: "var(--accent)", marginBottom: 10 }}
               />
-              <div className="flex justify-between">
+              {/* Scroll horizontal sur mobile pour zones de tap suffisantes */}
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                 {[5, 6, 8, 10, 12, 15, 20].map(n => (
                   <button key={n} onClick={() => setObjectif(n)}
-                    className="text-[11px] px-2 py-1 rounded-lg transition-all"
+                    className="flex-shrink-0 text-[13px] font-medium rounded-xl transition-all"
                     style={{
+                      minWidth: 44, height: 36,
                       background: objectif === n ? "var(--accent)" : "var(--bg)",
-                      border: "1px solid var(--border)",
+                      border: `1px solid ${objectif === n ? "var(--accent)" : "var(--border)"}`,
                       color: objectif === n ? "white" : "var(--fg-tertiary)",
                     }}>
                     {n}
@@ -327,12 +329,30 @@ export default function ReglagesPage() {
 
       </div>
 
-      {/* Save */}
+      {/* Sticky save — mobile uniquement */}
+      <div className="md:hidden fixed left-0 right-0 z-30 px-4 pt-3 pb-3"
+        style={{
+          bottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(20px)",
+          borderTop: "1px solid var(--border)",
+        }}>
+        <button
+          onClick={sauvegarder}
+          disabled={saving}
+          className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
+          style={{ background: saved ? "#34C759" : "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.25)" }}
+        >
+          {saving ? "Sauvegarde…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
+        </button>
+      </div>
+
+      {/* Save desktop */}
       <div className="mt-6">
         <button
           onClick={sauvegarder}
           disabled={saving}
-          className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
+          className="hidden md:block w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
           style={{ background: saved ? "#34C759" : "var(--accent)", boxShadow: "0 4px 20px rgba(0,122,255,0.2)" }}
         >
           {saving ? "Sauvegarde…" : saved ? "Sauvegardé ✓" : "Sauvegarder les réglages"}
