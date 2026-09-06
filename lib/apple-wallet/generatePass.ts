@@ -23,6 +23,12 @@ export interface PassField {
   value: string;
 }
 
+export interface PassLocation {
+  latitude: number;
+  longitude: number;
+  relevantText?: string;
+}
+
 export interface PassInput {
   walletId: string;
   authToken: string;
@@ -41,6 +47,8 @@ export interface PassInput {
   auxiliaryFields?: PassField[];
   backInfo?: string;
   description?: string;
+  locations?: PassLocation[];
+  relevantDate?: string;
 }
 
 export function generatePassJson(input: PassInput): object {
@@ -105,5 +113,16 @@ export function generatePassJson(input: PassInput): object {
         messageEncoding: "iso-8859-1",
       },
     ],
+    // Géolocalisation — notification lock screen quand le client s'approche
+    ...(input.locations?.length ? {
+      locations: input.locations.map(l => ({
+        latitude: l.latitude,
+        longitude: l.longitude,
+        ...(l.relevantText ? { relevantText: l.relevantText } : {}),
+      })),
+      maxDistance: 200, // mètres
+    } : {}),
+    // Date de mise en avant sur l'écran de verrouillage
+    ...(input.relevantDate ? { relevantDate: input.relevantDate } : {}),
   };
 }

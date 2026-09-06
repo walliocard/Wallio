@@ -60,6 +60,8 @@ export async function GET(
     ].filter(Boolean) as { label: string; value: string }[],
     backInfo: m.apple_back_info || undefined,
     description: m.apple_description || undefined,
+    locations: m.apple_location ? [m.apple_location as { latitude: number; longitude: number; relevantText?: string }] : undefined,
+    relevantDate: m.apple_relevant_date as string | undefined || undefined,
     });
   } catch (e) {
     console.error("[Apple Wallet] buildPkpass error:", e);

@@ -120,6 +120,17 @@ export default function CartePage() {
   const [iconUrl, setIconUrl] = useState<string>((marchand?.apple_icon_url as string) || "");
   const [uploadingIcon, setUploadingIcon] = useState(false);
 
+  // Géolocalisation
+  const [storeLocation, setStoreLocation] = useState<{ latitude: number; longitude: number; relevantText: string } | null>(
+    ((marchand as Record<string, unknown>).apple_location as { latitude: number; longitude: number; relevantText: string } | null) ?? null
+  );
+  const [detectingLocation, setDetectingLocation] = useState(false);
+
+  // Date de mise en avant (lock screen)
+  const [relevantDate, setRelevantDate] = useState<string>(
+    ((marchand as Record<string, unknown>).apple_relevant_date as string) || ""
+  );
+
   // Preview mode
   const [previewMode, setPreviewMode] = useState<"full" | "compact" | "back">("full");
   // Wallet type
@@ -438,6 +449,8 @@ export default function CartePage() {
       google_hero_url: finalGoogleHeroUrl,
       google_text_modules: googleTextModules,
       google_links: googleLinks,
+      apple_location: storeLocation || null,
+      apple_relevant_date: relevantDate || null,
       updated_at: serverTimestamp(),
     });
     setSaving(false);
@@ -583,6 +596,29 @@ export default function CartePage() {
     } finally {
       setUploadingComptoirBg(false);
     }
+  }
+
+  function detectLocation() {
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      return;
+    }
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setStoreLocation({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          relevantText: `Vous êtes près de ${nom} — présentez votre carte fidélité !`,
+        });
+        setDetectingLocation(false);
+      },
+      () => {
+        alert("Impossible de détecter la position. Vérifiez les permissions du navigateur.");
+        setDetectingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }
 
   async function telechargerComptoir() {
@@ -1490,12 +1526,9 @@ export default function CartePage() {
           {walletType === "apple" && (
             <Section label="Champ en-tête">
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
-                Affiché en haut à droite — ex : niveau, date, code.
+                Affiché en haut à droite à la place du compteur tampons — ex : niveau, code.
               </p>
-              <Field label="Label">
-                <TextInput value={headerLabel} onChange={setHeaderLabel} placeholder="ex : NIVEAU"/>
-              </Field>
-              <Field label="Valeur (obligatoire pour afficher)">
+              <Field label="Valeur (laisser vide = affiche les tampons)">
                 <TextInput value={headerValue} onChange={setHeaderValue} placeholder="ex : Gold, VIP, Premium…"/>
               </Field>
             </Section>
@@ -1507,19 +1540,6 @@ export default function CartePage() {
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                 Affichés sous la récompense et le membre, avant le QR code.
               </p>
-              {/* Champ auto toujours présent */}
-              <div style={{
-                padding: "8px 10px", borderRadius: 10,
-                background: "var(--glass-bg)", border: "1px solid var(--border)",
-                marginBottom: 10,
-              }}>
-                <p style={{ fontSize: 9, color: "var(--fg-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 3px", fontWeight: 600 }}>
-                  Automatique
-                </p>
-                <p style={{ fontSize: 12, color: "var(--fg)", fontWeight: 500, margin: 0 }}>
-                  Tampons restants avant récompense
-                </p>
-              </div>
               <Field label="Info 1 (optionnel)">
                 <TextInput value={aux1Value} onChange={setAux1Value} placeholder="ex : Valable dans tous nos établissements"/>
               </Field>
@@ -1564,6 +1584,78 @@ export default function CartePage() {
                   )}
                 </div>
               </div>
+            </Section>
+          )}
+
+          {/* Géolocalisation — Apple uniquement */}
+          {walletType === "apple" && (
+            <Section label="Géolocalisation">
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                Apple affiche une notification sur l'écran de verrouillage quand le client s'approche de votre établissement.
+              </p>
+              {storeLocation ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ padding: "8px 10px", borderRadius: 10, background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.25)" }}>
+                    <p style={{ fontSize: 9, color: "#34C759", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 3px", fontWeight: 700 }}>
+                      Position enregistrée
+                    </p>
+                    <p style={{ fontSize: 11, color: "var(--fg)", fontFamily: "monospace", margin: 0 }}>
+                      {storeLocation.latitude.toFixed(5)}, {storeLocation.longitude.toFixed(5)}
+                    </p>
+                  </div>
+                  <Field label="Message de notification">
+                    <TextInput
+                      value={storeLocation.relevantText}
+                      onChange={v => setStoreLocation({ ...storeLocation, relevantText: v })}
+                      placeholder={`Vous êtes près de ${nom} !`}
+                    />
+                  </Field>
+                  <button onClick={() => setStoreLocation(null)} style={{
+                    padding: "7px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
+                    background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.25)",
+                    color: "#FF3B30", cursor: "pointer",
+                  }}>
+                    Supprimer la localisation
+                  </button>
+                </div>
+              ) : (
+                <button onClick={detectLocation} disabled={detectingLocation} style={{
+                  width: "100%", padding: "10px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
+                  background: detectingLocation ? "var(--glass-bg)" : "var(--accent)",
+                  border: "none", color: detectingLocation ? "var(--fg-tertiary)" : "white",
+                  cursor: detectingLocation ? "wait" : "pointer",
+                }}>
+                  {detectingLocation ? "Détection en cours…" : "Détecter ma position actuelle"}
+                </button>
+              )}
+            </Section>
+          )}
+
+          {/* Date de mise en avant — Apple uniquement */}
+          {walletType === "apple" && (
+            <Section label="Mise en avant (lock screen)">
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+                La carte remonte automatiquement sur l'écran de verrouillage à cette date et heure.
+              </p>
+              <input
+                type="datetime-local"
+                value={relevantDate ? relevantDate.slice(0, 16) : ""}
+                onChange={e => setRelevantDate(e.target.value ? e.target.value + ":00" : "")}
+                style={{
+                  width: "100%", padding: "8px 12px", borderRadius: 10, fontSize: 12,
+                  background: "var(--glass-bg)", border: "1px solid var(--border)",
+                  color: relevantDate ? "var(--fg)" : "var(--fg-tertiary)",
+                  outline: "none", boxSizing: "border-box", cursor: "pointer",
+                }}
+              />
+              {relevantDate && (
+                <button onClick={() => setRelevantDate("")} style={{
+                  marginTop: 6, width: "100%", padding: "6px 0", borderRadius: 10, fontSize: 11,
+                  background: "none", border: "none", color: "#FF3B30", cursor: "pointer",
+                }}>
+                  Supprimer
+                </button>
+              )}
             </Section>
           )}
 
