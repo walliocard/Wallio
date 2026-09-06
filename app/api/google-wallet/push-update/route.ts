@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { adminDb, initAdmin } from "@/lib/admin";
+import { adminDb, initAdmin, adminMessaging } from "@/lib/admin";
 import { getGoogleAccessToken } from "@/lib/google-wallet/auth";
 
 const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID!;
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
 const API = "https://walletobjects.googleapis.com/walletobjects/v1";
 
 function objectId(walletId: string) {
@@ -30,6 +31,14 @@ export async function POST(req: Request) {
   const marchandSnap = await db.collection("marchands").doc(client.marchand_id).get();
   const m = marchandSnap.exists ? marchandSnap.data()! : {};
 
+  const tampons = client.tampons || 0;
+  const objectif = (m.objectif_tampons as number) || 10;
+  const recompense = (m.nom_recompense as string) || "Récompense";
+  const marchandNom = (m.nom as string) || "Wallio";
+  const logoUrl = `${BASE_URL}/api/logo/${client.marchand_id}`;
+  const isRecompense = tampons >= objectif;
+
+  // 1 — PATCH loyaltyObject sur Google
   try {
     const token = await getGoogleAccessToken();
     const res = await fetch(
@@ -39,22 +48,48 @@ export async function POST(req: Request) {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           loyaltyPoints: {
-            balance: { string: `${client.tampons || 0} / ${(m.objectif_tampons as number) || 10}` },
+            balance: { string: `${tampons} / ${objectif}` },
             label: (m.google_primary_label as string) || "Tampons",
           },
         }),
       }
     );
-
     if (!res.ok) {
-      const err = await res.text();
-      console.error("[GW push-update] PATCH failed:", res.status, err);
-      return NextResponse.json({ pushed: false, error: err });
+      console.error("[GW push-update] PATCH failed:", res.status, await res.text());
     }
-
-    return NextResponse.json({ pushed: true });
   } catch (e) {
-    console.error("[GW push-update] error:", e);
-    return NextResponse.json({ pushed: false, error: String(e) });
+    console.error("[GW push-update] PATCH error:", e);
   }
+
+  // 2 — Notif FCM (équivalent notif Apple Wallet automatique)
+  const fcmToken = client.fcm_token as string | undefined;
+  if (fcmToken) {
+    try {
+      const notifBody = isRecompense
+        ? `${recompense} débloquée !`
+        : `${tampons} / ${objectif} tampons`;
+
+      await adminMessaging().send({
+        token: fcmToken,
+        webpush: {
+          data: {
+            title: marchandNom,
+            body: notifBody,
+            icon: logoUrl,
+            url: `${BASE_URL}/mes-cartes`,
+          },
+          headers: { TTL: "3600" },
+          fcmOptions: { link: `${BASE_URL}/mes-cartes` },
+        },
+      });
+    } catch (e) {
+      console.error("[GW push-update] FCM error:", e);
+      // Token expiré → nettoyage
+      if (String(e).includes("registration-token-not-registered") || String(e).includes("invalid-registration-token")) {
+        await snap.docs[0].ref.update({ fcm_token: null });
+      }
+    }
+  }
+
+  return NextResponse.json({ pushed: true });
 }
