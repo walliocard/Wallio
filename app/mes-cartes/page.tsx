@@ -233,7 +233,9 @@ export default function MesCartesPage() {
   // ── Loading ────────────────────────────────────────────────────────
   if (step === "loading" || fetching) return (
     <main style={bg}>
-      <Header />
+      <div style={{ padding: "20px 20px 0", maxWidth: 430, margin: "0 auto", width: "100%" }}>
+        <Header />
+      </div>
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid rgba(91,124,250,0.3)", borderTopColor: "#5B7CFA", animation: "spin 0.8s linear infinite" }} />
       </div>
@@ -244,7 +246,9 @@ export default function MesCartesPage() {
   // ── Login ──────────────────────────────────────────────────────────
   if (step === "login") return (
     <main style={bg}>
-      <Header />
+      <div style={{ padding: "20px 20px 0", maxWidth: 430, margin: "0 auto", width: "100%" }}>
+        <Header />
+      </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 24px 48px" }}>
         <div style={{ maxWidth: 390, width: "100%", margin: "0 auto" }}>
 
