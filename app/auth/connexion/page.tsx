@@ -6,7 +6,6 @@ import { auth } from "@/lib/firebase";
 import { getMarchand } from "@/lib/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import WallioIcon from "@/components/WallioIcon";
 
 export default function ConnexionPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -30,31 +29,58 @@ export default function ConnexionPage() {
     }
   }
 
+  async function trySignIn() {
+    const signInTimeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), 10000)
+    );
+    const { user } = await Promise.race([
+      signInWithEmailAndPassword(auth, form.email, form.password),
+      signInTimeout,
+    ]);
+    const marchandTimeout = new Promise<null>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), 6000)
+    );
+    const marchand = await Promise.race([getMarchand(user.uid), marchandTimeout]);
+    if (!marchand || !marchand.actif) {
+      await auth.signOut();
+      throw new Error("inactive");
+    }
+    return true;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const signInTimeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), 8000)
-      );
-      const { user } = await Promise.race([
-        signInWithEmailAndPassword(auth, form.email, form.password),
-        signInTimeout,
-      ]);
-      const marchandTimeout = new Promise<null>((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), 5000)
-      );
-      const marchand = await Promise.race([getMarchand(user.uid), marchandTimeout]);
-      if (!marchand || !marchand.actif) {
-        await auth.signOut();
-        setError("Votre compte est en attente d'activation par l'équipe Wallio.");
-        return;
-      }
+      await trySignIn();
       router.push("/dashboard");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
-      setError(msg === "timeout" ? "Impossible de joindre Firebase. Vérifie ta connexion." : "Email ou mot de passe incorrect.");
+      if (msg === "inactive") {
+        setError("Votre compte est en attente d'activation par l'équipe Wallio.");
+        setLoading(false);
+        return;
+      }
+      if (msg === "timeout") {
+        // Retry automatique une fois
+        try {
+          await trySignIn();
+          router.push("/dashboard");
+          return;
+        } catch (e2: unknown) {
+          const msg2 = e2 instanceof Error ? e2.message : "";
+          if (msg2 === "inactive") {
+            setError("Votre compte est en attente d'activation par l'équipe Wallio.");
+            setLoading(false);
+            return;
+          }
+          setError(msg2 === "timeout" ? "Connexion lente — réessaie dans quelques secondes." : "Email ou mot de passe incorrect.");
+          setLoading(false);
+          return;
+        }
+      }
+      setError("Email ou mot de passe incorrect.");
     } finally {
       setLoading(false);
     }
@@ -73,7 +99,7 @@ export default function ConnexionPage() {
 
         {/* Logo */}
         <div className="text-center mb-12">
-          <WallioIcon size={56} className="mb-5 mx-auto" />
+          <img src="/icon.svg" alt="Wallio" style={{ width: 72, height: 72, borderRadius: 18, margin: "0 auto 20px", display: "block" }} />
           <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
             Wallio
           </h1>

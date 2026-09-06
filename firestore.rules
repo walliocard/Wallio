@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /marchands/{marchandId} {
       allow read: if true;
-      allow write: if false;
+      // Marchand authentifié peut modifier uniquement son propre document
+      allow write: if request.auth != null && request.auth.uid == marchandId;
     }
     match /clients/{clientId} {
       // Lecture ouverte : flux NFC sans auth + dashboard marchand
