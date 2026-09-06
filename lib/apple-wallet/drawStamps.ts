@@ -1,5 +1,3 @@
-import sharp from "sharp";
-
 export type StampStyle = "dot"|"ring"|"plus"|"check"|"heart"|"star"|"text"|"logo";
 
 export interface DrawStampsOptions {
@@ -25,6 +23,7 @@ export async function drawStampsOnStrip(stripBuf: Buffer, opts: DrawStampsOption
   const { stampsCurrent: filled, stampsObjective: total } = opts;
   if (total <= 0 || !stripBuf.length) return stripBuf;
 
+  const sharp = (await import("sharp")).default;
   const meta = await sharp(stripBuf).metadata();
   const W = meta.width  || 750;
   const H = meta.height || 288;
