@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { collection, query, where, onSnapshot, getDocs, doc, getDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDocs, doc, getDoc, updateDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient } from "@/lib/loyalty";
 
 interface CardData {
+  clientId: string;
   walletId: string;
   marchandId: string;
   marchandNom: string;
@@ -15,6 +16,7 @@ interface CardData {
   stampsObjective: number;
   rewardName: string;
   hasPushToken: boolean;
+  hasFcmToken: boolean;
 }
 
 interface MarchandDiscover {
@@ -103,6 +105,7 @@ export default function MesCartesPage() {
             marchandCacheRef.current.set(client.marchand_id, m);
           }
           results.push({
+            clientId: clientDoc.id,
             walletId: client.wallet_id,
             marchandId: client.marchand_id,
             marchandNom: (m.nom as string) || "Établissement",
@@ -112,6 +115,7 @@ export default function MesCartesPage() {
             stampsObjective: (m.objectif_tampons as number) || 10,
             rewardName: (m.nom_recompense as string) || "Récompense",
             hasPushToken: !!client.apns_push_token,
+            hasFcmToken: !!client.fcm_token,
           });
         } catch { /* skip */ }
       }));
@@ -164,16 +168,36 @@ export default function MesCartesPage() {
       const marchandSnap = await getDoc(doc(db, "marchands", marchand.id));
       const m = marchandSnap.exists() ? marchandSnap.data() : {};
       setCards(prev => [...prev, {
-        walletId, marchandId: marchand.id,
+        clientId, walletId, marchandId: marchand.id,
         marchandNom: marchand.nom, logoUrl: marchand.logoUrl, couleur: marchand.couleur,
         stampsCurrent: 0, stampsObjective: (m.objectif_tampons as number) || 10,
-        rewardName: (m.nom_recompense as string) || "Récompense", hasPushToken: false,
+        rewardName: (m.nom_recompense as string) || "Récompense", hasPushToken: false, hasFcmToken: false,
       }]);
       setMerchants(prev => prev.filter(m => m.id !== marchand.id));
       setJoined(prev => new Set(prev).add(marchand.id));
       setTab("cartes");
     } catch { /* silent */ }
     setJoining(prev => { const s = new Set(prev); s.delete(marchand.id); return s; });
+  }
+
+  const [enablingNotif, setEnablingNotif] = useState(false);
+
+  async function enableNotifications(targetClientId: string) {
+    if (enablingNotif) return;
+    setEnablingNotif(true);
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") { setEnablingNotif(false); return; }
+      const { registerFcmToken } = await import("@/lib/fcm");
+      const token = await registerFcmToken();
+      if (!token) { setEnablingNotif(false); return; }
+      // Sauvegarde le token sur ce client uniquement
+      await updateDoc(doc(db, "clients", targetClientId), { fcm_token: token });
+      setCards(prev => prev.map(c => c.clientId === targetClientId ? { ...c, hasFcmToken: true } : c));
+    } catch (err) {
+      console.error("enableNotifications:", err);
+    }
+    setEnablingNotif(false);
   }
 
   function handleLogout() {
@@ -287,7 +311,7 @@ export default function MesCartesPage() {
               <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Aucune carte</p>
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>Scannez le tag NFC d'un établissement ou découvrez-en un dans l'onglet Découvrir.</p>
             </div>
-          ) : cards.map((card, i) => <CardItem key={card.walletId} card={card} delay={i * 0.06} />)
+          ) : cards.map((card, i) => <CardItem key={card.walletId} card={card} delay={i * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} />)
         )}
 
         {/* ── Tab Découvrir ── */}
@@ -346,7 +370,7 @@ export default function MesCartesPage() {
   );
 }
 
-function CardItem({ card, delay }: { card: CardData; delay: number }) {
+function CardItem({ card, delay, onEnableNotif, enablingNotif }: { card: CardData; delay: number; onEnableNotif: () => void; enablingNotif: boolean }) {
   const pct = Math.min(100, Math.round((card.stampsCurrent / card.stampsObjective) * 100));
   const restants = card.stampsObjective - card.stampsCurrent;
   const dark = isColorDark(card.couleur);
@@ -399,6 +423,25 @@ function CardItem({ card, delay }: { card: CardData; delay: number }) {
             </a>
           )}
           <p style={{ fontSize: 11, color: "#AEAEB2", textAlign: "center" }}>{pct === 100 ? "Récompense disponible !" : `${pct}% complété`}</p>
+
+          {/* Activer les notifications si pas encore fait */}
+          {!card.hasFcmToken && typeof window !== "undefined" && "Notification" in window && Notification.permission !== "denied" && (
+            <button
+              onClick={onEnableNotif}
+              disabled={enablingNotif}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "10px 16px", borderRadius: 12, border: "1.5px solid rgba(91,124,250,0.3)",
+                background: "rgba(91,124,250,0.06)", cursor: enablingNotif ? "wait" : "pointer",
+                color: "#5B7CFA", fontSize: 13, fontWeight: 600,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+              </svg>
+              {enablingNotif ? "Activation…" : "Activer les notifications"}
+            </button>
+          )}
         </div>
       </div>
     </div>
