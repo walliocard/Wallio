@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/admin";
+import { adminDb, initAdmin } from "@/lib/admin";
 import { getGoogleAccessToken } from "@/lib/google-wallet/auth";
 
 const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID!;
@@ -11,18 +11,24 @@ function objectId(walletId: string) {
 
 export async function POST(req: Request) {
   const { walletId } = await req.json().catch(() => ({})) as { walletId?: string };
-  if (!walletId) return NextResponse.json({ error: "walletId manquant" }, { status: 400 });
+  if (!walletId || !ISSUER_ID || !process.env.GOOGLE_WALLET_KEY_JSON) {
+    return NextResponse.json({ pushed: false });
+  }
 
+  initAdmin();
   const db = adminDb();
+
   const snap = await db.collection("clients")
     .where("wallet_id", "==", walletId).limit(1).get();
-  if (snap.empty) return NextResponse.json({ error: "Client introuvable" }, { status: 404 });
+  if (snap.empty) return NextResponse.json({ pushed: false });
 
   const client = snap.docs[0].data();
-
   if (client.wallet_type !== "google") {
-    return NextResponse.json({ updated: false, reason: "Pas de carte Google Wallet" });
+    return NextResponse.json({ pushed: false, reason: "not_google" });
   }
+
+  const marchandSnap = await db.collection("marchands").doc(client.marchand_id).get();
+  const m = marchandSnap.exists ? marchandSnap.data()! : {};
 
   try {
     const token = await getGoogleAccessToken();
@@ -32,18 +38,23 @@ export async function POST(req: Request) {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          loyaltyPoints: { balance: { int: client.tampons || 0 }, label: "Tampons" },
+          loyaltyPoints: {
+            balance: { string: `${client.tampons || 0} / ${(m.objectif_tampons as number) || 10}` },
+            label: (m.google_primary_label as string) || "Tampons",
+          },
         }),
       }
     );
 
     if (!res.ok) {
       const err = await res.text();
-      return NextResponse.json({ updated: false, error: err }, { status: res.status });
+      console.error("[GW push-update] PATCH failed:", res.status, err);
+      return NextResponse.json({ pushed: false, error: err });
     }
 
-    return NextResponse.json({ updated: true });
+    return NextResponse.json({ pushed: true });
   } catch (e) {
-    return NextResponse.json({ updated: false, error: String(e) }, { status: 500 });
+    console.error("[GW push-update] error:", e);
+    return NextResponse.json({ pushed: false, error: String(e) });
   }
 }
