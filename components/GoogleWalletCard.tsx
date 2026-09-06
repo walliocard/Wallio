@@ -86,7 +86,7 @@ export default function GoogleWalletCard({
 
       {/* ── Hero image — position officielle Google Wallet ── */}
       {heroUrl && (
-        <div style={{ width: "100%", aspectRatio: "3/1", overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ width: "100%", height: 100, overflow: "hidden", flexShrink: 0 }}>
           <img src={heroUrl} alt="" style={{
             width: "100%", height: "100%", objectFit: "cover", display: "block",
             objectPosition: `50% ${previewCropY}%`,
@@ -97,53 +97,48 @@ export default function GoogleWalletCard({
       )}
 
       {/* ── Logo + émetteur + nom programme ── */}
-      <div style={{ padding: heroUrl ? "16px 20px 10px" : "24px 20px 10px", textAlign: "center" }}>
-        {/* Logo circulaire — obligatoire Google Wallet */}
+      <div style={{ padding: heroUrl ? "10px 20px 6px" : "16px 20px 6px", textAlign: "center" }}>
         <div style={{
-          width: 56, height: 56, borderRadius: "50%",
+          width: 42, height: 42, borderRadius: "50%",
           background: "rgba(255,255,255,0.18)",
-          overflow: "hidden", margin: "0 auto 8px",
+          overflow: "hidden", margin: "0 auto 5px",
           display: "flex", alignItems: "center", justifyContent: "center",
           border: "1.5px solid rgba(255,255,255,0.25)",
         }}>
           {logoUrl
             ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            : <span style={{ fontSize: 22, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
+            : <span style={{ fontSize: 17, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
           }
         </div>
-        {/* Nom émetteur */}
-        <p style={{ fontSize: 12, color: textSec, margin: "0 0 6px", letterSpacing: 0.2 }}>Wallio</p>
-        {/* Nom du programme — très visible */}
-        <p style={{ fontSize: heroUrl ? 22 : 26, fontWeight: 700, color: text, margin: 0, letterSpacing: -0.5, lineHeight: 1.1 }}>
+        <p style={{ fontSize: 10, color: textSec, margin: "0 0 3px", letterSpacing: 0.2 }}>Wallio</p>
+        <p style={{ fontSize: heroUrl ? 18 : 22, fontWeight: 700, color: text, margin: 0, letterSpacing: -0.5, lineHeight: 1.1 }}>
           {logoText || "Programme"}
         </p>
       </div>
 
       {/* ── QR code — élément central de Google Wallet ── */}
-      <div style={{ padding: "8px 20px 16px", display: "flex", justifyContent: "center" }}>
+      <div style={{ padding: "6px 20px 10px", display: "flex", justifyContent: "center" }}>
         <div style={{
           background: "#FFFFFF",
-          borderRadius: 16,
-          padding: 14,
-          boxShadow: dark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 20px rgba(0,0,0,0.15)",
+          borderRadius: 12,
+          padding: 10,
+          boxShadow: dark ? "0 4px 18px rgba(0,0,0,0.4)" : "0 4px 14px rgba(0,0,0,0.13)",
         }}>
           {qr
-            ? <img src={qr} alt="QR" style={{ width: 160, height: 160, display: "block" }} />
-            : <div style={{ width: 160, height: 160, background: "#f0f0f0", borderRadius: 4 }} />
+            ? <img src={qr} alt="QR" style={{ width: 120, height: 120, display: "block" }} />
+            : <div style={{ width: 120, height: 120, background: "#f0f0f0", borderRadius: 4 }} />
           }
         </div>
       </div>
 
       {/* ── Tampons ── */}
-      <div style={{ padding: "0 20px 14px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        <div>
-          <p style={{ fontSize: 10, color: textSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 3px", fontWeight: 600 }}>
-            {primaryLabel}
-          </p>
-          <p style={{ fontSize: 22, fontWeight: 700, color: text, margin: 0, lineHeight: 1 }}>
-            {stampsCurrent} / {stampsObjective}
-          </p>
-        </div>
+      <div style={{ padding: "0 20px 10px" }}>
+        <p style={{ fontSize: 10, color: textSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px", fontWeight: 600 }}>
+          {primaryLabel}
+        </p>
+        <p style={{ fontSize: 18, fontWeight: 700, color: text, margin: 0, lineHeight: 1 }}>
+          {stampsCurrent} / {stampsObjective}
+        </p>
       </div>
 
       {/* ── Séparateur ── */}
