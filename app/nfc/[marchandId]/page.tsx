@@ -52,6 +52,8 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         }
 
         const walletId = localStorage.getItem(WALLET_KEY(marchandId));
+        let compteSupprimeIci = false;
+
         if (walletId) {
           const client = await getClientByWalletId(walletId, marchand.id);
           if (client) {
@@ -68,15 +70,18 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             await traiterTampon(client, marchand);
             return;
           }
+          // wallet_id présent en local mais compte supprimé → on nettoie
           localStorage.removeItem(WALLET_KEY(marchandId));
+          compteSupprimeIci = true;
         }
 
-        // Identité Wallio connue → inscription automatique chez ce marchand
+        // Identité Wallio connue → inscription automatique chez un NOUVEAU marchand
+        // (skip si le compte a été explicitement supprimé chez CE marchand)
         const cachedPhone  = localStorage.getItem("wallio_client_phone");
         const cachedPrenom = localStorage.getItem("wallio_client_prenom");
         const cachedNom    = localStorage.getItem("wallio_client_nom");
         const cachedDob    = localStorage.getItem("wallio_client_dob");
-        if (cachedPhone && cachedPrenom && cachedNom) {
+        if (cachedPhone && cachedPrenom && cachedNom && !compteSupprimeIci) {
           // Peut-être déjà inscrit ici (localStorage perdu / nouvel appareil)
           const existing = await getClientByTelephone(cachedPhone, marchand.id);
           if (existing) {
