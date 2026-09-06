@@ -4,6 +4,21 @@ import fs from "fs";
 import path from "path";
 import forge from "node-forge";
 import { generatePassJson, type PassInput } from "./generatePass";
+import { drawStampsOnStrip, type StampStyle } from "./drawStamps";
+
+export interface StampOverlayInput {
+  stampsOnStrip?: boolean;
+  stripStampStyle?: StampStyle;
+  stampColor?: string;
+  stampPosition?: number;
+  stampSizePreset?: "s"|"m"|"l";
+  stampThickness?: number;
+  stampText?: string;
+  stampTextBold?: boolean;
+  stampTextItalic?: boolean;
+  stampTextSize?: number;
+  stampLogoOpacity?: number;
+}
 
 function sha1(data: Buffer | string): string {
   return crypto.createHash("sha1").update(data).digest("hex");
@@ -65,7 +80,7 @@ const ICON_29 = Buffer.from(
   "base64"
 );
 
-export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string }): Promise<Buffer> {
+export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string } & StampOverlayInput): Promise<Buffer> {
   const passJson = JSON.stringify(generatePassJson(input), null, 2);
 
   const files: Record<string, Buffer> = {
@@ -88,12 +103,29 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
     } catch { /* logo optionnel */ }
   }
 
-  // Bannière strip
+  // Bannière strip (avec tampons dessinés si activé)
   if (input.stripUrl) {
     try {
       const res = await fetch(input.stripUrl);
       if (res.ok) {
-        const buf = Buffer.from(await res.arrayBuffer());
+        let buf = Buffer.from(await res.arrayBuffer());
+        if (input.stampsOnStrip && input.stampsObjective > 0) {
+          buf = Buffer.from(await drawStampsOnStrip(buf, {
+            stampsCurrent:  input.stampsCurrent,
+            stampsObjective: input.stampsObjective,
+            style:           input.stripStampStyle   ?? "dot",
+            color:           input.stampColor        ?? "#FFFFFF",
+            position:        input.stampPosition     ?? 50,
+            sizePreset:      input.stampSizePreset   ?? "m",
+            thickness:       input.stampThickness    ?? 2,
+            text:            input.stampText         ?? "",
+            textBold:        input.stampTextBold     ?? false,
+            textItalic:      input.stampTextItalic   ?? false,
+            textSize:        input.stampTextSize      ?? 1,
+            logoUrl:         input.logoUrl,
+            logoOpacity:     input.stampLogoOpacity  ?? 1,
+          }));
+        }
         files["strip.png"]    = buf;
         files["strip@2x.png"] = buf;
         files["strip@3x.png"] = buf;
