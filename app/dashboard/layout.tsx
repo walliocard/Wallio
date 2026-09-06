@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <DashboardNav marchand={marchand} />
-      <div className="md:ml-[72px] lg:ml-[240px] min-h-screen pb-[72px] md:pb-0">
+      <div className="md:ml-[72px] lg:ml-[240px] min-h-screen">
         {children}
       </div>
       <RecompenseAlert marchand={marchand} marchandId={user.uid} />

@@ -168,9 +168,9 @@ export default function ClientsPage() {
       </div>
 
       {/* Filtres */}
-      <div className="flex items-center gap-3 mb-4 flex-wrap">
-        {/* Recherche */}
-        <div className="relative flex-1 min-w-[160px]">
+      <div className="flex flex-col gap-2 mb-4">
+        {/* Recherche — pleine largeur */}
+        <div className="relative">
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-tertiary)" }}>
             <Icons.Search size={15} />
           </span>
@@ -186,32 +186,33 @@ export default function ClientsPage() {
           />
         </div>
 
-        {/* Sort */}
-        <select
-          value={sort}
-          onChange={e => setSort(e.target.value as Sort)}
-          className="px-3 py-2.5 rounded-2xl text-[13px] outline-none"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-        >
-          <option value="recent">Plus récents</option>
-          <option value="tampons">Plus de tampons</option>
-          <option value="alpha">A → Z</option>
-        </select>
-
-        {/* Filtre récompenses */}
-        {recompensesCount > 0 && (
-          <button
-            onClick={() => setFilterRecompense(f => !f)}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl text-[13px] font-medium transition-all"
-            style={{
-              background: filterRecompense ? "rgba(52,199,89,0.12)" : "var(--glass-bg)",
-              border: `1px solid ${filterRecompense ? "rgba(52,199,89,0.3)" : "var(--border)"}`,
-              color: filterRecompense ? "#34C759" : "var(--fg-secondary)",
-            }}
+        {/* Sort + filtre récompenses */}
+        <div className="flex gap-2">
+          <select
+            value={sort}
+            onChange={e => setSort(e.target.value as Sort)}
+            className="flex-1 px-3 py-2.5 rounded-2xl text-[13px] outline-none"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
           >
-            🎁 {recompensesCount}
-          </button>
-        )}
+            <option value="recent">Plus récents</option>
+            <option value="tampons">Plus de tampons</option>
+            <option value="alpha">A → Z</option>
+          </select>
+
+          {recompensesCount > 0 && (
+            <button
+              onClick={() => setFilterRecompense(f => !f)}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl text-[13px] font-medium transition-all flex-shrink-0"
+              style={{
+                background: filterRecompense ? "rgba(52,199,89,0.12)" : "var(--glass-bg)",
+                border: `1px solid ${filterRecompense ? "rgba(52,199,89,0.3)" : "var(--border)"}`,
+                color: filterRecompense ? "#34C759" : "var(--fg-secondary)",
+              }}
+            >
+              🎁 {recompensesCount}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Liste */}
@@ -240,47 +241,47 @@ export default function ClientsPage() {
               <Link
                 key={client.id}
                 href={`/client/${client.wallet_id}`}
-                className="flex items-center gap-3.5 p-4 rounded-2xl transition-all duration-150 hover:opacity-80 block"
+                className="flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-150 active:scale-[0.98] hover:opacity-80 block"
                 style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}
               >
                 {/* Avatar */}
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[13px] font-semibold flex-shrink-0"
-                  style={{ background: "var(--accent)" }}
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0"
+                  style={{ background: client.recompense_en_attente ? "linear-gradient(135deg,#34C759,#30D158)" : "var(--accent)" }}
                 >
                   {initiales}
                 </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-medium truncate" style={{ color: "var(--fg)" }}>
-                    {client.prenom} {client.nom}
-                  </p>
-                  <p className="text-[11px] truncate" style={{ color: "var(--fg-tertiary)" }}>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <p className="text-[14px] font-semibold truncate" style={{ color: "var(--fg)" }}>
+                      {client.prenom} {client.nom}
+                    </p>
+                    {client.recompense_en_attente && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: "rgba(52,199,89,0.15)", color: "#34C759" }}>
+                        Récompense
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>
                     {formatTempsDepuis(client.derniere_visite)}
                   </p>
                   <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${Math.min(pct, 100)}%`, background: "var(--accent)" }}
-                    />
+                    <div className="h-full rounded-full transition-all"
+                      style={{ width: `${pct}%`, background: client.recompense_en_attente ? "#34C759" : "var(--accent)" }} />
                   </div>
                 </div>
 
-                {/* Tampons + récompense */}
-                <div className="text-right flex-shrink-0">
-                  <p className="text-[15px] font-semibold" style={{ color: "var(--accent)" }}>
+                {/* Tampons */}
+                <div className="text-right flex-shrink-0 mr-1">
+                  <p className="text-[16px] font-bold" style={{ color: client.recompense_en_attente ? "#34C759" : "var(--accent)" }}>
                     {client.tampons}
                     <span className="text-[11px] font-normal" style={{ color: "var(--fg-tertiary)" }}>
                       /{marchand?.objectif_tampons}
                     </span>
                   </p>
-                  {client.recompense_en_attente && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                      style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
-                      🎁 Récompense
-                    </span>
-                  )}
                 </div>
 
                 <Icons.ChevronRight />
