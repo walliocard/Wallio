@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <defs>
+
+    <!-- Dégradé Wallio pour l'anneau -->
+    <linearGradient id="ringGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#007AFF"/>
+      <stop offset="45%"  stop-color="#5E5CE6"/>
+      <stop offset="100%" stop-color="#BF5AF2"/>
+    </linearGradient>
+
+    <!-- Fond : dégradé radial avec profondeur -->
+    <radialGradient id="bgCenter" cx="42%" cy="36%" r="58%">
+      <stop offset="0%"   stop-color="#FFFFFF"/>
+      <stop offset="55%"  stop-color="#F2EEFF"/>
+      <stop offset="100%" stop-color="#E4DCFF"/>
+    </radialGradient>
+
+    <!-- Lumière douce haut-gauche -->
+    <radialGradient id="bgLight" cx="28%" cy="22%" r="55%">
+      <stop offset="0%"   stop-color="rgba(255,255,255,0.72)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+
+    <!-- Vignette bords -->
+    <radialGradient id="bgVignette" cx="50%" cy="50%" r="50%">
+      <stop offset="60%"  stop-color="rgba(180,160,255,0)"/>
+      <stop offset="100%" stop-color="rgba(140,100,240,0.13)"/>
+    </radialGradient>
+
+    <!-- Dégradé W -->
+    <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#007AFF"/>
+      <stop offset="50%"  stop-color="#5E5CE6"/>
+      <stop offset="100%" stop-color="#BF5AF2"/>
+    </linearGradient>
+
+    <!-- Ombre portée sur le W -->
+    <filter id="wShadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="12" stdDeviation="22" flood-color="#5E5CE6" flood-opacity="0.22"/>
+    </filter>
+
+    <!-- Glow sur l'anneau -->
+    <filter id="ringGlow" x="-6%" y="-6%" width="112%" height="112%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Clip contenu circulaire -->
+    <clipPath id="contentClip">
+      <circle cx="500" cy="500" r="456"/>
+    </clipPath>
+
+  </defs>
+
+  <!-- ── Anneau extérieur dégradé (glow) ── -->
+  <circle cx="500" cy="500" r="484" fill="none"
+    stroke="url(#ringGrad)" stroke-width="28"
+    filter="url(#ringGlow)" opacity="0.7"/>
+
+  <!-- ── Anneau principal ── -->
+  <circle cx="500" cy="500" r="484" fill="none"
+    stroke="url(#ringGrad)" stroke-width="20"/>
+
+  <!-- ── Séparateur blanc entre anneau et contenu ── -->
+  <circle cx="500" cy="500" r="469" fill="white"/>
+
+  <!-- ── Contenu clipé en cercle ── -->
+  <g clip-path="url(#contentClip)">
+
+    <!-- Fond dégradé radial -->
+    <rect width="1000" height="1000" fill="url(#bgCenter)"/>
+
+    <!-- Lumière haut-gauche -->
+    <rect width="1000" height="1000" fill="url(#bgLight)"/>
+
+    <!-- Vignette sur les bords -->
+    <rect width="1000" height="1000" fill="url(#bgVignette)"/>
+
+    <!-- Reflet subtil haut (highlight arc) -->
+    <ellipse cx="500" cy="240" rx="320" ry="130"
+      fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="60"
+      filter="url(#wShadow)" opacity="0.18"/>
+
+    <!-- W principal -->
+    <text x="500" y="592"
+      text-anchor="middle"
+      font-family="SF Pro Display, Helvetica Neue, Arial Black, sans-serif"
+      font-weight="900"
+      font-size="548"
+      fill="url(#wGrad)"
+      filter="url(#wShadow)">W</text>
+
+    <!-- wallio -->
+    <text x="500" y="828"
+      text-anchor="middle"
+      font-family="SF Pro Display, Helvetica Neue, Arial, sans-serif"
+      font-weight="600"
+      font-size="88"
+      letter-spacing="14"
+      fill="url(#wGrad)"
+      opacity="0.78">wallio</text>
+
+  </g>
+
+</svg>
