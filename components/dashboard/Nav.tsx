@@ -13,8 +13,8 @@ const NAV = [
   { href: "/dashboard",                   label: "Accueil",       Icon: Icons.Home,     mobile: true  },
   { href: "/dashboard/scanner",           label: "Scanner",       Icon: Icons.Camera,   mobile: true  },
   { href: "/dashboard/clients",           label: "Clients",       Icon: Icons.Users,    mobile: true  },
-  { href: "/dashboard/notifications",     label: "Notifs",        Icon: Icons.Bell,     mobile: true  },
-  { href: "/dashboard/carte",             label: "Ma carte",      Icon: Icons.Card,     mobile: false },
+  { href: "/dashboard/carte",             label: "Ma carte",      Icon: Icons.Card,     mobile: true  },
+  { href: "/dashboard/notifications",     label: "Notifs",        Icon: Icons.Bell,     mobile: false },
   { href: "/dashboard/reglages",          label: "Réglages",      Icon: Icons.Settings, mobile: true  },
 ];
 
@@ -115,27 +115,39 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
         </div>
       </aside>
 
-      {/* ── Bottom nav mobile ── */}
+      {/* ── Bottom nav mobile — style pill Instagram ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex"
+        className="md:hidden fixed z-40 flex items-center"
         style={{
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)",
+          left: "50%",
+          transform: "translateX(-50%)",
           background: "var(--glass-bg)",
-          backdropFilter: "blur(30px)",
-          borderTop: "1px solid var(--border)",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          backdropFilter: "blur(28px)",
+          WebkitBackdropFilter: "blur(28px)",
+          border: "1px solid var(--border)",
+          borderRadius: 50,
+          padding: "0 6px",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)",
+          gap: 0,
         }}
       >
-        {NAV.filter(n => n.mobile).map(({ href, label, Icon }) => {
+        {NAV.filter(n => n.mobile).map(({ href, Icon }) => {
           const isActive = active(pathname, href);
           return (
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center gap-1 py-3 transition-all duration-150"
-              style={{ color: isActive ? "#8B5CF6" : "var(--fg-tertiary)" }}
+              className="flex items-center justify-center transition-all duration-150 active:scale-90"
+              style={{
+                width: 54,
+                height: 50,
+                borderRadius: 40,
+                color: isActive ? "var(--accent)" : "var(--fg-tertiary)",
+                background: isActive ? "rgba(0,122,255,0.10)" : "transparent",
+              }}
             >
               <Icon size={22} />
-              <span className="text-[10px] font-semibold">{label}</span>
             </Link>
           );
         })}
