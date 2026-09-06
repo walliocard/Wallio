@@ -2,12 +2,24 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { User } from "firebase/auth";
 import AppleWalletCard, { type StampStyle } from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
 import CropEditor from "@/components/CropEditor";
+
+async function saveMarchandFields(user: User, fields: Record<string, unknown>) {
+  const idToken = await user.getIdToken();
+  const res = await fetch("/api/marchand/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+    body: JSON.stringify(fields),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+}
 
 // ── History snapshot ──────────────────────────────────
 interface Snapshot {
@@ -410,48 +422,56 @@ export default function CartePage() {
         setGoogleHeroUrl(finalGoogleHeroUrl);
       } catch { /* keep existing */ }
     }
-    await updateDoc(doc(db, "marchands", user!.uid), {
-      logo_url: logoUrl,
-      strip_url: finalStripUrl,
-      apple_bg_color: bgColor,
-      apple_fg_color: fgAuto ? null : fgColor,
-      apple_label_color: labelAuto ? null : labelColor,
-      apple_primary_label: primaryLabel,
-      apple_reward_label: rewardLabel,
-      apple_member_label: memberLabel,
-      apple_description: description,
-      apple_back_info: backInfo,
-      apple_header_label: headerLabel,
-      apple_header_value: headerValue,
-      apple_aux1_label: aux1Label,
-      apple_aux1_value: aux1Value,
-      apple_aux2_label: aux2Label,
-      apple_aux2_value: aux2Value,
-      apple_aux3_label: aux3Label,
-      apple_aux3_value: aux3Value,
-      apple_icon_url: iconUrl,
-      apple_stamps_on_strip: stampsOnStrip,
-      apple_strip_stamp_style: stripStampStyle,
-      apple_stamp_text: stampText,
-      apple_stamp_text_bold: stampTextBold,
-      apple_stamp_text_italic: stampTextItalic,
-      apple_stamp_text_size: stampTextSize,
-      apple_stamp_color: stampColor,
-      apple_stamp_position: stampPosition,
-      apple_stamp_size: stampSizePreset,
-      apple_stamp_thickness: stampThickness,
-      apple_stamp_logo_opacity: stampLogoOpacity,
-      apple_strip_text_y: stripTextY,
-      apple_strip_crop_y: cropY,
-      google_primary_label: googlePrimaryLabel,
-      google_secondary_label: googleSecondaryLabel,
-      google_bg_color: googleBgColor,
-      google_hero_url: finalGoogleHeroUrl,
-      google_text_modules: googleTextModules,
-      google_links: googleLinks,
-      apple_location: storeLocation || null,
-      updated_at: serverTimestamp(),
+    const idToken = await user!.getIdToken();
+    const res = await fetch("/api/marchand/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify({
+        logo_url: logoUrl,
+        strip_url: finalStripUrl,
+        apple_bg_color: bgColor,
+        apple_fg_color: fgAuto ? null : fgColor,
+        apple_label_color: labelAuto ? null : labelColor,
+        apple_primary_label: primaryLabel,
+        apple_reward_label: rewardLabel,
+        apple_member_label: memberLabel,
+        apple_description: description,
+        apple_back_info: backInfo,
+        apple_header_label: headerLabel,
+        apple_header_value: headerValue,
+        apple_aux1_label: aux1Label,
+        apple_aux1_value: aux1Value,
+        apple_aux2_label: aux2Label,
+        apple_aux2_value: aux2Value,
+        apple_aux3_label: aux3Label,
+        apple_aux3_value: aux3Value,
+        apple_icon_url: iconUrl,
+        apple_stamps_on_strip: stampsOnStrip,
+        apple_strip_stamp_style: stripStampStyle,
+        apple_stamp_text: stampText,
+        apple_stamp_text_bold: stampTextBold,
+        apple_stamp_text_italic: stampTextItalic,
+        apple_stamp_text_size: stampTextSize,
+        apple_stamp_color: stampColor,
+        apple_stamp_position: stampPosition,
+        apple_stamp_size: stampSizePreset,
+        apple_stamp_thickness: stampThickness,
+        apple_stamp_logo_opacity: stampLogoOpacity,
+        apple_strip_text_y: stripTextY,
+        apple_strip_crop_y: cropY,
+        google_primary_label: googlePrimaryLabel,
+        google_secondary_label: googleSecondaryLabel,
+        google_bg_color: googleBgColor,
+        google_hero_url: finalGoogleHeroUrl,
+        google_text_modules: googleTextModules,
+        google_links: googleLinks,
+        apple_location: storeLocation || null,
+      }),
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
     setSaving(false);
     setSaved(true);
     setLocked(true);
@@ -472,7 +492,7 @@ export default function CartePage() {
     try {
       const dataUrl = await resizeImage(file, 320);
       setLogoUrl(dataUrl);
-      await updateDoc(doc(db, "marchands", user.uid), { logo_url: dataUrl });
+      await saveMarchandFields(user, { logo_url: dataUrl });
     } catch (err: unknown) {
       console.error("[Logo] Erreur upload:", err);
       alert(`Erreur upload logo : ${err instanceof Error ? err.message : String(err)}`);
@@ -488,7 +508,7 @@ export default function CartePage() {
     try {
       const dataUrl = await resizeImage(file, 87);
       setIconUrl(dataUrl);
-      await updateDoc(doc(db, "marchands", user.uid), { apple_icon_url: dataUrl });
+      await saveMarchandFields(user, { apple_icon_url: dataUrl });
     } finally {
       setUploadingIcon(false);
     }
@@ -523,7 +543,7 @@ export default function CartePage() {
       setStripFrom("");
       setStripTo("");
       setStripUrl("");
-      updateDoc(doc(db, "marchands", user!.uid), { strip_url: "", apple_bg_color: color });
+      saveMarchandFields(user!, { strip_url: "", apple_bg_color: color });
     }
   }
 
@@ -580,7 +600,7 @@ export default function CartePage() {
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 430, 172);
     const adapted = canvas.toDataURL("image/jpeg", 0.88);
     setStripUrl(adapted);
-    await updateDoc(doc(db, "marchands", user!.uid), { strip_url: adapted });
+    await saveMarchandFields(user!, { strip_url: adapted });
   }
 
   async function handleComptoirBgUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -590,7 +610,7 @@ export default function CartePage() {
     try {
       const finalUrl = await resizeImage(file, 860);
       setComptoirBgUrl(finalUrl);
-      await updateDoc(doc(db, "marchands", user!.uid), { comptoir_bg_url: finalUrl });
+      await saveMarchandFields(user!, { comptoir_bg_url: finalUrl });
     } catch (err: unknown) {
       alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -1053,7 +1073,7 @@ export default function CartePage() {
                   <button
                     onClick={() => {
                       setStripUrl(""); setRawStripUrl(""); setStripRawCloudinaryUrl(""); setIsUploadedStrip(false); setCropZoom(1);
-                      updateDoc(doc(db, "marchands", user!.uid), { strip_url: "" });
+                      saveMarchandFields(user!, { strip_url: "" });
                     }}
                     style={{ padding: "8px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)", color: "#FF3B30", cursor: "pointer" }}
                   >
@@ -1093,7 +1113,7 @@ export default function CartePage() {
                     glassMode
                   );
                   setStripUrl(strip);
-                  updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip, apple_bg_color: t.bg });
+                  saveMarchandFields(user!, { strip_url: strip, apple_bg_color: t.bg });
                 }} style={{
                   width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
                   background: (t as { glass?: boolean }).glass
@@ -1407,7 +1427,7 @@ export default function CartePage() {
                       stripGlass
                     );
                     setStripUrl(strip);
-                    updateDoc(doc(db, "marchands", user!.uid), { strip_url: strip });
+                    saveMarchandFields(user!, { strip_url: strip });
                   }} style={{
                     flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
                     background: "var(--glass-bg)", border: "1px solid var(--border)",
@@ -1804,7 +1824,7 @@ export default function CartePage() {
                     <button onClick={async () => {
                       setGoogleHeroUrl(""); setRawGoogleHeroUrl(""); setIsUploadedGoogleHero(false);
                       setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleHeroCropZoom(1);
-                      await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: "" });
+                      await saveMarchandFields(user!, { google_hero_url: "" });
                     }} style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer" }}>
                       Suppr.
                     </button>
@@ -2007,7 +2027,7 @@ export default function CartePage() {
           setRawStripUrl("");
           setIsUploadedStrip(false);
           setCropZoom(1); setCropY(50);
-          await updateDoc(doc(db, "marchands", user!.uid), { strip_url: dataUrl });
+          await saveMarchandFields(user!, { strip_url: dataUrl });
         }}
         onClose={() => setShowStripCrop(false)}
       />
@@ -2025,7 +2045,7 @@ export default function CartePage() {
           setRawGoogleHeroUrl("");
           setIsUploadedGoogleHero(false);
           setGoogleHeroCropZoom(1); setGoogleHeroCropY(50);
-          await updateDoc(doc(db, "marchands", user!.uid), { google_hero_url: dataUrl });
+          await saveMarchandFields(user!, { google_hero_url: dataUrl });
         }}
         onClose={() => setShowGoogleCrop(false)}
       />
