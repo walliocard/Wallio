@@ -230,7 +230,7 @@ export default function AccueilPage() {
         </div>
 
         {/* Actions rapides — ligne sur mobile, colonne sur desktop */}
-        <div className="grid grid-cols-3 lg:grid-cols-1 lg:flex lg:flex-col gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-1 lg:flex lg:flex-col gap-3">
           <Link href="/dashboard/scanner"
             className="rounded-2xl p-3 lg:p-4 flex flex-col justify-between transition-all hover:opacity-90 active:scale-[0.98]"
             style={{ background: "var(--accent)", boxShadow: "0 8px 30px rgba(0,122,255,0.28)", minHeight: 80 }}>
@@ -248,18 +248,6 @@ export default function AccueilPage() {
             <div className="mt-2">
               <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>Notifs</p>
               <p className="text-[10px] mt-0.5 hidden lg:block" style={{ color: "var(--fg-tertiary)" }}>Envoyer à vos clients</p>
-            </div>
-          </Link>
-
-          <Link href="/dashboard/carte-comptoir"
-            className="rounded-2xl p-3 lg:p-4 flex flex-col justify-between transition-all hover:opacity-90"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)", minHeight: 80 }}>
-            <span style={{ color: "var(--accent)" }}><Icons.Print size={16} /></span>
-            <div className="mt-2">
-              <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>Comptoir</p>
-              <p className="text-[10px] mt-0.5 hidden lg:block" style={{ color: "var(--fg-tertiary)" }}>
-                {marchand.nfc_id ? `…/${marchand.nfc_id}` : "Non configuré"}
-              </p>
             </div>
           </Link>
         </div>
