@@ -91,7 +91,7 @@ export default function CarteComptoirPage() {
   }
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-2xl">
+    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-44 md:pb-10 max-w-2xl">
 
       <Link href="/dashboard" className="inline-flex items-center gap-1.5 mb-6 text-[14px]" style={{ color: "var(--accent)" }}>
         ← Dashboard

@@ -13,68 +13,72 @@ export default function OgImage() {
           width: 1200,
           height: 630,
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(160deg, #EEF2F7 0%, #E4ECF8 50%, #EAE8F5 100%)",
+          background: "linear-gradient(135deg, #F7F9FF 0%, #F1F4FF 48%, #F4F0FF 100%)",
           fontFamily: "system-ui, -apple-system, sans-serif",
+          position: "relative",
         }}
       >
-        {/* Halo */}
         <div style={{
           position: "absolute",
-          top: -100, left: "50%", transform: "translateX(-50%)",
-          width: 800, height: 600, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(91,124,250,0.18) 0%, transparent 65%)",
-          display: "flex",
+          left: 190,
+          top: 90,
+          width: 820,
+          height: 450,
+          borderRadius: 54,
+          background: "rgba(255,255,255,0.65)",
+          border: "1.5px solid rgba(255,255,255,0.9)",
+          boxShadow: "0 24px 70px rgba(120, 132, 176, 0.16)",
         }} />
 
-        {/* Card */}
         <div style={{
+          position: "absolute",
+          left: 300,
+          top: 140,
+          width: 600,
+          height: 330,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "rgba(255,255,255,0.80)",
-          border: "1.5px solid rgba(255,255,255,0.9)",
-          borderRadius: 40,
-          padding: "56px 80px",
-          boxShadow: "0 24px 80px rgba(100,120,160,0.18)",
         }}>
-          {/* Logo W */}
           <div style={{
-            width: 100, height: 100, borderRadius: 28,
-            background: "linear-gradient(135deg, #EDE8FF 0%, #E8F0FF 100%)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 12px 40px rgba(91,124,250,0.25)",
-            marginBottom: 28,
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 230,
+            height: 230,
+            borderRadius: 70,
+            background: "linear-gradient(135deg, rgba(255,255,255,0.9), rgba(243,247,255,0.7))",
+            boxShadow: "0 18px 50px rgba(94, 108, 232, 0.12)",
+            marginBottom: 18,
           }}>
-            <span style={{ fontSize: 60, fontWeight: 900, background: "linear-gradient(135deg, #5B7CFA, #7C5BFA)", backgroundClip: "text", color: "transparent" }}>W</span>
+            <div style={{
+              position: "absolute",
+              inset: 18,
+              borderRadius: 58,
+              background: "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.8), rgba(255,255,255,0) 60%)",
+            }} />
+            <span style={{
+              fontSize: 150,
+              fontWeight: 900,
+              lineHeight: 1,
+              background: "linear-gradient(135deg, #007AFF 0%, #2F63FF 35%, #665CF8 68%, #9B5CF6 100%)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+              filter: "drop-shadow(0 12px 16px rgba(76,84,219,0.18))",
+            }}>W</span>
           </div>
 
-          <span style={{ fontSize: 64, fontWeight: 800, color: "#1C2333", letterSpacing: -2, marginBottom: 16 }}>
+          <span style={{ fontSize: 60, fontWeight: 800, color: "#191D2A", letterSpacing: -2, marginBottom: 8 }}>
             Wallio
           </span>
-          <span style={{ fontSize: 28, color: "#6E7A8A", fontWeight: 400, textAlign: "center", maxWidth: 600 }}>
+          <span style={{ fontSize: 24, color: "#6E7B93", fontWeight: 500 }}>
             Cartes de fidélité digitales
           </span>
-
-          {/* Pills */}
-          <div style={{ display: "flex", gap: 14, marginTop: 36 }}>
-            {["NFC", "Apple Wallet", "Google Wallet"].map(t => (
-              <div key={t} style={{
-                padding: "10px 22px", borderRadius: 50,
-                background: "rgba(91,124,250,0.1)", border: "1px solid rgba(91,124,250,0.2)",
-                color: "#5B7CFA", fontSize: 18, fontWeight: 600,
-                display: "flex",
-              }}>{t}</div>
-            ))}
-          </div>
-        </div>
-
-        {/* URL */}
-        <div style={{ position: "absolute", bottom: 36, color: "#8E9BB5", fontSize: 22, display: "flex" }}>
-          app.walliocard.com
         </div>
       </div>
     ),

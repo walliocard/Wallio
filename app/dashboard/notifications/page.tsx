@@ -56,7 +56,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-2xl">
+    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-44 md:pb-10 max-w-2xl">
 
       {/* Header */}
       <div className="mb-5 md:mb-8">

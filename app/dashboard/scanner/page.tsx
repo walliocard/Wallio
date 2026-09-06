@@ -113,7 +113,7 @@ export default function ScannerPage() {
 
   // QR détecté
   if (detected) return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-28 md:pb-6 text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-44 md:pb-6 text-center">
       <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
         style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
         <Icons.Check size={28} />
@@ -134,7 +134,7 @@ export default function ScannerPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col pb-28 md:pb-8">
+    <div className="min-h-screen flex flex-col pb-44 md:pb-8">
 
       {/* Header */}
       <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 mb-5">

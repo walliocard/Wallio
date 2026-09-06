@@ -13,8 +13,8 @@ const NAV = [
   { href: "/dashboard",                   label: "Accueil",       Icon: Icons.Home,     mobile: true  },
   { href: "/dashboard/scanner",           label: "Scanner",       Icon: Icons.Camera,   mobile: true  },
   { href: "/dashboard/clients",           label: "Clients",       Icon: Icons.Users,    mobile: true  },
+  { href: "/dashboard/notifications",     label: "Notifs",        Icon: Icons.Bell,     mobile: true  },
   { href: "/dashboard/carte",             label: "Ma carte",      Icon: Icons.Card,     mobile: true  },
-  { href: "/dashboard/notifications",     label: "Notifs",        Icon: Icons.Bell,     mobile: false },
   { href: "/dashboard/reglages",          label: "Réglages",      Icon: Icons.Settings, mobile: true  },
 ];
 
