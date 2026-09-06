@@ -458,8 +458,9 @@ export default function CartePage() {
     setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       setSaving(false);
+      const msg = err instanceof Error ? err.message : String(err);
       console.error("[sauvegarder]", err);
-      alert("Erreur lors de l'enregistrement. Vérifie ta connexion.");
+      alert(`Erreur : ${msg}`);
     }
   }
 
