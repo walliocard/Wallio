@@ -62,7 +62,15 @@ export async function GET(
   // Fallback : google_hero_url → strip_url (bannière Apple Wallet)
   const heroUrl = (m.google_hero_url as string | undefined) || (m.strip_url as string | undefined);
 
-  const classBody = {
+  const textModules = (m.google_text_modules as { header: string; body: string; id: string }[] | undefined) || [];
+  const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
+  const validLinks = links.filter(l => l.uri && l.description);
+  const classTextModules = [
+    { header: "Récompense", body: (m.nom_recompense as string) || "Récompense", id: "recompense" },
+    ...textModules.filter(mod => mod.header && mod.body),
+  ];
+
+  const classBody: Record<string, unknown> = {
     issuerName: "Wallio",
     reviewStatus: "UNDER_REVIEW",
     programName: m.nom,
@@ -72,7 +80,9 @@ export async function GET(
     },
     hexBackgroundColor: bgColor,
     countryCode: "MA",
+    textModulesData: classTextModules,
     ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } } } } : {}),
+    ...(validLinks.length > 0 ? { linksModuleData: { uris: validLinks.map(l => ({ uri: l.uri, description: l.description })) } } : {}),
   };
 
   if (classRes.status === 404) {
@@ -88,9 +98,9 @@ export async function GET(
       return NextResponse.json({ error: "Erreur création classe Google Wallet" }, { status: 500 });
     }
   } else if (classRes.ok) {
-    // Classe existante — PATCH avec updateMask (requis par l'API Google)
-    const fields = ["programName", "hexBackgroundColor", "programLogo", "issuerName"];
+    const fields = ["programName", "hexBackgroundColor", "programLogo", "issuerName", "textModulesData"];
     if (heroUrl) fields.push("heroImage");
+    if (validLinks.length > 0) fields.push("linksModuleData");
     const patchRes = await fetch(
       `${API}/loyaltyClass/${encodeURIComponent(cid)}?updateMask=${fields.join(",")}`,
       {
@@ -122,15 +132,6 @@ export async function GET(
       alternateText: " ",
     },
     accountName: `${client.prenom} ${client.nom}`,
-    textModulesData: [
-      { header: "Récompense", body: m.nom_recompense || "Récompense", id: "recompense" },
-      ...((m.google_text_modules as {header: string; body: string; id: string}[] | undefined) || [])
-        .filter(mod => mod.header && mod.body)
-        .map(mod => ({ header: mod.header, body: mod.body, id: mod.id || `mod_${mod.header}` })),
-    ],
-    ...(((m.google_links as {uri: string; description: string}[] | undefined) || []).filter(l => l.uri && l.description).length > 0
-      ? { linksModuleData: { uris: ((m.google_links as {uri: string; description: string}[]) || []).filter(l => l.uri && l.description).map(l => ({ uri: l.uri, description: l.description })) } }
-      : {}),
   };
 
   const jwt = buildSaveToWalletJwt([loyaltyObject]);

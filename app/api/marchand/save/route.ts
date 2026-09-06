@@ -19,8 +19,18 @@ async function patchGoogleWalletClass(uid: string) {
   const logoUri = `${BASE_URL}/api/logo/${uid}`;
   const bgColor = (m.google_bg_color as string) || (m.apple_bg_color as string) || (m.couleur_principale as string) || "#1C1C1E";
   const heroUrl = (m.google_hero_url as string) || (m.strip_url as string) || undefined;
+  const textModules = (m.google_text_modules as { header: string; body: string; id: string }[] | undefined) || [];
+  const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
 
-  const classBody = {
+  // Modules texte au niveau classe (identiques pour tous les clients)
+  const classTextModules = [
+    { header: "Récompense", body: (m.nom_recompense as string) || "Récompense", id: "recompense" },
+    ...textModules.filter(mod => mod.header && mod.body),
+  ];
+
+  const validLinks = links.filter(l => l.uri && l.description);
+
+  const classBody: Record<string, unknown> = {
     issuerName: "Wallio",
     reviewStatus: "UNDER_REVIEW",
     programName: m.nom,
@@ -30,7 +40,9 @@ async function patchGoogleWalletClass(uid: string) {
     },
     hexBackgroundColor: bgColor,
     countryCode: "MA",
+    textModulesData: classTextModules,
     ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } } } } : {}),
+    ...(validLinks.length > 0 ? { linksModuleData: { uris: validLinks.map(l => ({ uri: l.uri, description: l.description })) } } : {}),
   };
 
   const checkRes = await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
@@ -44,8 +56,9 @@ async function patchGoogleWalletClass(uid: string) {
       body: JSON.stringify({ id: cid, ...classBody }),
     });
   } else if (checkRes.ok) {
-    const fields = ["programName", "hexBackgroundColor", "programLogo", "issuerName"];
+    const fields = ["programName", "hexBackgroundColor", "programLogo", "issuerName", "textModulesData"];
     if (heroUrl) fields.push("heroImage");
+    if (validLinks.length > 0) fields.push("linksModuleData");
     await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}?updateMask=${fields.join(",")}`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
