@@ -113,7 +113,7 @@ export default function AccueilPage() {
               Wallio
             </p>
           </div>
-          <h1 className="text-[30px] lg:text-[34px] font-bold tracking-[-0.8px] leading-none" style={{ color: "var(--fg)" }}>
+          <h1 className="text-[22px] lg:text-[34px] font-bold tracking-[-0.8px] leading-none" style={{ color: "var(--fg)" }}>
             {marchand.nom}
           </h1>
         </div>
@@ -163,19 +163,20 @@ export default function AccueilPage() {
 
       {/* Stats grid — 2 col mobile, 5 col desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
-        {STAT_CARDS.map(s => (
-          <div key={s.label} className="rounded-[20px] p-4 lg:p-5"
+        {STAT_CARDS.map((s, i) => (
+          <div key={s.label}
+            className={`rounded-[20px] p-4 lg:p-5${i === STAT_CARDS.length - 1 && STAT_CARDS.length % 2 !== 0 ? " col-span-2 lg:col-span-1" : ""}`}
             style={{
               background: s.gradient ? "var(--wallio-gradient)" : "var(--glass-bg)",
               border: s.gradient ? "none" : "1px solid var(--border)",
               backdropFilter: "blur(20px)",
               boxShadow: s.gradient ? "0 4px 20px rgba(139,92,246,0.25)" : "none",
             }}>
-            <p className="text-[32px] lg:text-[38px] font-bold tracking-tight leading-none mb-2"
+            <p className="text-[26px] lg:text-[38px] font-bold tracking-tight leading-none mb-1.5"
               style={{ color: s.gradient ? "white" : s.color }}>
               {s.value}
             </p>
-            <p className="text-[11px] font-medium uppercase tracking-wider"
+            <p className="text-[10px] font-semibold uppercase tracking-wider"
               style={{ color: s.gradient ? "rgba(255,255,255,0.75)" : "var(--fg-tertiary)" }}>
               {s.label}
             </p>
@@ -228,35 +229,35 @@ export default function AccueilPage() {
           </div>
         </div>
 
-        {/* Actions rapides */}
-        <div className="flex flex-col gap-3">
+        {/* Actions rapides — ligne sur mobile, colonne sur desktop */}
+        <div className="grid grid-cols-3 lg:grid-cols-1 lg:flex lg:flex-col gap-3">
           <Link href="/dashboard/scanner"
-            className="flex-1 rounded-2xl p-4 flex flex-col justify-between transition-all hover:opacity-90 active:scale-[0.98]"
-            style={{ background: "var(--accent)", boxShadow: "0 8px 30px rgba(0,122,255,0.28)" }}>
-            <span style={{ color: "rgba(255,255,255,0.7)" }}><Icons.Scan size={18} /></span>
-            <div className="mt-3">
-              <p className="text-white font-semibold text-[14px]">Scanner</p>
-              <p className="text-white/60 text-[11px] mt-0.5">Carte client</p>
+            className="rounded-2xl p-3 lg:p-4 flex flex-col justify-between transition-all hover:opacity-90 active:scale-[0.98]"
+            style={{ background: "var(--accent)", boxShadow: "0 8px 30px rgba(0,122,255,0.28)", minHeight: 80 }}>
+            <span style={{ color: "rgba(255,255,255,0.7)" }}><Icons.Scan size={16} /></span>
+            <div className="mt-2">
+              <p className="text-white font-semibold text-[13px]">Scanner</p>
+              <p className="text-white/60 text-[10px] hidden lg:block mt-0.5">Carte client</p>
             </div>
           </Link>
 
           <Link href="/dashboard/notifications"
-            className="flex-1 rounded-2xl p-4 flex flex-col justify-between transition-all hover:opacity-90"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
-            <span style={{ color: "#FF9F0A" }}><Icons.Bell size={18} /></span>
-            <div className="mt-3">
-              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Notification</p>
-              <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Envoyer à vos clients</p>
+            className="rounded-2xl p-3 lg:p-4 flex flex-col justify-between transition-all hover:opacity-90"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)", minHeight: 80 }}>
+            <span style={{ color: "#FF9F0A" }}><Icons.Bell size={16} /></span>
+            <div className="mt-2">
+              <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>Notifs</p>
+              <p className="text-[10px] mt-0.5 hidden lg:block" style={{ color: "var(--fg-tertiary)" }}>Envoyer à vos clients</p>
             </div>
           </Link>
 
           <Link href="/dashboard/carte-comptoir"
-            className="flex-1 rounded-2xl p-4 flex flex-col justify-between transition-all hover:opacity-90"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
-            <span style={{ color: "var(--accent)" }}><Icons.Print size={18} /></span>
-            <div className="mt-3">
-              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Carte NFC</p>
-              <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+            className="rounded-2xl p-3 lg:p-4 flex flex-col justify-between transition-all hover:opacity-90"
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)", minHeight: 80 }}>
+            <span style={{ color: "var(--accent)" }}><Icons.Print size={16} /></span>
+            <div className="mt-2">
+              <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>Comptoir</p>
+              <p className="text-[10px] mt-0.5 hidden lg:block" style={{ color: "var(--fg-tertiary)" }}>
                 {marchand.nfc_id ? `…/${marchand.nfc_id}` : "Non configuré"}
               </p>
             </div>
