@@ -7,6 +7,16 @@ export const ENSEIGNE_TEMPLATES: { id: Template; label: string; desc: string }[]
   { id: "gradient", label: "Dégradé", desc: "Transition des deux couleurs" },
 ];
 
+async function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
 export async function generateQRImage(url: string, size: number): Promise<HTMLImageElement | null> {
   try {
     const QRCode = (await import("qrcode")).default;
@@ -230,6 +240,26 @@ export async function drawChevaleret(canvas: HTMLCanvasElement, couleur_principa
   }
   const url = nfc_id ? `app.walliocard.com/nfc/${nfc_id}` : "app.walliocard.com";
   ctx.font = `${W * 0.025}px Arial, sans-serif`; ctx.fillStyle = `${textColor}28`; ctx.textAlign = "center"; ctx.fillText(url, W / 2, H * 0.93);
+
+  // Badges Apple Wallet + Google Wallet + NFC en bas, centrés
+  const badgeH = Math.round(W * 0.1);
+  const [appleImg, googleImg, nfcImg] = await Promise.all([
+    loadImage("/apple-wallet-badge.svg"),
+    loadImage("/google-wallet-badge.svg"),
+    loadImage("/nfc-icon.svg"),
+  ]);
+  const badges = [appleImg, googleImg, nfcImg].filter(Boolean) as HTMLImageElement[];
+  const gap = Math.round(W * 0.04);
+  const totalW = badges.reduce((acc, img) => acc + Math.round(badgeH * (img.width / img.height)), 0) + gap * (badges.length - 1);
+  let bx = (W - totalW) / 2;
+  const by = H * 0.955 - badgeH;
+  for (const img of badges) {
+    const bw = Math.round(badgeH * (img.width / img.height));
+    ctx.globalAlpha = img === nfcImg ? 0.7 : 1;
+    ctx.drawImage(img, bx, by, bw, badgeH);
+    bx += bw + gap;
+  }
+  ctx.globalAlpha = 1;
 }
 
 export async function drawComptoir(canvas: HTMLCanvasElement, couleur_principale: string, couleur_secondaire: string, nom: string, nfc_id: string | undefined, template: Template, scale = 1, showQR = true, bgImageUrl?: string) {
@@ -267,4 +297,31 @@ export async function drawComptoir(canvas: HTMLCanvasElement, couleur_principale
   }
   const url = nfc_id ? `app.walliocard.com/nfc/${nfc_id}` : "app.walliocard.com";
   ctx.font = `${H * 0.032}px Arial, sans-serif`; ctx.fillStyle = `${textColor}25`; ctx.textAlign = "center"; ctx.fillText(url, W / 2, H - 60);
+
+  // Badges Apple Wallet + Google Wallet en bas à gauche
+  const badgeH = Math.round(H * 0.09);
+  const badgePad = Math.round(W * 0.05);
+  const badgeY = H - badgeH - Math.round(H * 0.06);
+  const [appleImg, googleImg, nfcImg] = await Promise.all([
+    loadImage("/apple-wallet-badge.svg"),
+    loadImage("/google-wallet-badge.svg"),
+    loadImage("/nfc-icon.svg"),
+  ]);
+  let bx = badgePad;
+  if (appleImg) {
+    const bw = Math.round(badgeH * (appleImg.width / appleImg.height));
+    ctx.drawImage(appleImg, bx, badgeY, bw, badgeH);
+    bx += bw + Math.round(W * 0.012);
+  }
+  if (googleImg) {
+    const bw = Math.round(badgeH * (googleImg.width / googleImg.height));
+    ctx.drawImage(googleImg, bx, badgeY, bw, badgeH);
+    bx += bw + Math.round(W * 0.018);
+  }
+  if (nfcImg) {
+    const nw = Math.round(badgeH * (nfcImg.width / nfcImg.height));
+    ctx.globalAlpha = 0.7;
+    ctx.drawImage(nfcImg, bx, badgeY, nw, badgeH);
+    ctx.globalAlpha = 1;
+  }
 }
