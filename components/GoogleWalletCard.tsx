@@ -116,17 +116,17 @@ export default function GoogleWalletCard({
         </p>
       </div>
 
-      {/* ── QR code — élément central de Google Wallet ── */}
+      {/* ── QR code — taille officielle Google Wallet (52% largeur carte) ── */}
       <div style={{ padding: "6px 20px 10px", display: "flex", justifyContent: "center" }}>
         <div style={{
           background: "#FFFFFF",
-          borderRadius: 12,
-          padding: 10,
-          boxShadow: dark ? "0 4px 18px rgba(0,0,0,0.4)" : "0 4px 14px rgba(0,0,0,0.13)",
+          borderRadius: 18,
+          padding: 14,
+          boxShadow: dark ? "0 4px 24px rgba(0,0,0,0.45)" : "0 4px 18px rgba(0,0,0,0.15)",
         }}>
           {qr
-            ? <img src={qr} alt="QR" style={{ width: 120, height: 120, display: "block" }} />
-            : <div style={{ width: 120, height: 120, background: "#f0f0f0", borderRadius: 4 }} />
+            ? <img src={qr} alt="QR" style={{ width: 190, height: 190, display: "block" }} />
+            : <div style={{ width: 190, height: 190, background: "#f0f0f0", borderRadius: 4 }} />
           }
         </div>
       </div>
