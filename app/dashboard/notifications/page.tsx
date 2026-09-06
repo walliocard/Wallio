@@ -59,14 +59,14 @@ export default function NotificationsPage() {
     <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-2xl">
 
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-5 md:mb-8">
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
           Marketing
         </p>
-        <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
+        <h1 className="text-[24px] md:text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
           Notifications push
         </h1>
-        <p className="text-[14px] mt-1" style={{ color: "var(--fg-secondary)" }}>
+        <p className="text-[13px] md:text-[14px] mt-1" style={{ color: "var(--fg-secondary)" }}>
           Envoyez un message à vos clients ayant activé les notifications.
         </p>
       </div>
@@ -105,17 +105,25 @@ export default function NotificationsPage() {
         </div>
 
         {/* Templates */}
-        <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+        <div className="rounded-2xl p-4 md:p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
           <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
             Templates rapides
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          {/* Scroll horizontal sur mobile, grille sur desktop */}
+          <div className="flex gap-2 overflow-x-auto pb-1 snap-x md:grid md:grid-cols-2 md:overflow-visible md:pb-0"
+            style={{ scrollbarWidth: "none" }}>
             {TEMPLATES.map(t => (
               <button key={t.label}
                 onClick={() => { setTitle(t.title); setBody(t.body); }}
-                className="text-left px-3 py-2.5 rounded-xl transition-all"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>
-                <p className="text-[12px] font-medium" style={{ color: "var(--fg)" }}>{t.label}</p>
+                className="flex-shrink-0 snap-start text-left px-3 py-2.5 rounded-xl transition-all active:scale-95 md:flex-shrink"
+                style={{
+                  background: title === t.title ? "rgba(0,122,255,0.08)" : "var(--bg)",
+                  border: `1px solid ${title === t.title ? "var(--accent)" : "var(--border)"}`,
+                  minWidth: 130,
+                }}>
+                <p className="text-[12px] font-semibold" style={{ color: title === t.title ? "var(--accent)" : "var(--fg)" }}>
+                  {t.label}
+                </p>
                 <p className="text-[11px] mt-0.5 truncate" style={{ color: "var(--fg-tertiary)" }}>{t.title}</p>
               </button>
             ))}
@@ -224,7 +232,10 @@ export default function NotificationsPage() {
             boxShadow: canSend ? "0 8px 24px rgba(0,122,255,0.25)" : "none",
             cursor: canSend ? "pointer" : "not-allowed",
           }}>
-          {sendState === "sending" ? "Envoi en cours..." : `Envoyer aux ${SEGMENTS.find(s => s.id === segment)?.label.toLowerCase()}`}
+          {sendState === "sending"
+            ? "Envoi…"
+            : <><span className="md:hidden">Envoyer</span><span className="hidden md:inline">Envoyer aux {SEGMENTS.find(s => s.id === segment)?.label.toLowerCase()}</span></>
+          }
         </button>
 
       </div>
