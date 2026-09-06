@@ -202,6 +202,9 @@ export default function MesCartesPage() {
     setJoining(prev => { const s = new Set(prev); s.delete(marchand.id); return s; });
   }
 
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
+
   const [enablingNotif, setEnablingNotif] = useState(false);
 
   async function enableNotifications(targetClientId: string) {
@@ -341,7 +344,7 @@ export default function MesCartesPage() {
               <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Aucune carte</p>
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>Scannez le tag NFC d'un établissement ou découvrez-en un dans l'onglet Découvrir.</p>
             </div>
-          ) : cards.map((card, i) => <CardItem key={card.walletId} card={card} delay={i * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} />)
+          ) : cards.map((card, i) => <CardItem key={card.walletId} card={card} delay={i * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} isAndroid={isAndroid} />)
         )}
 
         {/* ── Tab Messages ── */}
@@ -438,7 +441,7 @@ export default function MesCartesPage() {
   );
 }
 
-function CardItem({ card, delay, onEnableNotif, enablingNotif }: { card: CardData; delay: number; onEnableNotif: () => void; enablingNotif: boolean }) {
+function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { card: CardData; delay: number; onEnableNotif: () => void; enablingNotif: boolean; isAndroid: boolean }) {
   const pct = Math.min(100, Math.round((card.stampsCurrent / card.stampsObjective) * 100));
   const restants = card.stampsObjective - card.stampsCurrent;
   const dark = isColorDark(card.couleur);
@@ -480,11 +483,13 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif }: { card: CardDat
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <a href={`/api/apple-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#000", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="white" stroke="none"/></svg>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>Ajouter à Apple Wallet</span>
-          </a>
-          {process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
+          {!isAndroid && (
+            <a href={`/api/apple-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#000", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="white" stroke="none"/></svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>Ajouter à Apple Wallet</span>
+            </a>
+          )}
+          {isAndroid && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
             <a href={`/api/google-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#1a73e8", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
               <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>Ajouter à Google Wallet</span>

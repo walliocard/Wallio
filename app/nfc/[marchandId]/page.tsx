@@ -13,6 +13,7 @@ import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
 import AppleWalletCard from "@/components/AppleWalletCard";
+import GoogleWalletCard from "@/components/GoogleWalletCard";
 import QRCode from "qrcode";
 
 type Screen =
@@ -706,6 +707,9 @@ function InstallBanner() {
 }
 
 function CarteCreee({ client, marchand, recuperation = false }: { client: Client; marchand: Marchand; recuperation?: boolean }) {
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
+
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">(() => {
     if (typeof window === "undefined") return "idle";
     if (!("Notification" in window)) return "denied";
@@ -764,42 +768,59 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
           </p>
         </div>
 
-        {/* Carte Apple Wallet — identique au dashboard */}
+        {/* Carte preview — Google sur Android, Apple sur iOS */}
         <div className="mb-5 w-full">
-          <AppleWalletCard
-            logoUrl={logo}
-            logoText={marchand.nom}
-            stripUrl={(m.strip_url as string) || undefined}
-            backgroundColor={(m.apple_bg_color as string) || couleur}
-            foregroundColor={(m.apple_fg_color as string) || undefined}
-            labelColor={(m.apple_label_color as string) || undefined}
-            stampsCurrent={client.tampons ?? 0}
-            stampsObjective={marchand.objectif_tampons}
-            rewardName={(m.nom_recompense as string) || "Récompense"}
-            previewUid={client.wallet_id}
-            clientPrenom={client.prenom}
-            clientNom={client.nom}
-            primaryLabel={(m.apple_primary_label as string) || "Tampons"}
-            rewardLabel={(m.apple_reward_label as string) || "Récompense"}
-            memberLabel={(m.apple_member_label as string) || "Membre"}
-            auxiliaryFields={[
-              { label: (m.apple_aux1_label as string) || "INFO", value: (m.apple_aux1_value as string) || "" },
-              { label: (m.apple_aux2_label as string) || "INFO", value: (m.apple_aux2_value as string) || "" },
-              { label: (m.apple_aux3_label as string) || "INFO", value: (m.apple_aux3_value as string) || "" },
-            ]}
-            mode="full"
-            stampsOnStrip={(m.apple_stamps_on_strip as boolean) ?? false}
-            stripStampStyle={(m.apple_strip_stamp_style as never) || undefined}
-            stampText={(m.apple_stamp_text as string) || undefined}
-            stampTextBold={(m.apple_stamp_text_bold as boolean) ?? false}
-            stampTextItalic={(m.apple_stamp_text_italic as boolean) ?? false}
-            stampTextSize={(m.apple_stamp_text_size as number) || undefined}
-            stampColor={(m.apple_stamp_color as string) || undefined}
-            stampPosition={typeof m.apple_stamp_position === "number" ? m.apple_stamp_position : m.apple_stamp_position === "top" ? 20 : m.apple_stamp_position === "bottom" ? 80 : 50}
-            stampSizePreset={(m.apple_stamp_size as never) || undefined}
-            stampThickness={(m.apple_stamp_thickness as number) || undefined}
-            stampLogoOpacity={(m.apple_stamp_logo_opacity as number) || undefined}
-          />
+          {isAndroid ? (
+            <GoogleWalletCard
+              logoUrl={logo}
+              logoText={marchand.nom}
+              backgroundColor={(m.google_bg_color as string) || (m.apple_bg_color as string) || couleur}
+              heroUrl={(m.google_hero_url as string) || (m.strip_url as string) || undefined}
+              stampsCurrent={client.tampons ?? 0}
+              stampsObjective={marchand.objectif_tampons}
+              rewardName={(m.nom_recompense as string) || "Récompense"}
+              previewUid={client.wallet_id}
+              primaryLabel={(m.google_primary_label as string) || "Tampons"}
+              secondaryLabel={(m.google_secondary_label as string) || "Objectif"}
+              textModules={((m.google_text_modules as { header: string; body: string; id: string }[]) || [])}
+              links={((m.google_links as { uri: string; description: string }[]) || [])}
+            />
+          ) : (
+            <AppleWalletCard
+              logoUrl={logo}
+              logoText={marchand.nom}
+              stripUrl={(m.strip_url as string) || undefined}
+              backgroundColor={(m.apple_bg_color as string) || couleur}
+              foregroundColor={(m.apple_fg_color as string) || undefined}
+              labelColor={(m.apple_label_color as string) || undefined}
+              stampsCurrent={client.tampons ?? 0}
+              stampsObjective={marchand.objectif_tampons}
+              rewardName={(m.nom_recompense as string) || "Récompense"}
+              previewUid={client.wallet_id}
+              clientPrenom={client.prenom}
+              clientNom={client.nom}
+              primaryLabel={(m.apple_primary_label as string) || "Tampons"}
+              rewardLabel={(m.apple_reward_label as string) || "Récompense"}
+              memberLabel={(m.apple_member_label as string) || "Membre"}
+              auxiliaryFields={[
+                { label: (m.apple_aux1_label as string) || "INFO", value: (m.apple_aux1_value as string) || "" },
+                { label: (m.apple_aux2_label as string) || "INFO", value: (m.apple_aux2_value as string) || "" },
+                { label: (m.apple_aux3_label as string) || "INFO", value: (m.apple_aux3_value as string) || "" },
+              ]}
+              mode="full"
+              stampsOnStrip={(m.apple_stamps_on_strip as boolean) ?? false}
+              stripStampStyle={(m.apple_strip_stamp_style as never) || undefined}
+              stampText={(m.apple_stamp_text as string) || undefined}
+              stampTextBold={(m.apple_stamp_text_bold as boolean) ?? false}
+              stampTextItalic={(m.apple_stamp_text_italic as boolean) ?? false}
+              stampTextSize={(m.apple_stamp_text_size as number) || undefined}
+              stampColor={(m.apple_stamp_color as string) || undefined}
+              stampPosition={typeof m.apple_stamp_position === "number" ? m.apple_stamp_position : m.apple_stamp_position === "top" ? 20 : m.apple_stamp_position === "bottom" ? 80 : 50}
+              stampSizePreset={(m.apple_stamp_size as never) || undefined}
+              stampThickness={(m.apple_stamp_thickness as number) || undefined}
+              stampLogoOpacity={(m.apple_stamp_logo_opacity as number) || undefined}
+            />
+          )}
         </div>
 
         {/* Notifications */}
@@ -835,28 +856,30 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
 
         <InstallBanner />
 
-        {/* Boutons Wallet */}
+        {/* Boutons Wallet — Apple sur iOS, Google sur Android */}
         <div className="flex flex-col gap-2.5">
-          {process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" ? (
-            <a href={`/api/apple-wallet/generate/${client.wallet_id}`}
-              className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
-              style={{ background: "#000", border: "1px solid rgba(255,255,255,0.15)" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="2" y="5" width="20" height="14" rx="3" stroke="white" strokeWidth="1.5"/>
-                <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
-                <circle cx="7" cy="14.5" r="1.5" fill="white"/>
-              </svg>
-              <span className="text-[15px] font-semibold text-white">Ajouter à Apple Wallet</span>
-            </a>
-          ) : (
-            <div className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-between"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
-              <span className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Apple Wallet</span>
-              <span className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>Bientôt disponible</span>
-            </div>
+          {!isAndroid && (
+            process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" ? (
+              <a href={`/api/apple-wallet/generate/${client.wallet_id}`}
+                className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
+                style={{ background: "#000", border: "1px solid rgba(255,255,255,0.15)" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="5" width="20" height="14" rx="3" stroke="white" strokeWidth="1.5"/>
+                  <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
+                  <circle cx="7" cy="14.5" r="1.5" fill="white"/>
+                </svg>
+                <span className="text-[15px] font-semibold text-white">Ajouter à Apple Wallet</span>
+              </a>
+            ) : (
+              <div className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-between"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
+                <span className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Apple Wallet</span>
+                <span className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>Bientôt disponible</span>
+              </div>
+            )
           )}
 
-          {process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
+          {isAndroid && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
             <a href={`/api/google-wallet/generate/${client.wallet_id}`}
               className="w-full rounded-2xl py-4 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
               style={{ background: "#1a73e8" }}>
