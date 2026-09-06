@@ -79,8 +79,9 @@
 
 html {
   overflow-x: hidden;
-  overscroll-behavior-x: none;
+  overscroll-behavior: none;
   touch-action: pan-y;
+  background: linear-gradient(160deg, #EEF2F7 0%, #E8EDF8 50%, #EAE8F5 100%);
 }
 
 body {

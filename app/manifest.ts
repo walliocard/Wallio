@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/mes-cartes",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0B0B0D",
-    theme_color: "#007AFF",
+    background_color: "#EEF2F7",
+    theme_color: "#EEF2F7",
     icons: [
       { src: "/wallio-instagram-profil.png", sizes: "1000x1000", type: "image/png", purpose: "any" },
       { src: "/icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
