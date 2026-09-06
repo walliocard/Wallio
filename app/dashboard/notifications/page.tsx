@@ -178,8 +178,8 @@ export default function NotificationsPage() {
                     }
                   </div>
                   <div>
-                    <p className="text-[13px] font-semibold" style={{ color: "var(--fg)" }}>{title || "Titre"}</p>
-                    <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{body || "Message…"}</p>
+                    <p className="text-[13px] font-semibold" style={{ color: "var(--fg)" }}>{marchand.nom}</p>
+                    <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{title ? `${title} · ${body || ""}` : "Message…"}</p>
                     <p className="text-[10px] mt-1" style={{ color: "var(--fg-tertiary)" }}>app.walliocard.com</p>
                   </div>
                 </div>

@@ -22,7 +22,8 @@ export async function POST(req: Request) {
 
     const marchandSnap = await db.collection("marchands").doc(marchandId).get();
     const marchandNom = (marchandSnap.data()?.nom as string) || "Wallio";
-    const notifTitle = `${marchandNom} — ${title}`;
+    const notifTitle = marchandNom;
+    const notifBody = `${title} · ${body}`;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
     const iconUrl = `${appUrl}/api/logo/${marchandId}`;
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
     const notifRecord = {
       id: randomUUID(),
       title: notifTitle,
-      body,
+      body: notifBody,
       marchandNom,
       marchandId,
       sentAt: new Date().toISOString(),
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
         webpush: {
           data: {
             title: notifTitle,
-            body,
+            body: notifBody,
             icon: iconUrl,
             url: `${appUrl}/mes-cartes`,
           },
