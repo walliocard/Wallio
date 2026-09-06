@@ -7,22 +7,6 @@
       <stop offset="100%" stop-color="#BF5AF2"/>
     </linearGradient>
 
-    <radialGradient id="bgCenter" cx="42%" cy="36%" r="58%">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="70%"  stop-color="#F9F8FF"/>
-      <stop offset="100%" stop-color="#F2EEFF"/>
-    </radialGradient>
-
-    <radialGradient id="bgLight" cx="28%" cy="22%" r="55%">
-      <stop offset="0%"   stop-color="rgba(255,255,255,0.8)"/>
-      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-    </radialGradient>
-
-    <radialGradient id="bgVignette" cx="50%" cy="50%" r="50%">
-      <stop offset="65%"  stop-color="rgba(180,160,255,0)"/>
-      <stop offset="100%" stop-color="rgba(140,100,240,0.07)"/>
-    </radialGradient>
-
     <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%"   stop-color="#007AFF"/>
       <stop offset="50%"  stop-color="#5E5CE6"/>
@@ -44,23 +28,26 @@
 
   </defs>
 
+  <!-- Anneau glow -->
   <circle cx="500" cy="500" r="484" fill="none"
     stroke="url(#ringGrad)" stroke-width="28"
     filter="url(#ringGlow)" opacity="0.7"/>
 
+  <!-- Anneau principal -->
   <circle cx="500" cy="500" r="484" fill="none"
     stroke="url(#ringGrad)" stroke-width="20"/>
 
+  <!-- Séparateur blanc -->
   <circle cx="500" cy="500" r="469" fill="white"/>
 
+  <!-- Contenu -->
   <g clip-path="url(#contentClip)">
 
-    <rect width="1000" height="1000" fill="url(#bgCenter)"/>
-    <rect width="1000" height="1000" fill="url(#bgLight)"/>
-    <rect width="1000" height="1000" fill="url(#bgVignette)"/>
+    <!-- Fond blanc pur -->
+    <rect width="1000" height="1000" fill="#FFFFFF"/>
 
-    <!-- W principal -->
-    <text x="500" y="580"
+    <!-- W — centré verticalement avec wallio -->
+    <text x="500" y="648"
       text-anchor="middle"
       font-family="SF Pro Display, Helvetica Neue, Arial Black, sans-serif"
       font-weight="900"
@@ -68,12 +55,12 @@
       fill="url(#wGrad)"
       filter="url(#wShadow)">W</text>
 
-    <!-- wallio — remonté pour réduire l'espace -->
-    <text x="500" y="708"
+    <!-- wallio — juste sous le W -->
+    <text x="500" y="726"
       text-anchor="middle"
       font-family="SF Pro Display, Helvetica Neue, Arial, sans-serif"
       font-weight="600"
-      font-size="88"
+      font-size="82"
       letter-spacing="14"
       fill="url(#wGrad)"
       opacity="0.78">wallio</text>
