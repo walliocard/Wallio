@@ -253,36 +253,36 @@ export default function AppleWalletCard({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 12px" }}>
-        {/* Logo */}
+      {/* ── Header (spec PKPass : logo max 160×50pt, texte 15pt, header field 9pt/14pt) ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px 10px" }}>
+        {/* Logo — Apple affiche à max 29×29pt pour les logos carrés */}
         <div style={{
-          height: 38, minWidth: 38, maxWidth: 110, flexShrink: 0,
-          borderRadius: 8,
+          height: 29, minWidth: 16, maxWidth: 90, flexShrink: 0,
           border: logoUrl ? "none" : `1.5px dashed ${dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
+          borderRadius: 6,
           overflow: "hidden",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           {logoUrl
-            ? <img src={logoUrl} alt="" style={{ height: 38, maxWidth: 110, objectFit: "contain", display: "block" }} />
-            : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+            ? <img src={logoUrl} alt="" style={{ height: 29, maxWidth: 90, objectFit: "contain", display: "block" }} />
+            : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
           }
         </div>
         {logoText && (
           <span style={{
             flex: 1, fontSize: 15, fontWeight: 600, color: fg,
-            letterSpacing: -0.2, overflow: "hidden",
+            letterSpacing: -0.3, overflow: "hidden",
             textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
             {logoText}
           </span>
         )}
-        {/* Tampons en header — reproduit fidèlement le layout Apple Wallet réel */}
+        {/* Header field — spec : label 9pt, valeur 14pt, aligné à droite */}
         <div style={{ flexShrink: 0, textAlign: "right" }}>
-          <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
+          <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 1 }}>
             {headerField?.value ? headerField.label : primaryLabel}
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: fg }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: fg, letterSpacing: -0.3 }}>
             {headerField?.value ? headerField.value : `${stampsCurrent}/${stampsObjective}`}
           </div>
         </div>
@@ -348,10 +348,10 @@ export default function AppleWalletCard({
         const frontAux = auxiliaryFields.filter(f => f.value).slice(0, 3);
         if (!frontAux.length) return null;
         return (
-          <div style={{ display: "flex", padding: "0 16px 12px", gap: 6 }}>
+          <div style={{ display: "flex", padding: "4px 16px 14px", gap: 6 }}>
             {frontAux.map((f, i) => (
               <div key={i} style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+                <div style={{ fontSize: 9, color: labelClr, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>
                   {f.label || "INFO"}
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -363,16 +363,16 @@ export default function AppleWalletCard({
         );
       })()}
 
-      {/* ── Séparateur ── */}
-      <div style={{ height: 1, background: sep, margin: "0 16px" }} />
+      {/* ── Séparateur spec PKPass ── */}
+      <div style={{ height: 1, background: sep }} />
 
-      {/* ── Barcode — centré, 200×200 comme Apple Wallet réel ── */}
+      {/* ── Barcode — spec PKPass : QR centré, fond blanc, padding 20pt top / 24pt bottom ── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px 24px" }}>
-        <div style={{ background: "#FFFFFF", borderRadius: 12, padding: 10, boxShadow: "0 1px 6px rgba(0,0,0,0.10)" }}>
+        <div style={{ background: "#FFFFFF", borderRadius: 8, padding: 8 }}>
           {qr ? (
-            <img src={qr} alt="QR Code" style={{ width: 200, height: 200, display: "block" }} />
+            <img src={qr} alt="QR Code" style={{ width: 196, height: 196, display: "block" }} />
           ) : (
-            <div style={{ width: 200, height: 200, background: "#f0f0f0", borderRadius: 4 }} />
+            <div style={{ width: 196, height: 196, background: "#f0f0f0", borderRadius: 4 }} />
           )}
         </div>
       </div>

@@ -1522,17 +1522,6 @@ export default function CartePage() {
 
 
 
-          {/* Champ en-tête — Apple uniquement */}
-          {walletType === "apple" && (
-            <Section label="Champ en-tête">
-              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
-                Affiché en haut à droite à la place du compteur tampons — ex : niveau, code.
-              </p>
-              <Field label="Valeur (laisser vide = affiche les tampons)">
-                <TextInput value={headerValue} onChange={setHeaderValue} placeholder="ex : Gold, VIP, Premium…"/>
-              </Field>
-            </Section>
-          )}
 
           {/* Champs auxiliaires — Apple uniquement */}
           {walletType === "apple" && (
