@@ -26,6 +26,10 @@ export async function POST(req: Request) {
     const marchandNom = (marchandSnap.data()?.nom as string) || "Wallio";
     const notifTitle = `${marchandNom} — ${title}`;
 
+    // URL absolue du logo via la route /api/logo (data URLs rejetées par les navigateurs)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
+    const iconUrl = `${appUrl}/api/logo/${marchandId}`;
+
     // Récupère les clients avec un token FCM
     let query = db.collection("clients").where("marchand_id", "==", marchandId);
 
@@ -62,7 +66,7 @@ export async function POST(req: Request) {
         tokens: batch.map(d => d.token),
         notification: { title: notifTitle, body },
         webpush: {
-          notification: { icon: (logoUrl as string | null) || "/icon-192.png", badge: "/favicon-32.png" },
+          notification: { icon: iconUrl, badge: `${appUrl}/favicon-32.png` },
           fcmOptions: { link: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com"}` },
         },
       });
