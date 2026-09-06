@@ -45,10 +45,15 @@ export async function POST(req: Request) {
     }
 
     const snap = await query.get();
+    // Déduplique par token — un même token peut être dans plusieurs docs (compte recréé)
+    const seen = new Set<string>();
     const tokenDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
     snap.forEach(doc => {
       const token = doc.data().fcm_token;
-      if (token) tokenDocs.push({ token, ref: doc.ref });
+      if (token && !seen.has(token)) {
+        seen.add(token);
+        tokenDocs.push({ token, ref: doc.ref });
+      }
     });
 
     if (tokenDocs.length === 0) {
