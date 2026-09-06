@@ -99,7 +99,7 @@ export default function ConnexionPage() {
 
         {/* Logo */}
         <div className="text-center mb-12">
-          <img src="/icon.svg" alt="Wallio" style={{ width: 72, height: 72, borderRadius: 18, margin: "0 auto 20px", display: "block" }} />
+          <img src="/icon-192.png" alt="Wallio" style={{ width: 72, height: 72, borderRadius: 18, margin: "0 auto 20px", display: "block" }} />
           <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
             Wallio
           </h1>
