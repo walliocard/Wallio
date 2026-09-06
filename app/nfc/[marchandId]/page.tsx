@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, use } from "react";
+import Link from "next/link";
 import {
   getMarchandByNfcId, getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
   creerClient, ajouterTampon, validerRecompense,
@@ -295,6 +296,9 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
         <a href={`/preferences/${walletId}`} className="block mt-10 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
           Gérer mes notifications
         </a>
+        <Link href="/mes-cartes" className="block mt-3 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
+          Toutes mes cartes →
+        </Link>
       </div>
     </main>
   );
@@ -857,6 +861,7 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
         <InstallBanner />
 
         {/* Boutons Wallet — Apple sur iOS, Google sur Android */}
+
         <div className="flex flex-col gap-2.5">
           {!isAndroid && (
             process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" ? (
@@ -891,6 +896,11 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
             </a>
           )}
         </div>
+
+        <Link href="/mes-cartes" className="block mt-5 py-4 rounded-2xl text-center text-[15px] font-semibold"
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--fg)" }}>
+          Voir toutes mes cartes
+        </Link>
       </div>
     </main>
   );
