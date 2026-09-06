@@ -439,7 +439,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif }: { card: CardDat
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round">
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
               </svg>
-              {enablingNotif ? "Activation…" : "Activer les notifications"}
+              {enablingNotif ? "Activation..." : "Activer les notifications"}
             </button>
           )}
         </div>
