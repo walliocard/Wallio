@@ -19,13 +19,22 @@ firebase.initializeApp(${JSON.stringify(config)});
 
 const messaging = firebase.messaging();
 
+// onBackgroundMessage est appelé pour les messages data-only (pas de champ notification)
+// ce qui nous donne le controle total sur l'affichage (icone marchand, click action)
 messaging.onBackgroundMessage(payload => {
-  const { title, body, icon } = payload.notification || {};
-  self.registration.showNotification(title || "Wallio", {
-    body: body || "",
-    icon: icon || "/icon-192.png",
+  const data = payload.data || {};
+  self.registration.showNotification(data.title || "Wallio", {
+    body: data.body || "",
+    icon: data.icon || "/icon-192.png",
     badge: "/favicon-32.png",
+    data: { url: data.url || "/mes-cartes" },
   });
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/mes-cartes";
+  event.waitUntil(clients.openWindow(url));
 });
 `;
 

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
-import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
+import { FieldValue } from "firebase-admin/firestore";
+import { adminDb, adminMessaging } from "@/lib/admin";
+import { randomUUID } from "crypto";
 
-// POST /api/notify
-// Body : { title, body, segment: "tous" | "actifs" | "inactifs", marchandId, idToken }
 export async function POST(req: Request) {
   try {
-    const { title, body, segment, marchandId, idToken, logoUrl } = await req.json();
+    const { title, body, segment, marchandId, idToken } = await req.json();
 
     if (!title || !body || !marchandId || !idToken) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
@@ -15,40 +15,37 @@ export async function POST(req: Request) {
     const db = adminDb();
     const auth = getAdminAuth();
 
-    // Vérifie l'identité du marchand
     const decoded = await auth.verifyIdToken(idToken);
     if (decoded.uid !== marchandId) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
 
-    // Récupère le nom du marchand pour l'afficher dans la notif
     const marchandSnap = await db.collection("marchands").doc(marchandId).get();
     const marchandNom = (marchandSnap.data()?.nom as string) || "Wallio";
     const notifTitle = `${marchandNom} — ${title}`;
 
-    // URL absolue du logo via la route /api/logo (data URLs rejetées par les navigateurs)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
     const iconUrl = `${appUrl}/api/logo/${marchandId}`;
 
-    // Récupère les clients avec un token FCM
+    // Récupère les clients
     let query = db.collection("clients").where("marchand_id", "==", marchandId);
-
-    // Filtre par segment si besoin
     if (segment === "actifs") {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 30);
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
       query = query.where("derniere_visite", ">=", cutoff) as typeof query;
     } else if (segment === "inactifs") {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 30);
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
       query = query.where("derniere_visite", "<", cutoff) as typeof query;
     }
 
     const snap = await query.get();
-    // Déduplique par token — un même token peut être dans plusieurs docs (compte recréé)
+
+    // Déduplique par token FCM
     const seen = new Set<string>();
     const tokenDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
+    const allRefs: FirebaseFirestore.DocumentReference[] = [];
+
     snap.forEach(doc => {
+      allRefs.push(doc.ref);
       const token = doc.data().fcm_token;
       if (token && !seen.has(token)) {
         seen.add(token);
@@ -56,11 +53,27 @@ export async function POST(req: Request) {
       }
     });
 
+    // Sauvegarde la notif dans chaque doc client (inbox PWA)
+    const notifRecord = {
+      id: randomUUID(),
+      title: notifTitle,
+      body,
+      marchandNom,
+      marchandId,
+      sentAt: new Date().toISOString(),
+      read: false,
+    };
+    const firestoreBatch = db.batch();
+    for (const ref of allRefs) {
+      firestoreBatch.update(ref, { notifs: FieldValue.arrayUnion(notifRecord) });
+    }
+    await firestoreBatch.commit();
+
     if (tokenDocs.length === 0) {
-      return NextResponse.json({ sent: 0, message: "Aucun client avec notifications activées" });
+      return NextResponse.json({ sent: 0, failed: 0, total: 0 });
     }
 
-    // Envoi en batch (max 500 par appel FCM) + nettoyage tokens expirés
+    // Envoi FCM — data-only pour contrôle total de l'affichage (icone marchand)
     const messaging = adminMessaging();
     let sent = 0;
     let failed = 0;
@@ -69,16 +82,20 @@ export async function POST(req: Request) {
       const batch = tokenDocs.slice(i, i + 500);
       const result = await messaging.sendEachForMulticast({
         tokens: batch.map(d => d.token),
-        notification: { title: notifTitle, body },
         webpush: {
-          notification: { icon: iconUrl, badge: `${appUrl}/favicon-32.png` },
-          fcmOptions: { link: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com"}` },
+          data: {
+            title: notifTitle,
+            body,
+            icon: iconUrl,
+            url: `${appUrl}/mes-cartes`,
+          },
+          headers: { TTL: "86400" },
+          fcmOptions: { link: `${appUrl}/mes-cartes` },
         },
       });
       sent += result.successCount;
       failed += result.failureCount;
 
-      // Supprimer les tokens invalides/expirés de Firestore
       const cleanups: Promise<unknown>[] = [];
       result.responses.forEach((r, idx) => {
         if (!r.success && r.error?.code && (

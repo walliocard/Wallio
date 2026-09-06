@@ -19,6 +19,16 @@ interface CardData {
   hasFcmToken: boolean;
 }
 
+interface ClientNotif {
+  id: string;
+  title: string;
+  body: string;
+  marchandNom: string;
+  marchandId: string;
+  sentAt: string;
+  read: boolean;
+}
+
 interface MarchandDiscover {
   id: string;
   nom: string;
@@ -49,7 +59,7 @@ const PAYS = [
 
 export default function MesCartesPage() {
   const [step, setStep]         = useState<"loading"|"login"|"main">("loading");
-  const [tab, setTab]           = useState<"cartes"|"decouvrir">("cartes");
+  const [tab, setTab]           = useState<"cartes"|"messages"|"decouvrir">("cartes");
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
   const [phone, setPhone]       = useState("");
@@ -62,6 +72,7 @@ export default function MesCartesPage() {
   const [notFound, setNotFound] = useState(false);
   const [joining, setJoining]   = useState<Set<string>>(new Set());
   const [joined, setJoined]     = useState<Set<string>>(new Set());
+  const [notifs, setNotifs]     = useState<ClientNotif[]>([]);
   const unsubRef = useRef<(() => void) | null>(null);
   const marchandCacheRef = useRef<Map<string, Record<string, unknown>>>(new Map());
 
@@ -123,6 +134,16 @@ export default function MesCartesPage() {
       setPrenom(p); setNom(n); setDob(d);
       if (p) { localStorage.setItem(PRENOM_KEY, p); localStorage.setItem(NOM_KEY, n); if (d) localStorage.setItem(DOB_KEY, d); }
       setCards(results);
+
+      // Agrège toutes les notifs de tous les marchands, triées par date desc
+      const allNotifs: ClientNotif[] = [];
+      snap.docs.forEach(d => {
+        const raw = d.data().notifs as ClientNotif[] | undefined;
+        if (raw?.length) allNotifs.push(...raw);
+      });
+      allNotifs.sort((a, b) => b.sentAt.localeCompare(a.sentAt));
+      setNotifs(allNotifs.slice(0, 50));
+
       setStep("main");
       if (firstSnapshot) {
         loadMerchants(results.map(c => c.marchandId));
@@ -284,9 +305,13 @@ export default function MesCartesPage() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 6, padding: "5px", background: "rgba(142,155,181,0.12)", borderRadius: 18, marginBottom: 20, backdropFilter: "blur(8px)" }}>
-          {([["cartes", `Mes cartes (${cards.length})`], ["decouvrir", `Découvrir (${merchants.length})`]] as const).map(([key, label]) => (
+          {([
+            ["cartes", `Mes cartes (${cards.length})`],
+            ["messages", notifs.filter(n => !n.read).length > 0 ? `Messages (${notifs.filter(n => !n.read).length})` : "Messages"],
+            ["decouvrir", `Découvrir (${merchants.length})`],
+          ] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
-              flex: 1, padding: "10px", borderRadius: 13, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+              flex: 1, padding: "10px", borderRadius: 13, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
               background: tab === key ? "white" : "transparent",
               color: tab === key ? "#1C2333" : "#8E9BB5",
               boxShadow: tab === key ? "0 2px 12px rgba(100,120,160,0.15)" : "none",
@@ -312,6 +337,44 @@ export default function MesCartesPage() {
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>Scannez le tag NFC d'un établissement ou découvrez-en un dans l'onglet Découvrir.</p>
             </div>
           ) : cards.map((card, i) => <CardItem key={card.walletId} card={card} delay={i * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} />)
+        )}
+
+        {/* ── Tab Messages ── */}
+        {tab === "messages" && (
+          notifs.length === 0 ? (
+            <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Aucun message</p>
+              <p style={{ fontSize: 13, color: "#8E9BB5" }}>Les offres et annonces de vos établissements apparaîtront ici.</p>
+            </div>
+          ) : notifs.map(n => {
+            const card = cards.find(c => c.marchandId === n.marchandId);
+            const date = new Date(n.sentAt);
+            const dateStr = date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+            const timeStr = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+            return (
+              <div key={n.id} style={{
+                ...glass, borderRadius: 20, overflow: "hidden",
+                opacity: n.read ? 0.7 : 1,
+              }}>
+                <div style={{ padding: "16px 18px", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  {card?.logoUrl ? (
+                    <img src={card.logoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 12, objectFit: "contain", background: "rgba(142,155,181,0.1)", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: card?.couleur || "#5B7CFA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{n.marchandNom[0]?.toUpperCase()}</span>
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#1C2333" }}>{n.title}</p>
+                      <p style={{ fontSize: 11, color: "#8E9BB5", flexShrink: 0, marginLeft: 8 }}>{dateStr} {timeStr}</p>
+                    </div>
+                    <p style={{ fontSize: 13, color: "#6E7A8A", lineHeight: 1.45 }}>{n.body}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })
         )}
 
         {/* ── Tab Découvrir ── */}
