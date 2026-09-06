@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { collection, query, where, onSnapshot, getDocs, doc, getDoc, updateDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient } from "@/lib/loyalty";
+import WallioIcon from "@/components/WallioIcon";
 
 interface CardData {
   clientId: string;
@@ -289,7 +290,7 @@ export default function MesCartesPage() {
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}.card-appear{animation:fadeUp 0.4s cubic-bezier(.16,1,.3,1) both}`}</style>
 
       {/* Header */}
-      <div style={{ padding: "52px 20px 0", maxWidth: 430, margin: "0 auto", width: "100%" }}>
+      <div style={{ padding: "20px 20px 0", maxWidth: 430, margin: "0 auto", width: "100%" }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <Header />
@@ -513,8 +514,8 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif }: { card: CardDat
 
 function Header() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 34, height: 34, borderRadius: 8, display: "block" }} />
+    <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+      <WallioIcon size={34} />
       <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, color: "#1C2333" }}>Wallio</span>
     </div>
   );
