@@ -54,10 +54,14 @@ export async function GET(
 
   // Proxies publics HTTPS — Google ne peut pas fetcher des data URLs base64
   const logoUri = `${BASE_URL}/api/logo/${client.marchand_id}`;
-  const bgColor = (m.google_bg_color as string | undefined)
+  const rawColor = (m.google_bg_color as string | undefined)
     || (m.apple_bg_color as string | undefined)
     || (m.couleur_principale as string | undefined)
     || "#1C1C1E";
+  // Google exige exactement #RRGGBB — on tronque à 7 chars et on valide
+  const bgColor = /^#[0-9A-Fa-f]{6}$/.test(rawColor.slice(0, 7))
+    ? rawColor.slice(0, 7)
+    : "#1C1C1E";
   // Hero via proxy uniquement si une bannière est configurée
   const hasHero = !!(m.google_hero_url || m.strip_url);
   const heroUrl = hasHero ? `${BASE_URL}/api/google-hero/${client.marchand_id}` : undefined;
@@ -106,7 +110,10 @@ export async function GET(
       body: JSON.stringify(classBase),
     });
     if (!putRes.ok) {
-      console.error("[Google Wallet] PUT classe échoué:", putRes.status, await putRes.text());
+      const putErr = await putRes.text();
+      console.error("[Google Wallet] PUT classe échoué:", putRes.status, putErr, "| bgColor utilisée:", bgColor);
+    } else {
+      console.log("[Google Wallet] classe mise à jour OK | bgColor:", bgColor, "| marchandId:", client.marchand_id);
     }
   } else {
     const err = await classRes.text();

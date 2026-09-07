@@ -491,6 +491,11 @@ export default function CartePage() {
     setSaved(true);
     setLocked(true);
     setTimeout(() => setSaved(false), 2500);
+    // Auto-sync Google Wallet class silently — pas de blocage si ça échoue
+    fetch("/api/google-wallet/sync-class", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${idToken}` },
+    }).catch(e => console.warn("[GW auto-sync]", e));
     } catch (err) {
       setSaving(false);
       const msg = err instanceof Error ? err.message : String(err);
