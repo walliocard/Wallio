@@ -817,7 +817,7 @@ export default function CartePage() {
 
         {/* ── Preview ── */}
         <div style={{
-          flex: 1, display: isMobile && mobileTab === "settings" ? "none" : "flex",
+          flex: 1, minHeight: 0, display: isMobile && mobileTab === "settings" ? "none" : "flex",
           flexDirection: "column",
           alignItems: "center", justifyContent: "flex-start",
           padding: isMobile ? "20px 16px 120px" : "32px 32px 48px",
