@@ -813,7 +813,7 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
         </div>
 
         {/* Carte preview — Google sur Android, Apple sur iOS */}
-        <div className="mb-5 w-full">
+        <div className="mb-5 -mx-5 flex justify-center overflow-hidden">
           {isAndroid ? (
             <GoogleWalletCard
               logoUrl={logo}
