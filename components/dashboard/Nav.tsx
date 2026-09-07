@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Icons } from "./icons";
@@ -25,6 +26,20 @@ function active(pathname: string, href: string) {
 
 export default function DashboardNav({ marchand }: { marchand: Marchand }) {
   const pathname = usePathname();
+  const [installPrompt, setInstallPrompt] = useState<Event & { prompt: () => void } | null>(null);
+  const [installed, setInstalled] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as Event & { prompt: () => void });
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", () => setInstalled(true));
+    // Déjà installée ?
+    if (window.matchMedia("(display-mode: standalone)").matches) setInstalled(true);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
 
   return (
     <>
@@ -95,11 +110,28 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           })}
         </nav>
 
-        {/* Theme + Logout */}
+        {/* Theme + Install + Logout */}
         <div className="flex-shrink-0 px-2 lg:px-3 py-3 space-y-2" style={{ borderTop: "1px solid var(--border)" }}>
           <div className="hidden lg:flex justify-center">
             <ThemeToggle />
           </div>
+
+          {/* Bouton installer — visible si pas encore installée */}
+          {!installed && installPrompt && (
+            <button
+              onClick={() => installPrompt.prompt()}
+              className="relative flex items-center gap-3 w-full rounded-xl px-3 py-2.5 transition-all duration-150"
+              style={{ color: "var(--accent)", background: "rgba(0,122,255,0.08)" }}
+            >
+              <span className="flex-shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v13M7 10l5 5 5-5"/><rect x="3" y="17" width="18" height="4" rx="2"/>
+                </svg>
+              </span>
+              <span className="hidden lg:block text-[13.5px] font-medium">Installer l&apos;app</span>
+            </button>
+          )}
+
           <button
             onClick={() => signOut(auth)}
             className="relative flex items-center gap-3 w-full rounded-xl px-3 py-2.5 transition-all duration-150 group"
