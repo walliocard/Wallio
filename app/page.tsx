@@ -468,52 +468,83 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* ── SCAN METHODS ── */}
+          {/* ── ACCÈS ── */}
           <section id="acces" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">Modes d&apos;accès</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>3 façons d&apos;accéder<br />à la carte de fidélité</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>Choisissez selon votre setup — ou combinez les trois.</p>
+
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
+                <span className="feature-tag">Support & accès</span>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>La carte comptoir —<br />le hub de votre fidélité</h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>Un seul support physique posé sur votre comptoir. Il contient les deux technologies d&apos;accès — QR code et NFC.</p>
               </div>
 
-              <div data-stagger className="scan-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20 }}>
+              {/* Carte Comptoir — parent */}
+              <div data-reveal style={{ background:"linear-gradient(135deg,rgba(138,92,246,0.06),rgba(191,90,242,0.03))", border:"1.5px solid rgba(138,92,246,0.18)", borderRadius:28, padding:"36px 40px", display:"flex", alignItems:"center", gap:36, marginBottom:0, flexWrap:"wrap" }}>
+                <div style={{ width:88, height:88, borderRadius:24, background:"linear-gradient(135deg,#8A5CF6,#BF5AF2)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 16px 40px rgba(138,92,246,0.30)", flexShrink:0 }}>
+                  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round">
+                    <rect x="2" y="3" width="20" height="16" rx="2.5"/>
+                    <path d="M8 21h8M12 19v2"/>
+                    <path d="M6 8h12M6 12h7"/>
+                  </svg>
+                </div>
+                <div style={{ flex:1, minWidth:240 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                    <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#8A5CF6" }}>Carte Comptoir</span>
+                    <span style={{ fontSize:11, fontWeight:600, color:"#8A5CF6", background:"rgba(138,92,246,0.10)", padding:"2px 10px", borderRadius:20 }}>Support principal</span>
+                  </div>
+                  <h3 style={{ fontSize:24, fontWeight:700, letterSpacing:-0.5, color:"#1D1D1F", marginBottom:8 }}>Votre support physique tout-en-un</h3>
+                  <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:16 }}>Imprimée en 4K à vos couleurs et avec votre logo, posée sur votre comptoir. Elle contient votre QR code unique et peut intégrer un tag NFC — vos clients s&apos;en servent pour recevoir leurs tampons, sans aucune installation.</p>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                    {["QR code intégré", "Option tag NFC", "Design 4K personnalisé", "Logo & couleurs à vous"].map(t => (
+                      <span key={t} style={{ fontSize:12, fontWeight:500, color:"#8A5CF6", background:"rgba(138,92,246,0.08)", padding:"4px 12px", borderRadius:20 }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual connector */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:44, position:"relative" }}>
+                <div style={{ position:"absolute", left:"25%", right:"25%", height:"0.5px", background:"rgba(0,0,0,0.10)", top:"50%" }} />
+                <div style={{ position:"absolute", left:"25%", top:0, width:"0.5px", height:"50%", background:"rgba(0,0,0,0.10)" }} />
+                <div style={{ position:"absolute", right:"25%", top:0, width:"0.5px", height:"50%", background:"rgba(0,0,0,0.10)" }} />
+                <span style={{ fontSize:11, fontWeight:600, color:"#8E8E93", background:"#F2F2F7", padding:"4px 14px", borderRadius:20, position:"relative", zIndex:1, letterSpacing:"0.04em" }}>deux technologies intégrées</span>
+              </div>
+
+              {/* NFC + QR — enfants */}
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }} className="scan-grid">
 
                 {/* NFC */}
-                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"36px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:28 }}>
-                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:16 }}>
-                    <div style={{ position:"relative", width:80, height:80 }}>
-                      <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,#4472F5,#6A5AF9)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 12px 32px rgba(68,114,245,0.35)" }}>
-                        <Image src="/nfc-icon.svg" alt="NFC" width={44} height={44} style={{ filter:"brightness(0) invert(1)", opacity:0.95 }} />
+                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"32px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", borderTop:"2px solid #4472F5", display:"flex", flexDirection:"column", gap:24 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+                    <div style={{ position:"relative", width:64, height:64, flexShrink:0 }}>
+                      <div style={{ width:64, height:64, borderRadius:18, background:"linear-gradient(135deg,#4472F5,#6A5AF9)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px rgba(68,114,245,0.30)" }}>
+                        <Image src="/nfc-icon.svg" alt="NFC" width={36} height={36} style={{ filter:"brightness(0) invert(1)", opacity:0.95 }} />
                       </div>
-                      {/* Pulse ring */}
-                      <div className="nfc-ring-1" style={{ position:"absolute", inset:-10, borderRadius:32, border:"1.5px solid #4472F5" }} />
+                      <div className="nfc-ring-1" style={{ position:"absolute", inset:-8, borderRadius:26, border:"1.5px solid #4472F5" }} />
                     </div>
                     <div>
-                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#4472F5" }}>NFC</span>
+                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#4472F5" }}>Tag NFC</span>
+                      <h3 style={{ fontSize:20, fontWeight:700, letterSpacing:-0.3, color:"#1D1D1F", marginTop:2 }}>Tap, c&apos;est fait</h3>
                     </div>
                   </div>
-                  <div>
-                    <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Tag NFC</h3>
-                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Un tap, un tampon. Le client approche son téléphone du sticker — moins d&apos;une seconde, aucune app.</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                      {["Le geste le plus rapide qui existe", "iPhone 7+ et tous les Android NFC", "Sticker discret, résistant, repositionnable"].map(t => (
-                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-                          <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                            <div style={{ width:5, height:5, borderRadius:"50%", background:"#4472F5" }} />
-                          </div>
-                          <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{t}</span>
+                  <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73" }}>Le client approche son téléphone à 4 cm du tag intégré à la carte comptoir. Tampon crédité en moins d&apos;une seconde, sans ouvrir aucune app.</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {["Le geste le plus rapide qui existe", "iPhone 7+ et tous les Android NFC", "Optionnel sur la carte comptoir"].map(t => (
+                      <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                        <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
+                          <div style={{ width:5, height:5, borderRadius:"50%", background:"#4472F5" }} />
                         </div>
-                      ))}
-                    </div>
+                        <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{t}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* QR Code */}
-                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"36px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:28 }}>
-                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:16 }}>
-                    <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,#6A5AF9,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 12px 32px rgba(106,90,249,0.35)" }}>
-                      <svg width="42" height="42" viewBox="0 0 34 34" fill="none">
+                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"32px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", borderTop:"2px solid #6A5AF9", display:"flex", flexDirection:"column", gap:24 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+                    <div style={{ width:64, height:64, borderRadius:18, background:"linear-gradient(135deg,#6A5AF9,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px rgba(106,90,249,0.30)", flexShrink:0 }}>
+                      <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
                         <rect x="1" y="1" width="13" height="13" rx="2.5" stroke="white" strokeWidth="1.8" fill="none"/>
                         <rect x="4" y="4" width="7" height="7" rx="1" fill="white"/>
                         <rect x="20" y="1" width="13" height="13" rx="2.5" stroke="white" strokeWidth="1.8" fill="none"/>
@@ -525,49 +556,21 @@ export default function LandingPage() {
                         <rect x="20" y="27" width="13" height="6" rx="0.8" fill="white"/>
                       </svg>
                     </div>
-                    <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#6A5AF9" }}>QR Code</span>
+                    <div>
+                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#6A5AF9" }}>QR Code</span>
+                      <h3 style={{ fontSize:20, fontWeight:700, letterSpacing:-0.3, color:"#1D1D1F", marginTop:2 }}>Scan, c&apos;est fait</h3>
+                    </div>
                   </div>
-                  <div>
-                    <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Scan QR Code</h3>
-                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>L&apos;appareil photo natif suffit. Tous les téléphones, pas d&apos;app, pas de compte.</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                      {["Compatible 100% des smartphones", "Appareil photo natif iOS et Android", "Idéal sans tag NFC ou en complément"].map(t => (
-                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-                          <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(106,90,249,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                            <div style={{ width:5, height:5, borderRadius:"50%", background:"#6A5AF9" }} />
-                          </div>
-                          <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{t}</span>
+                  <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73" }}>Le client ouvre son appareil photo et scanne le QR code imprimé sur la carte comptoir. Fonctionne avec tous les téléphones, sans aucune app.</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {["Compatible 100 % des smartphones", "Appareil photo natif — aucune app", "Toujours présent sur la carte comptoir"].map(t => (
+                      <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                        <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(106,90,249,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
+                          <div style={{ width:5, height:5, borderRadius:"50%", background:"#6A5AF9" }} />
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Carte comptoir */}
-                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"36px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:28 }}>
-                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:16 }}>
-                    <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,#8A5CF6,#BF5AF2)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 12px 32px rgba(138,92,246,0.35)" }}>
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round">
-                        <rect x="2" y="3" width="20" height="16" rx="2"/>
-                        <path d="M8 21h8M12 17v4"/>
-                        <path d="M6 8h12M6 12h8"/>
-                      </svg>
-                    </div>
-                    <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#8A5CF6" }}>Carte Comptoir</span>
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Support imprimé 4K</h3>
-                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Support physique imprimé avec QR code et NFC intégrés — posé sur votre comptoir, prêt à l&apos;emploi.</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                      {["QR code intégré prêt à scanner", "Design 4K à vos couleurs avec votre logo", "Option NFC intégré — tap ou scan au choix"].map(t => (
-                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-                          <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                            <div style={{ width:5, height:5, borderRadius:"50%", background:"#8A5CF6" }} />
-                          </div>
-                          <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{t}</span>
-                        </div>
-                      ))}
-                    </div>
+                        <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{t}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -575,27 +578,80 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* ── HOW IT WORKS ── */}
-          <section id="comment" style={{ maxWidth:1040, margin:"0 auto", padding:"96px 32px" }}>
-            <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
-              <span className="feature-tag">Comment ça marche</span>
-              <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F" }}>Trois secondes.<br />Pas une de plus.</h2>
-            </div>
-            <div data-stagger className="steps-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
-              {[
-                { n:"01", title:"Tap ou Scan", body:"Le client approche son téléphone du tag NFC ou scanne le QR code. Aucune application à télécharger, aucun compte à créer au préalable.", icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg> },
-                { n:"02", title:"Tampon instantané", body:"Un tampon est crédité automatiquement sur la carte du client en moins d'une seconde. Sa progression est visible immédiatement sur son téléphone.", icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6A5AF9" strokeWidth="1.8" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
-                { n:"03", title:"Récompense débloquée", body:"Objectif atteint — la récompense se débloque automatiquement et vous le validez en un clic depuis votre tableau de bord.", icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A5CF6" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> },
-              ].map((s) => (
-                <div key={s.n} className="glass card-hover" style={{ borderRadius:24, padding:"36px 30px", boxShadow:"0 4px 24px rgba(0,0,0,0.06)" }}>
-                  <div style={{ width:44, height:44, borderRadius:14, background:"rgba(68,114,245,0.08)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:20 }}>
-                    {s.icon}
+          {/* ── FLOW CLIENT ── */}
+          <section id="comment" style={{ padding:"96px 32px" }}>
+            <div style={{ maxWidth:1040, margin:"0 auto" }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
+                <span className="feature-tag">Parcours client</span>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>Deux scénarios.<br />Zéro friction.</h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>Nouveau client ou habitué — le flux est pensé pour chacun.</p>
+              </div>
+
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:24 }} className="steps-grid">
+
+                {/* Nouveau client */}
+                <div data-reveal="left" style={{ background:"white", borderRadius:28, padding:"36px 32px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 24px rgba(0,0,0,0.05)" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:32 }}>
+                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize:17, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.3 }}>Nouveau client</h3>
+                      <span style={{ fontSize:12, color:"#8E8E93" }}>Première visite</span>
+                    </div>
                   </div>
-                  <p style={{ fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:"#4472F5", marginBottom:12 }}>{s.n}</p>
-                  <h3 style={{ fontSize:22, fontWeight:650, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:12 }}>{s.title}</h3>
-                  <p style={{ fontSize:14, lineHeight:1.65, color:"#6E6E73" }}>{s.body}</p>
+                  {[
+                    { title:"Voit la carte comptoir", body:"Posée sur le comptoir, bien visible. QR code ou tag NFC." },
+                    { title:"Tap NFC ou scan QR", body:"Son téléphone reconnaît l'action immédiatement." },
+                    { title:"Prénom + téléphone", body:"30 secondes. C'est tout ce qu'on lui demande." },
+                    { title:"Carte créée, tampon crédité", body:"Sa carte de fidélité est créée automatiquement avec le 1er tampon." },
+                    { title:"Ajout à Apple / Google Wallet", body:"Proposition optionnelle pour retrouver sa carte en un tap." },
+                  ].map((s, i, arr) => (
+                    <div key={i} style={{ display:"flex", gap:16, paddingBottom: i < arr.length-1 ? 20 : 0 }}>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
+                        <div style={{ width:28, height:28, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:12, fontWeight:700, color:"#4472F5" }}>{i+1}</div>
+                        {i < arr.length-1 && <div style={{ width:"1px", flex:1, background:"rgba(68,114,245,0.15)", margin:"4px 0" }} />}
+                      </div>
+                      <div style={{ paddingTop:3, paddingBottom: i < arr.length-1 ? 4 : 0 }}>
+                        <div style={{ fontSize:14, fontWeight:650, color:"#1D1D1F", marginBottom:2 }}>{s.title}</div>
+                        <div style={{ fontSize:13, color:"#8E8E93", lineHeight:1.5 }}>{s.body}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+
+                {/* Client habituel */}
+                <div data-reveal="right" style={{ background:"white", borderRadius:28, padding:"36px 32px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 24px rgba(0,0,0,0.05)" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:32 }}>
+                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A5CF6" strokeWidth="1.8" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize:17, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.3 }}>Client habituel</h3>
+                      <span style={{ fontSize:12, color:"#8E8E93" }}>Retour en établissement</span>
+                    </div>
+                  </div>
+                  {[
+                    { title:"Tap NFC ou scan QR", body:"Même geste qu'à sa première visite." },
+                    { title:"Reconnu en moins d'une seconde", body:"Wallio retrouve sa carte via le numéro de téléphone enregistré." },
+                    { title:"Tampon crédité automatiquement", body:"Aucune action supplémentaire. Sa progression est à jour." },
+                    { title:"Notif Apple Wallet", body:"Sa carte Wallet se met à jour et lui envoie une notification." },
+                    { title:"Objectif atteint — récompense !", body:"Vous la validez d'un clic depuis votre dashboard." },
+                  ].map((s, i, arr) => (
+                    <div key={i} style={{ display:"flex", gap:16, paddingBottom: i < arr.length-1 ? 20 : 0 }}>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
+                        <div style={{ width:28, height:28, borderRadius:"50%", background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:12, fontWeight:700, color:"#8A5CF6" }}>{i+1}</div>
+                        {i < arr.length-1 && <div style={{ width:"1px", flex:1, background:"rgba(138,92,246,0.15)", margin:"4px 0" }} />}
+                      </div>
+                      <div style={{ paddingTop:3, paddingBottom: i < arr.length-1 ? 4 : 0 }}>
+                        <div style={{ fontSize:14, fontWeight:650, color:"#1D1D1F", marginBottom:2 }}>{s.title}</div>
+                        <div style={{ fontSize:13, color:"#8E8E93", lineHeight:1.5 }}>{s.body}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+              </div>
             </div>
           </section>
 
