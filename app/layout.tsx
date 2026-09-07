@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
@@ -17,7 +17,6 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Wallio",
   },
-  themeColor: "#EEF2F7",
   openGraph: {
     title: "Wallio — Cartes de fidélité digitales",
     description: "Gagnez des tampons et débloquez des récompenses chez vos établissements préférés.",
@@ -39,6 +38,10 @@ export const metadata: Metadata = {
     ],
     apple: "/wallio-instagram-profil.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#EEF2F7",
 };
 
 export default function RootLayout({
