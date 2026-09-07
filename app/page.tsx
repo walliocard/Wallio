@@ -289,14 +289,14 @@ export default function LandingPage() {
         .revealed { opacity:1 !important; transform:translate3d(0,0,0) scale3d(1,1,1) !important; }
 
         .grad-text { background:linear-gradient(92deg,#4472F5,#6A5AF9,#8A5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:shimmer 4s ease infinite; }
-        .glass { background:rgba(255,255,255,0.60); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); border:0.5px solid rgba(255,255,255,0.85); }
+        .glass { background:rgba(255,255,255,0.88); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); border:0.5px solid rgba(255,255,255,0.90); }
         .btn-primary { background:#1D1D1F; color:white; padding:14px 32px; border-radius:14px; font-size:15px; font-weight:600; text-decoration:none; letter-spacing:-0.2px; transition:transform 0.15s, box-shadow 0.15s; display:inline-block; }
         .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,0,0,0.25); }
         .btn-ghost  { background:rgba(0,0,0,0.05); color:#1D1D1F; padding:14px 32px; border-radius:14px; font-size:15px; font-weight:500; text-decoration:none; transition:background 0.15s; display:inline-block; }
         .btn-ghost:hover { background:rgba(0,0,0,0.09); }
         .card-hover { transition:transform 0.25s cubic-bezier(.16,1,.3,1), box-shadow 0.25s; }
         .card-hover:hover { transform:translateY(-4px); box-shadow:0 24px 48px rgba(0,0,0,0.10) !important; }
-        .feature-tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; color:#4472F5; background:rgba(68,114,245,0.08); padding:5px 12px; border-radius:20px; margin-bottom:20px; }
+        .feature-tag { display:inline-block; font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#4472F5; background:rgba(68,114,245,0.09); padding:7px 18px; border-radius:20px; margin-bottom:24px; }
         .lp-nav { padding:0 48px; }
         .float-card { padding:28px 36px; display:inline-flex; align-items:center; gap:24px; }
         .float-card-sep { width:1px; height:48px; background:rgba(0,0,0,0.08); }
@@ -345,7 +345,7 @@ export default function LandingPage() {
           .lp-nav { padding:0 16px; }
           .lp-nav .nav-contact { display:none; }
           .btn-primary, .btn-ghost { padding:12px 22px; font-size:14px; border-radius:12px; }
-          .feature-tag { font-size:10px; }
+          .feature-tag { font-size:11px; padding:6px 14px; }
           .features-grid { grid-template-columns:1fr !important; }
           .sectors-grid  { grid-template-columns:1fr !important; }
           .cta-section   { padding:44px 20px; border-radius:20px !important; margin:0 12px !important; }
@@ -395,7 +395,7 @@ export default function LandingPage() {
         </nav>
 
         {/* ── Anchor nav ── */}
-        <div style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.92)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.08)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+        <div style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
           <div className="anchor-nav" style={{ maxWidth:1040, margin:"0 auto", padding:"0 32px" }}>
             <div style={{ display:"flex", gap:2, height:42, alignItems:"center" }}>
               {([
@@ -467,7 +467,7 @@ export default function LandingPage() {
           </div>
 
           {/* ── SCAN METHODS ── */}
-          <section id="acces" style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+          <section id="acces" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Modes d&apos;accès</span>
@@ -493,9 +493,9 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Tag NFC</h3>
-                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Le client approche son téléphone à moins de 4 cm du sticker NFC posé sur votre comptoir. Le tampon est ajouté en moins d&apos;une seconde, sans ouvrir aucune application.</p>
+                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Un tap, un tampon. Le client approche son téléphone du sticker — moins d&apos;une seconde, aucune app.</p>
                     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                      {["Sans friction — le geste le plus rapide", "Compatible iPhone 7+ et Android NFC", "Sticker discret, résistant, repositionnable"].map(t => (
+                      {["Le geste le plus rapide qui existe", "iPhone 7+ et tous les Android NFC", "Sticker discret, résistant, repositionnable"].map(t => (
                         <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                           <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
                             <div style={{ width:5, height:5, borderRadius:"50%", background:"#4472F5" }} />
@@ -527,9 +527,9 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Scan QR Code</h3>
-                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Le client ouvre l&apos;appareil photo de son téléphone et scanne le QR code affiché sur votre comptoir. Fonctionne avec tous les téléphones, sans application.</p>
+                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>L&apos;appareil photo natif suffit. Tous les téléphones, pas d&apos;app, pas de compte.</p>
                     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                      {["Universel — tous les téléphones sans exception", "Fonctionne via l'appareil photo natif iOS/Android", "Idéal en complément ou sans tag NFC"].map(t => (
+                      {["Compatible 100% des smartphones", "Appareil photo natif iOS et Android", "Idéal sans tag NFC ou en complément"].map(t => (
                         <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                           <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(106,90,249,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
                             <div style={{ width:5, height:5, borderRadius:"50%", background:"#6A5AF9" }} />
@@ -555,9 +555,9 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Support imprimé 4K</h3>
-                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>La carte comptoir est le support physique de Wallio — votre QR code est intégré, vos clients le scannent directement. Elle peut aussi contenir un tag NFC pour un accès encore plus rapide.</p>
+                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Support physique imprimé avec QR code et NFC intégrés — posé sur votre comptoir, prêt à l&apos;emploi.</p>
                     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                      {["QR code intégré, scannable depuis l'appareil photo", "Design 4K à vos couleurs et avec votre logo", "Option tag NFC intégré pour un scan sans contact"].map(t => (
+                      {["QR code intégré prêt à scanner", "Design 4K à vos couleurs avec votre logo", "Option NFC intégré — tap ou scan au choix"].map(t => (
                         <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                           <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
                             <div style={{ width:5, height:5, borderRadius:"50%", background:"#8A5CF6" }} />
@@ -598,7 +598,7 @@ export default function LandingPage() {
           </section>
 
           {/* ── PERSONNALISATION ── */}
-          <section id="personnalisation" style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)", overflow:"hidden" }}>
+          <section id="personnalisation" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)", overflow:"hidden" }}>
             <div style={{ maxWidth:1120, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Personnalisation</span>
@@ -777,7 +777,7 @@ export default function LandingPage() {
           </section>
 
           {/* ── DASHBOARD ── */}
-          <section id="dashboard" style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+          <section id="dashboard" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Dashboard</span>
@@ -917,7 +917,7 @@ export default function LandingPage() {
           </section>
 
           {/* ── FAQ ── */}
-          <section id="faq" style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)" }}>
+          <section id="faq" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:760, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
                 <span className="feature-tag">FAQ</span>
