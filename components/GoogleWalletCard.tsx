@@ -171,8 +171,7 @@ export default function GoogleWalletCard({
 
       {/* ── Hero image EN BAS — position réelle dans Google Wallet ── */}
       {heroUrl && (
-        <div style={{ width: "100%", marginTop: allModules.length > 0 || validLinks.length > 0 ? 0 : 8 }}>
-          <div style={{ height: 1, background: divider }} />
+        <div style={{ width: "100%", marginTop: 4 }}>
           <div style={{ width: "100%", height: 60, overflow: "hidden" }}>
             <img src={heroUrl} alt="" style={{
               width: "100%", height: "100%", objectFit: "cover", display: "block",
@@ -184,7 +183,35 @@ export default function GoogleWalletCard({
         </div>
       )}
 
-      <div style={{ height: 6 }} />
+      {/* ── Bloc coloré bas — Nom de membre + Récompense (comme dans la vraie Google Wallet) ── */}
+      <div style={{
+        background: bg,
+        borderRadius: "0 0 16px 16px",
+        padding: "12px 16px 16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}>
+        <div style={{
+          background: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
+          borderRadius: 12,
+          padding: "10px 14px",
+          marginBottom: 6,
+        }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: text, margin: "0 0 1px" }}>Nom de membre</p>
+          <p style={{ fontSize: 13, color: textSec, margin: 0 }}>Prénom N.</p>
+        </div>
+        {rewardName && (
+          <div style={{
+            background: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
+            borderRadius: 12,
+            padding: "10px 14px",
+          }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: text, margin: "0 0 1px" }}>Récompense</p>
+            <p style={{ fontSize: 13, color: textSec, margin: 0 }}>{rewardName}</p>
+          </div>
+        )}
+      </div>
 
     </div>
   );
