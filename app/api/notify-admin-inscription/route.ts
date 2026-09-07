@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Wallio <onboarding@walliocard.com>",
+      from: "Wallio <onboarding@resend.dev>",
       to: ["karimmejbar2003@gmail.com"],
       subject: `Nouveau marchand en attente : ${nom}`,
       html: `

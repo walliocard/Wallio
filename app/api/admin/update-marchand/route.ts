@@ -21,7 +21,7 @@ async function sendActivationEmail(email: string, nom: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Wallio <onboarding@walliocard.com>",
+      from: "Wallio <onboarding@resend.dev>",
       to: [email],
       subject: "Votre compte Wallio est activé !",
       html: `
