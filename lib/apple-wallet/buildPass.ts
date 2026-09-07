@@ -6,6 +6,27 @@ import forge from "node-forge";
 import { generatePassJson, type PassInput } from "./generatePass";
 import { drawStampsOnStrip, type StampStyle } from "./drawStamps";
 
+async function generateIcon(size: number, logoBuf: Buffer, bgColor: string): Promise<Buffer> {
+  const { createCanvas, loadImage } = await import("@napi-rs/canvas");
+  const canvas = createCanvas(size, size);
+  const ctx    = canvas.getContext("2d");
+
+  ctx.fillStyle = /^#[0-9a-f]{6}$/i.test(bgColor) ? bgColor : "#1C1C1E";
+  ctx.fillRect(0, 0, size, size);
+
+  try {
+    const img     = await loadImage(logoBuf);
+    const padding = size * 0.12;
+    const maxDim  = size - padding * 2;
+    const ratio   = Math.min(maxDim / img.width, maxDim / img.height);
+    const w = img.width  * ratio;
+    const h = img.height * ratio;
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+  } catch { /* fond seul si logo illisible */ }
+
+  return canvas.encode("png");
+}
+
 export interface StampOverlayInput {
   stampsOnStrip?: boolean;
   stripStampStyle?: StampStyle;
@@ -99,20 +120,8 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         files["logo.png"]    = buf;
         files["logo@2x.png"] = buf;
         files["logo@3x.png"] = buf;
-        // Icône notification : logo sur fond couleur principale du marchand
-        const sharp = (await import("sharp")).default;
-        const hex = input.backgroundColor.replace("#", "");
-        const bg  = {
-          r: parseInt(hex.slice(0, 2), 16) || 28,
-          g: parseInt(hex.slice(2, 4), 16) || 28,
-          b: parseInt(hex.slice(4, 6), 16) || 30,
-        };
-        const mkIcon = (size: number) =>
-          sharp(buf)
-            .resize(size, size, { fit: "contain", background: { ...bg, alpha: 1 } })
-            .flatten({ background: bg })
-            .png()
-            .toBuffer();
+        // Icône notification : canvas avec fond couleur marchand + logo centré
+        const mkIcon = (size: number) => generateIcon(size, buf, input.backgroundColor);
         files["icon.png"]    = await mkIcon(29);
         files["icon@2x.png"] = await mkIcon(58);
         files["icon@3x.png"] = await mkIcon(87);
