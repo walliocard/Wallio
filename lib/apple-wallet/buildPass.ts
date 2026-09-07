@@ -6,7 +6,7 @@ import forge from "node-forge";
 import { generatePassJson, type PassInput } from "./generatePass";
 import { drawStampsOnStrip, type StampStyle } from "./drawStamps";
 
-async function generateIcon(size: number, logoBuf: Buffer, bgColor: string): Promise<Buffer> {
+async function generateIcon(size: number, logoUrl: string | undefined, bgColor: string): Promise<Buffer> {
   const { createCanvas, loadImage } = await import("@napi-rs/canvas");
   const canvas = createCanvas(size, size);
   const ctx    = canvas.getContext("2d");
@@ -14,15 +14,19 @@ async function generateIcon(size: number, logoBuf: Buffer, bgColor: string): Pro
   ctx.fillStyle = /^#[0-9a-f]{6}$/i.test(bgColor) ? bgColor : "#1C1C1E";
   ctx.fillRect(0, 0, size, size);
 
-  try {
-    const img     = await loadImage(logoBuf);
-    const padding = size * 0.12;
-    const maxDim  = size - padding * 2;
-    const ratio   = Math.min(maxDim / img.width, maxDim / img.height);
-    const w = img.width  * ratio;
-    const h = img.height * ratio;
-    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-  } catch { /* fond seul si logo illisible */ }
+  if (logoUrl) {
+    try {
+      const img     = await loadImage(logoUrl);
+      const padding = size * 0.12;
+      const maxDim  = size - padding * 2;
+      const ratio   = Math.min(maxDim / img.width, maxDim / img.height);
+      const w = img.width  * ratio;
+      const h = img.height * ratio;
+      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    } catch (e) {
+      console.error("[generateIcon] logo load failed:", e);
+    }
+  }
 
   return canvas.encode("png");
 }
@@ -111,7 +115,7 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
     "icon@3x.png":  ICON_29,
   };
 
-  // Logo marchand (coin supérieur gauche + icône de notification)
+  // Logo marchand (coin supérieur gauche)
   if (input.logoUrl) {
     try {
       const res = await fetch(input.logoUrl);
@@ -120,13 +124,17 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         files["logo.png"]    = buf;
         files["logo@2x.png"] = buf;
         files["logo@3x.png"] = buf;
-        // Icône notification : canvas avec fond couleur marchand + logo centré
-        const mkIcon = (size: number) => generateIcon(size, buf, input.backgroundColor);
-        files["icon.png"]    = await mkIcon(29);
-        files["icon@2x.png"] = await mkIcon(58);
-        files["icon@3x.png"] = await mkIcon(87);
       }
     } catch { /* logo optionnel */ }
+  }
+
+  // Icône notification — bloc indépendant pour ne pas masquer les erreurs
+  try {
+    files["icon.png"]    = await generateIcon(29,  input.logoUrl, input.backgroundColor);
+    files["icon@2x.png"] = await generateIcon(58,  input.logoUrl, input.backgroundColor);
+    files["icon@3x.png"] = await generateIcon(87,  input.logoUrl, input.backgroundColor);
+  } catch (e) {
+    console.error("[buildPkpass] icon generation failed:", e);
   }
 
   // Bannière strip (avec tampons dessinés si activé)
