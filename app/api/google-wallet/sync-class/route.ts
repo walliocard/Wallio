@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   ];
 
   const classBase: Record<string, unknown> = {
-    reviewStatus: "APPROVED",
+    reviewStatus: "UNDER_REVIEW",
     id: cid,
     issuerName: "Wallio",
     programName: m.nom,
