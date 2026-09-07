@@ -54,7 +54,7 @@ export default function ChoisirPage() {
         </Link>
 
         {/* Espace Client */}
-        <a href="/client" style={{ textDecoration:"none", flex:"1 1 280px" }}>
+        <Link href="/mes-cartes" style={{ textDecoration:"none", flex:"1 1 280px" }}>
           <div style={{
             background:"white", borderRadius:24, padding:"36px 32px",
             display:"flex", flexDirection:"column", gap:20,
@@ -87,7 +87,7 @@ export default function ChoisirPage() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
           </div>
-        </a>
+        </Link>
 
       </div>
 
