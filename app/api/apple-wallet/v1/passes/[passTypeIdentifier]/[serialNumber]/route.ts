@@ -59,6 +59,17 @@ export async function GET(
     ].filter(Boolean) as { label: string; value: string }[],
     backInfo: m.apple_back_info || undefined,
     description: m.apple_description || undefined,
+    stampsOnStrip:    m.apple_stamps_on_strip === true,
+    stripStampStyle:  m.apple_strip_stamp_style || "dot",
+    stampColor:       m.apple_stamp_color       || "#FFFFFF",
+    stampPosition:    typeof m.apple_stamp_position === "number" ? m.apple_stamp_position : 50,
+    stampSizePreset:  m.apple_stamp_size        || "m",
+    stampThickness:   m.apple_stamp_thickness   ?? 2,
+    stampText:        m.apple_stamp_text        || "",
+    stampTextBold:    m.apple_stamp_text_bold   === true,
+    stampTextItalic:  m.apple_stamp_text_italic === true,
+    stampTextSize:    m.apple_stamp_text_size   ?? 1,
+    stampLogoOpacity: m.apple_stamp_logo_opacity ?? 1,
   });
 
   const lastModified = client.apns_last_updated
