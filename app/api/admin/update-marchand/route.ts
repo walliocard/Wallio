@@ -69,7 +69,7 @@ export async function PATCH(req: Request) {
     const snap = await adminDb().collection("marchands").doc(marchandId).get();
     const m = snap.data();
     if (m?.email && m?.nom) {
-      sendActivationEmail(m.email as string, m.nom as string).catch(() => {});
+      await sendActivationEmail(m.email as string, m.nom as string);
     }
   }
 
