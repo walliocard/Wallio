@@ -70,9 +70,10 @@ export async function GET(
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
-  const classBody: Record<string, unknown> = {
+  // Corps commun (sans reviewStatus pour les updates — Google le gère lui-même)
+  const classBase: Record<string, unknown> = {
+    id: cid,
     issuerName: "Wallio",
-    reviewStatus: "APPROVED",
     programName: m.nom,
     programLogo: {
       sourceUri: { uri: logoUri },
@@ -86,31 +87,26 @@ export async function GET(
   };
 
   if (classRes.status === 404) {
+    // Première création : on impose reviewStatus APPROVED
     const createRes = await fetch(`${API}/loyaltyClass`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ id: cid, ...classBody }),
+      body: JSON.stringify({ ...classBase, reviewStatus: "APPROVED" }),
     });
-
     if (!createRes.ok) {
       const err = await createRes.text();
       console.error("[Google Wallet] Erreur création classe:", createRes.status, err);
       return NextResponse.json({ error: "Erreur création classe Google Wallet" }, { status: 500 });
     }
   } else if (classRes.ok) {
-    const fields = ["programName", "hexBackgroundColor", "programLogo", "issuerName", "textModulesData"];
-    if (heroUrl) fields.push("heroImage");
-    if (validLinks.length > 0) fields.push("linksModuleData");
-    const patchRes = await fetch(
-      `${API}/loyaltyClass/${encodeURIComponent(cid)}?updateMask=${fields.join(",")}`,
-      {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(classBody),
-      }
-    );
-    if (!patchRes.ok) {
-      console.error("[Google Wallet] PATCH classe échoué:", patchRes.status, await patchRes.text());
+    // PUT = remplacement complet → pas de problème de updateMask partiel
+    const putRes = await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(classBase),
+    });
+    if (!putRes.ok) {
+      console.error("[Google Wallet] PUT classe échoué:", putRes.status, await putRes.text());
     }
   } else {
     const err = await classRes.text();

@@ -45,9 +45,9 @@ export async function POST(req: Request) {
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
-  const classBody: Record<string, unknown> = {
+  const classBase: Record<string, unknown> = {
+    id: cid,
     issuerName: "Wallio",
-    reviewStatus: "APPROVED",
     programName: m.nom,
     programLogo: {
       sourceUri: { uri: logoUri },
@@ -68,29 +68,24 @@ export async function POST(req: Request) {
     const createRes = await fetch(`${API}/loyaltyClass`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ id: cid, ...classBody }),
+      body: JSON.stringify({ ...classBase, reviewStatus: "APPROVED" }),
     });
     if (!createRes.ok) {
       return NextResponse.json({ error: "Erreur création classe" }, { status: 500 });
     }
     return NextResponse.json({ ok: true, action: "created" });
   } else if (checkRes.ok) {
-    const fields = ["programName", "hexBackgroundColor", "programLogo", "issuerName", "textModulesData", "reviewStatus"];
-    if (heroUrl) fields.push("heroImage");
-    if (validLinks.length > 0) fields.push("linksModuleData");
-    const patchRes = await fetch(
-      `${API}/loyaltyClass/${encodeURIComponent(cid)}?updateMask=${fields.join(",")}`,
-      {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(classBody),
-      }
-    );
-    if (!patchRes.ok) {
-      const err = await patchRes.text();
+    // PUT = remplacement complet, pas de updateMask partiel
+    const putRes = await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(classBase),
+    });
+    if (!putRes.ok) {
+      const err = await putRes.text();
       return NextResponse.json({ error: err }, { status: 500 });
     }
-    return NextResponse.json({ ok: true, action: "patched" });
+    return NextResponse.json({ ok: true, action: "updated" });
   }
 
   return NextResponse.json({ error: "Erreur API Google" }, { status: 500 });
