@@ -180,7 +180,7 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    const ids = ["acces", "comment", "personnalisation", "notifications", "dashboard", "faq"];
+    const ids = ["acces", "comment", "personnalisation", "notifications", "dashboard", "presence", "faq"];
     const io = new IntersectionObserver(
       entries => { entries.forEach(e => { if (e.isIntersecting) setActiveAnchor(e.target.id); }); },
       { threshold: 0.2 }
@@ -340,6 +340,7 @@ export default function LandingPage() {
           .custom-cards > div { transform:none !important; }
           .anchor-nav { padding:0 16px !important; }
           .dash-stats { grid-template-columns:1fr !important; }
+          .pwa-grid { flex-direction:column !important; align-items:center !important; }
         }
         @media (max-width: 480px) {
           .lp-nav { padding:0 16px; }
@@ -404,6 +405,7 @@ export default function LandingPage() {
                 { id:"personnalisation", label:"Personnalisation" },
                 { id:"notifications", label:"Notifications" },
                 { id:"dashboard", label:"Dashboard" },
+                { id:"presence", label:"Présence" },
                 { id:"faq", label:"FAQ" },
               ] as { id: string; label: string }[]).map(a => (
                 <a key={a.id} href={`#${a.id}`} className="anchor-link" style={{ fontSize:13, fontWeight: activeAnchor === a.id ? 600 : 400, color: activeAnchor === a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none", padding:"4px 12px", borderRadius:20, background: activeAnchor === a.id ? "rgba(0,0,0,0.08)" : "transparent" }}>{a.label}</a>
@@ -883,6 +885,113 @@ export default function LandingPage() {
                     <p style={{ fontSize:14, lineHeight:1.65, color:"#8E8E93" }}>{f.body}</p>
                   </div>
                 ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ── PRÉSENCE / PWA ── */}
+          <section id="presence" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+            <div style={{ maxWidth:1040, margin:"0 auto" }}>
+              <div style={{ display:"flex", gap:64, alignItems:"center", flexWrap:"wrap" }} className="pwa-grid">
+
+                {/* Phone mockup — listing Wallio */}
+                <div data-reveal="left" style={{ flex:"0 0 auto", display:"flex", justifyContent:"center" }}>
+                  <PhoneMock style={{ width:210 }}>
+                    <div style={{ background:"#F2F2F7", minHeight:360 }}>
+                      {/* Header */}
+                      <div style={{ padding:"14px 16px 10px", background:"white", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+                        <div style={{ fontSize:9, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#8E8E93", marginBottom:6 }}>Découvrir</div>
+                        <div style={{ background:"#F2F2F7", borderRadius:8, padding:"7px 10px", display:"flex", alignItems:"center", gap:6 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                          <span style={{ fontSize:10, color:"#8E8E93" }}>Rechercher un commerce…</span>
+                        </div>
+                        <div style={{ display:"flex", gap:6, marginTop:8, overflowX:"auto" }}>
+                          {["Tout", "Café", "Barber", "Resto", "Beauté"].map((c, i) => (
+                            <span key={c} style={{ fontSize:9, fontWeight:600, padding:"3px 8px", borderRadius:20, flexShrink:0, background: i===0 ? "#1D1D1F" : "#F2F2F7", color: i===0 ? "white" : "#6E6E73" }}>{c}</span>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Merchant list */}
+                      <div style={{ padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
+                        {[
+                          { name:"Nomade Café", cat:"Café · Casablanca", rating:"4.9", clients:"247 clients", color:"#4472F5", initial:"N" },
+                          { name:"Barba Italiana", cat:"Barber · Casablanca", rating:"4.8", clients:"183 clients", color:"#C8956C", initial:"B" },
+                          { name:"Mori Matcha", cat:"Thé · Casablanca", rating:"4.7", clients:"134 clients", color:"#A8D5A2", initial:"M" },
+                          { name:"Hammam Royal", cat:"Spa · Casablanca", rating:"4.6", clients:"98 clients", color:"#C9A96E", initial:"H" },
+                        ].map(m => (
+                          <div key={m.name} style={{ background:"white", borderRadius:12, padding:"10px 12px", display:"flex", alignItems:"center", gap:10, boxShadow:"0 1px 6px rgba(0,0,0,0.06)" }}>
+                            <div style={{ width:36, height:36, borderRadius:10, background:`${m.color}22`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                              <span style={{ fontSize:13, fontWeight:700, color:m.color }}>{m.initial}</span>
+                            </div>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontSize:11, fontWeight:600, color:"#1D1D1F", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.name}</div>
+                              <div style={{ fontSize:9, color:"#8E8E93", marginTop:1 }}>{m.cat}</div>
+                            </div>
+                            <div style={{ textAlign:"right", flexShrink:0 }}>
+                              <div style={{ fontSize:10, fontWeight:600, color:"#FF9500" }}>★ {m.rating}</div>
+                              <div style={{ fontSize:9, color:"#8E8E93" }}>{m.clients}</div>
+                            </div>
+                          </div>
+                        ))}
+                        <div style={{ background:"linear-gradient(135deg,#4472F5,#8A5CF6)", borderRadius:12, padding:"10px 12px", display:"flex", alignItems:"center", gap:10 }}>
+                          <div style={{ width:36, height:36, borderRadius:10, background:"rgba(255,255,255,0.20)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          </div>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:11, fontWeight:600, color:"white" }}>Votre commerce ici</div>
+                            <div style={{ fontSize:9, color:"rgba(255,255,255,0.7)" }}>Rejoindre Wallio</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </PhoneMock>
+                </div>
+
+                {/* Text + benefits */}
+                <div data-reveal="right" style={{ flex:"1 1 400px", minWidth:0 }}>
+                  <span className="feature-tag">Présence digitale</span>
+                  <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:16 }}>Visible.<br />Même sans budget pub.</h2>
+                  <p style={{ fontSize:17, lineHeight:1.7, color:"#6E6E73", marginBottom:40, maxWidth:480 }}>
+                    Wallio est une application web progressive (PWA) — vos clients l&apos;installent en un tap sur leur écran d&apos;accueil, sans passer par l&apos;App Store. Et votre établissement est référencé dans l&apos;annuaire Wallio, visible par tous les utilisateurs de la plateforme.
+                  </p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+                    {[
+                      {
+                        color:"#4472F5",
+                        icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+                        title:"Listing par catégorie et ville",
+                        body:"Votre établissement apparaît dans l'annuaire Wallio, classé par secteur. De nouveaux clients vous découvrent sans vous avoir cherché.",
+                      },
+                      {
+                        color:"#6A5AF9",
+                        icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18" strokeWidth="2.5" strokeLinecap="round"/></svg>,
+                        title:"Installable sur l'écran d'accueil",
+                        body:"L'expérience d'une vraie app native, sans App Store ni Play Store. Vos clients l'ajoutent en un tap — icône Wallio sur l'écran d'accueil, accès instantané à leur carte.",
+                      },
+                      {
+                        color:"#8A5CF6",
+                        icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
+                        title:"Page dédiée partageable",
+                        body:"Chaque établissement reçoit un lien Wallio unique — à mettre en bio Instagram, sur vos flyers, votre vitrine. Un clic suffit pour accéder à la carte de fidélité.",
+                      },
+                      {
+                        color:"#30D158",
+                        icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+                        title:"Push sans installation",
+                        body:"Vos notifications arrivent dans le téléphone de vos clients même sans app installée. Le web moderne — zéro friction, portée maximale.",
+                      },
+                    ].map(b => (
+                      <div key={b.title} style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
+                        <div style={{ width:38, height:38, borderRadius:12, background:`${b.color}12`, color:b.color, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{b.icon}</div>
+                        <div>
+                          <h3 style={{ fontSize:15, fontWeight:650, color:"#1D1D1F", marginBottom:4, letterSpacing:-0.2 }}>{b.title}</h3>
+                          <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{b.body}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             </div>
           </section>
