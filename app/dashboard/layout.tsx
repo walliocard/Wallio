@@ -25,7 +25,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!marchand || !user) return null;
+  if (!marchand || !user) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
+      <div className="w-6 h-6 rounded-full border-2 animate-spin"
+        style={{ borderColor: "var(--border)", borderTopColor: "var(--accent)" }} />
+    </div>
+  );
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>

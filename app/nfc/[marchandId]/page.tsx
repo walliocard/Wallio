@@ -47,13 +47,26 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   useEffect(() => {
     async function init() {
       try {
-        // Fetch marchand via API route (Firebase Admin côté serveur = plus rapide)
-        const res = await fetch(`/api/nfc/${marchandId}`);
-        if (!res.ok) {
+        // Fetch marchand via API route avec timeout 6s (cold start Vercel)
+        // Fallback vers SDK client si la fonction est froide
+        let marchand: Marchand | null = null;
+        try {
+          const controller = new AbortController();
+          const tid = setTimeout(() => controller.abort(), 6000);
+          const res = await fetch(`/api/nfc/${marchandId}`, { signal: controller.signal });
+          clearTimeout(tid);
+          if (res.ok) marchand = await res.json();
+        } catch {
+          // Cold start timeout → fallback SDK client
+        }
+        if (!marchand) {
+          const { getMarchandByNfcId } = await import("@/lib/loyalty");
+          marchand = await getMarchandByNfcId(marchandId);
+        }
+        if (!marchand || !marchand.actif) {
           setScreen({ type: "erreur", message: "Ce service est temporairement indisponible." });
           return;
         }
-        const marchand: Marchand = await res.json();
 
         const walletId = localStorage.getItem(WALLET_KEY(marchandId));
         let compteSupprimeIci = false;
