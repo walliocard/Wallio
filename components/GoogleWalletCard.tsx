@@ -86,7 +86,7 @@ export default function GoogleWalletCard({
 
       {/* ── Hero image — position officielle Google Wallet ── */}
       {heroUrl && (
-        <div style={{ width: "100%", height: 100, overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ width: "100%", height: 120, overflow: "hidden", flexShrink: 0 }}>
           <img src={heroUrl} alt="" style={{
             width: "100%", height: "100%", objectFit: "cover", display: "block",
             objectPosition: `50% ${previewCropY}%`,

@@ -299,10 +299,10 @@ export default function CartePage() {
   const [googleStripText, setGoogleStripText] = useState<string>("");
   const [googleStripTextColor, setGoogleStripTextColor] = useState<string>("#FFFFFF");
   const [googleStripTextSize, setGoogleStripTextSize] = useState<"s"|"m"|"l">("m");
-  const [googleStripTextPos, setGoogleStripTextPos] = useState<"bl"|"bc"|"br"|"c">("bl");
+  const [googleStripTextPos, setGoogleStripTextPos] = useState<"tl"|"tc"|"tr"|"ml"|"mc"|"mr"|"bl"|"bc"|"br">("bl");
   const [googleStripFont, setGoogleStripFont] = useState<"sans"|"serif"|"mono">("sans");
   const [googleStripText2, setGoogleStripText2] = useState<string>("");
-  const [googleStripText2Size, setGoogleStripText2Size] = useState<"s"|"m"|"l">("s");
+  const [googleStripText2Size, setGoogleStripText2Size] = useState<"xs"|"s"|"m"|"l"|"xl">("s");
   const [googleStripIncludeLogo, setGoogleStripIncludeLogo] = useState<boolean>(false);
   const [rawGoogleHeroUrl, setRawGoogleHeroUrl] = useState<string>("");
   const [googleHeroCropY, setGoogleHeroCropY] = useState<number>(50);
@@ -1906,6 +1906,10 @@ export default function CartePage() {
                       setGoogleStripFrom(t.from); setGoogleStripTo(t.to);
                       setGoogleStripAngle(angle); setGoogleStripGlass(glassMode);
                       setIsUploadedGoogleHero(false); setRawGoogleHeroUrl("");
+                      // Auto-couleur fond : la couleur la plus sombre du dégradé
+                      const lumFrom = relativeLuminance(t.from);
+                      const lumTo = relativeLuminance(t.to);
+                      setGoogleBgColor(lumFrom < lumTo ? t.from : t.to);
                       const hero = await buildStrip(t.from, t.to, angle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, glassMode, 88, 1032, 344);
                       setGoogleHeroUrl(hero);
                     }} style={{
@@ -1921,16 +1925,22 @@ export default function CartePage() {
                 </Field>
                 {googleStripText && (<>
                   <Field label="Taille">
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {(["s","m","l"] as const).map(s => (
-                        <button key={s} onClick={() => setGoogleStripTextSize(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: googleStripTextSize === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextSize === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextSize === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}</button>
+                    <div style={{ display: "flex", gap: 5 }}>
+                      {(["xs","s","m","l","xl"] as const).map(s => (
+                        <button key={s} onClick={() => setGoogleStripTextSize(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 600, background: googleStripTextSize === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextSize === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextSize === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>
+                          {s === "xs" ? "XS" : s === "s" ? "S" : s === "m" ? "M" : s === "l" ? "L" : "XL"}
+                        </button>
                       ))}
                     </div>
                   </Field>
                   <Field label="Position">
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                      {([["bl","Bas gauche"],["bc","Bas centre"],["br","Bas droite"],["c","Centre"]] as const).map(([v,l]) => (
-                        <button key={v} onClick={() => setGoogleStripTextPos(v)} style={{ padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 500, background: googleStripTextPos === v ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextPos === v ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextPos === v ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{l}</button>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 5 }}>
+                      {([
+                        ["tl","↖ H.G"],["tc","↑ H.C"],["tr","↗ H.D"],
+                        ["ml","← M.G"],["mc","⊙ Centre"],["mr","→ M.D"],
+                        ["bl","↙ B.G"],["bc","↓ B.C"],["br","↘ B.D"],
+                      ] as const).map(([v,l]) => (
+                        <button key={v} onClick={() => setGoogleStripTextPos(v as "tl"|"tc"|"tr"|"ml"|"mc"|"mr"|"bl"|"bc"|"br")} style={{ padding: "6px 0", borderRadius: 9, fontSize: 10, fontWeight: 500, background: googleStripTextPos === v ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextPos === v ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextPos === v ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{l}</button>
                       ))}
                     </div>
                   </Field>
@@ -1947,9 +1957,11 @@ export default function CartePage() {
                   </Field>
                   {googleStripText2 && (
                     <Field label="Taille sous-titre">
-                      <div style={{ display: "flex", gap: 6 }}>
-                        {(["s","m","l"] as const).map(s => (
-                          <button key={s} onClick={() => setGoogleStripText2Size(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: googleStripText2Size === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripText2Size === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripText2Size === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}</button>
+                      <div style={{ display: "flex", gap: 5 }}>
+                        {(["xs","s","m","l","xl"] as const).map(s => (
+                          <button key={s} onClick={() => setGoogleStripText2Size(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 600, background: googleStripText2Size === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripText2Size === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripText2Size === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>
+                            {s === "xs" ? "XS" : s === "s" ? "S" : s === "m" ? "M" : s === "l" ? "L" : "XL"}
+                          </button>
                         ))}
                       </div>
                     </Field>
