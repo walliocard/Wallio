@@ -110,21 +110,23 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       if (res.ok) {
         let buf = Buffer.from(await res.arrayBuffer());
         if (input.stampsOnStrip && input.stampsObjective > 0) {
-          buf = Buffer.from(await drawStampsOnStrip(buf, {
-            stampsCurrent:  input.stampsCurrent,
-            stampsObjective: input.stampsObjective,
-            style:           input.stripStampStyle   ?? "dot",
-            color:           input.stampColor        ?? "#FFFFFF",
-            position:        input.stampPosition     ?? 50,
-            sizePreset:      input.stampSizePreset   ?? "m",
-            thickness:       input.stampThickness    ?? 2,
-            text:            input.stampText         ?? "",
-            textBold:        input.stampTextBold     ?? false,
-            textItalic:      input.stampTextItalic   ?? false,
-            textSize:        input.stampTextSize      ?? 1,
-            logoUrl:         input.logoUrl,
-            logoOpacity:     input.stampLogoOpacity  ?? 1,
-          }));
+          try {
+            buf = Buffer.from(await drawStampsOnStrip(buf, {
+              stampsCurrent:   input.stampsCurrent,
+              stampsObjective: input.stampsObjective,
+              style:           input.stripStampStyle  ?? "dot",
+              color:           input.stampColor       ?? "#FFFFFF",
+              position:        input.stampPosition    ?? 50,
+              sizePreset:      input.stampSizePreset  ?? "m",
+              thickness:       input.stampThickness   ?? 2,
+              text:            input.stampText        ?? "",
+              textBold:        input.stampTextBold    ?? false,
+              textItalic:      input.stampTextItalic  ?? false,
+              textSize:        input.stampTextSize    ?? 1,
+              logoUrl:         input.logoUrl,
+              logoOpacity:     input.stampLogoOpacity ?? 1,
+            }));
+          } catch { /* dessin optionnel — strip original conservé */ }
         }
         files["strip.png"]    = buf;
         files["strip@2x.png"] = buf;
