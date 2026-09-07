@@ -114,14 +114,19 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         ? input.backgroundColor
         : "#007AFF";
 
+      console.log("[icon] logo dimensions:", logo.width, "x", logo.height);
+
       const mkIcon = async (size: number) => {
+        // Si SVG ou format sans dimensions → utilise size comme fallback
+        const natW = logo.width  || size;
+        const natH = logo.height || size;
         const canvas = createCanvas(size, size);
         const ctx    = canvas.getContext("2d");
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, size, size);
-        const ratio = Math.min((size * 0.76) / logo.width, (size * 0.76) / logo.height);
-        const w = logo.width  * ratio;
-        const h = logo.height * ratio;
+        const ratio = Math.min((size * 0.76) / natW, (size * 0.76) / natH);
+        const w = natW * ratio;
+        const h = natH * ratio;
         ctx.drawImage(logo, (size - w) / 2, (size - h) / 2, w, h);
         return canvas.encode("png");
       };
