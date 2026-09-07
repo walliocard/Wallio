@@ -298,7 +298,7 @@ export default function CartePage() {
   const [googleStripGlass, setGoogleStripGlass] = useState<boolean>(false);
   const [googleStripText, setGoogleStripText] = useState<string>("");
   const [googleStripTextColor, setGoogleStripTextColor] = useState<string>("#FFFFFF");
-  const [googleStripTextSize, setGoogleStripTextSize] = useState<"s"|"m"|"l">("m");
+  const [googleStripTextSize, setGoogleStripTextSize] = useState<"xs"|"s"|"m"|"l"|"xl">("m");
   const [googleStripTextPos, setGoogleStripTextPos] = useState<"tl"|"tc"|"tr"|"ml"|"mc"|"mr"|"bl"|"bc"|"br">("bl");
   const [googleStripFont, setGoogleStripFont] = useState<"sans"|"serif"|"mono">("sans");
   const [googleStripText2, setGoogleStripText2] = useState<string>("");
@@ -2249,11 +2249,11 @@ const GRADIENT_THEMES = [
 async function buildStrip(
   from: string, to: string, angle: number,
   text = "", textColor = "#FFFFFF",
-  textSize: "s"|"m"|"l" = "m",
-  textPos: "bl"|"bc"|"br"|"c" = "bl",
+  textSize: "xs"|"s"|"m"|"l"|"xl" = "m",
+  textPos: "tl"|"tc"|"tr"|"ml"|"mc"|"mr"|"bl"|"bc"|"br"|"c" = "bl",
   font: "sans"|"serif"|"mono" = "sans",
   text2 = "",
-  text2Size: "s"|"m"|"l" = "s",
+  text2Size: "xs"|"s"|"m"|"l"|"xl" = "s",
   logoUrl?: string,
   glass = false,
   textY = 88,
@@ -2326,7 +2326,7 @@ async function buildStrip(
 
   // Feature 5 — Texte ligne 1 + ligne 2
   if (text) {
-    const sz = textSize === "s" ? 36 : textSize === "m" ? 54 : 76;
+    const sz = textSize === "xs" ? 24 : textSize === "s" ? 36 : textSize === "m" ? 54 : textSize === "l" ? 76 : 96;
     const fontFamily =
       font === "serif" ? `Georgia, "Times New Roman", serif`
       : font === "mono" ? `"Courier New", Courier, monospace`
@@ -2334,16 +2334,21 @@ async function buildStrip(
     ctx.font = `700 ${sz}px ${fontFamily}`;
     ctx.fillStyle = textColor;
     const pad = 44;
-    const isCenter = textPos === "bc" || textPos === "c";
-    const align = isCenter ? "center" : textPos === "br" ? "right" : "left";
+    const col = textPos === "tr" || textPos === "mr" || textPos === "br" ? "right"
+      : textPos === "tc" || textPos === "mc" || textPos === "bc" || textPos === "c" ? "center"
+      : "left";
+    const align = col as CanvasTextAlign;
     ctx.textAlign = align;
-    const x = textPos === "br" ? W - pad : isCenter ? W / 2 : pad;
-    const y = H * (textY / 100);
+    const x = col === "right" ? W - pad : col === "center" ? W / 2 : pad;
+    const row = textPos === "tl" || textPos === "tc" || textPos === "tr" ? "top"
+      : textPos === "ml" || textPos === "mc" || textPos === "mr" || textPos === "c" ? "mid"
+      : "bot";
+    const y = row === "top" ? H * 0.28 : row === "mid" ? H * 0.55 : H * (textY / 100);
     ctx.fillText(text, x, y);
 
     // Ligne 2
     if (text2) {
-      const sz2 = text2Size === "s" ? 26 : text2Size === "m" ? 36 : 50;
+      const sz2 = text2Size === "xs" ? 18 : text2Size === "s" ? 26 : text2Size === "m" ? 36 : text2Size === "l" ? 50 : 64;
       ctx.font = `500 ${sz2}px ${fontFamily}`;
       ctx.fillStyle = textColor;
       ctx.globalAlpha = 0.8;
