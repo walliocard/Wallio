@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { saveMarchandFields } from "@/lib/save-marchand";
+import { Timestamp } from "firebase/firestore";
 import Link from "next/link";
 import WallioIcon from "@/components/WallioIcon";
 
@@ -22,6 +23,8 @@ export default function InscriptionPage() {
       await saveMarchandFields(user, {
         nom: form.nom,
         email: form.email,
+        actif: false,
+        date_inscription: Timestamp.now(),
         objectif_tampons: 10,
         nom_recompense: "Récompense offerte",
         icone_tampons: "⭐",
@@ -30,6 +33,12 @@ export default function InscriptionPage() {
         anti_doublon_delai: 86400,
         fuseau_horaire: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
+      // Notif email admin (fire-and-forget)
+      fetch("/api/notify-admin-inscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nom: form.nom, email: form.email }),
+      }).catch(() => {});
       setSuccess(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
