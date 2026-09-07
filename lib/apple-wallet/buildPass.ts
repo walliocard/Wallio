@@ -90,7 +90,7 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
     "icon@3x.png":  ICON_29,
   };
 
-  // Logo marchand (coin supérieur gauche de la carte)
+  // Logo marchand (coin supérieur gauche + icône de notification)
   if (input.logoUrl) {
     try {
       const res = await fetch(input.logoUrl);
@@ -99,6 +99,14 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         files["logo.png"]    = buf;
         files["logo@2x.png"] = buf;
         files["logo@3x.png"] = buf;
+        // Icône notification : logo redimensionné en carré
+        const sharp = (await import("sharp")).default;
+        const icon1x = await sharp(buf).resize(29,  29,  { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+        const icon2x = await sharp(buf).resize(58,  58,  { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+        const icon3x = await sharp(buf).resize(87,  87,  { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+        files["icon.png"]    = icon1x;
+        files["icon@2x.png"] = icon2x;
+        files["icon@3x.png"] = icon3x;
       }
     } catch { /* logo optionnel */ }
   }
