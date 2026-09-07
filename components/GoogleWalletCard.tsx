@@ -88,16 +88,16 @@ export default function GoogleWalletCard({
       {/* ── Logo + texte logo + issuer + nom programme ── */}
       <div style={{ padding: "12px 20px 8px", textAlign: "center" }}>
 
-        {/* Logo — 46px */}
+        {/* Logo — 40px */}
         <div style={{
-          width: 46, height: 46, borderRadius: "50%",
+          width: 40, height: 40, borderRadius: "50%",
           background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.06)",
           overflow: "hidden", margin: "0 auto 5px",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           {logoUrl
             ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            : <span style={{ fontSize: 18, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
+            : <span style={{ fontSize: 16, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
           }
         </div>
 
@@ -120,8 +120,8 @@ export default function GoogleWalletCard({
           boxShadow: dark ? "0 4px 20px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.10)",
         }}>
           {qr
-            ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 190, height: "auto", display: "block" }} />
-            : <div style={{ width: 190, height: 190, background: "#f0f0f0", borderRadius: 4 }} />
+            ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 175, height: "auto", display: "block" }} />
+            : <div style={{ width: 175, height: 175, background: "#f0f0f0", borderRadius: 4 }} />
           }
           {/* Tampons — directement sous le QR dans la box */}
           <div style={{ marginTop: 8, textAlign: "center" }}>
@@ -173,7 +173,7 @@ export default function GoogleWalletCard({
       {heroUrl && (
         <div style={{ width: "100%", marginTop: allModules.length > 0 || validLinks.length > 0 ? 0 : 8 }}>
           <div style={{ height: 1, background: divider }} />
-          <div style={{ width: "100%", height: 80, overflow: "hidden" }}>
+          <div style={{ width: "100%", height: 60, overflow: "hidden" }}>
             <img src={heroUrl} alt="" style={{
               width: "100%", height: "100%", objectFit: "cover", display: "block",
               objectPosition: `50% ${previewCropY}%`,
@@ -184,7 +184,7 @@ export default function GoogleWalletCard({
         </div>
       )}
 
-      <div style={{ height: 12 }} />
+      <div style={{ height: 6 }} />
 
     </div>
   );
