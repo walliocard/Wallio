@@ -99,14 +99,23 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         files["logo.png"]    = buf;
         files["logo@2x.png"] = buf;
         files["logo@3x.png"] = buf;
-        // Icône notification : logo redimensionné en carré
+        // Icône notification : logo sur fond couleur principale du marchand
         const sharp = (await import("sharp")).default;
-        const icon1x = await sharp(buf).resize(29,  29,  { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
-        const icon2x = await sharp(buf).resize(58,  58,  { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
-        const icon3x = await sharp(buf).resize(87,  87,  { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
-        files["icon.png"]    = icon1x;
-        files["icon@2x.png"] = icon2x;
-        files["icon@3x.png"] = icon3x;
+        const hex = input.backgroundColor.replace("#", "");
+        const bg  = {
+          r: parseInt(hex.slice(0, 2), 16) || 28,
+          g: parseInt(hex.slice(2, 4), 16) || 28,
+          b: parseInt(hex.slice(4, 6), 16) || 30,
+        };
+        const mkIcon = (size: number) =>
+          sharp(buf)
+            .resize(size, size, { fit: "contain", background: { ...bg, alpha: 1 } })
+            .flatten({ background: bg })
+            .png()
+            .toBuffer();
+        files["icon.png"]    = await mkIcon(29);
+        files["icon@2x.png"] = await mkIcon(58);
+        files["icon@3x.png"] = await mkIcon(87);
       }
     } catch { /* logo optionnel */ }
   }
