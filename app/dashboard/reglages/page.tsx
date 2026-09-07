@@ -136,11 +136,6 @@ export default function ReglagesPage() {
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
                 Tampons nécessaires — <span style={{ color: "var(--accent)" }}>{objectif}</span>
               </p>
-              <input type="range" min={5} max={20} value={objectif}
-                onChange={e => setObjectif(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--accent)", marginBottom: 10 }}
-              />
-              {/* Scroll horizontal sur mobile pour zones de tap suffisantes */}
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                 {[5, 6, 8, 10, 12, 15, 20].map(n => (
                   <button key={n} onClick={() => setObjectif(n)}
