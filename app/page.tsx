@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 const WA = "https://wa.me/40749056483?text=Bonjour%2C%20je%20souhaite%20d%C3%A9couvrir%20Wallio%20pour%20mon%20commerce.";
@@ -325,9 +326,30 @@ export default function LandingPage() {
         <canvas ref={canvasRef} style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0 }} />
         <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, background:"radial-gradient(ellipse 80% 60% at 70% 40%, rgba(100,130,255,0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 20% 80%, rgba(140,100,255,0.05) 0%, transparent 50%)" }} />
 
+        {/* ── Bouton WhatsApp flottant ── */}
+        <a href={WA} target="_blank" rel="noopener noreferrer"
+          style={{
+            position:"fixed", bottom:24, right:24, zIndex:50,
+            width:56, height:56, borderRadius:"50%",
+            background:"#25D366", boxShadow:"0 8px 24px rgba(37,211,102,0.45)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            transition:"transform 0.2s, box-shadow 0.2s",
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.08)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 32px rgba(37,211,102,0.55)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(37,211,102,0.45)"; }}
+          aria-label="Nous contacter sur WhatsApp"
+        >
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="white">
+            <path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1.0 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9zm0 22.9c-2.0 0-3.9-.5-5.5-1.5l-.4-.2-4.4 1.1 1.2-4.2-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.7 0-5.9 4.8-10.8 10.8-10.8 2.9 0 5.6 1.1 7.6 3.2 2.0 2.0 3.2 4.7 3.2 7.6 0 5.9-4.8 10.9-10.5 10.9zm5.8-8.1c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.7-1.6-2.0-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.2-.7-1.7-1.0-2.4-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1.1 1.0-1.1 2.5s1.1 2.9 1.3 3.1c.2.2 2.2 3.4 5.4 4.7.8.3 1.4.5 1.8.6.8.2 1.5.2 2.0.1.6-.1 1.8-.7 2.1-1.4.3-.7.3-1.2.2-1.4-.1-.2-.3-.3-.6-.4z"/>
+          </svg>
+        </a>
+
         {/* ── Nav ── */}
         <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:20, height:58, display:"flex", alignItems:"center", justifyContent:"space-between", background: scrolled ? "rgba(242,242,247,0.85)" : "transparent", backdropFilter: scrolled ? "blur(24px)" : "none", borderBottom: scrolled ? "0.5px solid rgba(0,0,0,0.09)" : "none", transition:"all 0.3s" }}>
-          <span style={{ fontSize:14, fontWeight:700, letterSpacing:"0.16em", color:"#1D1D1F" }}>WALLIO</span>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <Image src="/icon.svg" alt="Wallio" width={24} height={24} />
+            <span style={{ fontSize:14, fontWeight:700, letterSpacing:"0.16em", color:"#1D1D1F" }}>WALLIO</span>
+          </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             <Link href="/auth/connexion" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>Connexion</Link>
             <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary nav-contact" style={{ padding:"7px 18px", fontSize:13, borderRadius:20 }}>
@@ -398,19 +420,15 @@ export default function LandingPage() {
                         border:"1.5px solid #4472F5", opacity:0.3,
                       }} />
                     ))}
-                    {/* Phone */}
+                    {/* Phone avec logo Wallio */}
                     <div style={{ width:52, height:88, background:"#1D1D1F", borderRadius:12, position:"relative", zIndex:2, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px rgba(0,0,0,0.3)" }}>
-                      <div style={{ width:36, height:60, background:"#007AFF", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="15" r="1.5" fill="white" stroke="none"/></svg>
+                      <div style={{ width:36, height:60, background:"#0A0A0A", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <Image src="/icon.svg" alt="Wallio" width={24} height={24} />
                       </div>
                     </div>
-                    {/* NFC chip */}
-                    <div style={{ position:"absolute", bottom:8, width:40, height:28, background:"#F2F2F7", borderRadius:6, border:"1px solid #E5E5EA", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2 }}>
-                      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-                        <path d="M1 6C1 3.2 3.2 1 6 1h4c2.8 0 5 2.2 5 5s-2.2 5-5 5H6C3.2 11 1 8.8 1 6z" stroke="#4472F5" strokeWidth="1.2" fill="none"/>
-                        <path d="M5 6h6" stroke="#4472F5" strokeWidth="1.2" strokeLinecap="round"/>
-                        <circle cx="8" cy="6" r="2" fill="#4472F5" fillOpacity="0.15" stroke="#4472F5" strokeWidth="1"/>
-                      </svg>
+                    {/* Tag NFC */}
+                    <div style={{ position:"absolute", bottom:4, width:44, height:30, background:"#F2F2F7", borderRadius:8, border:"1px solid #E5E5EA", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2, boxShadow:"0 2px 8px rgba(0,0,0,0.08)" }}>
+                      <Image src="/nfc-icon.svg" alt="NFC" width={22} height={22} />
                     </div>
                   </div>
                   <div>
