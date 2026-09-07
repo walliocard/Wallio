@@ -52,116 +52,121 @@ export default function GoogleWalletCard({
 }: GoogleWalletCardProps) {
   const [qr, setQr] = useState("");
 
-  const bg = /^#[0-9a-f]{6}$/i.test(backgroundColor) ? backgroundColor : "#007AFF";
+  // Google Wallet affiche toujours le fond de la carte sur fond clair
+  // Le backgroundColor est utilisé pour le fond du card MAIS Google Wallet
+  // utilise un fond gris clair pour la vue détail
+  const bg = /^#[0-9a-f]{6}$/i.test(backgroundColor) ? backgroundColor : "#F5F5F5";
   const dark = isDarkBg(bg);
-  const text = dark ? "#FFFFFF" : "#000000";
-  const textSec = dark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.5)";
-  const divider = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
+  const text = dark ? "#FFFFFF" : "#1A1A1A";
+  const textSec = dark ? "rgba(255,255,255,0.6)" : "#6E6E73";
+  const divider = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
 
   const qrValue = previewUid ? `WALLIO:${previewUid}` : "WALLIO:preview";
 
   useEffect(() => {
     QRCode.toDataURL(qrValue, {
-      width: 480, margin: 1,
+      width: 600, margin: 1,
       color: { dark: "#000000", light: "#FFFFFF" },
       errorCorrectionLevel: "M",
     }).then(setQr).catch(() => {});
   }, [qrValue]);
 
-  // Modules texte affichables (récompense incluse si présente)
   const rewardModule = rewardName ? [{ header: "Récompense", body: rewardName, id: "recompense" }] : [];
   const allModules = [...rewardModule, ...textModules.filter(m => m.header && m.body)];
   const validLinks = links.filter(l => l.uri && l.description);
 
   return (
     <div style={{
-      width: 360,
-      borderRadius: 20,
+      width: 340,
+      borderRadius: 16,
       overflow: "hidden",
       background: bg,
       fontFamily: "'Google Sans', Roboto, 'Helvetica Neue', sans-serif",
-      boxShadow: "0 8px 40px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12)",
+      boxShadow: "0 2px 12px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)",
       WebkitFontSmoothing: "antialiased",
     }}>
 
-      {/* ── Hero image — position officielle Google Wallet ── */}
-      {heroUrl && (
-        <div style={{ width: "100%", height: 120, overflow: "hidden", flexShrink: 0 }}>
-          <img src={heroUrl} alt="" style={{
-            width: "100%", height: "100%", objectFit: "cover", display: "block",
-            objectPosition: `50% ${previewCropY}%`,
-            transform: previewZoom > 1 ? `scale(${previewZoom})` : "none",
-            transformOrigin: `50% ${previewCropY}%`,
-          }} />
-        </div>
-      )}
+      {/* ── Logo + texte logo + issuer + nom programme ── */}
+      <div style={{ padding: "24px 20px 12px", textAlign: "center" }}>
 
-      {/* ── Logo + émetteur + nom programme ── */}
-      <div style={{ padding: heroUrl ? "10px 20px 6px" : "16px 20px 6px", textAlign: "center" }}>
+        {/* Logo — 64px comme dans la vraie Google Wallet */}
         <div style={{
-          width: 42, height: 42, borderRadius: "50%",
-          background: "rgba(255,255,255,0.18)",
-          overflow: "hidden", margin: "0 auto 5px",
+          width: 64, height: 64, borderRadius: "50%",
+          background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.06)",
+          overflow: "hidden", margin: "0 auto 8px",
           display: "flex", alignItems: "center", justifyContent: "center",
-          border: "1.5px solid rgba(255,255,255,0.25)",
         }}>
           {logoUrl
             ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            : <span style={{ fontSize: 17, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
+            : <span style={{ fontSize: 24, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
           }
         </div>
-        <p style={{ fontSize: 10, color: textSec, margin: "0 0 3px", letterSpacing: 0.2 }}>Wallio</p>
-        <p style={{ fontSize: heroUrl ? 18 : 22, fontWeight: 700, color: text, margin: 0, letterSpacing: -0.5, lineHeight: 1.1 }}>
+
+        {/* Texte sous le logo (nom abrégé, comme Google Wallet l'affiche) */}
+        <p style={{ fontSize: 11, color: textSec, margin: "0 0 2px", fontWeight: 500 }}>
+          {logoText}
+        </p>
+
+        {/* Issuer name */}
+        <p style={{ fontSize: 14, color: textSec, margin: "0 0 4px", fontWeight: 400 }}>
+          Wallio
+        </p>
+
+        {/* Nom du programme — très grand, comme dans la vraie app */}
+        <p style={{ fontSize: 34, fontWeight: 700, color: text, margin: 0, letterSpacing: -0.5, lineHeight: 1.1 }}>
           {logoText || "Programme"}
         </p>
       </div>
 
-      {/* ── QR code — taille officielle Google Wallet (52% largeur carte) ── */}
-      <div style={{ padding: "6px 20px 10px", display: "flex", justifyContent: "center" }}>
+      {/* ── QR code — pleine largeur comme dans la vraie Google Wallet ── */}
+      <div style={{ padding: "0 16px 16px" }}>
         <div style={{
           background: "#FFFFFF",
-          borderRadius: 18,
-          padding: 14,
-          boxShadow: dark ? "0 4px 24px rgba(0,0,0,0.45)" : "0 4px 18px rgba(0,0,0,0.15)",
+          borderRadius: 16,
+          padding: 16,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: dark ? "0 4px 20px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.10)",
         }}>
           {qr
-            ? <img src={qr} alt="QR" style={{ width: 190, height: 190, display: "block" }} />
-            : <div style={{ width: 190, height: 190, background: "#f0f0f0", borderRadius: 4 }} />
+            ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 260, height: "auto", display: "block" }} />
+            : <div style={{ width: 260, height: 260, background: "#f0f0f0", borderRadius: 4 }} />
           }
         </div>
       </div>
 
       {/* ── Tampons ── */}
-      <div style={{ padding: "0 20px 10px" }}>
-        <p style={{ fontSize: 10, color: textSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px", fontWeight: 600 }}>
+      <div style={{ padding: "0 20px 16px" }}>
+        <p style={{ fontSize: 11, color: textSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 3px", fontWeight: 600 }}>
           {primaryLabel}
         </p>
-        <p style={{ fontSize: 18, fontWeight: 700, color: text, margin: 0, lineHeight: 1 }}>
+        <p style={{ fontSize: 22, fontWeight: 700, color: text, margin: 0, lineHeight: 1 }}>
           {stampsCurrent} / {stampsObjective}
         </p>
       </div>
 
       {/* ── Séparateur ── */}
-      {allModules.length > 0 && (
+      {(allModules.length > 0 || heroUrl) && (
         <div style={{ height: 1, background: divider, margin: "0 20px" }} />
       )}
 
-      {/* ── Text modules (récompense + modules custom) ── */}
+      {/* ── Text modules ── */}
       {allModules.map((m, i) => (
         <div key={m.id} style={{
-          padding: "10px 20px",
+          padding: "12px 20px",
           borderBottom: i < allModules.length - 1 ? `1px solid ${divider}` : "none",
         }}>
-          <p style={{ fontSize: 10, color: textSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px", fontWeight: 600 }}>
+          <p style={{ fontSize: 11, color: textSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px", fontWeight: 600 }}>
             {m.header}
           </p>
-          <p style={{ fontSize: 14, fontWeight: 600, color: text, margin: 0 }}>{m.body}</p>
+          <p style={{ fontSize: 15, fontWeight: 600, color: text, margin: 0 }}>{m.body}</p>
         </div>
       ))}
 
       {/* ── Liens ── */}
       {validLinks.length > 0 && (
-        <div style={{ padding: "10px 20px 16px", display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <div style={{ padding: "12px 20px", display: "flex", flexWrap: "wrap", gap: 6 }}>
           {validLinks.map((l, i) => (
             <a key={i} href={l.uri} target="_blank" rel="noopener noreferrer" style={{
               display: "inline-flex", alignItems: "center", gap: 4,
@@ -175,8 +180,22 @@ export default function GoogleWalletCard({
         </div>
       )}
 
-      {/* Padding bas */}
-      <div style={{ height: allModules.length === 0 && validLinks.length === 0 ? 8 : 4 }} />
+      {/* ── Hero image EN BAS — position réelle dans Google Wallet ── */}
+      {heroUrl && (
+        <div style={{ width: "100%", marginTop: allModules.length > 0 || validLinks.length > 0 ? 0 : 8 }}>
+          <div style={{ height: 1, background: divider }} />
+          <div style={{ width: "100%", height: 140, overflow: "hidden" }}>
+            <img src={heroUrl} alt="" style={{
+              width: "100%", height: "100%", objectFit: "cover", display: "block",
+              objectPosition: `50% ${previewCropY}%`,
+              transform: previewZoom > 1 ? `scale(${previewZoom})` : "none",
+              transformOrigin: `50% ${previewCropY}%`,
+            }} />
+          </div>
+        </div>
+      )}
+
+      <div style={{ height: 12 }} />
 
     </div>
   );
