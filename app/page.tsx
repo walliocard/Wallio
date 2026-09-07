@@ -713,7 +713,7 @@ export default function LandingPage() {
                   { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>, title:"Style des tampons", body:"Choisissez parmi 8 styles : point, anneau, check, cœur, étoile, texte ou votre logo.", color:"#8A5CF6" },
                   { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 9v12"/></svg>, title:"Bannière personnalisée", body:"Uploadez une image de votre établissement comme bannière sur la carte — avec les tampons dessinés dessus.", color:"#4472F5" },
                   { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>, title:"Champs informatifs", body:"Ajoutez vos horaires, votre numéro, vos liens — directement visibles sur la carte.", color:"#6A5AF9" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>, title:"Mode progressif", body:"Définissez des paliers de récompenses — remise 5 tampons, cadeau 10, statut VIP 20.", color:"#8A5CF6" },
+                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title:"Anti-doublon intelligent", body:"Configurez un délai minimum entre deux tampons (15 min, 1h, 4h, 1 jour) pour éviter les cumuls abusifs.", color:"#8A5CF6" },
                 ].map(f => (
                   <div key={f.title} style={{ background:"white", borderRadius:20, padding:"24px 22px", border:"0.5px solid rgba(0,0,0,0.07)", display:"flex", gap:16 }}>
                     <div style={{ width:38, height:38, borderRadius:12, background:`${f.color}12`, color:f.color, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -743,7 +743,7 @@ export default function LandingPage() {
                 {/* Phone mockup */}
                 <div data-reveal="left" style={{ display:"flex", justifyContent:"center" }}>
                   <div style={{ position:"relative" }}>
-                    <PhoneMock>
+                    <PhoneMock style={{ width:270 }}>
                       {/* Lock screen */}
                       <div style={{ background:"linear-gradient(160deg,#1A2744,#0D1829)", minHeight:340, padding:"20px 0 16px" }}>
                         {/* Time */}
