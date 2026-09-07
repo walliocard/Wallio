@@ -9,7 +9,7 @@ function useReveal() {
   useEffect(() => {
     document.querySelectorAll("[data-stagger]").forEach(parent => {
       Array.from(parent.children).forEach((child, i) => {
-        (child as HTMLElement).style.transitionDelay = `${i * 0.06}s`;
+        (child as HTMLElement).style.transitionDelay = `${i * 0.04}s`;
         child.setAttribute("data-reveal", "");
       });
     });
@@ -21,7 +21,7 @@ function useReveal() {
           io.unobserve(e.target);
         }
       }),
-      { threshold: 0.06 }
+      { threshold: 0.12, rootMargin: "0px 0px -24px 0px" }
     );
     els.forEach(el => io.observe(el));
     return () => io.disconnect();
@@ -249,8 +249,8 @@ export default function LandingPage() {
   return (
     <>
       <style>{`
-        @keyframes fadeUp  { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes float   { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+        @keyframes fadeUp  { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes float   { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-7px); } }
         @keyframes shimmer { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
         @keyframes nfcPulse { 0%,100% { opacity:0.15; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.08); } }
 
@@ -264,13 +264,13 @@ export default function LandingPage() {
         .hero-float { animation: float 5s ease-in-out infinite; }
 
         [data-reveal],[data-reveal="left"],[data-reveal="right"],[data-reveal="scale"],[data-reveal="fade"] {
-          will-change:transform,opacity; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+          backface-visibility:hidden; -webkit-backface-visibility:hidden;
         }
-        [data-reveal]         { opacity:0; transform:translate3d(0,24px,0);   transition:opacity 0.48s cubic-bezier(.22,1,.36,1), transform 0.48s cubic-bezier(.22,1,.36,1); }
-        [data-reveal="left"]  { opacity:0; transform:translate3d(-28px,0,0);  transition:opacity 0.48s cubic-bezier(.22,1,.36,1), transform 0.48s cubic-bezier(.22,1,.36,1); }
-        [data-reveal="right"] { opacity:0; transform:translate3d(28px,0,0);   transition:opacity 0.48s cubic-bezier(.22,1,.36,1), transform 0.48s cubic-bezier(.22,1,.36,1); }
-        [data-reveal="scale"] { opacity:0; transform:translate3d(0,16px,0) scale3d(0.94,0.94,1); transition:opacity 0.52s cubic-bezier(.22,1,.36,1), transform 0.52s cubic-bezier(.22,1,.36,1); }
-        [data-reveal="fade"]  { opacity:0; transition:opacity 0.55s ease; }
+        [data-reveal]         { opacity:0; transform:translate3d(0,12px,0);   transition:opacity 0.68s cubic-bezier(0.16,1,0.3,1), transform 0.68s cubic-bezier(0.16,1,0.3,1); }
+        [data-reveal="left"]  { opacity:0; transform:translate3d(-16px,0,0);  transition:opacity 0.68s cubic-bezier(0.16,1,0.3,1), transform 0.68s cubic-bezier(0.16,1,0.3,1); }
+        [data-reveal="right"] { opacity:0; transform:translate3d(16px,0,0);   transition:opacity 0.68s cubic-bezier(0.16,1,0.3,1), transform 0.68s cubic-bezier(0.16,1,0.3,1); }
+        [data-reveal="scale"] { opacity:0; transform:translate3d(0,8px,0) scale3d(0.97,0.97,1); transition:opacity 0.72s cubic-bezier(0.16,1,0.3,1), transform 0.72s cubic-bezier(0.16,1,0.3,1); }
+        [data-reveal="fade"]  { opacity:0; transition:opacity 0.68s ease; }
         .revealed { opacity:1 !important; transform:translate3d(0,0,0) scale3d(1,1,1) !important; }
 
         .grad-text { background:linear-gradient(92deg,#4472F5,#6A5AF9,#8A5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:shimmer 4s ease infinite; }
@@ -313,6 +313,10 @@ export default function LandingPage() {
           .lp-footer > div { justify-content:center; }
           section { padding-left:20px !important; padding-right:20px !important; }
         }
+        @media (max-width: 768px) {
+          .wallet-badges-inner { padding:20px 20px !important; }
+          .custom-cards > div { transform:none !important; }
+        }
         @media (max-width: 480px) {
           .lp-nav { padding:0 16px; }
           .lp-nav .nav-contact { display:none; }
@@ -325,6 +329,7 @@ export default function LandingPage() {
           .hero-cta { flex-direction:column; align-items:center; }
           .hero-cta a { width:100%; text-align:center; }
           section { padding-top:64px !important; padding-bottom:64px !important; }
+          .hero-badge span { font-size:9px !important; letter-spacing:0.06em !important; }
         }
       `}</style>
 
@@ -374,7 +379,7 @@ export default function LandingPage() {
                 NFC · QR Code · Apple Wallet · Google Wallet
               </span>
             </div>
-            <h1 className="hero-title" style={{ fontSize:"clamp(52px,6vw,88px)", fontWeight:700, lineHeight:1.02, letterSpacing:-3, color:"#1D1D1F", maxWidth:820, marginBottom:28 }}>
+            <h1 className="hero-title" style={{ fontSize:"clamp(40px,6vw,88px)", fontWeight:700, lineHeight:1.02, letterSpacing:-3, color:"#1D1D1F", maxWidth:820, marginBottom:28 }}>
               La fidélité client,<br />
               <span className="grad-text">sans friction.</span>
             </h1>
@@ -407,8 +412,8 @@ export default function LandingPage() {
           </section>
 
           {/* ── WALLET BADGES ── */}
-          <div style={{ background:"#1D1D1F", padding:"28px 32px" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }}>
+          <div style={{ background:"#1D1D1F" }}>
+            <div className="wallet-badges-inner" style={{ maxWidth:1040, margin:"0 auto", padding:"28px 32px", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }}>
               <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.5)", letterSpacing:"0.04em" }}>Disponible nativement sur</span>
               <div style={{ display:"flex", alignItems:"center", gap:20 }}>
                 <Image src="/apple-wallet-badge.svg" alt="Apple Wallet" width={130} height={40} style={{ opacity:0.9 }} />
