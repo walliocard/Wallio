@@ -100,9 +100,17 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         files["logo.png"]    = buf;
         files["logo@2x.png"] = buf;
         files["logo@3x.png"] = buf;
-        files["icon.png"]    = buf;
-        files["icon@2x.png"] = buf;
-        files["icon@3x.png"] = buf;
+        // icon.png doit être PNG (spec Apple stricte) — on convertit via canvas
+        try {
+          const { createCanvas, loadImage } = await import("@napi-rs/canvas");
+          const img    = await loadImage(buf);
+          const canvas = createCanvas(img.width, img.height);
+          canvas.getContext("2d").drawImage(img, 0, 0);
+          const png = await canvas.encode("png");
+          files["icon.png"]    = png;
+          files["icon@2x.png"] = png;
+          files["icon@3x.png"] = png;
+        } catch { /* garde ICON_29 si conversion échoue */ }
       }
     } catch { /* logo optionnel */ }
   }
