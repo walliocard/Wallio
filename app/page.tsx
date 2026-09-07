@@ -341,6 +341,10 @@ export default function LandingPage() {
           .anchor-nav { padding:0 16px !important; }
           .dash-stats { grid-template-columns:1fr !important; }
           .pwa-grid { flex-direction:column !important; align-items:center !important; }
+          .custom-grid-3 { grid-template-columns:repeat(2,1fr) !important; }
+        }
+        @media (max-width: 480px) {
+          .custom-grid-3 { grid-template-columns:1fr !important; }
         }
         @media (max-width: 480px) {
           .lp-nav { padding:0 16px; }
@@ -668,41 +672,41 @@ export default function LandingPage() {
               <div data-reveal style={{ display:"flex", gap:24, justifyContent:"center", alignItems:"flex-start", marginBottom:64, flexWrap:"wrap" }} className="custom-cards">
                 <div style={{ transform:"translateY(20px)", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
-                    bg="#0E1A0F" fg="#FFFFFF" labelClr="rgba(255,255,255,0.42)"
+                    bg="#082B16" fg="#FFFFFF" labelClr="rgba(110,220,140,0.55)"
                     name="Mori Matcha" logoInitial="M"
                     stamps={5} total={10} reward="Matcha offert"
-                    stampColor="#A8D5A2"
+                    stampColor="#5DCC80"
                     stripImageUrl="/strip-matcha.jpg"
                     aux1="7j/7" aux2="9h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>Matcha café</div>
+                  <div style={{ borderRadius:12, padding:"8px 16px", fontSize:12, fontWeight:600, color:"#5DCC80", background:"rgba(8,43,22,0.08)", border:"0.5px solid rgba(93,204,128,0.25)" }}>Matcha café</div>
                 </div>
                 <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
-                    bg="#1C1108" fg="#FFFFFF" labelClr="rgba(255,255,255,0.42)"
+                    bg="#2C0D04" fg="#FFFFFF" labelClr="rgba(220,140,90,0.55)"
                     name="Barba Italiana" logoInitial="BI"
                     stamps={4} total={8} reward="Coupe offerte"
-                    stampColor="#C8956C"
+                    stampColor="#D4875A"
                     stripImageUrl="/strip-barber.jpg"
                     aux1="Lun–Sam" aux2="9h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>Barber shop</div>
+                  <div style={{ borderRadius:12, padding:"8px 16px", fontSize:12, fontWeight:600, color:"#C8703C", background:"rgba(44,13,4,0.07)", border:"0.5px solid rgba(212,135,90,0.25)" }}>Barber shop</div>
                 </div>
                 <div style={{ transform:"translateY(20px)", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
-                    bg="#1A1714" fg="#FFFFFF" labelClr="rgba(255,255,255,0.42)"
+                    bg="#11102E" fg="#FFFFFF" labelClr="rgba(210,180,90,0.55)"
                     name="Hammam Royal" logoInitial="HR"
                     stamps={5} total={10} reward="Soin offert"
-                    stampColor="#C9A96E"
+                    stampColor="#E8BF50"
                     stripImageUrl="/strip-hammam.jpg"
                     aux1="Sur RDV" aux2="10h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>Hammam & Spa</div>
+                  <div style={{ borderRadius:12, padding:"8px 16px", fontSize:12, fontWeight:600, color:"#C9A030", background:"rgba(17,16,46,0.07)", border:"0.5px solid rgba(232,191,80,0.30)" }}>Hammam & Spa</div>
                 </div>
               </div>
 
               {/* Customization options */}
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))", gap:16 }}>
+              <div data-stagger className="custom-grid-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
                 {[
                   { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="13.5" cy="6.5" r="2.5"/><path d="M17 4.5a9 9 0 1 1-12.73 12.73"/><path d="M2 2l20 20"/></svg>, title:"Couleurs & Logo", body:"Couleur de fond, texte, tampons — et votre logo affiché en tête de carte.", color:"#4472F5" },
                   { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10"/><path d="M12 6v6l4 2"/><path d="M20 14l-5 5 5 5"/></svg>, title:"Nombre de tampons", body:"Choisissez entre 5 et 50 tampons par cycle, avec une ou plusieurs récompenses.", color:"#6A5AF9" },
