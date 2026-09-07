@@ -406,6 +406,19 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* ── WALLET BADGES ── */}
+          <div style={{ background:"#1D1D1F", padding:"28px 32px" }}>
+            <div style={{ maxWidth:1040, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }}>
+              <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.5)", letterSpacing:"0.04em" }}>Disponible nativement sur</span>
+              <div style={{ display:"flex", alignItems:"center", gap:20 }}>
+                <Image src="/apple-wallet-badge.svg" alt="Apple Wallet" width={130} height={40} style={{ opacity:0.9 }} />
+                <div style={{ width:"0.5px", height:28, background:"rgba(255,255,255,0.15)" }} />
+                <Image src="/google-wallet-badge.svg" alt="Google Wallet" width={130} height={40} style={{ opacity:0.9 }} />
+              </div>
+              <span style={{ fontSize:13, color:"rgba(255,255,255,0.35)", letterSpacing:"0.04em" }}>iOS · Android · sans application</span>
+            </div>
+          </div>
+
           {/* ── SCAN METHODS ── */}
           <section style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
@@ -418,40 +431,29 @@ export default function LandingPage() {
               <div data-stagger className="scan-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20 }}>
 
                 {/* NFC */}
-                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"32px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:24 }}>
-                  <div style={{ position:"relative", height:140, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    {/* NFC rings */}
-                    {[56,38,22].map((r, i) => (
-                      <div key={i} className={`nfc-ring-${i+1}`} style={{
-                        position:"absolute", width:r*2, height:r*2, borderRadius:"50%",
-                        border:"1.5px solid #4472F5", opacity:0.3,
-                      }} />
-                    ))}
-                    {/* Phone avec logo Wallio */}
-                    <div style={{ width:52, height:88, background:"#1D1D1F", borderRadius:12, position:"relative", zIndex:2, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px rgba(0,0,0,0.3)" }}>
-                      <div style={{ width:36, height:60, background:"#0A0A0A", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <Image src="/icon.svg" alt="Wallio" width={24} height={24} />
+                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"36px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:28 }}>
+                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:16 }}>
+                    <div style={{ position:"relative", width:80, height:80 }}>
+                      <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,#4472F5,#6A5AF9)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 12px 32px rgba(68,114,245,0.35)" }}>
+                        <Image src="/nfc-icon.svg" alt="NFC" width={44} height={44} style={{ filter:"brightness(0) invert(1)", opacity:0.95 }} />
                       </div>
+                      {/* Pulse ring */}
+                      <div className="nfc-ring-1" style={{ position:"absolute", inset:-10, borderRadius:32, border:"1.5px solid #4472F5" }} />
                     </div>
-                    {/* Tag NFC */}
-                    <div style={{ position:"absolute", bottom:4, width:44, height:30, background:"#F2F2F7", borderRadius:8, border:"1px solid #E5E5EA", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2, boxShadow:"0 2px 8px rgba(0,0,0,0.08)" }}>
-                      <Image src="/nfc-icon.svg" alt="NFC" width={22} height={22} />
+                    <div>
+                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#4472F5" }}>NFC</span>
                     </div>
                   </div>
                   <div>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-                      <div style={{ width:32, height:32, borderRadius:10, background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="2" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                      </div>
-                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"#4472F5" }}>NFC</span>
-                    </div>
-                    <h3 style={{ fontSize:20, fontWeight:650, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Tag NFC</h3>
-                    <p style={{ fontSize:14, lineHeight:1.65, color:"#6E6E73", marginBottom:16 }}>Le client approche son téléphone à moins de 4 cm du sticker NFC posé sur votre comptoir. Le tampon est ajouté en moins d&apos;une seconde, sans ouvrir aucune application.</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Tag NFC</h3>
+                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Le client approche son téléphone à moins de 4 cm du sticker NFC posé sur votre comptoir. Le tampon est ajouté en moins d&apos;une seconde, sans ouvrir aucune application.</p>
+                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                       {["Sans friction — le geste le plus rapide", "Compatible iPhone 7+ et Android NFC", "Sticker discret, résistant, repositionnable"].map(t => (
-                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
-                          <div style={{ width:5, height:5, borderRadius:"50%", background:"#4472F5", marginTop:7, flexShrink:0 }} />
-                          <span style={{ fontSize:13, color:"#6E6E73" }}>{t}</span>
+                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                          <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
+                            <div style={{ width:5, height:5, borderRadius:"50%", background:"#4472F5" }} />
+                          </div>
+                          <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{t}</span>
                         </div>
                       ))}
                     </div>
@@ -459,43 +461,33 @@ export default function LandingPage() {
                 </div>
 
                 {/* QR Code */}
-                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"32px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:24 }}>
-                  <div style={{ height:140, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <div style={{ position:"relative" }}>
-                      {/* Phone camera */}
-                      <div style={{ width:80, height:100, background:"#1D1D1F", borderRadius:16, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, boxShadow:"0 8px 24px rgba(0,0,0,0.3)" }}>
-                        <div style={{ width:12, height:12, borderRadius:"50%", background:"#2C2C2E", border:"2px solid #3A3A3C" }} />
-                        <div style={{ width:56, height:56, borderRadius:8, border:"2px solid #4472F5", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
-                          <div style={{ position:"absolute", top:3, left:3, width:10, height:10, border:"2px solid #4472F5", borderBottom:"none", borderRight:"none" }} />
-                          <div style={{ position:"absolute", top:3, right:3, width:10, height:10, border:"2px solid #4472F5", borderBottom:"none", borderLeft:"none" }} />
-                          <div style={{ position:"absolute", bottom:3, left:3, width:10, height:10, border:"2px solid #4472F5", borderTop:"none", borderRight:"none" }} />
-                          <div style={{ position:"absolute", bottom:3, right:3, width:10, height:10, border:"2px solid #4472F5", borderTop:"none", borderLeft:"none" }} />
-                          <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
-                            <rect x="1" y="1" width="13" height="13" rx="2" stroke="rgba(68,114,245,0.6)" strokeWidth="1.2" fill="none"/>
-                            <rect x="3.5" y="3.5" width="8" height="8" rx="1" fill="rgba(68,114,245,0.4)"/>
-                            <rect x="20" y="1" width="13" height="13" rx="2" stroke="rgba(68,114,245,0.6)" strokeWidth="1.2" fill="none"/>
-                            <rect x="22.5" y="3.5" width="8" height="8" rx="1" fill="rgba(68,114,245,0.4)"/>
-                            <rect x="1" y="20" width="13" height="13" rx="2" stroke="rgba(68,114,245,0.6)" strokeWidth="1.2" fill="none"/>
-                            <rect x="3.5" y="22.5" width="8" height="8" rx="1" fill="rgba(68,114,245,0.4)"/>
-                          </svg>
-                        </div>
-                      </div>
+                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"36px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:28 }}>
+                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:16 }}>
+                    <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,#6A5AF9,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 12px 32px rgba(106,90,249,0.35)" }}>
+                      <svg width="42" height="42" viewBox="0 0 34 34" fill="none">
+                        <rect x="1" y="1" width="13" height="13" rx="2.5" stroke="white" strokeWidth="1.8" fill="none"/>
+                        <rect x="4" y="4" width="7" height="7" rx="1" fill="white"/>
+                        <rect x="20" y="1" width="13" height="13" rx="2.5" stroke="white" strokeWidth="1.8" fill="none"/>
+                        <rect x="23" y="4" width="7" height="7" rx="1" fill="white"/>
+                        <rect x="1" y="20" width="13" height="13" rx="2.5" stroke="white" strokeWidth="1.8" fill="none"/>
+                        <rect x="4" y="23" width="7" height="7" rx="1" fill="white"/>
+                        <rect x="20" y="20" width="5" height="5" rx="0.8" fill="white"/>
+                        <rect x="27" y="20" width="6" height="5" rx="0.8" fill="white"/>
+                        <rect x="20" y="27" width="13" height="6" rx="0.8" fill="white"/>
+                      </svg>
                     </div>
+                    <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#6A5AF9" }}>QR Code</span>
                   </div>
                   <div>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-                      <div style={{ width:32, height:32, borderRadius:10, background:"rgba(106,90,249,0.10)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6A5AF9" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z" opacity=".5"/></svg>
-                      </div>
-                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"#6A5AF9" }}>QR Code</span>
-                    </div>
-                    <h3 style={{ fontSize:20, fontWeight:650, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Scan QR Code</h3>
-                    <p style={{ fontSize:14, lineHeight:1.65, color:"#6E6E73", marginBottom:16 }}>Le client ouvre l&apos;appareil photo de son téléphone et scanne le QR code affiché sur votre comptoir ou votre carte de caisse. Fonctionne avec tous les téléphones.</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Scan QR Code</h3>
+                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Le client ouvre l&apos;appareil photo de son téléphone et scanne le QR code affiché sur votre comptoir. Fonctionne avec tous les téléphones, sans application.</p>
+                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                       {["Universel — tous les téléphones sans exception", "Fonctionne via l'appareil photo natif iOS/Android", "Idéal en complément ou sans tag NFC"].map(t => (
-                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
-                          <div style={{ width:5, height:5, borderRadius:"50%", background:"#6A5AF9", marginTop:7, flexShrink:0 }} />
-                          <span style={{ fontSize:13, color:"#6E6E73" }}>{t}</span>
+                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                          <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(106,90,249,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
+                            <div style={{ width:5, height:5, borderRadius:"50%", background:"#6A5AF9" }} />
+                          </div>
+                          <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{t}</span>
                         </div>
                       ))}
                     </div>
@@ -503,45 +495,27 @@ export default function LandingPage() {
                 </div>
 
                 {/* Carte comptoir */}
-                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"32px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:24 }}>
-                  <div style={{ height:140, display:"flex", alignItems:"flex-end", justifyContent:"center", paddingBottom:8 }}>
-                    {/* Counter surface */}
-                    <div style={{ position:"relative" }}>
-                      <div style={{ width:160, height:16, background:"#E5E5EA", borderRadius:"4px 4px 0 0", position:"absolute", bottom:-8, left:"50%", transform:"translateX(-50%)" }} />
-                      {/* Display card */}
-                      <div style={{ width:120, height:80, background:"linear-gradient(135deg,#1D1D1F,#3A3A3C)", borderRadius:10, boxShadow:"0 8px 24px rgba(0,0,0,0.3)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6, padding:10, position:"relative", zIndex:1 }}>
-                        <div style={{ fontSize:8, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:"rgba(255,255,255,0.5)" }}>CARTE FIDÉLITÉ</div>
-                        <div style={{ width:44, height:44, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                          <svg width="40" height="40" viewBox="0 0 34 34" fill="none">
-                            <rect x="1" y="1" width="13" height="13" rx="2" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" fill="none"/>
-                            <rect x="3.5" y="3.5" width="8" height="8" rx="1" fill="rgba(255,255,255,0.5)"/>
-                            <rect x="20" y="1" width="13" height="13" rx="2" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" fill="none"/>
-                            <rect x="22.5" y="3.5" width="8" height="8" rx="1" fill="rgba(255,255,255,0.5)"/>
-                            <rect x="1" y="20" width="13" height="13" rx="2" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" fill="none"/>
-                            <rect x="3.5" y="22.5" width="8" height="8" rx="1" fill="rgba(255,255,255,0.5)"/>
-                            <rect x="20" y="20" width="4" height="4" rx="0.5" fill="rgba(255,255,255,0.5)"/>
-                            <rect x="26" y="20" width="7" height="4" rx="0.5" fill="rgba(255,255,255,0.5)"/>
-                            <rect x="20" y="26" width="13" height="7" rx="0.5" fill="rgba(255,255,255,0.5)"/>
-                          </svg>
-                        </div>
-                        <div style={{ fontSize:7, color:"rgba(255,255,255,0.4)" }}>Scannez pour accéder</div>
-                      </div>
+                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"36px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", display:"flex", flexDirection:"column", gap:28 }}>
+                  <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:16 }}>
+                    <div style={{ width:80, height:80, borderRadius:22, background:"linear-gradient(135deg,#8A5CF6,#BF5AF2)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 12px 32px rgba(138,92,246,0.35)" }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6" strokeLinecap="round">
+                        <rect x="2" y="3" width="20" height="16" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
+                        <path d="M6 8h12M6 12h8"/>
+                      </svg>
                     </div>
+                    <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#8A5CF6" }}>Carte Comptoir</span>
                   </div>
                   <div>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-                      <div style={{ width:32, height:32, borderRadius:10, background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A5CF6" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                      </div>
-                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8A5CF6" }}>Carte Comptoir</span>
-                    </div>
-                    <h3 style={{ fontSize:20, fontWeight:650, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Support imprimé 4K</h3>
-                    <p style={{ fontSize:14, lineHeight:1.65, color:"#6E6E73", marginBottom:16 }}>Wallio génère automatiquement un visuel haute résolution à votre image, avec votre logo et votre QR code unique. Vous l&apos;imprimez et le posez sur votre comptoir.</p>
-                    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                    <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Support imprimé 4K</h3>
+                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Wallio génère automatiquement un visuel haute résolution à votre image, avec votre logo et votre QR code unique. Vous l&apos;imprimez et le posez sur votre comptoir.</p>
+                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                       {["Fichier 4K prêt à envoyer à l'imprimeur", "Design à vos couleurs et avec votre logo", "Peut inclure un tag NFC intégré"].map(t => (
-                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
-                          <div style={{ width:5, height:5, borderRadius:"50%", background:"#8A5CF6", marginTop:7, flexShrink:0 }} />
-                          <span style={{ fontSize:13, color:"#6E6E73" }}>{t}</span>
+                        <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                          <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
+                            <div style={{ width:5, height:5, borderRadius:"50%", background:"#8A5CF6" }} />
+                          </div>
+                          <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{t}</span>
                         </div>
                       ))}
                     </div>
@@ -596,7 +570,7 @@ export default function LandingPage() {
                     stripImageUrl="/strip-matcha.jpg"
                     aux1="7j/7" aux2="9h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>🍵 Matcha café</div>
+                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>Matcha café</div>
                 </div>
                 <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
@@ -607,7 +581,7 @@ export default function LandingPage() {
                     stripImageUrl="/strip-barber.jpg"
                     aux1="Lun–Sam" aux2="9h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>✂️ Barber shop</div>
+                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>Barber shop</div>
                 </div>
                 <div style={{ transform:"translateY(20px)", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
@@ -618,7 +592,7 @@ export default function LandingPage() {
                     stripImageUrl="/strip-hammam.jpg"
                     aux1="Sur RDV" aux2="10h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>🛁 Hammam & Spa</div>
+                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>Hammam & Spa</div>
                 </div>
               </div>
 
@@ -689,7 +663,7 @@ export default function LandingPage() {
                           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                             <div style={{ width:28, height:28, borderRadius:7, overflow:"hidden", flexShrink:0 }}>
                               <div style={{ width:"100%", height:"100%", background:"#1A1209", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                                <span style={{ fontSize:12 }}>☕</span>
+                                <span style={{ fontSize:10, fontWeight:700, color:"#E8C97A" }}>NC</span>
                               </div>
                             </div>
                             <div style={{ flex:1 }}>
@@ -697,7 +671,7 @@ export default function LandingPage() {
                             </div>
                             <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>il y a 2h</div>
                           </div>
-                          <div style={{ fontSize:12, fontWeight:600, color:"white", marginBottom:2 }}>🎂 Bonne anniversaire !</div>
+                          <div style={{ fontSize:12, fontWeight:600, color:"white", marginBottom:2 }}>Bonne anniversaire !</div>
                           <div style={{ fontSize:11, color:"rgba(255,255,255,0.65)" }}>On vous offre un double tampon aujourd&apos;hui. À bientôt !</div>
                         </div>
                       </div>
