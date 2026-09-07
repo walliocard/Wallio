@@ -118,32 +118,31 @@ export default function GoogleWalletCard({
         </p>
       </div>
 
-      {/* ── QR code — pleine largeur comme dans la vraie Google Wallet ── */}
+      {/* ── QR code + tampons dans la même box blanche ── */}
       <div style={{ padding: "0 16px 16px" }}>
         <div style={{
           background: "#FFFFFF",
           borderRadius: 16,
           padding: 16,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
           boxShadow: dark ? "0 4px 20px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.10)",
         }}>
           {qr
             ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 260, height: "auto", display: "block" }} />
             : <div style={{ width: 260, height: 260, background: "#f0f0f0", borderRadius: 4 }} />
           }
+          {/* Tampons — directement sous le QR dans la box */}
+          <div style={{ marginTop: 12, textAlign: "center" }}>
+            <p style={{ fontSize: 11, color: "#6E6E73", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px", fontWeight: 600 }}>
+              {primaryLabel}
+            </p>
+            <p style={{ fontSize: 22, fontWeight: 700, color: "#1A1A1A", margin: 0, lineHeight: 1 }}>
+              {stampsCurrent} / {stampsObjective}
+            </p>
+          </div>
         </div>
-      </div>
-
-      {/* ── Tampons ── */}
-      <div style={{ padding: "0 20px 16px" }}>
-        <p style={{ fontSize: 11, color: textSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 3px", fontWeight: 600 }}>
-          {primaryLabel}
-        </p>
-        <p style={{ fontSize: 22, fontWeight: 700, color: text, margin: 0, lineHeight: 1 }}>
-          {stampsCurrent} / {stampsObjective}
-        </p>
       </div>
 
       {/* ── Séparateur ── */}
