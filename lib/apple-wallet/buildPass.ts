@@ -17,6 +17,7 @@ async function generateIcon(size: number, logoUrl: string | undefined, bgColor: 
   if (logoUrl) {
     try {
       const img     = await loadImage(logoUrl);
+      console.log("[generateIcon] logo loaded:", img.width, "x", img.height);
       const padding = size * 0.12;
       const maxDim  = size - padding * 2;
       const ratio   = Math.min(maxDim / img.width, maxDim / img.height);
@@ -130,9 +131,12 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
 
   // Icône notification — bloc indépendant pour ne pas masquer les erreurs
   try {
+    console.log("[icon] bgColor:", input.backgroundColor, "| logoUrl:", input.logoUrl ?? "none");
+    const icon87 = await generateIcon(87, input.logoUrl, input.backgroundColor);
+    console.log("[icon] generated, size:", icon87.length, "bytes");
     files["icon.png"]    = await generateIcon(29,  input.logoUrl, input.backgroundColor);
     files["icon@2x.png"] = await generateIcon(58,  input.logoUrl, input.backgroundColor);
-    files["icon@3x.png"] = await generateIcon(87,  input.logoUrl, input.backgroundColor);
+    files["icon@3x.png"] = icon87;
   } catch (e) {
     console.error("[buildPkpass] icon generation failed:", e);
   }
