@@ -28,7 +28,7 @@ export async function GET(
   if (ifModifiedSince && client.apns_last_updated) {
     const sinceMs = new Date(ifModifiedSince).getTime();
     const updatedMs = new Date(client.apns_last_updated).getTime();
-    if (updatedMs < sinceMs) return new Response(null, { status: 304 });
+    if (updatedMs <= sinceMs) return new Response(null, { status: 304 });
   }
 
   const marchandDoc = await db.collection("marchands").doc(client.marchand_id).get();
