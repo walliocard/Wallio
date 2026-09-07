@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const FROM = "Wallio <onboarding@resend.dev>";
+const FROM = "Wallio <hello@walliocard.com>";
 
 async function sendEmail(key: string, to: string, subject: string, html: string) {
   return fetch("https://api.resend.com/emails", {
