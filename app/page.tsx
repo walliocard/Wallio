@@ -165,13 +165,28 @@ function PhoneMock({ children, style }: { children: React.ReactNode; style?: Rea
 export default function LandingPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [navVisible, setNavVisible] = useState(false);
+  const [activeAnchor, setActiveAnchor] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   useReveal();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setNavVisible(window.scrollY > window.innerHeight * 0.65);
+    };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const ids = ["acces", "comment", "personnalisation", "notifications", "dashboard", "faq"];
+    const io = new IntersectionObserver(
+      entries => { entries.forEach(e => { if (e.isIntersecting) setActiveAnchor(e.target.id); }); },
+      { threshold: 0.2 }
+    );
+    ids.forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
+    return () => io.disconnect();
   }, []);
 
   useEffect(() => {
@@ -313,9 +328,18 @@ export default function LandingPage() {
           .lp-footer > div { justify-content:center; }
           section { padding-left:20px !important; padding-right:20px !important; }
         }
+        html { scroll-behavior:smooth; scroll-padding-top:108px; }
+        .anchor-nav { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+        .anchor-nav::-webkit-scrollbar { display:none; }
+        .anchor-link { transition:all 0.18s; white-space:nowrap; flex-shrink:0; }
+        .anchor-link:hover { color:#1D1D1F !important; }
+        .dash-row { border-bottom:0.5px solid rgba(0,0,0,0.06); }
+        .dash-row:last-child { border-bottom:none; }
         @media (max-width: 768px) {
           .wallet-badges-inner { padding:20px 20px !important; }
           .custom-cards > div { transform:none !important; }
+          .anchor-nav { padding:0 16px !important; }
+          .dash-stats { grid-template-columns:1fr !important; }
         }
         @media (max-width: 480px) {
           .lp-nav { padding:0 16px; }
@@ -369,6 +393,24 @@ export default function LandingPage() {
             </a>
           </div>
         </nav>
+
+        {/* ── Anchor nav ── */}
+        <div style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.92)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.08)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+          <div className="anchor-nav" style={{ maxWidth:1040, margin:"0 auto", padding:"0 32px" }}>
+            <div style={{ display:"flex", gap:2, height:42, alignItems:"center" }}>
+              {([
+                { id:"acces", label:"Accès" },
+                { id:"comment", label:"Comment ça marche" },
+                { id:"personnalisation", label:"Personnalisation" },
+                { id:"notifications", label:"Notifications" },
+                { id:"dashboard", label:"Dashboard" },
+                { id:"faq", label:"FAQ" },
+              ] as { id: string; label: string }[]).map(a => (
+                <a key={a.id} href={`#${a.id}`} className="anchor-link" style={{ fontSize:13, fontWeight: activeAnchor === a.id ? 600 : 400, color: activeAnchor === a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none", padding:"4px 12px", borderRadius:20, background: activeAnchor === a.id ? "rgba(0,0,0,0.08)" : "transparent" }}>{a.label}</a>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div style={{ position:"relative", zIndex:1 }}>
 
@@ -425,11 +467,11 @@ export default function LandingPage() {
           </div>
 
           {/* ── SCAN METHODS ── */}
-          <section style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+          <section id="acces" style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Modes d&apos;accès</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:14 }}>3 façons d&apos;accéder<br />à la carte de fidélité</h2>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>3 façons d&apos;accéder<br />à la carte de fidélité</h2>
                 <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>Choisissez selon votre setup — ou combinez les trois.</p>
               </div>
 
@@ -513,9 +555,9 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize:22, fontWeight:700, letterSpacing:-0.4, color:"#1D1D1F", marginBottom:10 }}>Support imprimé 4K</h3>
-                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>Wallio génère automatiquement un visuel haute résolution à votre image, avec votre logo et votre QR code unique. Vous l&apos;imprimez et le posez sur votre comptoir.</p>
+                    <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:20 }}>La carte comptoir est le support physique de Wallio — votre QR code est intégré, vos clients le scannent directement. Elle peut aussi contenir un tag NFC pour un accès encore plus rapide.</p>
                     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                      {["Fichier 4K prêt à envoyer à l'imprimeur", "Design à vos couleurs et avec votre logo", "Peut inclure un tag NFC intégré"].map(t => (
+                      {["QR code intégré, scannable depuis l'appareil photo", "Design 4K à vos couleurs et avec votre logo", "Option tag NFC intégré pour un scan sans contact"].map(t => (
                         <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                           <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
                             <div style={{ width:5, height:5, borderRadius:"50%", background:"#8A5CF6" }} />
@@ -532,10 +574,10 @@ export default function LandingPage() {
           </section>
 
           {/* ── HOW IT WORKS ── */}
-          <section style={{ maxWidth:1040, margin:"0 auto", padding:"96px 32px" }}>
+          <section id="comment" style={{ maxWidth:1040, margin:"0 auto", padding:"96px 32px" }}>
             <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
               <span className="feature-tag">Comment ça marche</span>
-              <h2 style={{ fontSize:40, fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Trois secondes. Pas une de plus.</h2>
+              <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F" }}>Trois secondes.<br />Pas une de plus.</h2>
             </div>
             <div data-stagger className="steps-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
               {[
@@ -556,11 +598,11 @@ export default function LandingPage() {
           </section>
 
           {/* ── PERSONNALISATION ── */}
-          <section style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)", overflow:"hidden" }}>
+          <section id="personnalisation" style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)", overflow:"hidden" }}>
             <div style={{ maxWidth:1120, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Personnalisation</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:14 }}>Votre carte, à votre image</h2>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>Votre carte, à votre image</h2>
                 <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>Chaque élément est configurable depuis votre dashboard — en temps réel.</p>
               </div>
 
@@ -626,12 +668,12 @@ export default function LandingPage() {
           </section>
 
           {/* ── NOTIFICATIONS ── */}
-          <section style={{ padding:"96px 32px" }}>
+          <section id="notifications" style={{ padding:"96px 32px" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Notifications</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:14 }}>Restez présent<br />au bon moment</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>Deux canaux de notification, trois déclencheurs automatiques.</p>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>Restez présent<br />au bon moment</h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>Wallet, push ciblé, automatisations, géolocalisation — quatre façons d&apos;atteindre vos clients au bon moment.</p>
               </div>
 
               <div className="notif-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:32, alignItems:"center" }}>
@@ -705,6 +747,12 @@ export default function LandingPage() {
                       desc:"Wallio envoie automatiquement un message le jour de l'anniversaire de votre client, ou une relance personnalisée si un client n'est pas revenu depuis X jours.",
                       tags:["Anniversaire", "Relance auto"],
                     },
+                    {
+                      color:"#30D158", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+                      title:"Géolocalisation",
+                      desc:"Déclenchez une notification push automatique quand un client se trouve à proximité de votre établissement — l'incitation parfaite à pousser la porte.",
+                      tags:["Proximité", "Automatique"],
+                    },
                   ].map(n => (
                     <div key={n.title} style={{ background:"white", borderRadius:20, padding:"22px 22px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 16px rgba(0,0,0,0.04)" }}>
                       <div style={{ display:"flex", gap:14 }}>
@@ -728,12 +776,95 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* ── DASHBOARD ── */}
+          <section id="dashboard" style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+            <div style={{ maxWidth:1040, margin:"0 auto" }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
+                <span className="feature-tag">Dashboard</span>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>Chaque client,<br />sous la main</h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>Votre tableau de bord centralise tout — clients, tampons, récompenses, statistiques — en temps réel.</p>
+              </div>
+
+              {/* Dashboard mockup */}
+              <div data-reveal style={{ background:"white", borderRadius:28, border:"0.5px solid rgba(0,0,0,0.08)", boxShadow:"0 8px 48px rgba(0,0,0,0.08)", overflow:"hidden", marginBottom:48 }}>
+                <div style={{ padding:"18px 28px", borderBottom:"0.5px solid rgba(0,0,0,0.07)", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z" opacity=".5"/></svg>
+                    </div>
+                    <span style={{ fontSize:14, fontWeight:650, color:"#1D1D1F" }}>Nomade Café — Tableau de bord</span>
+                  </div>
+                  <span style={{ fontSize:12, color:"#8E8E93" }}>Lundi 7 sept. 2026</span>
+                </div>
+                <div className="dash-stats" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+                  {[
+                    { label:"Clients totaux", value:"247", sub:"+12 ce mois", color:"#4472F5" },
+                    { label:"Tampons distribués", value:"1 842", sub:"30 derniers jours", color:"#6A5AF9" },
+                    { label:"Taux de fidélité", value:"78 %", sub:"clients actifs", color:"#34C759" },
+                  ].map((s, i) => (
+                    <div key={s.label} style={{ padding:"20px 28px", borderRight: i < 2 ? "0.5px solid rgba(0,0,0,0.07)" : "none" }}>
+                      <div style={{ fontSize:11, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>{s.label}</div>
+                      <div style={{ fontSize:28, fontWeight:700, color:"#1D1D1F", letterSpacing:-1, lineHeight:1 }}>{s.value}</div>
+                      <div style={{ fontSize:12, color:s.color, marginTop:4 }}>{s.sub}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ padding:"16px 28px" }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:12 }}>Clients récents</div>
+                  {[
+                    { initials:"AM", name:"Ahmed M.", phone:"+212 6XX XXX XX1", stamps:8, total:10, time:"il y a 2h", badge:"Actif", bc:"#34C759" },
+                    { initials:"FB", name:"Fatima B.", phone:"+212 6XX XXX XX2", stamps:10, total:10, time:"Récompense", badge:"Récompense", bc:"#FF9500" },
+                    { initials:"KL", name:"Karim L.", phone:"+212 6XX XXX XX3", stamps:3, total:10, time:"il y a 5j", badge:"Actif", bc:"#34C759" },
+                  ].map((c, i) => (
+                    <div key={c.name} className="dash-row" style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0" }}>
+                      <div style={{ width:36, height:36, borderRadius:"50%", background:"rgba(68,114,245,0.08)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <span style={{ fontSize:12, fontWeight:700, color:"#4472F5" }}>{c.initials}</span>
+                      </div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                          <span style={{ fontSize:14, fontWeight:600, color:"#1D1D1F" }}>{c.name}</span>
+                          <span style={{ fontSize:11, fontWeight:600, color:c.bc, background:`${c.bc}18`, padding:"2px 8px", borderRadius:20 }}>{c.badge}</span>
+                        </div>
+                        <div style={{ fontSize:12, color:"#8E8E93", marginTop:1 }}>{c.phone}</div>
+                      </div>
+                      <div style={{ textAlign:"right", flexShrink:0 }}>
+                        <div style={{ fontSize:12, fontWeight:600, color:"#1D1D1F", marginBottom:4 }}>{c.stamps}/{c.total}</div>
+                        <div style={{ width:80, height:4, background:"#F2F2F7", borderRadius:2 }}>
+                          <div style={{ width:`${(c.stamps/c.total)*100}%`, height:"100%", background:"linear-gradient(90deg,#4472F5,#8A5CF6)", borderRadius:2 }} />
+                        </div>
+                      </div>
+                      <div style={{ fontSize:11, color:"#C7C7CC", textAlign:"right", width:56, flexShrink:0, display:"none" }} className="dash-time">{c.time}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dashboard features */}
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))", gap:16 }}>
+                {[
+                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>, title:"Segmentation automatique", body:"Clients actifs (passés dans les 30 derniers jours) et inactifs — classés en temps réel.", color:"#4472F5" },
+                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, title:"Ajustement manuel", body:"Corrigez un tampon oublié ou récompensez un client exceptionnel directement depuis sa fiche.", color:"#6A5AF9" },
+                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>, title:"Statistiques détaillées", body:"Tampons distribués, récompenses validées, fréquence de visite — visualisés par période.", color:"#8A5CF6" },
+                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>, title:"Recherche instantanée", body:"Retrouvez n'importe quel client par nom ou numéro de téléphone en une fraction de seconde.", color:"#4472F5" },
+                ].map(f => (
+                  <div key={f.title} style={{ background:"white", borderRadius:20, padding:"22px 20px", border:"0.5px solid rgba(0,0,0,0.07)", display:"flex", gap:14 }}>
+                    <div style={{ width:38, height:38, borderRadius:12, background:`${f.color}12`, color:f.color, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{f.icon}</div>
+                    <div>
+                      <h3 style={{ fontSize:15, fontWeight:650, color:"#1D1D1F", marginBottom:5, letterSpacing:-0.2 }}>{f.title}</h3>
+                      <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{f.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* ── FEATURES ── */}
-          <section style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+          <section style={{ padding:"96px 32px" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Fonctionnalités</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Tout ce dont vous avez besoin</h2>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F" }}>Tout ce dont vous avez besoin</h2>
               </div>
               <div data-stagger className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
                 {[
@@ -757,12 +888,12 @@ export default function LandingPage() {
           </section>
 
           {/* ── SECTEURS ── */}
-          <section style={{ padding:"96px 32px", overflow:"hidden", position:"relative" }}>
+          <section id="secteurs" style={{ padding:"96px 32px", overflow:"hidden", position:"relative" }}>
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 70% 80% at 50% 50%, rgba(68,114,245,0.05) 0%, transparent 70%)", pointerEvents:"none" }} />
             <div style={{ maxWidth:1040, margin:"0 auto", position:"relative" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
                 <span className="feature-tag">Secteurs</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:14 }}>Pour tous les commerces<br />de proximité</h2>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>Pour tous les commerces<br />de proximité</h2>
                 <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>Une seule solution, adaptée à chaque type d&apos;établissement.</p>
               </div>
               <div data-stagger className="sectors-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:12 }}>
@@ -786,11 +917,11 @@ export default function LandingPage() {
           </section>
 
           {/* ── FAQ ── */}
-          <section style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)" }}>
+          <section id="faq" style={{ padding:"96px 32px", background:"rgba(255,255,255,0.55)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)", borderTop:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:760, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
                 <span className="feature-tag">FAQ</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F" }}>Questions fréquentes</h2>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F" }}>Questions fréquentes</h2>
               </div>
 
               <div data-stagger>
