@@ -180,7 +180,7 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    const ids = ["acces", "comment", "personnalisation", "notifications", "dashboard", "presence", "faq"];
+    const ids = ["acces", "comment", "personnalisation", "notifications", "dashboard", "presence", "tarifs", "faq"];
     const io = new IntersectionObserver(
       entries => { entries.forEach(e => { if (e.isIntersecting) setActiveAnchor(e.target.id); }); },
       { threshold: 0.2 }
@@ -346,6 +346,7 @@ export default function LandingPage() {
         }
         @media (max-width: 480px) {
           .custom-grid-3 { grid-template-columns:1fr !important; }
+          .pricing-inner { flex-direction:column !important; }
         }
         @media (max-width: 480px) {
           .lp-nav { padding:0 16px; }
@@ -411,6 +412,7 @@ export default function LandingPage() {
                 { id:"notifications", label:"Notifications" },
                 { id:"dashboard", label:"Dashboard" },
                 { id:"presence", label:"Présence" },
+                { id:"tarifs", label:"Tarifs" },
                 { id:"faq", label:"FAQ" },
               ] as { id: string; label: string }[]).map(a => (
                 <a key={a.id} href={`#${a.id}`} className="anchor-link" style={{ fontSize:13, fontWeight: activeAnchor === a.id ? 600 : 400, color: activeAnchor === a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none", padding:"4px 12px", borderRadius:20, background: activeAnchor === a.id ? "rgba(0,0,0,0.08)" : "transparent" }}>{a.label}</a>
@@ -1127,15 +1129,86 @@ export default function LandingPage() {
                   { label:"Barber Shop", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M20 17v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><line x1="12" y1="12" x2="12" y2="21"/></svg> },
                   { label:"Salon de beauté", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> },
                   { label:"Boutique & Mode", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> },
-                  { label:"Salle de sport", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6.5 6.5h11M6.5 17.5h11M3 10h18M3 14h18"/></svg> },
-                  { label:"Boulangerie", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 5a5 5 0 0 1 0 10H7A5 5 0 0 1 7 5h10z"/><path d="M12 5v10"/></svg> },
-                  { label:"Institut & Spa", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+                  { label:"Salle de sport", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 5v14M18 5v14"/><path d="M2 9h8M2 15h8M14 9h8M14 15h8"/><path d="M6 12h12"/></svg> },
+                  { label:"Boulangerie", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 11a8 8 0 0 1 16 0v8H4v-8z"/><path d="M8 19v-4M12 19v-5M16 19v-4"/></svg> },
+                  { label:"Institut & Spa", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22V12"/><path d="M12 12c0 0-5-2-5-7 1.5-.5 3-.5 5 2 2-2.5 3.5-2.5 5-2 0 5-5 7-5 7z"/><path d="M5 17c2 2 4 3 7 3s5-1 7-3"/></svg> },
                 ].map(s => (
                   <div key={s.label} className="glass card-hover" style={{ borderRadius:18, padding:"20px 18px", display:"flex", alignItems:"center", gap:14, boxShadow:"0 4px 16px rgba(0,0,0,0.05)" }}>
                     <div style={{ width:36, height:36, borderRadius:10, background:"rgba(68,114,245,0.10)", color:"#4472F5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{s.icon}</div>
                     <span style={{ fontSize:14, fontWeight:500, color:"#1D1D1F" }}>{s.label}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ── TARIFS ── */}
+          <section id="tarifs" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+            <div style={{ maxWidth:760, margin:"0 auto" }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
+                <span className="feature-tag">Tarifs</span>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:16 }}>Simple et transparent.</h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>Pas d&apos;abonnement caché, pas de frais à la transaction. Un tarif clair adapté à votre établissement.</p>
+              </div>
+
+              <div data-reveal style={{ background:"linear-gradient(135deg,#1D1D1F 0%,#2C2C2E 100%)", borderRadius:28, padding:"48px 52px", position:"relative", overflow:"hidden" }}>
+                {/* Fond décoratif */}
+                <div style={{ position:"absolute", top:-60, right:-60, width:240, height:240, borderRadius:"50%", background:"rgba(68,114,245,0.08)", pointerEvents:"none" }} />
+                <div style={{ position:"absolute", bottom:-40, left:-40, width:160, height:160, borderRadius:"50%", background:"rgba(138,92,246,0.08)", pointerEvents:"none" }} />
+
+                <div style={{ position:"relative", display:"flex", gap:48, alignItems:"flex-start", flexWrap:"wrap" }} className="pricing-inner">
+                  {/* Gauche — ce qui est inclus */}
+                  <div style={{ flex:1, minWidth:240 }}>
+                    <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", marginBottom:20 }}>Inclus dans votre accès</div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                      {[
+                        "Carte de fidélité Apple & Google Wallet",
+                        "Carte comptoir 4K (QR + NFC optionnel)",
+                        "Dashboard temps réel",
+                        "Notifications push illimitées",
+                        "Automatisations anniversaire & relance",
+                        "Listing dans l'annuaire Wallio",
+                        "Support dédié par WhatsApp",
+                      ].map(f => (
+                        <div key={f} style={{ display:"flex", alignItems:"center", gap:12 }}>
+                          <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(68,114,245,0.20)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                          <span style={{ fontSize:14, color:"rgba(255,255,255,0.80)", lineHeight:1.4 }}>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Droite — CTA */}
+                  <div style={{ flexShrink:0, display:"flex", flexDirection:"column", alignItems:"center", gap:16, minWidth:200 }}>
+                    <div style={{ textAlign:"center", marginBottom:8 }}>
+                      <div style={{ fontSize:13, color:"rgba(255,255,255,0.45)", marginBottom:8 }}>Tarif adapté à votre commerce</div>
+                      <div style={{ fontSize:42, fontWeight:700, color:"white", letterSpacing:-1.5, lineHeight:1 }}>Sur mesure</div>
+                      <div style={{ fontSize:13, color:"rgba(255,255,255,0.45)", marginTop:8 }}>Réponse sous 24h</div>
+                    </div>
+
+                    <a href={WA} target="_blank" rel="noopener noreferrer"
+                      style={{ width:"100%", background:"#25D366", color:"white", padding:"14px 24px", borderRadius:14, fontSize:15, fontWeight:600, textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:10, boxShadow:"0 8px 24px rgba(37,211,102,0.35)", transition:"transform 0.15s, box-shadow 0.15s" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform="translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 32px rgba(37,211,102,0.45)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=""; (e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(37,211,102,0.35)"; }}>
+                      <svg width="18" height="18" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1.0 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9zm0 22.9c-2.0 0-3.9-.5-5.5-1.5l-.4-.2-4.4 1.1 1.2-4.2-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.7 0-5.9 4.8-10.8 10.8-10.8 2.9 0 5.6 1.1 7.6 3.2 2.0 2.0 3.2 4.7 3.2 7.6 0 5.9-4.8 10.9-10.5 10.9zm5.8-8.1c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.7-1.6-2.0-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.2-.7-1.7-1.0-2.4-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1.1 1.0-1.1 2.5s1.1 2.9 1.3 3.1c.2.2 2.2 3.4 5.4 4.7.8.3 1.4.5 1.8.6.8.2 1.5.2 2.0.1.6-.1 1.8-.7 2.1-1.4.3-.7.3-1.2.2-1.4-.1-.2-.3-.3-.6-.4z"/></svg>
+                      Nous contacter sur WhatsApp
+                    </a>
+
+                    <a href="mailto:wallio.card@gmail.com?subject=Demande%20de%20tarif%20Wallio"
+                      style={{ width:"100%", background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.75)", padding:"13px 24px", borderRadius:14, fontSize:14, fontWeight:500, textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:8, border:"0.5px solid rgba(255,255,255,0.12)", transition:"background 0.15s" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.13)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)"; }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                      wallio.card@gmail.com
+                    </a>
+
+                    <div style={{ fontSize:11, color:"rgba(255,255,255,0.30)", textAlign:"center", lineHeight:1.5 }}>
+                      Sans engagement — tarif selon<br />votre type d&apos;établissement
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
