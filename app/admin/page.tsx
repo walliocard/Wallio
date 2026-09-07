@@ -169,9 +169,12 @@ export default function AdminPage() {
     async function init() {
       const res = await fetch("/api/admin/check");
       if (!res.ok) { router.push("/admin/login"); return; }
-      const q = query(collection(db, "marchands"), orderBy("date_inscription", "desc"));
-      unsubSnap = onSnapshot(q, snap => {
-        setMarchands(snap.docs.map(d => ({ id: d.id, nom: "", email: "", actif: false, ...d.data() } as Marchand)));
+      // Pas de orderBy pour inclure les marchands sans date_inscription (auto-inscrits avant le fix)
+      unsubSnap = onSnapshot(collection(db, "marchands"), snap => {
+        const all = snap.docs.map(d => ({ id: d.id, nom: "", email: "", actif: false, ...d.data() } as Marchand));
+        // Tri client-side : sans date en dernier
+        all.sort((a, b) => (b.date_inscription?.seconds ?? 0) - (a.date_inscription?.seconds ?? 0));
+        setMarchands(all);
         setLoading(false);
       });
     }
