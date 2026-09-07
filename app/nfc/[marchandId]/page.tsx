@@ -295,8 +295,11 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
         {/* QR récompense */}
         {isRecompense && <RecompenseQR walletId={walletId} />}
 
+        {/* Installer la PWA si pas encore fait */}
+        <div className="mt-8"><InstallBanner /></div>
+
         {/* Ajouter au Wallet */}
-        <div className="mt-8 flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5">
           {!isAndroid && process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" && (
             <a href={`/api/apple-wallet/generate/${walletId}`}
               className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
