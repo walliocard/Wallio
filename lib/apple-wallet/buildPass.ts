@@ -103,16 +103,32 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       }
     } catch (e) { console.error("[logo] fetch failed:", e); }
 
-    // icon.png : PNG strict requis par Apple — canvas via URL (loadImage(url) confirmé Lambda OK)
+    // icon.png — iOS 18 exige fond solide (transparent = blanc sur blanc)
+    // Tailles exactes Apple : 29×29 / 58×58 / 87×87 px
     try {
       const { createCanvas, loadImage } = await import("@napi-rs/canvas");
-      const img    = await loadImage(input.logoUrl);
-      const canvas = createCanvas(img.width, img.height);
-      canvas.getContext("2d").drawImage(img, 0, 0);
-      const png = await canvas.encode("png");
-      files["icon.png"]    = png;
-      files["icon@2x.png"] = png;
-      files["icon@3x.png"] = png;
+      const logo = await loadImage(input.logoUrl);
+
+      // Couleur de fond : couleur principale du marchand, sinon bleu Wallio
+      const bg = /^#[0-9a-f]{6}$/i.test(input.backgroundColor)
+        ? input.backgroundColor
+        : "#007AFF";
+
+      const mkIcon = async (size: number) => {
+        const canvas = createCanvas(size, size);
+        const ctx    = canvas.getContext("2d");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, size, size);
+        const ratio = Math.min((size * 0.76) / logo.width, (size * 0.76) / logo.height);
+        const w = logo.width  * ratio;
+        const h = logo.height * ratio;
+        ctx.drawImage(logo, (size - w) / 2, (size - h) / 2, w, h);
+        return canvas.encode("png");
+      };
+
+      files["icon.png"]    = await mkIcon(29);
+      files["icon@2x.png"] = await mkIcon(58);
+      files["icon@3x.png"] = await mkIcon(87);
     } catch (e) { console.error("[icon] canvas failed:", e); }
   }
 
