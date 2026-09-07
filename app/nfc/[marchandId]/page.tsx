@@ -211,6 +211,8 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
   walletId: string;
   onValiderRecompense: () => void;
 }) {
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
 
   if (result.type === "not_found") return <Erreur message="Client introuvable." />;
 
@@ -293,7 +295,34 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
         {/* QR récompense */}
         {isRecompense && <RecompenseQR walletId={walletId} />}
 
-        <a href={`/preferences/${walletId}`} className="block mt-10 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
+        {/* Ajouter au Wallet */}
+        <div className="mt-8 flex flex-col gap-2.5">
+          {!isAndroid && process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" && (
+            <a href={`/api/apple-wallet/generate/${walletId}`}
+              className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
+              style={{ background: "#000" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="5" width="20" height="14" rx="3" stroke="white" strokeWidth="1.5"/>
+                <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
+                <circle cx="7" cy="14.5" r="1.5" fill="white"/>
+              </svg>
+              <span className="text-[14px] font-semibold text-white">Ajouter à Apple Wallet</span>
+            </a>
+          )}
+          {isAndroid && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
+            <a href={`/api/google-wallet/generate/${walletId}`}
+              className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
+              style={{ background: "#1a73e8" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M21 7H3a1 1 0 00-1 1v8a1 1 0 001 1h18a1 1 0 001-1V8a1 1 0 00-1-1z" stroke="white" strokeWidth="1.5"/>
+                <path d="M1 10h22" stroke="white" strokeWidth="1.5"/>
+              </svg>
+              <span className="text-[14px] font-semibold text-white">Ajouter à Google Wallet</span>
+            </a>
+          )}
+        </div>
+
+        <a href={`/preferences/${walletId}`} className="block mt-8 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
           Gérer mes notifications
         </a>
         <Link href="/mes-cartes" className="block mt-3 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
