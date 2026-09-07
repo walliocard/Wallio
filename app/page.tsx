@@ -32,12 +32,12 @@ function WalletCardMock({
   bg = "#1C1C1E", fg = "#FFFFFF", labelClr = "rgba(255,255,255,0.5)",
   name = "Mon Café", logoInitial = "MC",
   stamps = 7, total = 10, reward = "Café offert",
-  stampColor = "#FFFFFF", stripBg = "rgba(255,255,255,0.08)",
+  stampColor = "#FFFFFF", stripBg = "rgba(255,255,255,0.08)", stripImageUrl,
   aux1 = "Ouv. 8h-18h", aux2 = "Lundi-Samedi",
 }: {
   bg?: string; fg?: string; labelClr?: string; name?: string; logoInitial?: string;
   stamps?: number; total?: number; reward?: string; stampColor?: string;
-  stripBg?: string; aux1?: string; aux2?: string;
+  stripBg?: string; stripImageUrl?: string; aux1?: string; aux2?: string;
 }) {
   const sep = `1px solid rgba(${fg === "#FFFFFF" ? "255,255,255" : "0,0,0"},0.10)`;
   const perRow = total <= 8 ? total : Math.ceil(total / 2);
@@ -72,6 +72,11 @@ function WalletCardMock({
 
       {/* Strip avec tampons */}
       <div style={{ width: 260, height: 100, overflow: "hidden", position: "relative", background: stripBg }}>
+        {stripImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={stripImageUrl} alt="" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center" }} />
+        )}
+        {stripImageUrl && <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.28)" }} />}
         <div style={{
           position: "absolute", inset: 0,
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -582,13 +587,14 @@ export default function LandingPage() {
               <div data-reveal style={{ display:"flex", gap:24, justifyContent:"center", alignItems:"flex-start", marginBottom:64, flexWrap:"wrap" }} className="custom-cards">
                 <div style={{ transform:"translateY(20px)", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
-                    bg="#1A1209" fg="#FFFFFF" labelClr="rgba(255,255,255,0.45)"
-                    name="Nomade Café" logoInitial="NC"
-                    stamps={7} total={20} reward="1 café gratuit"
-                    stampColor="#E8C97A" stripBg="rgba(232,201,122,0.08)"
-                    aux1="Lun–Sam" aux2="8h–18h"
+                    bg="#0E1A0F" fg="#FFFFFF" labelClr="rgba(255,255,255,0.42)"
+                    name="Mori Matcha" logoInitial="M"
+                    stamps={5} total={10} reward="Matcha offert"
+                    stampColor="#A8D5A2"
+                    stripImageUrl="/strip-matcha.jpg"
+                    aux1="7j/7" aux2="9h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>☕ Café — tons chauds</div>
+                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>🍵 Matcha — épuré</div>
                 </div>
                 <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
