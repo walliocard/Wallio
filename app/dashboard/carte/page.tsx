@@ -201,19 +201,23 @@ export default function CartePage() {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
-        const targetW = 750, targetH = 288;
-        const targetRatio = targetW / targetH;
-        const imgRatio = img.width / img.height;
-        const baseSW = imgRatio > targetRatio ? Math.round(img.height * targetRatio) : img.width;
-        const baseSH = imgRatio > targetRatio ? img.height : Math.round(img.width / targetRatio);
-        const sw = Math.round(baseSW / Math.max(1, zoom));
-        const sh = Math.round(baseSH / Math.max(1, zoom));
-        const sx = Math.round((img.width - sw) / 2);
-        const sy = Math.round((img.height - sh) * y / 100);
-        const canvas = document.createElement("canvas");
-        canvas.width = targetW; canvas.height = targetH;
-        canvas.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-        resolve(canvas.toDataURL("image/jpeg", 0.88));
+        try {
+          const targetW = 750, targetH = 288;
+          const targetRatio = targetW / targetH;
+          const imgRatio = img.width / img.height;
+          const baseSW = imgRatio > targetRatio ? Math.round(img.height * targetRatio) : img.width;
+          const baseSH = imgRatio > targetRatio ? img.height : Math.round(img.width / targetRatio);
+          const sw = Math.round(baseSW / Math.max(1, zoom));
+          const sh = Math.round(baseSH / Math.max(1, zoom));
+          const sx = Math.round((img.width - sw) / 2);
+          const sy = Math.round((img.height - sh) * y / 100);
+          const canvas = document.createElement("canvas");
+          canvas.width = targetW; canvas.height = targetH;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) { reject(new Error("canvas context null")); return; }
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+          resolve(canvas.toDataURL("image/jpeg", 0.88));
+        } catch (e) { reject(e); }
       };
       img.onerror = reject;
       img.src = rawUrl;
@@ -374,19 +378,23 @@ export default function CartePage() {
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
-        const targetW = 1032, targetH = 344;
-        const targetRatio = targetW / targetH;
-        const imgRatio = img.width / img.height;
-        const baseSW = imgRatio > targetRatio ? Math.round(img.height * targetRatio) : img.width;
-        const baseSH = imgRatio > targetRatio ? img.height : Math.round(img.width / targetRatio);
-        const sw = Math.round(baseSW / Math.max(1, zoom));
-        const sh = Math.round(baseSH / Math.max(1, zoom));
-        const sx = Math.round((img.width - sw) / 2);
-        const sy = Math.round((img.height - sh) * y / 100);
-        const canvas = document.createElement("canvas");
-        canvas.width = targetW; canvas.height = targetH;
-        canvas.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-        resolve(canvas.toDataURL("image/jpeg", 0.88));
+        try {
+          const targetW = 1032, targetH = 344;
+          const targetRatio = targetW / targetH;
+          const imgRatio = img.width / img.height;
+          const baseSW = imgRatio > targetRatio ? Math.round(img.height * targetRatio) : img.width;
+          const baseSH = imgRatio > targetRatio ? img.height : Math.round(img.width / targetRatio);
+          const sw = Math.round(baseSW / Math.max(1, zoom));
+          const sh = Math.round(baseSH / Math.max(1, zoom));
+          const sx = Math.round((img.width - sw) / 2);
+          const sy = Math.round((img.height - sh) * y / 100);
+          const canvas = document.createElement("canvas");
+          canvas.width = targetW; canvas.height = targetH;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) { reject(new Error("canvas context null")); return; }
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+          resolve(canvas.toDataURL("image/jpeg", 0.88));
+        } catch (e) { reject(e); }
       };
       img.onerror = reject;
       img.src = rawUrl;
