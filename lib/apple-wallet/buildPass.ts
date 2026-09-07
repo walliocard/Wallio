@@ -6,31 +6,6 @@ import forge from "node-forge";
 import { generatePassJson, type PassInput } from "./generatePass";
 import { drawStampsOnStrip, type StampStyle } from "./drawStamps";
 
-async function generateIcon(size: number, logoUrl: string | undefined, bgColor: string): Promise<Buffer> {
-  const { createCanvas, loadImage } = await import("@napi-rs/canvas");
-  const canvas = createCanvas(size, size);
-  const ctx    = canvas.getContext("2d");
-
-  ctx.fillStyle = /^#[0-9a-f]{6}$/i.test(bgColor) ? bgColor : "#1C1C1E";
-  ctx.fillRect(0, 0, size, size);
-
-  if (logoUrl) {
-    try {
-      const img     = await loadImage(logoUrl);
-      console.log("[generateIcon] logo loaded:", img.width, "x", img.height);
-      const padding = size * 0.12;
-      const maxDim  = size - padding * 2;
-      const ratio   = Math.min(maxDim / img.width, maxDim / img.height);
-      const w = img.width  * ratio;
-      const h = img.height * ratio;
-      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-    } catch (e) {
-      console.error("[generateIcon] logo load failed:", e);
-    }
-  }
-
-  return canvas.encode("png");
-}
 
 export interface StampOverlayInput {
   stampsOnStrip?: boolean;
@@ -116,7 +91,7 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
     "icon@3x.png":  ICON_29,
   };
 
-  // Logo marchand (coin supérieur gauche)
+  // Logo marchand = coin supérieur gauche + icône de notification
   if (input.logoUrl) {
     try {
       const res = await fetch(input.logoUrl);
@@ -125,20 +100,11 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         files["logo.png"]    = buf;
         files["logo@2x.png"] = buf;
         files["logo@3x.png"] = buf;
+        files["icon.png"]    = buf;
+        files["icon@2x.png"] = buf;
+        files["icon@3x.png"] = buf;
       }
     } catch { /* logo optionnel */ }
-  }
-
-  // Icône notification — bloc indépendant pour ne pas masquer les erreurs
-  try {
-    console.log("[icon] bgColor:", input.backgroundColor, "| logoUrl:", input.logoUrl ?? "none");
-    const icon87 = await generateIcon(87, input.logoUrl, input.backgroundColor);
-    console.log("[icon] generated, size:", icon87.length, "bytes");
-    files["icon.png"]    = await generateIcon(29,  input.logoUrl, input.backgroundColor);
-    files["icon@2x.png"] = await generateIcon(58,  input.logoUrl, input.backgroundColor);
-    files["icon@3x.png"] = icon87;
-  } catch (e) {
-    console.error("[buildPkpass] icon generation failed:", e);
   }
 
   // Bannière strip (avec tampons dessinés si activé)
