@@ -64,7 +64,7 @@ export async function GET(
     : "#1C1C1E";
   // Hero via proxy uniquement si une bannière est configurée
   const hasHero = !!(m.google_hero_url || m.strip_url);
-  const heroUrl = hasHero ? `${BASE_URL}/api/google-hero/${client.marchand_id}` : undefined;
+  const heroUrl = hasHero ? `${BASE_URL}/api/google-hero/${client.marchand_id}?v=${Date.now()}` : undefined;
 
   const textModules = (m.google_text_modules as { header: string; body: string; id: string }[] | undefined) || [];
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];

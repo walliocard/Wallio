@@ -28,7 +28,7 @@ export async function GET(
       return new Response(buffer, {
         headers: {
           "Content-Type": mime,
-          "Cache-Control": "public, max-age=3600",
+          "Cache-Control": "no-store",
         },
       });
     }

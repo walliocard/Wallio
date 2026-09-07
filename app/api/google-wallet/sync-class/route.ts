@@ -33,11 +33,12 @@ export async function POST(req: Request) {
   const cid = `${ISSUER_ID}.wallio_${uid.replace(/[^a-zA-Z0-9_]/g, "_")}`;
   const token = await getGoogleAccessToken();
 
-  const logoUri = `${BASE_URL}/api/logo/${uid}`;
+  const logoUri = `${BASE_URL}/api/logo/${uid}?v=${Date.now()}`;
   const rawColor = (m.google_bg_color as string) || (m.apple_bg_color as string) || (m.couleur_principale as string) || "#1C1C1E";
   const bgColor = /^#[0-9A-Fa-f]{6}$/.test(rawColor.slice(0, 7)) ? rawColor.slice(0, 7) : "#1C1C1E";
   const hasHero = !!(m.google_hero_url || m.strip_url);
-  const heroUrl = hasHero ? `${BASE_URL}/api/google-hero/${uid}` : undefined;
+  // Cache-busting : URL unique à chaque sync → Google re-fetch toujours la dernière image
+  const heroUrl = hasHero ? `${BASE_URL}/api/google-hero/${uid}?v=${Date.now()}` : undefined;
   const textModules = (m.google_text_modules as { header: string; body: string; id: string }[] | undefined) || [];
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
   const validLinks = links.filter(l => l.uri && l.description);
@@ -77,7 +78,6 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ ok: true, action: "created" });
   } else if (checkRes.ok) {
-    // PUT = remplacement complet, pas de updateMask partiel
     const putRes = await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -87,6 +87,36 @@ export async function POST(req: Request) {
       const err = await putRes.text();
       return NextResponse.json({ error: err }, { status: 500 });
     }
+
+    // PATCH tous les loyalty objects Google du marchand pour forcer le rechargement
+    // côté utilisateur (sans ça, Google peut mettre jusqu'à 24h pour propager)
+    try {
+      const clientsSnap = await adminDb().collection("clients")
+        .where("marchand_id", "==", uid)
+        .where("wallet_type", "==", "google")
+        .limit(100)
+        .get();
+
+      const objectif = (m.objectif_tampons as number) || 10;
+      const patches = clientsSnap.docs.map(doc => {
+        const c = doc.data();
+        const oid = `${ISSUER_ID}.${(c.wallet_id as string).replace(/[^a-zA-Z0-9_]/g, "_")}`;
+        return fetch(`${API}/loyaltyObject/${encodeURIComponent(oid)}?updateMask=loyaltyPoints`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            loyaltyPoints: {
+              balance: { string: `${c.tampons || 0} / ${objectif}` },
+              label: (m.google_primary_label as string) || "Tampons",
+            },
+          }),
+        }).catch(() => null);
+      });
+      await Promise.allSettled(patches);
+    } catch (e) {
+      console.warn("[GW sync-class] mass PATCH failed:", e);
+    }
+
     return NextResponse.json({ ok: true, action: "updated" });
   }
 
