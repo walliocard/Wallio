@@ -76,35 +76,37 @@ function WalletCardMock({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={stripImageUrl} alt="" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center" }} />
         )}
-        {stripImageUrl && <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.28)" }} />}
-        <div style={{
-          position: "absolute", inset: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap }}>
-            {Array.from({ length: rows }).map((_, row) => {
-              const count = Math.min(perRow, total - row * perRow);
-              return (
-                <div key={row} style={{ display: "flex", gap }}>
-                  {Array.from({ length: count }).map((_, col) => {
-                    const idx = row * perRow + col;
-                    const filled = idx < stamps;
-                    return (
-                      <div key={col} style={{
-                        width: s, height: s, borderRadius: "50%", flexShrink: 0,
-                        background: filled ? stampColor + "22" : "transparent",
-                        border: `${thick}px solid ${filled ? stampColor : stampColor + "44"}`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        {filled && <div style={{ width: s * 0.36, height: s * 0.36, borderRadius: "50%", background: stampColor }} />}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+        {stripImageUrl && <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />}
+        {!stripImageUrl && (
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap }}>
+              {Array.from({ length: rows }).map((_, row) => {
+                const count = Math.min(perRow, total - row * perRow);
+                return (
+                  <div key={row} style={{ display: "flex", gap }}>
+                    {Array.from({ length: count }).map((_, col) => {
+                      const idx = row * perRow + col;
+                      const filled = idx < stamps;
+                      return (
+                        <div key={col} style={{
+                          width: s, height: s, borderRadius: "50%", flexShrink: 0,
+                          background: filled ? stampColor + "22" : "transparent",
+                          border: `${thick}px solid ${filled ? stampColor : stampColor + "44"}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          {filled && <div style={{ width: s * 0.36, height: s * 0.36, borderRadius: "50%", background: stampColor }} />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Champs */}
@@ -594,27 +596,29 @@ export default function LandingPage() {
                     stripImageUrl="/strip-matcha.jpg"
                     aux1="7j/7" aux2="9h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>🍵 Matcha — épuré</div>
+                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>🍵 Matcha café</div>
                 </div>
                 <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
-                    bg="#0A1628" fg="#FFFFFF" labelClr="rgba(255,255,255,0.45)"
-                    name="Barber Club" logoInitial="BC"
+                    bg="#1C1108" fg="#FFFFFF" labelClr="rgba(255,255,255,0.42)"
+                    name="Barba Italiana" logoInitial="BI"
                     stamps={4} total={8} reward="Coupe offerte"
-                    stampColor="#4472F5" stripBg="rgba(68,114,245,0.10)"
-                    aux1="7j/7" aux2="9h–20h"
+                    stampColor="#C8956C"
+                    stripImageUrl="/strip-barber.jpg"
+                    aux1="Lun–Sam" aux2="9h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>✂️ Barber — tons sombres</div>
+                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>✂️ Barber shop</div>
                 </div>
                 <div style={{ transform:"translateY(20px)", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
                   <WalletCardMock
-                    bg="#1E0A2E" fg="#FFFFFF" labelClr="rgba(255,255,255,0.45)"
-                    name="Beauty Studio" logoInitial="BS"
-                    stamps={5} total={10} reward="-50% soin"
-                    stampColor="#C084FC" stripBg="rgba(192,132,252,0.10)"
-                    aux1="Sur RDV" aux2="10h–19h"
+                    bg="#1A1714" fg="#FFFFFF" labelClr="rgba(255,255,255,0.42)"
+                    name="Hammam Royal" logoInitial="HR"
+                    stamps={5} total={10} reward="Soin offert"
+                    stampColor="#C9A96E"
+                    stripImageUrl="/strip-hammam.jpg"
+                    aux1="Sur RDV" aux2="10h–20h"
                   />
-                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>💅 Beauté — tons violets</div>
+                  <div className="glass" style={{ borderRadius:12, padding:"8px 16px", fontSize:12, color:"#6E6E73" }}>🛁 Hammam & Spa</div>
                 </div>
               </div>
 
