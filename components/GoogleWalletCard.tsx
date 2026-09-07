@@ -71,8 +71,7 @@ export default function GoogleWalletCard({
     }).then(setQr).catch(() => {});
   }, [qrValue]);
 
-  const rewardModule = rewardName ? [{ header: "Récompense", body: rewardName, id: "recompense" }] : [];
-  const allModules = [...rewardModule, ...textModules.filter(m => m.header && m.body)];
+  const allModules = textModules.filter(m => m.header && m.body);
   const validLinks = links.filter(l => l.uri && l.description);
 
   return (
