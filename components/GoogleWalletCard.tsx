@@ -87,58 +87,49 @@ export default function GoogleWalletCard({
     }}>
 
       {/* ── Logo + texte logo + issuer + nom programme ── */}
-      <div style={{ padding: "24px 20px 12px", textAlign: "center" }}>
+      <div style={{ padding: "16px 20px 10px", textAlign: "center" }}>
 
-        {/* Logo — 64px comme dans la vraie Google Wallet */}
+        {/* Logo — 52px */}
         <div style={{
-          width: 64, height: 64, borderRadius: "50%",
+          width: 52, height: 52, borderRadius: "50%",
           background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.06)",
-          overflow: "hidden", margin: "0 auto 8px",
+          overflow: "hidden", margin: "0 auto 6px",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           {logoUrl
             ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            : <span style={{ fontSize: 24, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
+            : <span style={{ fontSize: 20, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
           }
         </div>
 
-        {/* Texte sous le logo (nom abrégé, comme Google Wallet l'affiche) */}
-        <p style={{ fontSize: 11, color: textSec, margin: "0 0 2px", fontWeight: 500 }}>
-          {logoText}
-        </p>
-
-        {/* Issuer name */}
-        <p style={{ fontSize: 14, color: textSec, margin: "0 0 4px", fontWeight: 400 }}>
-          Wallio
-        </p>
-
-        {/* Nom du programme — très grand, comme dans la vraie app */}
-        <p style={{ fontSize: 34, fontWeight: 700, color: text, margin: 0, letterSpacing: -0.5, lineHeight: 1.1 }}>
+        <p style={{ fontSize: 10, color: textSec, margin: "0 0 1px", fontWeight: 500 }}>{logoText}</p>
+        <p style={{ fontSize: 13, color: textSec, margin: "0 0 4px", fontWeight: 400 }}>Wallio</p>
+        <p style={{ fontSize: 28, fontWeight: 700, color: text, margin: 0, letterSpacing: -0.5, lineHeight: 1.1 }}>
           {logoText || "Programme"}
         </p>
       </div>
 
       {/* ── QR code + tampons dans la même box blanche ── */}
-      <div style={{ padding: "0 16px 16px" }}>
+      <div style={{ padding: "0 14px 14px" }}>
         <div style={{
           background: "#FFFFFF",
-          borderRadius: 16,
-          padding: 16,
+          borderRadius: 14,
+          padding: 12,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           boxShadow: dark ? "0 4px 20px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.10)",
         }}>
           {qr
-            ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 260, height: "auto", display: "block" }} />
-            : <div style={{ width: 260, height: 260, background: "#f0f0f0", borderRadius: 4 }} />
+            ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 210, height: "auto", display: "block" }} />
+            : <div style={{ width: 210, height: 210, background: "#f0f0f0", borderRadius: 4 }} />
           }
           {/* Tampons — directement sous le QR dans la box */}
-          <div style={{ marginTop: 12, textAlign: "center" }}>
-            <p style={{ fontSize: 11, color: "#6E6E73", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px", fontWeight: 600 }}>
+          <div style={{ marginTop: 10, textAlign: "center" }}>
+            <p style={{ fontSize: 10, color: "#6E6E73", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px", fontWeight: 600 }}>
               {primaryLabel}
             </p>
-            <p style={{ fontSize: 22, fontWeight: 700, color: "#1A1A1A", margin: 0, lineHeight: 1 }}>
+            <p style={{ fontSize: 20, fontWeight: 700, color: "#1A1A1A", margin: 0, lineHeight: 1 }}>
               {stampsCurrent} / {stampsObjective}
             </p>
           </div>
