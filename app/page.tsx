@@ -748,7 +748,7 @@ export default function LandingPage() {
                   <div style={{ position:"relative" }}>
                     <PhoneMock style={{ width:270 }}>
                       {/* Lock screen */}
-                      <div style={{ background:"linear-gradient(160deg,#1A2744,#0D1829)", minHeight:340, padding:"20px 0 16px" }}>
+                      <div style={{ background:"linear-gradient(160deg,#1A2744,#0D1829)", minHeight:460, padding:"20px 0 20px" }}>
                         {/* Time */}
                         <div style={{ textAlign:"center", marginBottom:24 }}>
                           <div style={{ fontSize:48, fontWeight:300, color:"white", letterSpacing:-2 }}>12:47</div>
@@ -785,6 +785,21 @@ export default function LandingPage() {
                           </div>
                           <div style={{ fontSize:12, fontWeight:600, color:"white", marginBottom:2 }}>Bonne anniversaire !</div>
                           <div style={{ fontSize:11, color:"rgba(255,255,255,0.65)" }}>On vous offre un double tampon aujourd&apos;hui. À bientôt !</div>
+                        </div>
+
+                        {/* Géolocalisation notification */}
+                        <div style={{ margin:"10px 8px 0", background:"rgba(48,209,88,0.15)", backdropFilter:"blur(20px)", borderRadius:14, padding:"10px 12px", border:"0.5px solid rgba(48,209,88,0.25)" }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+                            <div style={{ width:28, height:28, borderRadius:7, background:"rgba(48,209,88,0.20)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#30D158" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </div>
+                            <div style={{ flex:1 }}>
+                              <div style={{ fontSize:11, fontWeight:600, color:"white" }}>Nomade Café</div>
+                            </div>
+                            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>à proximité</div>
+                          </div>
+                          <div style={{ fontSize:12, fontWeight:600, color:"white", marginBottom:2 }}>Vous passez par là ?</div>
+                          <div style={{ fontSize:11, color:"rgba(255,255,255,0.65)" }}>Il vous reste 2 tampons avant votre café offert. On vous attend !</div>
                         </div>
                       </div>
                     </PhoneMock>
