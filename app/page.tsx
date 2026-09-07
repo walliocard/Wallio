@@ -316,6 +316,7 @@ export default function LandingPage() {
           .custom-grid { flex-direction:column !important; }
           .custom-cards { justify-content:center !important; flex-wrap:wrap !important; }
           .notif-grid  { grid-template-columns:1fr !important; }
+          .dash-split  { grid-template-columns:1fr !important; }
         }
         @media (max-width: 768px) {
           .lp-nav { padding:0 24px; }
@@ -843,80 +844,162 @@ export default function LandingPage() {
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">Dashboard</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>Chaque client,<br />sous la main</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>Votre tableau de bord centralise tout — clients, tampons, récompenses, statistiques — en temps réel.</p>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>La donnée qui change tout<br />pour votre commerce</h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:560, margin:"0 auto" }}>Pour la première fois, vous savez exactement qui sont vos clients, qui revient, et qui vous êtes en train de perdre.</p>
               </div>
 
-              {/* Dashboard mockup */}
-              <div data-reveal style={{ background:"white", borderRadius:28, border:"0.5px solid rgba(0,0,0,0.08)", boxShadow:"0 8px 48px rgba(0,0,0,0.08)", overflow:"hidden", marginBottom:48 }}>
-                <div style={{ padding:"18px 28px", borderBottom:"0.5px solid rgba(0,0,0,0.07)", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                    <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z" opacity=".5"/></svg>
+              <div style={{ display:"grid", gridTemplateColumns:"1.15fr 1fr", gap:48, alignItems:"start" }} className="dash-split">
+
+                {/* Mockup enrichi */}
+                <div data-reveal="left" style={{ background:"white", borderRadius:24, border:"0.5px solid rgba(0,0,0,0.09)", boxShadow:"0 8px 48px rgba(0,0,0,0.09)", overflow:"hidden" }}>
+
+                  {/* Header */}
+                  <div style={{ padding:"16px 24px", borderBottom:"0.5px solid rgba(0,0,0,0.07)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z" opacity=".5"/></svg>
+                      </div>
+                      <span style={{ fontSize:13, fontWeight:650, color:"#1D1D1F" }}>Nomade Café</span>
                     </div>
-                    <span style={{ fontSize:14, fontWeight:650, color:"#1D1D1F" }}>Nomade Café — Tableau de bord</span>
+                    <span style={{ fontSize:11, color:"#8E8E93" }}>7 sept. 2026</span>
                   </div>
-                  <span style={{ fontSize:12, color:"#8E8E93" }}>Lundi 7 sept. 2026</span>
-                </div>
-                <div className="dash-stats" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-                  {[
-                    { label:"Clients totaux", value:"247", sub:"+12 ce mois", color:"#4472F5" },
-                    { label:"Tampons distribués", value:"1 842", sub:"30 derniers jours", color:"#6A5AF9" },
-                    { label:"Taux de fidélité", value:"78 %", sub:"clients actifs", color:"#34C759" },
-                  ].map((s, i) => (
-                    <div key={s.label} style={{ padding:"20px 28px", borderRight: i < 2 ? "0.5px solid rgba(0,0,0,0.07)" : "none" }}>
-                      <div style={{ fontSize:11, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>{s.label}</div>
-                      <div style={{ fontSize:28, fontWeight:700, color:"#1D1D1F", letterSpacing:-1, lineHeight:1 }}>{s.value}</div>
-                      <div style={{ fontSize:12, color:s.color, marginTop:4 }}>{s.sub}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ padding:"16px 28px" }}>
-                  <div style={{ fontSize:11, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:12 }}>Clients récents</div>
-                  {[
-                    { initials:"AM", name:"Ahmed M.", phone:"+212 6XX XXX XX1", stamps:8, total:10, time:"il y a 2h", badge:"Actif", bc:"#34C759" },
-                    { initials:"FB", name:"Fatima B.", phone:"+212 6XX XXX XX2", stamps:10, total:10, time:"Récompense", badge:"Récompense", bc:"#FF9500" },
-                    { initials:"KL", name:"Karim L.", phone:"+212 6XX XXX XX3", stamps:3, total:10, time:"il y a 5j", badge:"Actif", bc:"#34C759" },
-                  ].map((c, i) => (
-                    <div key={c.name} className="dash-row" style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0" }}>
-                      <div style={{ width:36, height:36, borderRadius:"50%", background:"rgba(68,114,245,0.08)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                        <span style={{ fontSize:12, fontWeight:700, color:"#4472F5" }}>{c.initials}</span>
-                      </div>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-                          <span style={{ fontSize:14, fontWeight:600, color:"#1D1D1F" }}>{c.name}</span>
-                          <span style={{ fontSize:11, fontWeight:600, color:c.bc, background:`${c.bc}18`, padding:"2px 8px", borderRadius:20 }}>{c.badge}</span>
-                        </div>
-                        <div style={{ fontSize:12, color:"#8E8E93", marginTop:1 }}>{c.phone}</div>
-                      </div>
-                      <div style={{ textAlign:"right", flexShrink:0 }}>
-                        <div style={{ fontSize:12, fontWeight:600, color:"#1D1D1F", marginBottom:4 }}>{c.stamps}/{c.total}</div>
-                        <div style={{ width:80, height:4, background:"#F2F2F7", borderRadius:2 }}>
-                          <div style={{ width:`${(c.stamps/c.total)*100}%`, height:"100%", background:"linear-gradient(90deg,#4472F5,#8A5CF6)", borderRadius:2 }} />
-                        </div>
-                      </div>
-                      <div style={{ fontSize:11, color:"#C7C7CC", textAlign:"right", width:56, flexShrink:0, display:"none" }} className="dash-time">{c.time}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Dashboard features */}
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))", gap:16 }}>
-                {[
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>, title:"Segmentation automatique", body:"Clients actifs (passés dans les 30 derniers jours) et inactifs — classés en temps réel.", color:"#4472F5" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, title:"Ajustement manuel", body:"Corrigez un tampon oublié ou récompensez un client exceptionnel directement depuis sa fiche.", color:"#6A5AF9" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>, title:"Statistiques détaillées", body:"Tampons distribués, récompenses validées, fréquence de visite — visualisés par période.", color:"#8A5CF6" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>, title:"Recherche instantanée", body:"Retrouvez n'importe quel client par nom ou numéro de téléphone en une fraction de seconde.", color:"#4472F5" },
-                ].map(f => (
-                  <div key={f.title} style={{ background:"white", borderRadius:20, padding:"22px 20px", border:"0.5px solid rgba(0,0,0,0.07)", display:"flex", gap:14 }}>
-                    <div style={{ width:38, height:38, borderRadius:12, background:`${f.color}12`, color:f.color, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{f.icon}</div>
+                  {/* 4 stats — dont "À risque" en orange */}
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+                    {[
+                      { label:"Clients", value:"247", sub:"+12 ce mois", color:"#4472F5" },
+                      { label:"Tampons", value:"312", sub:"ce mois", color:"#6A5AF9" },
+                      { label:"Retour", value:"78%", sub:"actifs", color:"#34C759" },
+                      { label:"À risque", value:"14", sub:"à relancer !", color:"#FF9500" },
+                    ].map((s, i) => (
+                      <div key={s.label} style={{ padding:"14px 16px", borderRight: i < 3 ? "0.5px solid rgba(0,0,0,0.07)" : "none", background: i === 3 ? "rgba(255,149,0,0.03)" : "transparent" }}>
+                        <div style={{ fontSize:10, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:4 }}>{s.label}</div>
+                        <div style={{ fontSize:22, fontWeight:700, color: i === 3 ? "#FF9500" : "#1D1D1F", letterSpacing:-0.5, lineHeight:1 }}>{s.value}</div>
+                        <div style={{ fontSize:11, color:s.color, marginTop:3 }}>{s.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Activité 7 jours */}
+                  <div style={{ padding:"16px 24px", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+                    <div style={{ fontSize:10, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:10 }}>Activité — 7 derniers jours</div>
+                    <div style={{ display:"flex", gap:4, alignItems:"flex-end", height:44 }}>
+                      {[
+                        { v:38, d:"L" }, { v:52, d:"M" }, { v:31, d:"M" },
+                        { v:67, d:"J" }, { v:44, d:"V" }, { v:58, d:"S" }, { v:29, d:"D" },
+                      ].map((b, i) => (
+                        <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
+                          <div style={{ width:"100%", height: Math.round((b.v/67)*40), background: i === 3 ? "linear-gradient(180deg,#4472F5,#6A5AF9)" : "rgba(68,114,245,0.15)", borderRadius:"3px 3px 0 0", minHeight:4 }} />
+                          <span style={{ fontSize:9, color:"#C7C7CC" }}>{b.d}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Segments */}
+                  <div style={{ padding:"14px 24px", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+                    <div style={{ fontSize:10, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:10 }}>Segmentation clients</div>
+                    {[
+                      { label:"Actifs (≤30j)", count:193, pct:78, color:"#34C759" },
+                      { label:"Inactifs (+30j)", count:54, pct:22, color:"#FF9500" },
+                    ].map(seg => (
+                      <div key={seg.label} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+                        <span style={{ fontSize:11, color:"#6E6E73", width:88, flexShrink:0 }}>{seg.label}</span>
+                        <div style={{ flex:1, height:5, background:"#F2F2F7", borderRadius:3 }}>
+                          <div style={{ width:`${seg.pct}%`, height:"100%", background:seg.color, borderRadius:3 }} />
+                        </div>
+                        <span style={{ fontSize:11, fontWeight:600, color:seg.color, width:24, textAlign:"right", flexShrink:0 }}>{seg.count}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Insight alert actionnable */}
+                  <div style={{ padding:"12px 24px", background:"rgba(255,149,0,0.05)", display:"flex", alignItems:"flex-start", gap:10 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     <div>
-                      <h3 style={{ fontSize:15, fontWeight:650, color:"#1D1D1F", marginBottom:5, letterSpacing:-0.2 }}>{f.title}</h3>
-                      <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{f.body}</p>
+                      <div style={{ fontSize:12, fontWeight:600, color:"#FF9500" }}>14 clients absents depuis +30 jours</div>
+                      <div style={{ fontSize:11, color:"#8E8E93", marginTop:1 }}>Envoyez une relance ciblée — ils sont encore récupérables.</div>
                     </div>
                   </div>
-                ))}
+
+                  {/* Top clients */}
+                  <div style={{ padding:"14px 24px" }}>
+                    <div style={{ fontSize:10, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:10 }}>Meilleurs clients ce mois</div>
+                    {[
+                      { initials:"FB", name:"Fatima B.", visits:12, stamps:10, total:10, bc:"#FF9500", badge:"Récompense" },
+                      { initials:"AM", name:"Ahmed M.", visits:9, stamps:8, total:10, bc:"#34C759", badge:"Actif" },
+                      { initials:"KL", name:"Karim L.", visits:7, stamps:3, total:10, bc:"#34C759", badge:"Actif" },
+                    ].map((c, i) => (
+                      <div key={c.name} className="dash-row" style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0" }}>
+                        <div style={{ width:30, height:30, borderRadius:"50%", background:"rgba(68,114,245,0.08)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <span style={{ fontSize:10, fontWeight:700, color:"#4472F5" }}>{c.initials}</span>
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                            <span style={{ fontSize:12, fontWeight:600, color:"#1D1D1F" }}>{c.name}</span>
+                            <span style={{ fontSize:10, fontWeight:600, color:c.bc, background:`${c.bc}15`, padding:"1px 7px", borderRadius:20 }}>{c.badge}</span>
+                          </div>
+                          <div style={{ fontSize:10, color:"#8E8E93" }}>{c.visits} visites ce mois</div>
+                        </div>
+                        <div style={{ textAlign:"right", flexShrink:0 }}>
+                          <div style={{ fontSize:11, fontWeight:600, color:"#1D1D1F", marginBottom:2 }}>{c.stamps}/{c.total}</div>
+                          <div style={{ width:60, height:3, background:"#F2F2F7", borderRadius:2 }}>
+                            <div style={{ width:`${(c.stamps/c.total)*100}%`, height:"100%", background:"linear-gradient(90deg,#4472F5,#8A5CF6)", borderRadius:2 }} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+
+                {/* Valeur ajoutée — droite */}
+                <div data-reveal="right" style={{ display:"flex", flexDirection:"column", gap:0 }}>
+                  <h3 style={{ fontSize:"clamp(22px,2.5vw,28px)", fontWeight:700, letterSpacing:-0.5, color:"#1D1D1F", marginBottom:16, lineHeight:1.2 }}>
+                    Ce que vous savez enfin.
+                  </h3>
+                  <p style={{ fontSize:15, lineHeight:1.7, color:"#6E6E73", marginBottom:36 }}>
+                    Avant Wallio, vos clients étaient des anonymes. Vous ne saviez pas qui revenait, qui vous quittait, ni qui méritait une attention particulière. Maintenant, vous le savez.
+                  </p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
+                    {[
+                      {
+                        color:"#4472F5",
+                        title:"Qui revient — et qui vous quitte",
+                        body:"Chaque client est automatiquement segmenté. Vous voyez d'un coup d'œil vos actifs et vos inactifs, sans aucune manipulation.",
+                      },
+                      {
+                        color:"#FF9500",
+                        title:"Vos clients à risque, identifiés",
+                        body:"14 clients absents depuis +30 jours ? Wallio vous l'indique et vous permet de les relancer en un clic, avant qu'ils aillent ailleurs.",
+                      },
+                      {
+                        color:"#6A5AF9",
+                        title:"Votre activité, jour par jour",
+                        body:"Tampons distribués, nouvelles inscriptions, récompenses validées — visualisés sur 7 ou 30 jours pour piloter votre commerce.",
+                      },
+                      {
+                        color:"#34C759",
+                        title:"Vos meilleurs clients récompensés",
+                        body:"Identifiez ceux qui viennent le plus souvent, ajustez leurs tampons, offrez-leur quelque chose d'exceptionnel directement depuis leur fiche.",
+                      },
+                      {
+                        color:"#8A5CF6",
+                        title:"Tout en un clic — pas de rapport à lire",
+                        body:"Chaque donnée est actionnaire. Relancer, corriger, récompenser, notifier — tout se fait depuis le dashboard, sans export ni tableur.",
+                      },
+                    ].map((v, i) => (
+                      <div key={i} style={{ display:"flex", gap:16, alignItems:"flex-start" }}>
+                        <div style={{ width:3, borderRadius:2, background:v.color, flexShrink:0, alignSelf:"stretch", minHeight:40 }} />
+                        <div>
+                          <h4 style={{ fontSize:14, fontWeight:700, color:"#1D1D1F", marginBottom:4, letterSpacing:-0.2 }}>{v.title}</h4>
+                          <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{v.body}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             </div>
           </section>
