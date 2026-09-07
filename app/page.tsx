@@ -1004,34 +1004,6 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* ── FEATURES ── */}
-          <section style={{ padding:"96px 32px" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">Fonctionnalités</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F" }}>Tout ce dont vous avez besoin</h2>
-              </div>
-              <div data-stagger className="features-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
-                {[
-                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M2 20c0-4 4-7 10-7s10 3 10 7"/></svg>, title:"NFC + QR Code", body:"Compatible avec tous les smartphones. Aucune application à installer, aucun compte requis.", accent:"#4472F5" },
-                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="15" r="1" fill="currentColor"/></svg>, title:"Apple & Google Wallet", body:"La carte de fidélité s'intègre nativement dans le portefeuille numérique — iOS et Android.", accent:"#6A5AF9" },
-                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>, title:"Notifications ciblées", body:"Relancez vos clients inactifs, fêtez leurs anniversaires, envoyez des offres au bon moment.", accent:"#8A5CF6" },
-                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z" opacity=".4"/></svg>, title:"Dashboard temps réel", body:"Visualisez vos clients, tampons et récompenses depuis un tableau de bord clair et complet.", accent:"#4472F5" },
-                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, title:"Carte 100% personnalisable", body:"Couleurs, logo, bannière, tampons, champs — entièrement à l'image de votre marque.", accent:"#6A5AF9" },
-                  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, title:"Carte comptoir 4K", body:"Fichier haute résolution généré automatiquement, prêt à envoyer à l'imprimeur en 1 clic.", accent:"#8A5CF6" },
-                ].map(f => (
-                  <div key={f.title} className="card-hover" style={{ background:"white", borderRadius:22, padding:"28px 26px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)" }}>
-                    <div style={{ width:44, height:44, borderRadius:14, background:`${f.accent}12`, color:f.accent, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
-                      {f.icon}
-                    </div>
-                    <h3 style={{ fontSize:16, fontWeight:650, color:"#1D1D1F", marginBottom:8, letterSpacing:-0.2 }}>{f.title}</h3>
-                    <p style={{ fontSize:14, lineHeight:1.65, color:"#8E8E93" }}>{f.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
           {/* ── PRÉSENCE / PWA ── */}
           <section id="presence" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
