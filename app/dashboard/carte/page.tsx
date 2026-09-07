@@ -961,14 +961,17 @@ export default function CartePage() {
 
         </div>
 
-        {/* ── Panel droit ── */}
-        {!locked && <div style={{
-          width: isMobile ? "100%" : 300,
-          borderLeft: isMobile ? "none" : "1px solid var(--border)",
-          overflowY: "auto",
-          padding: isMobile ? "16px 16px 120px" : "20px 18px",
+        {/* ── Panel droit — toujours dans le DOM, slide in/out ── */}
+        <div style={{
+          width: isMobile ? "100%" : (locked ? 0 : 300),
+          borderLeft: isMobile || locked ? "none" : "1px solid var(--border)",
+          overflowY: locked ? "hidden" : "auto",
+          overflowX: "hidden",
+          padding: locked ? 0 : isMobile ? "16px 16px 120px" : "20px 18px",
           display: isMobile && mobileTab === "preview" ? "none" : "flex",
           flexDirection: "column", gap: 22, flexShrink: 0,
+          transition: "width 0.25s ease, padding 0.25s ease",
+          visibility: locked ? "hidden" : "visible",
         }}>
 
           {/* Logo */}
@@ -2094,7 +2097,7 @@ export default function CartePage() {
             </p>
           </div>
 
-        </div>}
+        </div>
       </div>
     </div>
 
