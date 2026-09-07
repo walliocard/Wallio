@@ -74,8 +74,8 @@ export async function GET(
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
-  // Corps commun (sans reviewStatus pour les updates — Google le gère lui-même)
   const classBase: Record<string, unknown> = {
+    reviewStatus: "APPROVED",
     id: cid,
     issuerName: "Wallio",
     programName: m.nom,
@@ -91,11 +91,10 @@ export async function GET(
   };
 
   if (classRes.status === 404) {
-    // Première création : on impose reviewStatus APPROVED
     const createRes = await fetch(`${API}/loyaltyClass`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ ...classBase, reviewStatus: "APPROVED" }),
+      body: JSON.stringify(classBase),
     });
     if (!createRes.ok) {
       const err = await createRes.text();

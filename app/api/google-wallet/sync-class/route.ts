@@ -47,6 +47,7 @@ export async function POST(req: Request) {
   ];
 
   const classBase: Record<string, unknown> = {
+    reviewStatus: "APPROVED",
     id: cid,
     issuerName: "Wallio",
     programName: m.nom,
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
     const createRes = await fetch(`${API}/loyaltyClass`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ ...classBase, reviewStatus: "APPROVED" }),
+      body: JSON.stringify(classBase),
     });
     if (!createRes.ok) {
       return NextResponse.json({ error: "Erreur création classe" }, { status: 500 });
