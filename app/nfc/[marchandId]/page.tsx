@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, use } from "react";
+import { useEffect, useState, useCallback, use, lazy, Suspense } from "react";
 import Link from "next/link";
 import {
-  getMarchandByNfcId, getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
+  getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
   creerClient, ajouterTampon, validerRecompense,
   formatTemps, WALLET_KEY,
   type Marchand, type Client, type TamponResult,
@@ -13,9 +13,10 @@ import { db } from "@/lib/firebase";
 import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
-import AppleWalletCard from "@/components/AppleWalletCard";
-import GoogleWalletCard from "@/components/GoogleWalletCard";
-import QRCode from "qrcode";
+
+// Lazy-load composants lourds — pas besoin au premier rendu
+const AppleWalletCard = lazy(() => import("@/components/AppleWalletCard"));
+const GoogleWalletCard = lazy(() => import("@/components/GoogleWalletCard"));
 
 type Screen =
   | { type: "loading" }
@@ -46,11 +47,13 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   useEffect(() => {
     async function init() {
       try {
-        const marchand = await getMarchandByNfcId(marchandId);
-        if (!marchand || !marchand.actif) {
+        // Fetch marchand via API route (Firebase Admin côté serveur = plus rapide)
+        const res = await fetch(`/api/nfc/${marchandId}`);
+        if (!res.ok) {
           setScreen({ type: "erreur", message: "Ce service est temporairement indisponible." });
           return;
         }
+        const marchand: Marchand = await res.json();
 
         const walletId = localStorage.getItem(WALLET_KEY(marchandId));
         let compteSupprimeIci = false;
@@ -342,10 +345,10 @@ function RecompenseQR({ walletId }: { walletId: string }) {
   const [qr, setQr] = useState("");
 
   useEffect(() => {
-    QRCode.toDataURL(`https://app.walliocard.com/client/${walletId}`, {
+    import("qrcode").then(({ default: QRCode }) => QRCode.toDataURL(`https://app.walliocard.com/client/${walletId}`, {
       width: 600, margin: 1, errorCorrectionLevel: "M",
       color: { dark: "#1D1D1F", light: "#FFFFFF" },
-    }).then(setQr).catch(() => {});
+    }).then(setQr).catch(() => {}));
   }, [walletId]);
 
   return (
@@ -814,6 +817,7 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
 
         {/* Carte preview — Google sur Android, Apple sur iOS */}
         <div className="mb-5 -mx-5 flex justify-center overflow-hidden">
+          <Suspense fallback={<div style={{ width: 340, height: 300, borderRadius: 16, background: couleur, opacity: 0.3 }} />}>
           {isAndroid ? (
             <GoogleWalletCard
               logoUrl={logo}
@@ -865,6 +869,7 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
               stampLogoOpacity={(m.apple_stamp_logo_opacity as number) || undefined}
             />
           )}
+          </Suspense>
         </div>
 
         {/* Notifications */}

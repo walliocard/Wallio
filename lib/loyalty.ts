@@ -1,7 +1,7 @@
 import { db } from "./firebase";
 import {
   collection, doc, getDoc, getDocs, setDoc,
-  updateDoc, query, where, serverTimestamp, Timestamp,
+  updateDoc, query, where, limit, serverTimestamp, Timestamp,
 } from "firebase/firestore";
 import { v4 as uuid } from "uuid";
 
@@ -93,22 +93,29 @@ function normaliseTel(tel: string): string {
 
 export async function getClientByTelephone(telephone: string, marchandId: string): Promise<Client | null> {
   const telNorm = normaliseTel(telephone);
-  const snap = await getDocs(query(collection(db, "clients"), where("marchand_id", "==", marchandId)));
-  const matches = snap.docs.filter(d => normaliseTel(d.data().telephone ?? "") === telNorm);
-  if (matches.length === 0) return null;
-  // Préférer le client enregistré dans Apple Wallet (apns_push_token présent)
-  const best = matches.find(d => d.data().apns_push_token) ?? matches[0];
+  // Requête directe par téléphone normalisé + marchand_id (index composé Firestore)
+  const snap = await getDocs(query(
+    collection(db, "clients"),
+    where("marchand_id", "==", marchandId),
+    where("telephone", "==", telNorm),
+    limit(5)
+  ));
+  if (snap.empty) return null;
+  const best = snap.docs.find(d => d.data().apns_push_token) ?? snap.docs[0];
   return { id: best.id, ...best.data() } as Client;
 }
 
-// Trouve le client Apple Wallet actif parmi les doublons (même téléphone, même marchand)
+// Trouve le client Apple/Google Wallet actif (même téléphone, même marchand)
 export async function getWalletClientByTelephone(telephone: string, marchandId: string): Promise<Client | null> {
   const telNorm = normaliseTel(telephone);
-  const snap = await getDocs(query(collection(db, "clients"), where("marchand_id", "==", marchandId)));
-  const matches = snap.docs
-    .filter(d => normaliseTel(d.data().telephone ?? "") === telNorm)
-    .map(d => ({ id: d.id, ...d.data() } as Client));
-  return matches.find(c => c.apns_push_token || c.wallet_type) ?? null;
+  const snap = await getDocs(query(
+    collection(db, "clients"),
+    where("marchand_id", "==", marchandId),
+    where("telephone", "==", telNorm),
+    limit(5)
+  ));
+  const clients = snap.docs.map(d => ({ id: d.id, ...d.data() } as Client));
+  return clients.find(c => c.apns_push_token || c.wallet_type) ?? null;
 }
 
 export async function creerClient(data: {
