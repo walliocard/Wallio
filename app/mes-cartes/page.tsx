@@ -77,7 +77,6 @@ export default function MesCartesPage() {
   const [joined, setJoined]     = useState<Set<string>>(new Set());
   const [notifs, setNotifs]     = useState<ClientNotif[]>([]);
   const unsubRef = useRef<(() => void) | null>(null);
-  const marchandCacheRef = useRef<Map<string, Record<string, unknown>>>(new Map());
 
   useEffect(() => {
     const saved = localStorage.getItem(PHONE_KEY);
@@ -89,7 +88,6 @@ export default function MesCartesPage() {
   async function loadCards(fullPhone: string) {
     // Annuler l'éventuel listener précédent
     unsubRef.current?.();
-    marchandCacheRef.current.clear();
     setFetching(true); setNotFound(false);
 
     const q = query(collection(db, "clients"), where("telephone", "==", fullPhone));
@@ -110,14 +108,9 @@ export default function MesCartesPage() {
         const client = clientDoc.data();
         if (!p && client.prenom) { p = client.prenom; n = client.nom || ""; d = client.date_naissance || ""; }
         try {
-          // Cache marchand pour ne pas re-fetcher à chaque tampon
-          let m = marchandCacheRef.current.get(client.marchand_id);
-          if (!m) {
-            const marchandSnap = await getDoc(doc(db, "marchands", client.marchand_id));
-            if (!marchandSnap.exists()) return;
-            m = marchandSnap.data();
-            marchandCacheRef.current.set(client.marchand_id, m);
-          }
+          const marchandSnap = await getDoc(doc(db, "marchands", client.marchand_id));
+          if (!marchandSnap.exists()) return;
+          const m = marchandSnap.data();
           results.push({
             clientId: clientDoc.id,
             walletId: client.wallet_id,
