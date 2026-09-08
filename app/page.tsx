@@ -127,17 +127,98 @@ function WalletCardMock({
       {/* Séparateur + QR */}
       <div style={{ height: "0.5px", background: sep, margin: "0 12px" }} />
       <div style={{ display: "flex", justifyContent: "center", padding: "10px 12px 12px" }}>
-        <div style={{ background: "#FFFFFF", borderRadius: 5, padding: 5, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-            <rect x="1" y="1" width="13" height="13" rx="2" stroke="#1D1D1F" strokeWidth="1.5" fill="none"/>
-            <rect x="4" y="4" width="7" height="7" rx="1" fill="#1D1D1F"/>
-            <rect x="20" y="1" width="13" height="13" rx="2" stroke="#1D1D1F" strokeWidth="1.5" fill="none"/>
-            <rect x="23" y="4" width="7" height="7" rx="1" fill="#1D1D1F"/>
-            <rect x="1" y="20" width="13" height="13" rx="2" stroke="#1D1D1F" strokeWidth="1.5" fill="none"/>
-            <rect x="4" y="23" width="7" height="7" rx="1" fill="#1D1D1F"/>
-            <rect x="20" y="20" width="4" height="4" rx="0.5" fill="#1D1D1F"/>
-            <rect x="26" y="20" width="7" height="4" rx="0.5" fill="#1D1D1F"/>
-            <rect x="20" y="26" width="13" height="7" rx="0.5" fill="#1D1D1F"/>
+        <div style={{ background: "#FFFFFF", borderRadius: 4, padding: 4, width: 46, height: 46, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="38" height="38" viewBox="0 0 21 21" fill="none">
+            <rect width="21" height="21" fill="white"/>
+            {/* Finder TL */}
+            <rect x="0" y="0" width="7" height="7" fill="#1D1D1F"/>
+            <rect x="1" y="1" width="5" height="5" fill="white"/>
+            <rect x="2" y="2" width="3" height="3" fill="#1D1D1F"/>
+            {/* Finder TR */}
+            <rect x="14" y="0" width="7" height="7" fill="#1D1D1F"/>
+            <rect x="15" y="1" width="5" height="5" fill="white"/>
+            <rect x="16" y="2" width="3" height="3" fill="#1D1D1F"/>
+            {/* Finder BL */}
+            <rect x="0" y="14" width="7" height="7" fill="#1D1D1F"/>
+            <rect x="1" y="15" width="5" height="5" fill="white"/>
+            <rect x="2" y="16" width="3" height="3" fill="#1D1D1F"/>
+            {/* Timing row */}
+            <rect x="8" y="6" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="10" y="6" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="12" y="6" width="1" height="1" fill="#1D1D1F"/>
+            {/* Timing col */}
+            <rect x="6" y="8" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="6" y="10" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="6" y="12" width="1" height="1" fill="#1D1D1F"/>
+            {/* Format info */}
+            <rect x="8" y="0" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="2" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="4" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="5" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="0" y="8" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="3" y="8" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="5" y="8" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="13" width="1" height="1" fill="#1D1D1F"/>
+            {/* Data */}
+            <rect x="9" y="8" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="12" y="8" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="14" y="8" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="18" y="8" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="20" y="8" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="9" y="9" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="11" y="9" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="15" y="9" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="17" y="9" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="20" y="9" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="10" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="10" y="10" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="14" y="10" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="18" y="10" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="9" y="11" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="12" y="11" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="16" y="11" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="20" y="11" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="12" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="11" y="12" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="13" y="12" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="17" y="12" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="19" y="12" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="9" y="13" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="14" y="13" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="16" y="13" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="19" y="13" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="14" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="12" y="14" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="15" y="14" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="18" y="14" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="20" y="14" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="9" y="15" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="11" y="15" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="14" y="15" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="16" y="15" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="20" y="15" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="16" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="10" y="16" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="14" y="16" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="18" y="16" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="9" y="17" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="12" y="17" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="15" y="17" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="17" y="17" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="20" y="17" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="18" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="11" y="18" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="15" y="18" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="19" y="18" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="9" y="19" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="12" y="19" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="14" y="19" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="18" y="19" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="20" y="19" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="8" y="20" width="3" height="1" fill="#1D1D1F"/>
+            <rect x="12" y="20" width="2" height="1" fill="#1D1D1F"/>
+            <rect x="15" y="20" width="1" height="1" fill="#1D1D1F"/>
+            <rect x="17" y="20" width="3" height="1" fill="#1D1D1F"/>
           </svg>
         </div>
       </div>
@@ -1215,45 +1296,45 @@ export default function LandingPage() {
 
                 {/* Phone mockup — listing Wallio */}
                 <div data-reveal="left" style={{ flex:"0 0 auto", display:"flex", justifyContent:"center" }}>
-                  <PhoneMock style={{ width:210 }}>
-                    <div style={{ background:"#F2F2F7", minHeight:360 }}>
+                  <PhoneMock style={{ width:300 }}>
+                    <div style={{ background:"#F2F2F7", minHeight:440 }}>
                       {/* Header */}
-                      <div style={{ padding:"14px 16px 10px", background:"white", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-                        <div style={{ fontSize:9, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#8E8E93", marginBottom:6 }}>{t.presenceDiscover}</div>
-                        <div style={{ background:"#F2F2F7", borderRadius:8, padding:"7px 10px", display:"flex", alignItems:"center", gap:6 }}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                          <span style={{ fontSize:10, color:"#8E8E93" }}>{t.presenceSearch}</span>
+                      <div style={{ padding:"16px 18px 12px", background:"white", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+                        <div style={{ fontSize:10, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#8E8E93", marginBottom:8 }}>{t.presenceDiscover}</div>
+                        <div style={{ background:"#F2F2F7", borderRadius:10, padding:"8px 12px", display:"flex", alignItems:"center", gap:8 }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                          <span style={{ fontSize:11, color:"#8E8E93" }}>{t.presenceSearch}</span>
                         </div>
-                        <div style={{ display:"flex", gap:6, marginTop:8, overflowX:"auto" }}>
+                        <div style={{ display:"flex", gap:6, marginTop:10, overflowX:"auto" }}>
                           {t.presenceCats.map((c, i) => (
-                            <span key={c} style={{ fontSize:9, fontWeight:600, padding:"3px 8px", borderRadius:20, flexShrink:0, background: i===0 ? "#1D1D1F" : "#F2F2F7", color: i===0 ? "white" : "#6E6E73" }}>{c}</span>
+                            <span key={c} style={{ fontSize:10, fontWeight:600, padding:"4px 10px", borderRadius:20, flexShrink:0, background: i===0 ? "#1D1D1F" : "#F2F2F7", color: i===0 ? "white" : "#6E6E73" }}>{c}</span>
                           ))}
                         </div>
                       </div>
                       {/* Merchant list */}
-                      <div style={{ padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
+                      <div style={{ padding:"12px 14px", display:"flex", flexDirection:"column", gap:8 }}>
                         {t.presenceMerchants.map(m => (
-                          <div key={m.name} style={{ background:"white", borderRadius:12, padding:"10px 12px", display:"flex", alignItems:"center", gap:10, boxShadow:"0 1px 6px rgba(0,0,0,0.06)" }}>
-                            <div style={{ width:36, height:36, borderRadius:10, background:`${m.color}22`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                              <span style={{ fontSize:13, fontWeight:700, color:m.color }}>{m.initial}</span>
+                          <div key={m.name} style={{ background:"white", borderRadius:14, padding:"12px 14px", display:"flex", alignItems:"center", gap:12, boxShadow:"0 1px 8px rgba(0,0,0,0.07)" }}>
+                            <div style={{ width:40, height:40, borderRadius:12, background:`${m.color}22`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                              <span style={{ fontSize:15, fontWeight:700, color:m.color }}>{m.initial}</span>
                             </div>
                             <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ fontSize:11, fontWeight:600, color:"#1D1D1F", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.name}</div>
-                              <div style={{ fontSize:9, color:"#8E8E93", marginTop:1 }}>{m.cat}</div>
+                              <div style={{ fontSize:13, fontWeight:600, color:"#1D1D1F", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.name}</div>
+                              <div style={{ fontSize:11, color:"#8E8E93", marginTop:2 }}>{m.cat}</div>
                             </div>
                             <div style={{ textAlign:"right", flexShrink:0 }}>
-                              <div style={{ fontSize:10, fontWeight:600, color:"#FF9500" }}>★ {m.rating}</div>
-                              <div style={{ fontSize:9, color:"#8E8E93" }}>{m.clients}</div>
+                              <div style={{ fontSize:11, fontWeight:600, color:"#FF9500" }}>★ {m.rating}</div>
+                              <div style={{ fontSize:10, color:"#8E8E93" }}>{m.clients}</div>
                             </div>
                           </div>
                         ))}
-                        <div style={{ background:"linear-gradient(135deg,#4472F5,#8A5CF6)", borderRadius:12, padding:"10px 12px", display:"flex", alignItems:"center", gap:10 }}>
-                          <div style={{ width:36, height:36, borderRadius:10, background:"rgba(255,255,255,0.20)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <div style={{ background:"linear-gradient(135deg,#4472F5,#8A5CF6)", borderRadius:14, padding:"12px 14px", display:"flex", alignItems:"center", gap:12 }}>
+                          <div style={{ width:40, height:40, borderRadius:12, background:"rgba(255,255,255,0.20)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                           </div>
                           <div style={{ flex:1 }}>
-                            <div style={{ fontSize:11, fontWeight:600, color:"white" }}>{t.presenceJoin}</div>
-                            <div style={{ fontSize:9, color:"rgba(255,255,255,0.7)" }}>{t.presenceJoinSub}</div>
+                            <div style={{ fontSize:13, fontWeight:600, color:"white" }}>{t.presenceJoin}</div>
+                            <div style={{ fontSize:11, color:"rgba(255,255,255,0.7)" }}>{t.presenceJoinSub}</div>
                           </div>
                         </div>
                       </div>
