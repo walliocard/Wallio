@@ -80,9 +80,8 @@ export default function InscriptionPage() {
       <div className="w-full max-w-[380px] relative">
 
         <div className="text-center mb-12">
-          <WallioIcon size={56} className="mb-5 mx-auto" />
-          <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Wallio</h1>
-          <p className="text-[15px] mt-1.5" style={{ color: "var(--fg-secondary)" }}>Créer votre espace marchand</p>
+          <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 88, height: 88, borderRadius: 22, margin: "0 auto 16px", display: "block" }} />
+          <p className="text-[15px] mt-1" style={{ color: "var(--fg-secondary)" }}>Créer votre espace marchand</p>
         </div>
 
         <div className="rounded-[28px] p-8"
