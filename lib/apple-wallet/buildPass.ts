@@ -93,15 +93,59 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
 
   // Logo marchand = coin supérieur gauche + icône de notification
   if (input.logoUrl) {
+    // Logo avec coins arrondis (Apple Wallet n'arrondit pas nativement)
     try {
-      const res = await fetch(input.logoUrl);
-      if (res.ok) {
-        const buf = Buffer.from(await res.arrayBuffer());
-        files["logo.png"]    = buf;
-        files["logo@2x.png"] = buf;
-        files["logo@3x.png"] = buf;
-      }
-    } catch (e) { console.error("[logo] fetch failed:", e); }
+      const { createCanvas, loadImage } = await import("@napi-rs/canvas");
+      const logo = await loadImage(input.logoUrl);
+
+      const mkLogo = async (size: number) => {
+        const natW = logo.width || size;
+        const natH = logo.height || size;
+        // Calcul dimensions en gardant le ratio, max size×size
+        const ratio = Math.min(size / natW, size / natH);
+        const w = Math.round(natW * ratio);
+        const h = Math.round(natH * ratio);
+        const canvas = createCanvas(w, h);
+        const ctx = canvas.getContext("2d");
+        // Fond transparent
+        ctx.clearRect(0, 0, w, h);
+        // Clip avec coins arrondis (~22% du plus petit côté, comme iOS app icon)
+        const r = Math.round(Math.min(w, h) * 0.22);
+        ctx.beginPath();
+        ctx.moveTo(r, 0);
+        ctx.lineTo(w - r, 0);
+        ctx.quadraticCurveTo(w, 0, w, r);
+        ctx.lineTo(w, h - r);
+        ctx.quadraticCurveTo(w, h, w - r, h);
+        ctx.lineTo(r, h);
+        ctx.quadraticCurveTo(0, h, 0, h - r);
+        ctx.lineTo(0, r);
+        ctx.quadraticCurveTo(0, 0, r, 0);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(logo, 0, 0, w, h);
+        return canvas.encode("png");
+      };
+
+      const logo1x = await mkLogo(160);
+      const logo2x = await mkLogo(320);
+      const logo3x = await mkLogo(480);
+      files["logo.png"]    = logo1x;
+      files["logo@2x.png"] = logo2x;
+      files["logo@3x.png"] = logo3x;
+    } catch (e) {
+      // Fallback : logo brut sans arrondi
+      console.error("[logo] rounded corners failed, using raw:", e);
+      try {
+        const res = await fetch(input.logoUrl);
+        if (res.ok) {
+          const buf = Buffer.from(await res.arrayBuffer());
+          files["logo.png"]    = buf;
+          files["logo@2x.png"] = buf;
+          files["logo@3x.png"] = buf;
+        }
+      } catch (e2) { console.error("[logo] fetch failed:", e2); }
+    }
 
     // icon.png — iOS 18 exige fond solide (transparent = blanc sur blanc)
     // Tailles exactes Apple : 29×29 / 58×58 / 87×87 px
