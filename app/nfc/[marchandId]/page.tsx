@@ -549,7 +549,7 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
   const selectStyle: React.CSSProperties = { ...inputStyle, backgroundImage: "none" };
 
   return (
-    <main className="min-h-screen flex flex-col justify-center px-5 py-12" style={{ background: BG_PAGE }}>
+    <main className="min-h-screen flex flex-col px-5 py-12" style={{ background: BG_PAGE }}>
       <div className="w-full max-w-[390px] mx-auto">
         <MarchandHeader marchand={marchand} />
 
@@ -664,7 +664,7 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
   }
 
   return (
-    <main className="min-h-screen flex flex-col justify-center px-5 py-12" style={{ background: BG_PAGE }}>
+    <main className="min-h-screen flex flex-col px-5 py-12" style={{ background: BG_PAGE }}>
       <div className="w-full max-w-[390px] mx-auto">
         <MarchandHeader marchand={marchand} />
 
@@ -891,7 +891,7 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
   }
 
   return (
-    <main className="min-h-screen flex flex-col justify-center px-5 py-12" style={{ background: "var(--bg)" }}>
+    <main className="min-h-screen flex flex-col px-5 pt-12 pb-16" style={{ background: "var(--bg)" }}>
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[50%] translate-x-[-50%] w-[500px] h-[400px] rounded-full"
           style={{ background: `radial-gradient(circle, ${couleur}22 0%, transparent 70%)` }} />
@@ -1043,7 +1043,7 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
           )}
         </div>
 
-        <Link href="/mes-cartes" className="block mt-5 py-4 rounded-2xl text-center text-[15px] font-semibold"
+        <Link href="/mes-cartes" className="block mt-5 mb-4 py-4 rounded-2xl text-center text-[15px] font-semibold"
           style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--fg)" }}>
           Voir toutes mes cartes
         </Link>
