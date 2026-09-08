@@ -523,10 +523,8 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
     setError("");
     try {
       const existing = await getClientByTelephone(telephone, marchand.id);
-      if (existing &&
-          existing.prenom.trim().toLowerCase() === prenom.trim().toLowerCase() &&
-          existing.nom.trim().toLowerCase() === nom.trim().toLowerCase()) {
-        // Client existant → ref ignoré (déjà client ici)
+      if (existing) {
+        // Même numéro de téléphone = même personne → reconnexion, pas de nouveau compte
         onSuccess(existing, false);
         return;
       }
