@@ -737,7 +737,7 @@ function InstallBanner() {
       {/* Header banner */}
       <div style={{ padding: "16px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/icon-192.png" alt="Wallio" style={{ width: 34, height: 34, borderRadius: 8, display: "block" }} />
+          <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 38, height: 38, borderRadius: 10, display: "block" }} />
           <div>
             <p style={{ fontSize: 15, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.2 }}>
               Installez Wallio

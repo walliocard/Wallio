@@ -11,7 +11,7 @@ export default function ChoisirPage() {
       WebkitFontSmoothing:"antialiased",
     }}>
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:48 }}>
-        <Image src="/icon.svg" alt="Wallio" width={32} height={32} unoptimized style={{ borderRadius:7 }} />
+        <Image src="/wallio-instagram-profil.png" alt="Wallio" width={36} height={36} unoptimized style={{ borderRadius:9 }} />
         <span style={{ fontSize:15, fontWeight:700, letterSpacing:"0.16em", color:"#1D1D1F" }}>WALLIO</span>
       </div>
 

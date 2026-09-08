@@ -6,7 +6,6 @@ import { auth } from "@/lib/firebase";
 import { saveMarchandFields } from "@/lib/save-marchand";
 import { Timestamp } from "firebase/firestore";
 import Link from "next/link";
-import WallioIcon from "@/components/WallioIcon";
 
 export default function InscriptionPage() {
   const [form, setForm] = useState({ nom: "", email: "", password: "" });

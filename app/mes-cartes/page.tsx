@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { collection, query, where, onSnapshot, getDocs, doc, getDoc, updateDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient } from "@/lib/loyalty";
-import WallioIcon from "@/components/WallioIcon";
 
 interface CardData {
   clientId: string;
@@ -627,8 +626,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
 function Header() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-      <WallioIcon size={34} />
-      <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: -0.3, color: "#1C2333" }}>Wallio</span>
+      <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 38, height: 38, borderRadius: 10, display: "block" }} />
     </div>
   );
 }
