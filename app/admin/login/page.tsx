@@ -33,8 +33,8 @@ export default function AdminLoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[800px] h-[500px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(0,122,255,0.2) 0%, transparent 70%)" }} />
+        <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[800px] h-[500px] rounded-full opacity-30"
+          style={{ background: "radial-gradient(circle, rgba(0,245,160,0.12) 0%, transparent 70%)" }} />
       </div>
 
       <div className="w-full max-w-[380px] relative">
@@ -62,8 +62,8 @@ export default function AdminLoginPage() {
             ))}
             {error && <p className="text-red-500 text-[13px]">{error}</p>}
             <button type="submit" disabled={loading}
-              className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all mt-1"
-              style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.3)" }}>
+              className="w-full py-3.5 rounded-2xl text-[15px] font-semibold transition-all mt-1"
+              style={{ background: "#0A0A0A", color: "#00F5A0", border: "1px solid rgba(0,245,160,0.25)", boxShadow: "0 4px 24px rgba(0,245,160,0.12)" }}>
               {loading ? "Vérification…" : "Accéder"}
             </button>
           </form>
