@@ -68,6 +68,7 @@ export default function AdminPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [tab, setTab] = useState<"marchands" | "impression">("marchands");
+  const [page, setPage] = useState(0);
   const [impUrl, setImpUrl] = useState("https://app.walliocard.com/nfc/demo");
   const [impUrls, setImpUrls] = useState("");
   const [impGenerating, setImpGenerating] = useState(false);
@@ -248,7 +249,6 @@ export default function AdminPage() {
     !search || m.nom?.toLowerCase().includes(search.toLowerCase()) || m.email?.toLowerCase().includes(search.toLowerCase())
   );
   const PAGE_SIZE = 20;
-  const [page, setPage] = useState(0);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 

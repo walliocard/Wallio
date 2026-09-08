@@ -756,8 +756,7 @@ export default function LandingPage() {
         {/* ── Nav ── */}
         <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:20, height:58, display:"flex", alignItems:"center", justifyContent:"space-between", background: scrolled ? "rgba(242,242,247,0.85)" : "transparent", backdropFilter: scrolled ? "blur(24px)" : "none", borderBottom: scrolled ? "0.5px solid rgba(0,0,0,0.09)" : "none", transition:"all 0.3s" }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <Image src="/icon.svg" alt="Wallio" width={28} height={28} unoptimized style={{ borderRadius:6 }} />
-            <span style={{ fontSize:14, fontWeight:700, letterSpacing:"0.16em", color:"#1D1D1F" }}>WALLIO</span>
+            <Image src="/wallio-instagram-profil.png" alt="Wallio" width={36} height={36} unoptimized style={{ borderRadius:8 }} />
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             <button
