@@ -322,3 +322,139 @@ export async function drawPrintCard(
 
   ctx.restore(); // end card clip
 }
+
+export async function drawPrintCardQROnly(
+  canvas: HTMLCanvasElement,
+  qrUrl: string,
+  scale = 1,
+) {
+  const W = PRINT_W * scale;
+  const H = PRINT_H * scale;
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+  const p = (v: number) => v * scale;
+
+  const font   = `-apple-system, 'Helvetica Neue', Arial, sans-serif`;
+  const blue   = "#4472F5";
+  const indigo = "#6A5AF9";
+  const violet = "#8A5CF6";
+
+  // 1. Background
+  ctx.fillStyle = "#F0F0F5";
+  ctx.fillRect(0, 0, W, H);
+
+  // 2. Card
+  ctx.shadowColor = "rgba(0,0,0,0.10)";
+  ctx.shadowBlur  = p(40);
+  ctx.shadowOffsetY = p(8);
+  rr(ctx, p(50), p(50), p(1400), p(900), p(55));
+  ctx.fillStyle = "#F8F8FA";
+  ctx.fill();
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  ctx.save();
+  rr(ctx, p(50), p(50), p(1400), p(900), p(55));
+  ctx.clip();
+
+  // Waves (identiques)
+  const waves = [
+    { dy: 0,   opa: 0.10, c: "100,140,255" },
+    { dy: 30,  opa: 0.08, c: "130,110,250" },
+    { dy: -20, opa: 0.06, c: "165,110,245" },
+  ];
+  waves.forEach(({ dy, opa, c }) => {
+    const y0 = p(660 + dy);
+    ctx.beginPath();
+    ctx.moveTo(p(50),   y0 + p(60));
+    ctx.bezierCurveTo(p(350), y0 - p(30), p(600), y0 + p(70), p(750), y0 + p(20));
+    ctx.bezierCurveTo(p(900), y0 - p(20), p(1150), y0 + p(50), p(1450), y0 + p(30));
+    ctx.lineTo(p(1450), p(950)); ctx.lineTo(p(50), p(950)); ctx.closePath();
+    ctx.fillStyle = `rgba(${c},${opa})`; ctx.fill();
+  });
+
+  // Titre (identique)
+  ctx.font = `600 ${p(64)}px ${font}`;
+  ctx.textBaseline = "top"; ctx.textAlign = "left";
+  const p1 = "Votre fidélité. ", p2 = "Simplifiée.";
+  const w1 = ctx.measureText(p1).width, w2 = ctx.measureText(p2).width;
+  const titleStartX = p(750) - (w1 + w2) / 2;
+  ctx.fillStyle = "#15171A";
+  ctx.fillText(p1, titleStartX, p(120));
+  const gTitle = ctx.createLinearGradient(titleStartX + w1, 0, titleStartX + w1 + w2, 0);
+  gTitle.addColorStop(0, blue); gTitle.addColorStop(0.5, indigo); gTitle.addColorStop(1, violet);
+  ctx.fillStyle = gTitle;
+  ctx.fillText(p2, titleStartX + w1, p(120));
+
+  // Sous-titre (identique)
+  ctx.font = `400 ${p(24)}px ${font}`;
+  ctx.fillStyle = "#596170"; ctx.textAlign = "center";
+  ctx.fillText("Ajoutez notre carte à votre portefeuille en quelques secondes.", p(750), p(220));
+
+  // Bloc QR centré et agrandi (remplace les deux blocs + séparateur)
+  // X:175 Y:305 W:1150 H:320 R:36
+  ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
+  rr(ctx, p(175), p(305), p(1150), p(320), p(36));
+  ctx.fillStyle = "#FFFFFF"; ctx.fill();
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
+
+  // QR code (grand, gauche du bloc) — 270×270
+  const qrSize = Math.round(p(270));
+  const qrImg  = await loadQRImage(qrUrl, qrSize);
+  const qrX = p(230), qrY = p(330);
+  if (qrImg) {
+    ctx.drawImage(qrImg, qrX, qrY, p(270), p(270));
+  }
+
+  // Texte SCANNEZ LE CODE (droite, identique au design NFC+QR)
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.font = `600 ${p(36)}px ${font}`;
+  const textX = p(580), textY = p(360);
+  ctx.fillStyle = "#15171A";
+  ctx.fillText("SCANNEZ", textX, textY);
+  const leW = ctx.measureText("LE ").width;
+  ctx.fillStyle = "#15171A";
+  ctx.fillText("LE ", textX, textY + p(42));
+  const gCode = ctx.createLinearGradient(textX + leW, 0, textX + leW + ctx.measureText("CODE").width, 0);
+  gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
+  ctx.fillStyle = gCode;
+  ctx.fillText("CODE", textX + leW, textY + p(42));
+
+  ctx.font = `400 ${p(21)}px ${font}`;
+  ctx.fillStyle = "#596170";
+  const descY = textY + p(42 + 40 + 18);
+  ctx.fillText("Ouvrez l'appareil photo",     textX, descY);
+  ctx.fillText("de votre téléphone et",       textX, descY + p(28));
+  ctx.fillText("ajoutez la carte",            textX, descY + p(56));
+
+  // "Ajoutez à votre portefeuille" (identique)
+  ctx.font = `400 ${p(18)}px ${font}`;
+  ctx.fillStyle = "#596170"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("Ajoutez à votre portefeuille", p(750), p(680));
+
+  function drawBadge(img: HTMLImageElement | null, x: number, y: number, w: number, h: number) {
+    if (!img) return;
+    const natR = img.naturalWidth / (img.naturalHeight || 1);
+    const boxW = p(w), boxH = p(h);
+    const boxR = boxW / boxH;
+    let dw: number, dh: number;
+    if (natR > boxR) { dw = boxW; dh = boxW / natR; } else { dh = boxH; dw = boxH * natR; }
+    ctx.drawImage(img, p(x) + (boxW - dw) / 2, p(y) + (boxH - dh) / 2, dw, dh);
+  }
+
+  const appleImg  = await loadImg("/apple-wallet-badge.svg");
+  const googleImg = await loadImg("/google-wallet-badge.svg");
+  drawBadge(appleImg,  435, 725, 300, 78);
+  drawBadge(googleImg, 765, 725, 300, 78);
+
+  // WALLIO (identique)
+  ctx.font = `500 ${p(24)}px ${font}`;
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillStyle = indigo;
+  ctx.letterSpacing = `${p(8)}px`;
+  ctx.fillText("WALLIO", p(750), p(855));
+  ctx.letterSpacing = "0px";
+
+  ctx.restore();
+}

@@ -5,8 +5,7 @@ import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
 import ThemeToggle from "@/components/ThemeToggle";
-import { drawPrintCard, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
-import { drawEnseigne } from "@/lib/carte-comptoir-draw";
+import { drawPrintCard, drawPrintCardQROnly, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
 type Marchand = {
   id: string;
@@ -275,7 +274,8 @@ export default function AdminPage() {
   async function telechargerCarteQR(m: Marchand) {
     setDownloadingQR(true);
     const canvas = document.createElement("canvas");
-    await drawEnseigne(canvas, m.couleur_principale || "#0A0A0A", m.couleur_secondaire || m.couleur_principale || "#1A1A1A", m.nom, "Scannez pour gagner vos points", m.nfc_id, "dark", 4, true, true);
+    const url = m.nfc_id ? `https://app.walliocard.com/nfc/${m.nfc_id}` : "https://app.walliocard.com";
+    await drawPrintCardQROnly(canvas, url, 3);
     const link = document.createElement("a");
     link.download = `wallio-qr-${slugify(m.nom || m.id)}.png`;
     link.href = canvas.toDataURL("image/png");
