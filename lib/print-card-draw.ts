@@ -390,22 +390,27 @@ export async function drawPrintCardQROnly(
   ctx.fillStyle = "#596170"; ctx.textAlign = "center";
   ctx.fillText("Ajoutez notre carte à votre portefeuille en quelques secondes.", p(600), p(200));
 
-  // Bloc QR — large, centré, presque carré (X:130 Y:270 W:940 H:490)
+  // QR 390×390, bloc ajusté autour du contenu
+  const qrSize = Math.round(p(390));
+  const qrImg  = await loadQRImage(qrUrl, qrSize);
+  const qrPad = p(38);
+  const blockY = p(258);
+  const blockH = p(390) + qrPad * 2; // bloc = taille QR + padding haut + bas
+  rr(ctx, p(130), blockY, p(940), blockH, p(36));
   ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
-  rr(ctx, p(130), p(268), p(940), p(490), p(36));
   ctx.fillStyle = "#FFFFFF"; ctx.fill();
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
 
-  // QR code — grand (370×370), à gauche du bloc
-  const qrSize = Math.round(p(370));
-  const qrImg  = await loadQRImage(qrUrl, qrSize);
-  if (qrImg) ctx.drawImage(qrImg, p(165), p(303), p(370), p(370));
+  // QR code — aligné en haut du bloc avec padding
+  if (qrImg) ctx.drawImage(qrImg, p(165), blockY + qrPad, p(390), p(390));
 
-  // Texte SCANNEZ LE CODE — à droite du QR
+  // Texte SCANNEZ LE CODE — centré verticalement dans le bloc
+  const textHeight = p(46 + 44 + 20 + 22 * 3 + 30 * 2); // hauteur totale du groupe texte
+  const textX = p(608);
+  const textY  = blockY + (blockH - textHeight) / 2;
   ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.font = `600 ${p(38)}px ${font}`;
-  const textX = p(600), textY = p(358);
   ctx.fillStyle = "#15171A";
   ctx.fillText("SCANNEZ", textX, textY);
   const leW = ctx.measureText("LE ").width;
@@ -423,33 +428,36 @@ export async function drawPrintCardQROnly(
   ctx.fillText("de votre téléphone et",    textX, descY + p(30));
   ctx.fillText("ajoutez la carte",         textX, descY + p(60));
 
+  // Positionnement dynamique des éléments sous le bloc
+  const afterBlock = blockY + blockH + p(42);
+
   // "Ajoutez à votre portefeuille"
   ctx.font = `400 ${p(19)}px ${font}`;
   ctx.fillStyle = "#596170"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText("Ajoutez à votre portefeuille", p(600), p(820));
+  ctx.fillText("Ajoutez à votre portefeuille", p(600), afterBlock);
 
-  function drawBadge(img: HTMLImageElement | null, x: number, y: number, w: number, h: number) {
+  function drawBadgeAbs(img: HTMLImageElement | null, cx: number, y: number, w: number, h: number) {
     if (!img) return;
     const natR = img.naturalWidth / (img.naturalHeight || 1);
     const boxW = p(w), boxH = p(h);
     const boxR = boxW / boxH;
     let dw: number, dh: number;
     if (natR > boxR) { dw = boxW; dh = boxW / natR; } else { dh = boxH; dw = boxH * natR; }
-    ctx.drawImage(img, p(x) + (boxW - dw) / 2, p(y) + (boxH - dh) / 2, dw, dh);
+    ctx.drawImage(img, cx - dw / 2, y + (boxH - dh) / 2, dw, dh);
   }
 
   const appleImg  = await loadImg("/apple-wallet-badge.svg");
   const googleImg = await loadImg("/google-wallet-badge.svg");
-  // Badges centrés sur 600 (milieu du carré)
-  drawBadge(appleImg,  285, 860, 300, 78);
-  drawBadge(googleImg, 615, 860, 300, 78);
+  const badgeY = afterBlock + p(34);
+  drawBadgeAbs(appleImg,  p(435), badgeY, 300, 78);
+  drawBadgeAbs(googleImg, p(765), badgeY, 300, 78);
 
   // WALLIO
   ctx.font = `500 ${p(22)}px ${font}`;
   ctx.textAlign = "center"; ctx.textBaseline = "top";
   ctx.fillStyle = indigo;
   ctx.letterSpacing = `${p(8)}px`;
-  ctx.fillText("WALLIO", p(600), p(992));
+  ctx.fillText("WALLIO", p(600), badgeY + p(118));
   ctx.letterSpacing = "0px";
 
   ctx.restore();
