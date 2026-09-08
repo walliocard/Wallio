@@ -454,7 +454,7 @@ export async function drawPrintCardQROnly(
 
   const appleImg  = await loadImg("/apple-wallet-badge.svg");
   const googleImg = await loadImg("/google-wallet-badge.svg");
-  const badgeY = afterBlock + p(34);
+  const badgeY = afterBlock + p(58);
   drawBadgeAbs(appleImg,  p(435), badgeY, 300, 78);
   drawBadgeAbs(googleImg, p(765), badgeY, 300, 78);
 
