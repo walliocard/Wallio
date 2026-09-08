@@ -21,6 +21,7 @@ export type Marchand = {
   slogan?: string;
   template_id?: string;
   palette_id?: string;
+  parrainage_actif?: boolean;
 };
 
 export type Client = {
@@ -39,6 +40,7 @@ export type Client = {
   apns_device_lib_id?: string;
   wallet_type?: "apple" | "google";
   fcm_token?: string;
+  parrain_id?: string;
 };
 
 export type TamponResult =
@@ -124,18 +126,28 @@ export async function creerClient(data: {
   telephone: string;
   date_naissance: string;
   marchand_id: string;
+  parrain_wallet_id?: string;
 }): Promise<{ clientId: string; walletId: string }> {
+  const { parrain_wallet_id, ...clientData } = data;
   const walletId = uuid();
   const ref = doc(collection(db, "clients"));
-  await setDoc(ref, {
-    ...data,
+  const docData: Record<string, unknown> = {
+    ...clientData,
     wallet_id: walletId,
     wallet_type: "apple",
-    tampons: 0,
     recompense_en_attente: false,
     date_inscription: serverTimestamp(),
-    derniere_visite: serverTimestamp(),
-  });
+    // derniere_visite intentionnellement absent : posé par ajouterTampon() au 1er vrai scan
+  };
+  if (parrain_wallet_id) {
+    // Parrainage : 1er tampon crédité directement, pas de derniere_visite
+    // → le filleul peut scanner immédiatement après sans anti-doublon
+    docData.tampons = 1;
+    docData.parrain_id = parrain_wallet_id;
+  } else {
+    docData.tampons = 0;
+  }
+  await setDoc(ref, docData);
   return { clientId: ref.id, walletId };
 }
 
@@ -210,3 +222,46 @@ export async function setTampons(clientId: string, tampons: number): Promise<voi
 }
 
 export const WALLET_KEY = (marchandId: string) => `wallio_${marchandId}`;
+
+// ─── Parrainage ───────────────────────────────────────────────────────────────
+
+// Crédite 1 tampon fixe au parrain (bypass anti-doublon, jamais doublé).
+// Retourne le wallet_id du parrain pour déclencher le push Wallet côté appelant.
+export async function traiterParrainage(
+  parrainWalletId: string,
+  marchandId: string,
+): Promise<string | null> {
+  const q = query(
+    collection(db, "clients"),
+    where("wallet_id", "==", parrainWalletId),
+    where("marchand_id", "==", marchandId),
+    limit(1),
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+
+  const parrainDoc = snap.docs[0];
+  const parrain = { id: parrainDoc.id, ...parrainDoc.data() } as Client;
+
+  const marchandSnap = await getDoc(doc(db, "marchands", marchandId));
+  if (!marchandSnap.exists()) return null;
+  const marchand = { id: marchandSnap.id, ...marchandSnap.data() } as Marchand;
+
+  // +1 fixe : jamais doublé par promo double_tampons, bypass anti-doublon
+  const nouveaux = parrain.tampons + 1;
+
+  if (nouveaux >= marchand.objectif_tampons) {
+    await updateDoc(doc(db, "clients", parrain.id), {
+      tampons: 0,
+      recompense_en_attente: true,
+      derniere_visite: serverTimestamp(),
+    });
+  } else {
+    await updateDoc(doc(db, "clients", parrain.id), {
+      tampons: nouveaux,
+      derniere_visite: serverTimestamp(),
+    });
+  }
+
+  return parrainWalletId;
+}

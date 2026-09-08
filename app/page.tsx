@@ -351,6 +351,18 @@ const T = {
     secteursTag:"Secteurs", secteursH2a:"Pour tous les commerces", secteursH2b:"de proximité",
     secteursSub:"Une seule solution, adaptée à chaque type d'établissement.",
     secteurs:["Café & Salon de thé","Restaurant","Barber Shop","Salon de beauté","Boutique & Mode","Salle de sport","Boulangerie","Institut & Spa"],
+    parrainageTag:"Parrainage", parrainageH2a:"Vos clients,", parrainageH2b:"vos meilleurs commerciaux.",
+    parrainageSub:"Un client satisfait partage son lien. Son ami s'inscrit, ils sont tous les deux récompensés. Zéro budget pub, zéro friction.",
+    parrainageSteps:[
+      {title:"Le client partage son lien",body:"Depuis « Mes cartes », en un tap. Le lien est unique et lié à son établissement."},
+      {title:"L'ami scanne et s'inscrit",body:"Il clique le lien, passe par l'inscription rapide, reçoit son 1er tampon immédiatement."},
+      {title:"Le parrain est récompensé",body:"Sa carte Wallet se met à jour automatiquement avec +1 tampon. Notif push incluse."},
+    ],
+    parrainageStats:[
+      {value:"x3",label:"plus de nouveaux clients",sub:"vs bouche-à-oreille classique"},
+      {value:"+1",label:"tampon pour le parrain",sub:"crédité automatiquement"},
+      {value:"0€",label:"coût d'acquisition",sub:"100% organique"},
+    ],
     tarifsTag:"Tarifs", tarifsH2:"Simple et transparent.",
     tarifsSub:"Pas d'abonnement caché, pas de frais à la transaction. Un tarif clair adapté à votre établissement.",
     tarifsIncludedLabel:"Inclus dans votre accès",
@@ -499,6 +511,18 @@ const T = {
     secteursTag:"Industries", secteursH2a:"For every local", secteursH2b:"business",
     secteursSub:"One solution, tailored to every type of venue.",
     secteurs:["Café & Tea room","Restaurant","Barber Shop","Beauty salon","Boutique & Fashion","Gym","Bakery","Spa & Wellness"],
+    parrainageTag:"Referral", parrainageH2a:"Your customers,", parrainageH2b:"your best salespeople.",
+    parrainageSub:"A happy customer shares their link. Their friend signs up, both get rewarded. Zero ad budget, zero friction.",
+    parrainageSteps:[
+      {title:"The customer shares their link",body:"From \"My cards\", one tap. The link is unique and tied to their venue."},
+      {title:"The friend scans and signs up",body:"They click the link, go through quick sign-up, and receive their 1st stamp instantly."},
+      {title:"The referrer is rewarded",body:"Their Wallet card updates automatically with +1 stamp. Push notification included."},
+    ],
+    parrainageStats:[
+      {value:"x3",label:"more new customers",sub:"vs classic word of mouth"},
+      {value:"+1",label:"stamp for the referrer",sub:"credited automatically"},
+      {value:"€0",label:"acquisition cost",sub:"100% organic"},
+    ],
     tarifsTag:"Pricing", tarifsH2:"Simple and transparent.",
     tarifsSub:"No hidden subscription, no transaction fees. A clear price adapted to your business.",
     tarifsIncludedLabel:"Included in your plan",
@@ -1396,6 +1420,76 @@ export default function LandingPage() {
                     <span style={{ fontSize:14, fontWeight:500, color:"#1D1D1F" }}>{s.label}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ── PARRAINAGE ── */}
+          <section style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+            <div style={{ maxWidth:1040, margin:"0 auto" }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
+                <span className="feature-tag">{t.parrainageTag}</span>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>
+                  {t.parrainageH2a}<br /><span className="grad-text">{t.parrainageH2b}</span>
+                </h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.parrainageSub}</p>
+              </div>
+
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:48, alignItems:"center" }} className="dash-split">
+
+                {/* Étapes */}
+                <div data-reveal="left" style={{ display:"flex", flexDirection:"column", gap:0 }}>
+                  {t.parrainageSteps.map((s, i, arr) => (
+                    <div key={i} style={{ display:"flex", gap:20, paddingBottom: i < arr.length-1 ? 32 : 0 }}>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
+                        <div style={{ width:36, height:36, borderRadius:"50%", background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:14, fontWeight:700, color:"white" }}>{i+1}</div>
+                        {i < arr.length-1 && <div style={{ width:2, flex:1, background:"linear-gradient(180deg,rgba(68,114,245,0.3),rgba(138,92,246,0.1))", margin:"8px 0", borderRadius:2 }} />}
+                      </div>
+                      <div style={{ paddingTop:6 }}>
+                        <h3 style={{ fontSize:16, fontWeight:700, color:"#1D1D1F", marginBottom:6, letterSpacing:-0.2 }}>{s.title}</h3>
+                        <p style={{ fontSize:14, lineHeight:1.65, color:"#8E8E93" }}>{s.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Stats + mockup */}
+                <div data-reveal="right" style={{ display:"flex", flexDirection:"column", gap:16 }}>
+                  {/* Stats */}
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
+                    {t.parrainageStats.map(s => (
+                      <div key={s.label} style={{ background:"linear-gradient(135deg,rgba(68,114,245,0.06),rgba(138,92,246,0.04))", border:"0.5px solid rgba(68,114,245,0.15)", borderRadius:20, padding:"20px 16px", textAlign:"center" }}>
+                        <div style={{ fontSize:32, fontWeight:700, letterSpacing:-1, color:"#4472F5", lineHeight:1, marginBottom:6 }}>{s.value}</div>
+                        <div style={{ fontSize:12, fontWeight:600, color:"#1D1D1F", marginBottom:4, lineHeight:1.3 }}>{s.label}</div>
+                        <div style={{ fontSize:11, color:"#AEAEB2", lineHeight:1.3 }}>{s.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Mockup notification parrain */}
+                  <div style={{ background:"#1D1D1F", borderRadius:24, padding:"24px 24px", position:"relative", overflow:"hidden" }}>
+                    <div style={{ position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:"rgba(68,114,245,0.08)", pointerEvents:"none" }} />
+                    <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.4)", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:16 }}>Notification parrain</div>
+                    <div style={{ background:"rgba(255,255,255,0.08)", borderRadius:16, padding:"14px 16px", border:"0.5px solid rgba(255,255,255,0.12)" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+                        <div style={{ width:32, height:32, borderRadius:8, background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
+                        </div>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:12, fontWeight:600, color:"white" }}>Wallet</div>
+                        </div>
+                        <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>maintenant</div>
+                      </div>
+                      <div style={{ fontSize:13, fontWeight:600, color:"white", marginBottom:3 }}>Votre filleul vient de s&apos;inscrire !</div>
+                      <div style={{ fontSize:12, color:"rgba(255,255,255,0.6)" }}>+1 tampon crédité sur votre carte Nomade Café. 8/10 tampons.</div>
+                    </div>
+                    <div style={{ marginTop:14, display:"flex", alignItems:"center", gap:8 }}>
+                      <div style={{ width:8, height:8, borderRadius:"50%", background:"#34C759", flexShrink:0 }} />
+                      <span style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>Carte mise à jour automatiquement dans Wallet</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </section>

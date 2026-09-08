@@ -18,6 +18,8 @@ interface CardData {
   rewardName: string;
   hasPushToken: boolean;
   hasFcmToken: boolean;
+  nfcId?: string;
+  parrainageActif?: boolean;
 }
 
 interface ClientNotif {
@@ -128,6 +130,8 @@ export default function MesCartesPage() {
             rewardName: (m.nom_recompense as string) || "Récompense",
             hasPushToken: !!client.apns_push_token,
             hasFcmToken: !!client.fcm_token,
+            nfcId: (m.nfc_id as string) || undefined,
+            parrainageActif: !!(m.parrainage_actif as boolean),
           });
         } catch { /* skip */ }
       }));
@@ -445,6 +449,19 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
   const pct = Math.min(100, Math.round((card.stampsCurrent / card.stampsObjective) * 100));
   const restants = card.stampsObjective - card.stampsCurrent;
   const dark = isColorDark(card.couleur);
+  const [copied, setCopied] = useState(false);
+
+  function partager() {
+    const url = `${window.location.origin}/ref/${card.walletId}`;
+    if (navigator.share) {
+      navigator.share({ title: `Rejoins-moi chez ${card.marchandNom} !`, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {});
+    }
+  }
 
   return (
     <div className="card-appear" style={{ animationDelay: `${delay}s`, borderRadius: 24, overflow: "hidden", boxShadow: "0 12px 40px rgba(100,120,160,0.18)" }}>
@@ -496,6 +513,26 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
             </a>
           )}
           <p style={{ fontSize: 11, color: "#AEAEB2", textAlign: "center" }}>{pct === 100 ? "Récompense disponible !" : `${pct}% complété`}</p>
+
+          {card.parrainageActif && card.nfcId && (
+            <button
+              onClick={partager}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "10px 16px", borderRadius: 12,
+                border: `1.5px solid ${card.couleur}44`,
+                background: `${card.couleur}10`,
+                cursor: "pointer", width: "100%",
+                color: card.couleur, fontSize: 13, fontWeight: 600,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              {copied ? "Lien copié !" : "Inviter un ami (+1 tampon)"}
+            </button>
+          )}
 
           {/* Activer les notifications si pas encore fait */}
           {!card.hasFcmToken && typeof window !== "undefined" && "Notification" in window && Notification.permission !== "denied" && (

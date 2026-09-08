@@ -53,6 +53,9 @@ export default function ReglagesPage() {
   const [doubleTamponsFin, setDoubleTamponsFin] = useState<string>(
     doubleFin ?? new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10)
   );
+  const [parrainageActif, setParrainageActif] = useState<boolean>(
+    !!((marchand as Record<string, unknown>)?.parrainage_actif)
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -76,6 +79,7 @@ export default function ReglagesPage() {
         notif_actif: notifActif,
         notif_message: notifMessage,
         double_tampons_fin: doubleTamponsActif ? doubleTamponsFin : null,
+        parrainage_actif: parrainageActif,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -275,6 +279,36 @@ export default function ReglagesPage() {
           >
             {FUSEAUX.map(tz => <option key={tz} value={tz}>{tz}</option>)}
           </select>
+        </Card>
+
+        {/* Parrainage */}
+        <Card title="Parrainage">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Activer le parrainage</p>
+              <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+                Vos clients peuvent inviter leurs amis. Chaque nouveau client parrainé rapporte 1 tampon au parrain.
+              </p>
+            </div>
+            <Toggle value={parrainageActif} onChange={setParrainageActif} />
+          </div>
+          {parrainageActif && (
+            <div className="mt-4 rounded-2xl p-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+              <p className="text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-tertiary)" }}>Comment ça marche</p>
+              <div className="space-y-1.5">
+                {[
+                  "Un client partage son lien depuis « Mes cartes »",
+                  "Un ami clique et s'inscrit → 1er tampon crédité",
+                  "Le parrain reçoit automatiquement +1 tampon",
+                ].map(t => (
+                  <div key={t} className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "var(--accent)" }} />
+                    <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>{t}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Notifications clients */}

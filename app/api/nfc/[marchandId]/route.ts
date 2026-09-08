@@ -29,6 +29,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ marchandId
     nfc_id: data.nfc_id,
     notif_actif: data.notif_actif,
     double_tampons_fin: data.double_tampons_fin ?? null,
+    parrainage_actif: data.parrainage_actif ?? false,
     // Champs wallet
     apple_bg_color: data.apple_bg_color,
     apple_fg_color: data.apple_fg_color,

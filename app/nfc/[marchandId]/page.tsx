@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, use, lazy, Suspense } from "react";
 import Link from "next/link";
 import {
   getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
-  creerClient, ajouterTampon, validerRecompense,
+  creerClient, ajouterTampon, validerRecompense, traiterParrainage,
   formatTemps, WALLET_KEY,
   type Marchand, type Client, type TamponResult,
 } from "@/lib/loyalty";
@@ -21,9 +21,9 @@ const GoogleWalletCard = lazy(() => import("@/components/GoogleWalletCard"));
 type Screen =
   | { type: "loading" }
   | { type: "result"; result: TamponResult; client: Client; marchand: Marchand }
-  | { type: "inscription"; marchand: Marchand }
+  | { type: "inscription"; marchand: Marchand; refParam: string | null }
   | { type: "recuperation"; marchand: Marchand }
-  | { type: "carte"; client: Client; marchand: Marchand; recuperation?: boolean }
+  | { type: "carte"; client: Client; marchand: Marchand; recuperation?: boolean; parraine?: boolean }
   | { type: "erreur"; message: string };
 
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
@@ -92,6 +92,10 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           compteSupprimeIci = true;
         }
 
+        // Lire le paramètre de parrainage depuis l'URL
+        const ref = new URLSearchParams(window.location.search).get("ref");
+        const parrainageActif = !!(marchand as Record<string, unknown>).parrainage_actif;
+
         // Identité Wallio connue → inscription automatique chez un NOUVEAU marchand
         // (skip si le compte a été explicitement supprimé chez CE marchand)
         const cachedPhone  = localStorage.getItem("wallio_client_phone");
@@ -102,41 +106,50 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           // Peut-être déjà inscrit ici (localStorage perdu / nouvel appareil)
           const existing = await getClientByTelephone(cachedPhone, marchand.id);
           if (existing) {
+            // Déjà client ici → ref ignoré, tampon normal
             localStorage.setItem(WALLET_KEY(marchandId), existing.wallet_id);
             await traiterTampon(existing, marchand);
             return;
           }
           // Nouveau chez ce marchand → on crée la carte automatiquement
+          const parrainId = parrainageActif && ref ? ref : undefined;
           const { clientId, walletId: newWalletId } = await creerClient({
-            prenom: cachedPrenom,
-            nom: cachedNom,
-            telephone: cachedPhone,
-            date_naissance: cachedDob || "",
-            marchand_id: marchand.id,
+            prenom: cachedPrenom, nom: cachedNom, telephone: cachedPhone,
+            date_naissance: cachedDob || "", marchand_id: marchand.id,
+            parrain_wallet_id: parrainId,
           });
-          const newClient: Client = {
-            id: clientId,
-            prenom: cachedPrenom,
-            nom: cachedNom,
-            telephone: cachedPhone,
-            date_naissance: cachedDob || "",
-            wallet_id: newWalletId,
-            marchand_id: marchand.id,
-            tampons: 0,
-          };
           localStorage.setItem(WALLET_KEY(marchandId), newWalletId);
-          const result = await ajouterTampon(newClient, marchand);
-          if (result.type === "ok" || result.type === "recompense") {
-            const body = JSON.stringify({ walletId: newWalletId });
-            const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
-            fetch("/api/apple-wallet/push-update", opts).catch(() => {});
-            fetch("/api/google-wallet/push-update", opts).catch(() => {});
+          const newClient: Client = {
+            id: clientId, prenom: cachedPrenom, nom: cachedNom,
+            telephone: cachedPhone, date_naissance: cachedDob || "",
+            wallet_id: newWalletId, marchand_id: marchand.id,
+            tampons: parrainId ? 1 : 0,
+          };
+          if (parrainId) {
+            // Tampon déjà posé dans creerClient, on traite le parrain en fire-and-forget
+            traiterParrainage(parrainId, marchand.id).then(wid => {
+              if (wid) {
+                const b = JSON.stringify({ walletId: wid });
+                const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
+                fetch("/api/apple-wallet/push-update", o).catch(() => {});
+                fetch("/api/google-wallet/push-update", o).catch(() => {});
+              }
+            }).catch(() => {});
+            setScreen({ type: "carte", client: newClient, marchand, parraine: true });
+          } else {
+            const result = await ajouterTampon(newClient, marchand);
+            if (result.type === "ok" || result.type === "recompense") {
+              const body = JSON.stringify({ walletId: newWalletId });
+              const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+              fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+              fetch("/api/google-wallet/push-update", opts).catch(() => {});
+            }
+            setScreen({ type: "carte", client: { ...newClient, tampons: result.type === "ok" ? result.tampons : 1 }, marchand });
           }
-          setScreen({ type: "carte", client: { ...newClient, tampons: result.type === "ok" ? result.tampons : 1 }, marchand });
           return;
         }
 
-        setScreen({ type: "inscription", marchand });
+        setScreen({ type: "inscription", marchand, refParam: parrainageActif ? ref : null });
       } catch (e) {
         setScreen({ type: "erreur", message: `Erreur de connexion. Réessayez. (${String(e).slice(0, 60)})` });
       }
@@ -160,14 +173,34 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   if (screen.type === "inscription") return (
     <InscriptionForm
       marchand={screen.marchand}
-      onSuccess={async (client) => {
+      parrainWalletId={screen.refParam ?? undefined}
+      onSuccess={async (client, isNew) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
-        if (client.telephone)    localStorage.setItem("wallio_client_phone", client.telephone);
-        if (client.prenom)       localStorage.setItem("wallio_client_prenom", client.prenom);
-        if (client.nom)          localStorage.setItem("wallio_client_nom", client.nom);
+        if (client.telephone)      localStorage.setItem("wallio_client_phone", client.telephone);
+        if (client.prenom)         localStorage.setItem("wallio_client_prenom", client.prenom);
+        if (client.nom)            localStorage.setItem("wallio_client_nom", client.nom);
         if (client.date_naissance) localStorage.setItem("wallio_client_dob", client.date_naissance);
-        const result = await ajouterTampon(client, screen.marchand);
-        setScreen({ type: "carte", client: { ...client, tampons: result.type === "ok" ? result.tampons : 1 }, marchand: screen.marchand });
+        if (isNew && screen.refParam) {
+          // Tampon déjà posé dans creerClient, on traite le parrain
+          traiterParrainage(screen.refParam, screen.marchand.id).then(wid => {
+            if (wid) {
+              const b = JSON.stringify({ walletId: wid });
+              const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
+              fetch("/api/apple-wallet/push-update", o).catch(() => {});
+              fetch("/api/google-wallet/push-update", o).catch(() => {});
+            }
+          }).catch(() => {});
+          setScreen({ type: "carte", client: { ...client, tampons: 1 }, marchand: screen.marchand, parraine: true });
+        } else {
+          const result = await ajouterTampon(client, screen.marchand);
+          if (result.type === "ok" || result.type === "recompense") {
+            const body = JSON.stringify({ walletId: client.wallet_id });
+            const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+            fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+            fetch("/api/google-wallet/push-update", opts).catch(() => {});
+          }
+          setScreen({ type: "carte", client: { ...client, tampons: result.type === "ok" ? result.tampons : 1 }, marchand: screen.marchand });
+        }
       }}
       onRecuperation={() => setScreen({ type: "recuperation", marchand: screen.marchand })}
     />
@@ -183,10 +216,10 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         if (client.date_naissance) localStorage.setItem("wallio_client_dob", client.date_naissance);
         setScreen({ type: "carte", client, marchand: screen.marchand, recuperation: true });
       }}
-      onBack={() => setScreen({ type: "inscription", marchand: screen.marchand })}
+      onBack={() => setScreen({ type: "inscription", marchand: screen.marchand, refParam: null })}
     />
   );
-  if (screen.type === "carte") return <CarteCreee client={screen.client} marchand={screen.marchand} recuperation={screen.recuperation} />;
+  if (screen.type === "carte") return <CarteCreee client={screen.client} marchand={screen.marchand} recuperation={screen.recuperation} parraine={screen.parraine} />;
   return null;
 }
 
@@ -449,9 +482,10 @@ const inputStyle: React.CSSProperties = {
   WebkitAppearance: "none",
 };
 
-function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
+function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation }: {
   marchand: Marchand;
-  onSuccess: (client: Client) => void;
+  parrainWalletId?: string;
+  onSuccess: (client: Client, isNew: boolean) => void;
   onRecuperation: () => void;
 }) {
   const [prenom, setPrenom] = useState("");
@@ -481,11 +515,19 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
       if (existing &&
           existing.prenom.trim().toLowerCase() === prenom.trim().toLowerCase() &&
           existing.nom.trim().toLowerCase() === nom.trim().toLowerCase()) {
-        onSuccess(existing);
+        // Client existant → ref ignoré (déjà client ici)
+        onSuccess(existing, false);
         return;
       }
-      const { clientId, walletId } = await creerClient({ prenom, nom, telephone, date_naissance, marchand_id: marchand.id });
-      onSuccess({ id: clientId, prenom, nom, telephone: `${indicatif.code}${numPropre}`, date_naissance, wallet_id: walletId, marchand_id: marchand.id, tampons: 0 });
+      const { clientId, walletId } = await creerClient({
+        prenom, nom, telephone, date_naissance, marchand_id: marchand.id,
+        parrain_wallet_id: parrainWalletId,
+      });
+      onSuccess({
+        id: clientId, prenom, nom, telephone: `${indicatif.code}${numPropre}`,
+        date_naissance, wallet_id: walletId, marchand_id: marchand.id,
+        tampons: parrainWalletId ? 1 : 0,
+      }, true);
     } catch {
       setError("Une erreur est survenue. Réessayez.");
     } finally {
@@ -758,7 +800,7 @@ function InstallBanner() {
   );
 }
 
-function CarteCreee({ client, marchand, recuperation = false }: { client: Client; marchand: Marchand; recuperation?: boolean }) {
+function CarteCreee({ client, marchand, recuperation = false, parraine = false }: { client: Client; marchand: Marchand; recuperation?: boolean; parraine?: boolean }) {
   const [isAndroid, setIsAndroid] = useState(false);
   useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
 
@@ -826,6 +868,12 @@ function CarteCreee({ client, marchand, recuperation = false }: { client: Client
               ? `${client.tampons} tampon${(client.tampons ?? 0) > 1 ? "s" : ""} · Compte retrouvé`
               : "Votre carte est créée · 1er tampon ajouté"}
           </p>
+          {parraine && (
+            <div className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full text-[12px] font-semibold"
+              style={{ background: "rgba(52,199,89,0.12)", color: "#34C759", border: "1px solid rgba(52,199,89,0.2)" }}>
+              Vous avez été invité par un ami
+            </div>
+          )}
         </div>
 
         {/* Carte preview — Google sur Android, Apple sur iOS */}
