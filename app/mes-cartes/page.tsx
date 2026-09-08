@@ -230,6 +230,31 @@ export default function MesCartesPage() {
     setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom(""); setPhoneInput(""); setNotFound(false); setStep("login");
   }
 
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteAccount() {
+    if (!phone) return;
+    setDeleting(true);
+    try {
+      await fetch("/api/delete-account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telephone: phone }),
+      });
+    } catch { /* on nettoie quand même */ }
+
+    // Vider tout le localStorage wallio_* de ce téléphone
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith("wallio_"));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
+    unsubRef.current?.();
+    unsubRef.current = null;
+    setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom("");
+    setPhoneInput(""); setNotFound(false); setDeleteConfirm(false); setDeleting(false);
+    setStep("login");
+  }
+
   // ── Loading ────────────────────────────────────────────────────────
   if (step === "loading" || fetching) return (
     <main style={bg}>
@@ -443,7 +468,42 @@ export default function MesCartesPage() {
         )}
       </div>
 
-      <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 32 }}>Wallio · cartes de fidélité digitales</p>
+      {/* Supprimer mon compte */}
+      <div style={{ textAlign: "center", paddingBottom: 40, paddingTop: 8 }}>
+        <button
+          onClick={() => setDeleteConfirm(true)}
+          style={{ fontSize: 12, color: "#C0C8D8", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
+          Supprimer mon compte Wallio
+        </button>
+      </div>
+
+      {/* Modal confirmation suppression */}
+      {deleteConfirm && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)" }}>
+          <div style={{ width: "100%", maxWidth: 430, background: "#FFFFFF", borderRadius: "24px 24px 0 0", padding: "28px 24px 48px" }}>
+            <div style={{ width: 36, height: 4, background: "rgba(0,0,0,0.1)", borderRadius: 2, margin: "0 auto 24px" }} />
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#1C2333", marginBottom: 8, textAlign: "center" }}>Supprimer mon compte ?</p>
+            <p style={{ fontSize: 14, color: "#8E9BB5", lineHeight: 1.6, textAlign: "center", marginBottom: 28 }}>
+              Toutes vos cartes de fidélité seront supprimées définitivement. Cette action est irréversible.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: "#FF3B30", color: "white", fontSize: 16, fontWeight: 700, border: "none", cursor: deleting ? "default" : "pointer", opacity: deleting ? 0.6 : 1 }}>
+                {deleting ? "Suppression…" : "Supprimer définitivement"}
+              </button>
+              <button
+                onClick={() => setDeleteConfirm(false)}
+                style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: "rgba(0,0,0,0.05)", color: "#1C2333", fontSize: 16, fontWeight: 500, border: "none", cursor: "pointer" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 16 }}>Wallio · cartes de fidélité digitales</p>
     </main>
   );
 }
