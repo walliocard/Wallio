@@ -452,8 +452,10 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
   const [copied, setCopied] = useState(false);
 
   function partager() {
-    const url = `${window.location.origin}/ref/${card.walletId}`;
-    const message = `Salut ! Je suis client chez ${card.marchandNom} et je t'invite a rejoindre leur programme de fidelite. Cree ta carte gratuitement et on gagne tous les deux un tampon bonus :\n${url}`;
+    const base = card.nfcId
+      ? `${window.location.origin}/nfc/${card.nfcId}?ref=${card.walletId}`
+      : `${window.location.origin}/ref/${card.walletId}`;
+    const message = `Salut ! Je suis client chez ${card.marchandNom} et je t'invite a rejoindre leur programme de fidelite. Cree ta carte gratuitement et on gagne tous les deux un tampon bonus :\n${base}`;
     if (navigator.share) {
       navigator.share({ text: message }).catch(() => {});
     } else {
@@ -515,7 +517,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
           )}
           <p style={{ fontSize: 11, color: "#AEAEB2", textAlign: "center" }}>{pct === 100 ? "Récompense disponible !" : `${pct}% complété`}</p>
 
-          {card.parrainageActif && (
+          {card.parrainageActif && card.nfcId && (
             <button
               onClick={partager}
               style={{
