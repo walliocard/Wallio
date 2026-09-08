@@ -405,28 +405,40 @@ export async function drawPrintCardQROnly(
   // QR code — aligné en haut du bloc avec padding
   if (qrImg) ctx.drawImage(qrImg, p(165), blockY + qrPad, p(390), p(390));
 
-  // Texte SCANNEZ LE CODE — centré verticalement dans le bloc
-  const textHeight = p(46 + 44 + 20 + 22 * 3 + 30 * 2); // hauteur totale du groupe texte
-  const textX = p(608);
-  const textY  = blockY + (blockH - textHeight) / 2;
+  // Texte SCANNEZ LE CODE — police large, centré dans la zone droite
+  // Zone texte : de (qrX + qrSize + gap) à (blockX + blockW - gap)
+  const textX  = p(165) + p(390) + p(48);  // après QR + gap
+  const lineH1 = p(56);   // hauteur ligne titre
+  const gap12  = p(12);   // espace entre les deux lignes de titre
+  const gapDesc= p(32);   // espace entre titre et description
+  const lineHD = p(30);   // hauteur ligne description
+  const gapD   = p(10);   // espace entre lignes description
+  const groupH = lineH1 + gap12 + lineH1 + gapDesc + lineHD + gapD + lineHD + gapD + lineHD;
+  const textY  = blockY + (blockH - groupH) / 2;
+
   ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.font = `600 ${p(38)}px ${font}`;
+
+  // Ligne 1 : "SCANNEZ"
+  ctx.font = `700 ${p(52)}px ${font}`;
   ctx.fillStyle = "#15171A";
   ctx.fillText("SCANNEZ", textX, textY);
+
+  // Ligne 2 : "LE " + "CODE" gradient
   const leW = ctx.measureText("LE ").width;
   ctx.fillStyle = "#15171A";
-  ctx.fillText("LE ", textX, textY + p(46));
+  ctx.fillText("LE ", textX, textY + lineH1 + gap12);
   const gCode = ctx.createLinearGradient(textX + leW, 0, textX + leW + ctx.measureText("CODE").width, 0);
   gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
   ctx.fillStyle = gCode;
-  ctx.fillText("CODE", textX + leW, textY + p(46));
+  ctx.fillText("CODE", textX + leW, textY + lineH1 + gap12);
 
-  ctx.font = `400 ${p(22)}px ${font}`;
+  // Description
+  ctx.font = `400 ${p(26)}px ${font}`;
   ctx.fillStyle = "#596170";
-  const descY = textY + p(46 + 44 + 20);
+  const descY = textY + lineH1 + gap12 + lineH1 + gapDesc;
   ctx.fillText("Ouvrez l'appareil photo",  textX, descY);
-  ctx.fillText("de votre téléphone et",    textX, descY + p(30));
-  ctx.fillText("ajoutez la carte",         textX, descY + p(60));
+  ctx.fillText("de votre téléphone et",    textX, descY + lineHD + gapD);
+  ctx.fillText("ajoutez la carte",         textX, descY + lineHD * 2 + gapD * 2);
 
   // Positionnement dynamique des éléments sous le bloc
   const afterBlock = blockY + blockH + p(42);
