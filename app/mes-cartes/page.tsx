@@ -111,6 +111,7 @@ export default function MesCartesPage() {
           const marchandSnap = await getDoc(doc(db, "marchands", client.marchand_id));
           if (!marchandSnap.exists()) return;
           const m = marchandSnap.data();
+          if (!m.actif) return;
           results.push({
             clientId: clientDoc.id,
             walletId: client.wallet_id,
