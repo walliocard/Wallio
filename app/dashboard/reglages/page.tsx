@@ -290,7 +290,10 @@ export default function ReglagesPage() {
                 Vos clients peuvent inviter leurs amis. Chaque nouveau client parrainé rapporte 1 tampon au parrain.
               </p>
             </div>
-            <Toggle value={parrainageActif} onChange={setParrainageActif} />
+            <Toggle value={parrainageActif} onChange={async (v) => {
+              setParrainageActif(v);
+              await saveMarchandFields(user!, { parrainage_actif: v });
+            }} />
           </div>
           {parrainageActif && (
             <div className="mt-4 rounded-2xl p-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
