@@ -372,76 +372,70 @@ export async function drawPrintCardQROnly(
     ctx.fillStyle = `rgba(${c},${opa})`; ctx.fill();
   });
 
-  // Titre centré
-  ctx.font = `600 ${p(62)}px ${font}`;
-  ctx.textBaseline = "top"; ctx.textAlign = "left";
-  const p1 = "Votre fidélité. ", p2 = "Simplifiée.";
-  const w1 = ctx.measureText(p1).width, w2 = ctx.measureText(p2).width;
-  const titleStartX = p(600) - (w1 + w2) / 2;
+  // Titre sur 2 lignes
+  const titleFont = p(62);
+  ctx.font = `600 ${titleFont}px ${font}`;
+  ctx.textBaseline = "top"; ctx.textAlign = "center";
   ctx.fillStyle = "#15171A";
-  ctx.fillText(p1, titleStartX, p(105));
-  const gTitle = ctx.createLinearGradient(titleStartX + w1, 0, titleStartX + w1 + w2, 0);
+  ctx.fillText("Votre fidélité.", p(600), p(90));
+  const simplW = ctx.measureText("Simplifiée.").width;
+  const gTitle = ctx.createLinearGradient(p(600) - simplW / 2, 0, p(600) + simplW / 2, 0);
   gTitle.addColorStop(0, blue); gTitle.addColorStop(0.5, indigo); gTitle.addColorStop(1, violet);
   ctx.fillStyle = gTitle;
-  ctx.fillText(p2, titleStartX + w1, p(105));
+  ctx.fillText("Simplifiée.", p(600), p(90) + titleFont + p(6));
 
   // Sous-titre
-  ctx.font = `400 ${p(23)}px ${font}`;
-  ctx.fillStyle = "#596170"; ctx.textAlign = "center";
-  ctx.fillText("Ajoutez notre carte à votre portefeuille en quelques secondes.", p(600), p(200));
+  ctx.font = `400 ${p(22)}px ${font}`;
+  ctx.fillStyle = "#596170";
+  ctx.fillText("Ajoutez notre carte à votre portefeuille en quelques secondes.", p(600), p(90) + titleFont * 2 + p(28));
 
-  // QR 390×390, bloc ajusté autour du contenu
-  const qrSize = Math.round(p(390));
+  // Bloc QR — Y calculé après titre 2 lignes + sous-titre
+  const blockY = p(310);
+  const qrSz   = p(370);
+  const qrPad  = p(44);
+  const blockH = qrSz + qrPad * 2;
+  const qrSize = Math.round(qrSz);
   const qrImg  = await loadQRImage(qrUrl, qrSize);
-  const qrPad = p(38);
-  const blockY = p(258);
-  const blockH = p(390) + qrPad * 2; // bloc = taille QR + padding haut + bas
-  rr(ctx, p(130), blockY, p(940), blockH, p(36));
   ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
+  rr(ctx, p(130), blockY, p(940), blockH, p(36));
   ctx.fillStyle = "#FFFFFF"; ctx.fill();
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
 
-  // QR code — aligné en haut du bloc avec padding
-  if (qrImg) ctx.drawImage(qrImg, p(165), blockY + qrPad, p(390), p(390));
+  // QR code gauche du bloc
+  if (qrImg) ctx.drawImage(qrImg, p(168), blockY + qrPad, qrSz, qrSz);
 
-  // Texte SCANNEZ LE CODE — police large, centré dans la zone droite
-  // Zone texte : de (qrX + qrSize + gap) à (blockX + blockW - gap)
-  const textX  = p(165) + p(390) + p(48);  // après QR + gap
-  const lineH1 = p(56);   // hauteur ligne titre
-  const gap12  = p(12);   // espace entre les deux lignes de titre
-  const gapDesc= p(32);   // espace entre titre et description
-  const lineHD = p(30);   // hauteur ligne description
-  const gapD   = p(10);   // espace entre lignes description
-  const groupH = lineH1 + gap12 + lineH1 + gapDesc + lineHD + gapD + lineHD + gapD + lineHD;
-  const textY  = blockY + (blockH - groupH) / 2;
+  // Texte SCANNEZ LE CODE — 60px, centré verticalement dans zone droite
+  const titleF  = p(60);
+  const descF   = p(28);
+  const lineGap = p(10);
+  const sectGap = p(30);
+  const groupH  = titleF + lineGap + titleF + sectGap + descF + lineGap + descF + lineGap + descF;
+  const textX   = p(168) + qrSz + p(52);
+  const textY   = blockY + (blockH - groupH) / 2;
 
   ctx.textAlign = "left"; ctx.textBaseline = "top";
-
-  // Ligne 1 : "SCANNEZ"
-  ctx.font = `700 ${p(52)}px ${font}`;
+  ctx.font = `700 ${titleF}px ${font}`;
   ctx.fillStyle = "#15171A";
   ctx.fillText("SCANNEZ", textX, textY);
 
-  // Ligne 2 : "LE " + "CODE" gradient
   const leW = ctx.measureText("LE ").width;
   ctx.fillStyle = "#15171A";
-  ctx.fillText("LE ", textX, textY + lineH1 + gap12);
+  ctx.fillText("LE ", textX, textY + titleF + lineGap);
   const gCode = ctx.createLinearGradient(textX + leW, 0, textX + leW + ctx.measureText("CODE").width, 0);
   gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
   ctx.fillStyle = gCode;
-  ctx.fillText("CODE", textX + leW, textY + lineH1 + gap12);
+  ctx.fillText("CODE", textX + leW, textY + titleF + lineGap);
 
-  // Description
-  ctx.font = `400 ${p(26)}px ${font}`;
+  ctx.font = `400 ${descF}px ${font}`;
   ctx.fillStyle = "#596170";
-  const descY = textY + lineH1 + gap12 + lineH1 + gapDesc;
-  ctx.fillText("Ouvrez l'appareil photo",  textX, descY);
-  ctx.fillText("de votre téléphone et",    textX, descY + lineHD + gapD);
-  ctx.fillText("ajoutez la carte",         textX, descY + lineHD * 2 + gapD * 2);
+  const descY = textY + titleF + lineGap + titleF + sectGap;
+  ctx.fillText("Ouvrez l'appareil photo", textX, descY);
+  ctx.fillText("de votre téléphone et",   textX, descY + descF + lineGap);
+  ctx.fillText("ajoutez la carte",        textX, descY + (descF + lineGap) * 2);
 
-  // Positionnement dynamique des éléments sous le bloc
-  const afterBlock = blockY + blockH + p(42);
+  // Badges et WALLIO poussés vers le bas de la carte
+  const afterBlock = blockY + blockH + p(50);
 
   // "Ajoutez à votre portefeuille"
   ctx.font = `400 ${p(19)}px ${font}`;
