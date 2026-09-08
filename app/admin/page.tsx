@@ -35,7 +35,7 @@ const T = {
   blur: "blur(28px) saturate(150%)", shadow: "0 2px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04)",
   shadowModal: "0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
   overlay: "rgba(0,0,0,0.18)",
-  btnBg: "#FFFFFF", btnFg: "#111113",
+  btnBg: "#111113", btnFg: "#FFFFFF",
   btnSecBg: "rgba(255,255,255,0.72)", btnSecBorder: "rgba(0,0,0,0.10)", btnSecFg: "#6E6E73",
   actifFg: "#1C7A37", actifDot: "#34C759", inactifFg: "#A1A1A6", inactifDot: "rgba(0,0,0,0.15)",
   paidBg: "rgba(52,199,89,0.10)", paidFg: "#1C7A37",
