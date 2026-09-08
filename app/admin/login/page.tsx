@@ -4,14 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import WallioLogo from "@/components/WallioLogo";
 
-const BG      = "#000000";
-const SURFACE = "#1C1C1E";
-const SURFACE2= "#2C2C2E";
-const SEP     = "rgba(60,60,67,0.36)";
-const LABEL   = "#FFFFFF";
-const SEC     = "#8E8E93";
-const GREEN   = "#00F5A0";
-const RED     = "#FF453A";
+const BG     = "#F5F5F7";
+const LABEL  = "#111113";
+const SEC    = "#6E6E73";
+const BORDER = "rgba(0,0,0,0.07)";
+const ACCENT = "#00F5A0";
+const DANGER = "#FF3B30";
 
 export default function AdminLoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -44,16 +42,16 @@ export default function AdminLoginPage() {
       <div style={{ width: "100%", maxWidth: 340 }}>
 
         {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: SURFACE, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            <WallioLogo size={30} color={LABEL} />
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: "#FFFFFF", border: `1px solid ${BORDER}`, boxShadow: "0 2px 10px rgba(0,0,0,0.06)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+            <WallioLogo size={28} />
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: LABEL, marginBottom: 4 }}>Wallio</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: LABEL, marginBottom: 3 }}>Wallio</h1>
           <p style={{ fontSize: 14, color: SEC }}>Administration</p>
         </div>
 
-        {/* Form */}
-        <div style={{ background: SURFACE, borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
+        {/* Formulaire */}
+        <div style={{ background: "#FFFFFF", borderRadius: 16, overflow: "hidden", border: `1px solid ${BORDER}`, boxShadow: "0 2px 12px rgba(0,0,0,0.05)", marginBottom: 10 }}>
           {[
             { key: "email",    type: "email",    placeholder: "Email" },
             { key: "password", type: "password", placeholder: "Mot de passe" },
@@ -63,19 +61,17 @@ export default function AdminLoginPage() {
                 value={form[f.key as keyof typeof form]}
                 onChange={e => setForm({ ...form, [f.key]: e.target.value })}
                 onKeyDown={e => e.key === "Enter" && handleSubmit(e as unknown as React.FormEvent)}
-                style={{ width: "100%", background: "transparent", border: "none", padding: "16px", fontSize: 16, color: LABEL, outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", background: "transparent", border: "none", padding: "15px 16px", fontSize: 16, color: LABEL, outline: "none", boxSizing: "border-box" }}
               />
-              {i === 0 && <div style={{ height: 1, background: SEP, marginLeft: 16 }} />}
+              {i === 0 && <div style={{ height: 1, background: BORDER, marginLeft: 16 }} />}
             </div>
           ))}
         </div>
 
-        {error && (
-          <p style={{ fontSize: 13, color: RED, marginBottom: 12, textAlign: "center" }}>{error}</p>
-        )}
+        {error && <p style={{ fontSize: 13, color: DANGER, marginBottom: 10, textAlign: "center" }}>{error}</p>}
 
         <button onClick={handleSubmit} disabled={loading}
-          style={{ width: "100%", padding: "16px 0", borderRadius: 14, background: loading ? SURFACE2 : GREEN, color: loading ? SEC : "#000", fontSize: 16, fontWeight: 700, border: "none", cursor: loading ? "default" : "pointer", transition: "all 0.15s" }}>
+          style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: loading ? "rgba(0,0,0,0.06)" : ACCENT, color: loading ? SEC : LABEL, fontSize: 16, fontWeight: 600, border: "none", cursor: loading ? "default" : "pointer", transition: "opacity 0.15s" }}>
           {loading ? "Vérification…" : "Accéder"}
         </button>
       </div>
