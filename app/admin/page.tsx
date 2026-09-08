@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
 import ThemeToggle from "@/components/ThemeToggle";
 import { drawPrintCard, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
+import { drawEnseigne } from "@/lib/carte-comptoir-draw";
 
 type Marchand = {
   id: string;
@@ -16,6 +17,7 @@ type Marchand = {
   nfc_id?: string;
   logo_url?: string;
   couleur_principale?: string;
+  couleur_secondaire?: string;
   abonnement_statut?: "actif" | "en_attente" | "suspendu";
 };
 
@@ -143,6 +145,7 @@ export default function AdminPage() {
   const [updatingAbo, setUpdatingAbo] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloadingCard, setDownloadingCard] = useState(false);
+  const [downloadingQR, setDownloadingQR] = useState(false);
 
   // Nouveau marchand
   const [showCreate, setShowCreate] = useState(false);
@@ -267,6 +270,17 @@ export default function AdminPage() {
     link.href = canvas.toDataURL("image/png");
     link.click();
     setDownloadingCard(false);
+  }
+
+  async function telechargerCarteQR(m: Marchand) {
+    setDownloadingQR(true);
+    const canvas = document.createElement("canvas");
+    await drawEnseigne(canvas, m.couleur_principale || "#0A0A0A", m.couleur_secondaire || m.couleur_principale || "#1A1A1A", m.nom, "Scannez pour gagner vos points", m.nfc_id, "dark", 4, true, true);
+    const link = document.createElement("a");
+    link.download = `wallio-qr-${slugify(m.nom || m.id)}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    setDownloadingQR(false);
   }
 
   async function creerMarchand() {
@@ -552,20 +566,29 @@ export default function AdminPage() {
 
               {/* Carte comptoir */}
               <Section title="Carte comptoir imprimable">
-                <button
-                  onClick={() => telechargerCarte(selected)}
-                  disabled={!selected.nfc_id || downloadingCard}
-                  className="w-full py-3 rounded-2xl text-[14px] font-semibold"
-                  style={{
-                    background: selected.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)",
-                    border: `1px solid ${selected.nfc_id ? "var(--accent)" : "var(--border)"}`,
-                    color: selected.nfc_id ? "var(--accent)" : "var(--fg-tertiary)",
-                    cursor: selected.nfc_id ? "pointer" : "not-allowed",
-                  }}>
-                  {downloadingCard ? "Génération 4K…" : selected.nfc_id ? "⬇ Télécharger PNG 4K" : "Générer d'abord l'ID NFC"}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => telechargerCarte(selected)}
+                    disabled={!selected.nfc_id || downloadingCard || downloadingQR}
+                    className="flex-1 py-3 rounded-2xl text-[13px] font-semibold"
+                    style={{
+                      background: selected.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)",
+                      border: `1px solid ${selected.nfc_id ? "var(--accent)" : "var(--border)"}`,
+                      color: selected.nfc_id ? "var(--accent)" : "var(--fg-tertiary)",
+                      cursor: selected.nfc_id ? "pointer" : "not-allowed",
+                    }}>
+                    {downloadingCard ? "…" : "⬇ NFC + QR"}
+                  </button>
+                  <button
+                    onClick={() => telechargerCarteQR(selected)}
+                    disabled={downloadingCard || downloadingQR}
+                    className="flex-1 py-3 rounded-2xl text-[13px] font-semibold"
+                    style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>
+                    {downloadingQR ? "…" : "⬇ QR seul"}
+                  </button>
+                </div>
                 <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
-                  4500×3000px · ratio 3:2 · prêt imprimeur
+                  4K · prêt imprimeur · {selected.nfc_id ? "NFC + QR ou QR uniquement" : "QR uniquement disponible sans ID NFC"}
                 </p>
               </Section>
 
@@ -748,12 +771,19 @@ export default function AdminPage() {
                       </span>
                     </td>
                     <td className="px-3 py-4">
-                      <button onClick={async e => { e.stopPropagation(); if (!m.nfc_id) return; const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarte(m); btn.textContent = "⬇ Carte"; btn.removeAttribute("disabled"); }}
-                        disabled={!m.nfc_id}
-                        className="text-[12px] font-semibold px-3 py-2 rounded-xl whitespace-nowrap"
-                        style={{ background: m.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)", border: `1px solid ${m.nfc_id ? "var(--accent)" : "var(--border)"}`, color: m.nfc_id ? "var(--accent)" : "var(--fg-tertiary)", cursor: m.nfc_id ? "pointer" : "not-allowed", opacity: m.nfc_id ? 1 : 0.5 }}>
-                        ⬇ Carte
-                      </button>
+                      <div className="flex gap-1.5">
+                        <button onClick={async e => { e.stopPropagation(); if (!m.nfc_id) return; const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarte(m); btn.textContent = "NFC+QR"; btn.removeAttribute("disabled"); }}
+                          disabled={!m.nfc_id}
+                          className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap"
+                          style={{ background: m.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)", border: `1px solid ${m.nfc_id ? "var(--accent)" : "var(--border)"}`, color: m.nfc_id ? "var(--accent)" : "var(--fg-tertiary)", cursor: m.nfc_id ? "pointer" : "not-allowed", opacity: m.nfc_id ? 1 : 0.5 }}>
+                          ⬇ NFC+QR
+                        </button>
+                        <button onClick={async e => { e.stopPropagation(); const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarteQR(m); btn.textContent = "⬇ QR"; btn.removeAttribute("disabled"); }}
+                          className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap"
+                          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>
+                          ⬇ QR
+                        </button>
+                      </div>
                     </td>
                     <td className="px-3 py-4">
                       <button onClick={e => { e.stopPropagation(); setSelected(m); }}
