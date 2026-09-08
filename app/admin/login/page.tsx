@@ -1,29 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import WallioLogo from "@/components/WallioLogo";
 
 const DANGER = "#FF3B30";
 
-const L = { bg: "#F5F5F7", surfCard: "#FFFFFF", label: "#111113", sec: "#6E6E73", border: "rgba(0,0,0,0.07)", borderInput: "rgba(0,0,0,0.10)", sep: "rgba(0,0,0,0.07)", inputBg: "rgba(255,255,255,0.80)", btnBg: "#FFFFFF", btnFg: "#111113", shadow: "0 2px 12px rgba(0,0,0,0.05)" };
-const D = { bg: "#0B0B0D", surfCard: "#1C1C1E", label: "#FFFFFF", sec: "#8E8E93", border: "rgba(255,255,255,0.09)", borderInput: "rgba(255,255,255,0.12)", sep: "rgba(255,255,255,0.07)", inputBg: "rgba(255,255,255,0.06)", btnBg: "#00F5A0", btnFg: "#0B0B0D", shadow: "0 2px 16px rgba(0,0,0,0.35)" };
+const T = { bg: "#F5F5F7", surfCard: "#FFFFFF", label: "#111113", sec: "#6E6E73", border: "rgba(0,0,0,0.07)", sep: "rgba(0,0,0,0.07)", btnBg: "#FFFFFF", btnFg: "#111113", shadow: "0 2px 12px rgba(0,0,0,0.05)" };
 
 export default function AdminLoginPage() {
-  const [dark, setDark] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    setDark(mq.matches);
-    const h = (e: MediaQueryListEvent) => setDark(e.matches);
-    mq.addEventListener("change", h);
-    return () => mq.removeEventListener("change", h);
-  }, []);
-
-  const T = dark ? D : L;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,7 +49,7 @@ export default function AdminLoginPage() {
         </div>
         {error && <p style={{ fontSize: 13, color: DANGER, marginBottom: 10, textAlign: "center" }}>{error}</p>}
         <button onClick={handleSubmit} disabled={loading}
-          style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: loading ? (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") : T.btnBg, color: loading ? T.sec : T.btnFg, fontSize: 16, fontWeight: 600, border: `1px solid ${T.border}`, boxShadow: T.shadow, cursor: loading ? "default" : "pointer", transition: "opacity 0.15s" }}>
+          style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: loading ? "rgba(0,0,0,0.06)" : T.btnBg, color: loading ? T.sec : T.btnFg, fontSize: 16, fontWeight: 600, border: `1px solid ${T.border}`, boxShadow: T.shadow, cursor: loading ? "default" : "pointer", transition: "opacity 0.15s" }}>
           {loading ? "Vérification…" : "Accéder"}
         </button>
       </div>

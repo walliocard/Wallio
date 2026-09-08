@@ -24,11 +24,11 @@ function formatDate(ts?: { seconds: number }) {
   return new Date(ts.seconds * 1000).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
 
-// ── Palettes light / dark ────────────────────────────────────────────────────
+// ── Palette (toujours clair) ─────────────────────────────────────────────────
 const DANGER  = "#FF3B30";
 const WARNING = "#FF9F0A";
 
-const L = {
+const T = {
   bg: "#F5F5F7", surf: "rgba(255,255,255,0.72)", surfCard: "#FFFFFF", surfForm: "#F5F5F7",
   surfInput: "rgba(255,255,255,0.80)", label: "#111113", sec: "#6E6E73", tert: "#A1A1A6",
   border: "rgba(0,0,0,0.07)", borderInput: "rgba(0,0,0,0.10)",
@@ -47,28 +47,8 @@ const L = {
   rowHover: "rgba(0,0,0,0.015)", sep: "rgba(0,0,0,0.07)",
   closeBtn: "rgba(0,0,0,0.06)", inputFocus: "rgba(0,0,0,0.20)",
 };
-const D = {
-  bg: "#0B0B0D", surf: "rgba(255,255,255,0.07)", surfCard: "rgba(255,255,255,0.07)", surfForm: "rgba(255,255,255,0.04)",
-  surfInput: "rgba(255,255,255,0.06)", label: "#FFFFFF", sec: "#8E8E93", tert: "rgba(255,255,255,0.30)",
-  border: "rgba(255,255,255,0.09)", borderInput: "rgba(255,255,255,0.12)",
-  blur: "blur(28px) saturate(120%)", shadow: "0 2px 16px rgba(0,0,0,0.35)",
-  shadowModal: "0 8px 40px rgba(0,0,0,0.55)",
-  overlay: "rgba(0,0,0,0.50)",
-  btnBg: "#00F5A0", btnFg: "#0B0B0D",
-  btnSecBg: "rgba(255,255,255,0.07)", btnSecBorder: "rgba(255,255,255,0.12)", btnSecFg: "rgba(255,255,255,0.45)",
-  actifFg: "#00F5A0", actifDot: "#00F5A0", inactifFg: "rgba(255,255,255,0.30)", inactifDot: "rgba(255,255,255,0.20)",
-  paidBg: "rgba(52,199,89,0.12)", paidFg: "#30D158",
-  waitBg: "rgba(255,159,10,0.12)", waitFg: "#FF9F0A",
-  nfcBg: "rgba(0,245,160,0.10)", nfcFg: "#00F5A0",
-  drawerBg: "rgba(12,12,14,0.92)", drawerBlur: "blur(48px) saturate(120%)",
-  drawerBorder: "rgba(255,255,255,0.09)", drawerShadow: "-4px 0 24px rgba(0,0,0,0.40)",
-  tabsBg: "rgba(255,255,255,0.05)", tabActiveBg: "rgba(255,255,255,0.10)", tabActiveFg: "#FFFFFF", tabInactiveFg: "rgba(255,255,255,0.40)",
-  rowHover: "rgba(255,255,255,0.03)", sep: "rgba(255,255,255,0.07)",
-  closeBtn: "rgba(255,255,255,0.08)", inputFocus: "rgba(255,255,255,0.30)",
-};
 
 export default function AdminPage() {
-  const [dark, setDark]  = useState(false);
   const [marchands, setMarchands] = useState<Marchand[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -94,24 +74,6 @@ export default function AdminPage() {
   const [impProgress, setImpProgress] = useState(0);
   const previewRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
-
-  // Thème : localStorage prioritaire, sinon système
-  useEffect(() => {
-    const saved = localStorage.getItem("wallio_admin_theme");
-    if (saved === "dark") { setDark(true); return; }
-    if (saved === "light") { setDark(false); return; }
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    setDark(mq.matches);
-    const h = (e: MediaQueryListEvent) => setDark(e.matches);
-    mq.addEventListener("change", h);
-    return () => mq.removeEventListener("change", h);
-  }, []);
-
-  function toggleTheme() {
-    const next = !dark;
-    setDark(next);
-    localStorage.setItem("wallio_admin_theme", next ? "dark" : "light");
-  }
 
   useEffect(() => {
     let unsub: (() => void) | null = null;
@@ -245,7 +207,6 @@ export default function AdminPage() {
   async function logout() { await fetch("/api/admin/logout", { method: "POST" }); router.push("/admin/login"); }
 
   // ── Palette active ──────────────────────────────────────────────────────────
-  const T = dark ? D : L;
 
   const G: React.CSSProperties = {
     background: T.surf,
@@ -294,7 +255,7 @@ export default function AdminPage() {
       {showCreate && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center", background: T.overlay, backdropFilter: "blur(8px)" }}
           onClick={() => { setShowCreate(false); setCreateError(""); }}>
-          <div style={{ width: "100%", maxWidth: 480, background: dark ? "#1C1C1E" : "#FFFFFF", borderRadius: "24px 24px 0 0", padding: "28px 24px 40px", boxShadow: T.shadowModal }}
+          <div style={{ width: "100%", maxWidth: 480, background: "#FFFFFF", borderRadius: "24px 24px 0 0", padding: "28px 24px 40px", boxShadow: T.shadowModal }}
             onClick={e => e.stopPropagation()}>
             <div style={{ width: 32, height: 4, background: T.border, borderRadius: 2, margin: "0 auto 22px" }} />
             <h3 style={{ fontSize: 18, fontWeight: 600, color: T.label, marginBottom: 3 }}>Nouveau marchand</h3>
@@ -330,7 +291,7 @@ export default function AdminPage() {
       {/* ── Modal suppression ── */}
       {confirmDelete && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px", background: T.overlay, backdropFilter: "blur(8px)" }}>
-          <div style={{ width: "100%", maxWidth: 290, background: dark ? "#1C1C1E" : "#FFFFFF", borderRadius: 20, overflow: "hidden", boxShadow: T.shadowModal, textAlign: "center" }}>
+          <div style={{ width: "100%", maxWidth: 290, background: "#FFFFFF", borderRadius: 20, overflow: "hidden", boxShadow: T.shadowModal, textAlign: "center" }}>
             <div style={{ padding: "22px 24px 0" }}>
               <p style={{ fontSize: 16, fontWeight: 600, color: T.label, marginBottom: 6 }}>Supprimer ce marchand ?</p>
               <p style={{ fontSize: 13, color: T.sec, lineHeight: 1.5 }}>Action irréversible. Compte et données supprimés définitivement.</p>
@@ -474,11 +435,7 @@ export default function AdminPage() {
               style={{ padding: "9px 16px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: `1px solid ${T.border}`, boxShadow: T.shadow, cursor: "pointer" }}>
               + Nouveau
             </button>
-            <button onClick={toggleTheme} title={dark ? "Passer en mode clair" : "Passer en mode sombre"}
-              style={{ width: 36, height: 36, borderRadius: 10, background: T.btnSecBg, border: `1px solid ${T.btnSecBorder}`, color: T.btnSecFg, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {dark ? "○" : "●"}
-            </button>
-            <button onClick={logout}
+<button onClick={logout}
               style={{ padding: "9px 14px", borderRadius: 12, background: T.btnSecBg, border: `1px solid ${T.btnSecBorder}`, color: T.btnSecFg, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
               Sortir
             </button>
@@ -501,7 +458,7 @@ export default function AdminPage() {
             {[
               { label: "Total",          value: String(marchands.length),              color: T.label },
               { label: "Actifs",         value: String(actifs),                        color: T.actifFg },
-              { label: "En attente",     value: String(marchands.length - actifs),     color: dark ? WARNING : "#7A4A00" },
+              { label: "En attente",     value: String(marchands.length - actifs),     color: "#7A4A00" },
               { label: "Revenus / mois", value: `${revenus.toLocaleString("fr-FR")} DH`, color: T.label },
             ].map(s => (
               <div key={s.label} style={{ ...G, borderRadius: 18, padding: "18px 20px" }}>
