@@ -1,24 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="w" x1="10%" y1="0%" x2="90%" y2="100%">
-      <stop offset="0%"   stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#00F5A0"/>
+      <stop offset="0%"   stop-color="#007AFF"/>
+      <stop offset="50%"  stop-color="#5E5CE6"/>
+      <stop offset="100%" stop-color="#BF5AF2"/>
     </linearGradient>
-    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="16" result="blur"/>
-      <feFlood flood-color="#00F5A0" flood-opacity="0.28" result="color"/>
-      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
-      <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <filter id="drop" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="18" flood-color="#5E5CE6" flood-opacity="0.35"/>
     </filter>
   </defs>
 
-  <!-- Fond noir mat -->
-  <rect width="512" height="512" rx="112" fill="#0A0A0A"/>
+  <rect width="512" height="512" rx="112" fill="#0F1117"/>
 
-  <!-- Halo vert très subtil centré -->
-  <circle cx="256" cy="270" r="180" fill="rgba(0,245,160,0.05)"/>
-
-  <!-- W blanc→vert avec glow -->
   <text x="256" y="256"
         font-size="340"
         font-family="SF Pro Display,Helvetica Neue,Helvetica,Arial,sans-serif"
@@ -26,5 +19,5 @@
         fill="url(#w)"
         text-anchor="middle"
         dominant-baseline="central"
-        filter="url(#glow)">W</text>
+        filter="url(#drop)">W</text>
 </svg>

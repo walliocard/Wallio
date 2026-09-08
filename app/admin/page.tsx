@@ -371,11 +371,11 @@ export default function AdminPage() {
   );
 
   return (
-    <main className="min-h-screen px-6 py-10" style={{ background: "var(--bg)" }}>
+    <main className="min-h-screen px-4 md:px-8 py-8 md:py-12" style={{ background: "var(--bg)" }}>
       {/* Ambient */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] right-[10%] w-[600px] h-[500px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(0,122,255,0.15) 0%, transparent 70%)" }} />
+        <div className="absolute top-[-10%] right-[10%] w-[600px] h-[500px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, rgba(94,92,230,0.2) 0%, transparent 70%)" }} />
       </div>
 
       {/* Modal nouveau marchand */}
@@ -620,11 +620,11 @@ export default function AdminPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-10 gap-4">
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "#0A0A0A", border: "1px solid rgba(0,245,160,0.22)", boxShadow: "0 0 20px rgba(0,245,160,0.07), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
-              <WallioLogo size={30} color="#00F5A0" />
+              style={{ background: "#0F1117", border: "1px solid rgba(94,92,230,0.25)", boxShadow: "0 4px 16px rgba(94,92,230,0.15), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
+              <WallioLogo size={30} />
             </div>
             <div>
-              <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-0.5" style={{ color: "#00F5A0" }}>WALLIO</p>
+              <p className="text-[10px] font-semibold tracking-[0.16em] uppercase mb-0.5" style={{ color: "var(--accent)" }}>WALLIO</p>
               <h1 className="text-[22px] md:text-[28px] font-semibold tracking-[-0.5px] leading-none" style={{ color: "var(--fg)" }}>Administration</h1>
               <p className="text-[12px] md:text-[13px] mt-1" style={{ color: "var(--fg-tertiary)" }}>
                 {actifs} actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
@@ -634,8 +634,8 @@ export default function AdminPage() {
           <div className="flex gap-2 items-center">
             <ThemeToggle />
             <button onClick={() => setShowCreate(true)}
-              className="text-[13px] px-3 md:px-4 py-2 rounded-xl font-semibold"
-              style={{ background: "#0A0A0A", color: "#00F5A0", border: "1px solid rgba(0,245,160,0.25)" }}>
+              className="text-[13px] px-3 md:px-4 py-2 rounded-xl font-semibold text-white"
+              style={{ background: "var(--accent)" }}>
               + Nouveau
             </button>
             <button onClick={logout}
@@ -665,17 +665,13 @@ export default function AdminPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
           {[
-            { label: "Total", value: String(marchands.length), color: "var(--fg)", accent: false },
-            { label: "Actifs", value: String(actifs), color: "#00F5A0", accent: true },
-            { label: "En attente", value: String(marchands.length - actifs), color: "#FF9F0A", accent: false },
-            { label: "Revenus / mois", value: `${revenus.toLocaleString("fr-FR")} DH`, color: "#00F5A0", accent: false },
+            { label: "Total",         value: String(marchands.length),                          color: "var(--fg)" },
+            { label: "Actifs",        value: String(actifs),                                    color: "var(--accent)" },
+            { label: "En attente",    value: String(marchands.length - actifs),                 color: "#FF9F0A" },
+            { label: "Revenus / mois",value: `${revenus.toLocaleString("fr-FR")} DH`,          color: "#30D158" },
           ].map(s => (
             <div key={s.label} className="rounded-[20px] md:rounded-[24px] p-4 md:p-6"
-              style={{
-                background: s.accent ? "rgba(0,245,160,0.04)" : "var(--glass-bg)",
-                border: s.accent ? "1px solid rgba(0,245,160,0.18)" : "1px solid var(--glass-border)",
-                backdropFilter: "blur(20px)",
-              }}>
+              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)" }}>
               <p className="text-[24px] md:text-[30px] font-semibold tracking-tight leading-none" style={{ color: s.color }}>{s.value}</p>
               <p className="text-[11px] md:text-[12px] mt-1.5 md:mt-2" style={{ color: "var(--fg-secondary)" }}>{s.label}</p>
             </div>
