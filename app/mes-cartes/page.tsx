@@ -282,7 +282,17 @@ export default function MesCartesPage() {
             </form>
           </div>
 
-          <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0" }}>Wallio · cartes de fidélité digitales</p>
+          <div style={{ textAlign: "center", marginTop: 8 }}>
+            <p style={{ fontSize: 13, color: "#8E9BB5", marginBottom: 12 }}>Pas encore de carte ?</p>
+            <a href="/inscription" style={{
+              display: "inline-block", fontSize: 14, fontWeight: 600,
+              color: "#5B7CFA", textDecoration: "none",
+              padding: "12px 28px", borderRadius: 14,
+              background: "rgba(91,124,250,0.08)", border: "1px solid rgba(91,124,250,0.2)",
+            }}>
+              Créer un compte
+            </a>
+          </div>
         </div>
       </div>
     </main>
