@@ -99,30 +99,34 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       const logo = await loadImage(input.logoUrl);
 
       // Spec Apple PassKit : logo max 160×50 pt (1x), 320×100 (2x), 480×150 (3x)
-      const mkLogo = async (maxW: number, maxH: number) => {
+      // paddingBottom : transparent ajouté en bas pour équilibrer visuellement
+      // le padding interne d'Apple (haut > bas). Ratio ~16% de la hauteur logo.
+      const mkLogo = async (maxW: number, maxH: number, paddingBottomRatio = 0.16) => {
         const natW = logo.width || maxW;
         const natH = logo.height || maxH;
         const ratio = Math.min(maxW / natW, maxH / natH);
-        const w = Math.round(natW * ratio);
-        const h = Math.round(natH * ratio);
-        const canvas = createCanvas(w, h);
+        const logoW = Math.round(natW * ratio);
+        const logoH = Math.round(natH * ratio);
+        const padB  = Math.round(logoH * paddingBottomRatio);
+        // Canvas = logo + padding bas transparent
+        const canvas = createCanvas(logoW, logoH + padB);
         const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, w, h);
-        // Coins arrondis (~20% du plus petit côté)
-        const r = Math.round(Math.min(w, h) * 0.20);
+        ctx.clearRect(0, 0, logoW, logoH + padB);
+        // Coins arrondis sur la zone logo uniquement (~20% du plus petit côté)
+        const r = Math.round(Math.min(logoW, logoH) * 0.20);
         ctx.beginPath();
         ctx.moveTo(r, 0);
-        ctx.lineTo(w - r, 0);
-        ctx.quadraticCurveTo(w, 0, w, r);
-        ctx.lineTo(w, h - r);
-        ctx.quadraticCurveTo(w, h, w - r, h);
-        ctx.lineTo(r, h);
-        ctx.quadraticCurveTo(0, h, 0, h - r);
+        ctx.lineTo(logoW - r, 0);
+        ctx.quadraticCurveTo(logoW, 0, logoW, r);
+        ctx.lineTo(logoW, logoH - r);
+        ctx.quadraticCurveTo(logoW, logoH, logoW - r, logoH);
+        ctx.lineTo(r, logoH);
+        ctx.quadraticCurveTo(0, logoH, 0, logoH - r);
         ctx.lineTo(0, r);
         ctx.quadraticCurveTo(0, 0, r, 0);
         ctx.closePath();
         ctx.clip();
-        ctx.drawImage(logo, 0, 0, w, h);
+        ctx.drawImage(logo, 0, 0, logoW, logoH);
         return canvas.encode("png");
       };
 
