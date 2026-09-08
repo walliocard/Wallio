@@ -24,6 +24,7 @@ type Screen =
   | { type: "inscription"; marchand: Marchand; refParam: string | null }
   | { type: "recuperation"; marchand: Marchand }
   | { type: "carte"; client: Client; marchand: Marchand; recuperation?: boolean; parraine?: boolean }
+  | { type: "lien_parrainage"; marchand: Marchand }
   | { type: "erreur"; message: string };
 
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
@@ -68,12 +69,21 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           return;
         }
 
+        // Lire le paramètre de parrainage depuis l'URL
+        const ref = new URLSearchParams(window.location.search).get("ref");
+        const parrainageActif = !!(marchand as Record<string, unknown>).parrainage_actif;
+
         const walletId = localStorage.getItem(WALLET_KEY(marchandId));
         let compteSupprimeIci = false;
 
         if (walletId) {
           const client = await getClientByWalletId(walletId, marchand.id);
           if (client) {
+            // Lien de parrainage → client existant ici : pas de tampon, juste un message
+            if (ref && parrainageActif) {
+              setScreen({ type: "lien_parrainage", marchand });
+              return;
+            }
             // Si ce client n'est pas dans Apple/Google Wallet, chercher le bon par téléphone
             const hasWallet = client.apns_push_token || client.wallet_type;
             if (!hasWallet && client.telephone) {
@@ -92,10 +102,6 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           compteSupprimeIci = true;
         }
 
-        // Lire le paramètre de parrainage depuis l'URL
-        const ref = new URLSearchParams(window.location.search).get("ref");
-        const parrainageActif = !!(marchand as Record<string, unknown>).parrainage_actif;
-
         // Identité Wallio connue → inscription automatique chez un NOUVEAU marchand
         // (skip si le compte a été explicitement supprimé chez CE marchand)
         const cachedPhone  = localStorage.getItem("wallio_client_phone");
@@ -106,7 +112,11 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           // Peut-être déjà inscrit ici (localStorage perdu / nouvel appareil)
           const existing = await getClientByTelephone(cachedPhone, marchand.id);
           if (existing) {
-            // Déjà client ici → ref ignoré, tampon normal
+            // Déjà client ici → lien parrainage : pas de tampon
+            if (ref && parrainageActif) {
+              setScreen({ type: "lien_parrainage", marchand });
+              return;
+            }
             localStorage.setItem(WALLET_KEY(marchandId), existing.wallet_id);
             await traiterTampon(existing, marchand);
             return;
@@ -219,6 +229,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       onBack={() => setScreen({ type: "inscription", marchand: screen.marchand, refParam: null })}
     />
   );
+  if (screen.type === "lien_parrainage") return <LienParrainage marchand={screen.marchand} />;
   if (screen.type === "carte") return <CarteCreee client={screen.client} marchand={screen.marchand} recuperation={screen.recuperation} parraine={screen.parraine} />;
   return null;
 }
@@ -797,6 +808,35 @@ function InstallBanner() {
         )}
       </div>
     </div>
+  );
+}
+
+function LienParrainage({ marchand }: { marchand: Marchand }) {
+  return (
+    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: NFC_BG }}>
+      <div className="w-full max-w-[360px] text-center">
+        <MarchandHeader marchand={marchand} />
+        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+          style={{ background: "rgba(99,102,241,0.10)", border: "1.5px solid rgba(99,102,241,0.2)" }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="1.8" strokeLinecap="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </div>
+        <h1 className="text-[24px] font-semibold tracking-tight mb-3" style={{ color: "#1D1D1F" }}>
+          Vous êtes déjà membre !
+        </h1>
+        <p className="text-[15px] leading-relaxed mb-8" style={{ color: "#6E6E73" }}>
+          Ce lien est destiné à inviter de nouveaux clients.<br />
+          Pour gagner vos tampons, scannez le QR code ou approchez votre téléphone du tag NFC de l&apos;établissement.
+        </p>
+        <Link href="/mes-cartes"
+          className="block w-full py-4 rounded-2xl text-center text-[15px] font-semibold text-white"
+          style={{ background: "linear-gradient(135deg, #007AFF, #8B5CF6)" }}>
+          Voir mes cartes
+        </Link>
+      </div>
+    </main>
   );
 }
 
