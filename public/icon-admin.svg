@@ -1,70 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
   <defs>
-
-    <linearGradient id="ringGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%"   stop-color="#007AFF"/>
-      <stop offset="45%"  stop-color="#5E5CE6"/>
-      <stop offset="100%" stop-color="#BF5AF2"/>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#EEF0FF"/>
+      <stop offset="100%" stop-color="#E8E0FF"/>
     </linearGradient>
-
     <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%"   stop-color="#007AFF"/>
       <stop offset="50%"  stop-color="#5E5CE6"/>
       <stop offset="100%" stop-color="#BF5AF2"/>
     </linearGradient>
-
     <filter id="wShadow" x="-8%" y="-8%" width="116%" height="116%">
       <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#5E5CE6" flood-opacity="0.18"/>
     </filter>
-
-    <filter id="ringGlow" x="-6%" y="-6%" width="112%" height="112%">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-
-    <clipPath id="contentClip">
-      <circle cx="500" cy="500" r="456"/>
-    </clipPath>
-
   </defs>
 
-  <!-- Anneau glow -->
-  <circle cx="500" cy="500" r="484" fill="none"
-    stroke="url(#ringGrad)" stroke-width="28"
-    filter="url(#ringGlow)" opacity="0.7"/>
+  <!-- Fond lavande -->
+  <rect width="1000" height="1000" fill="url(#bg)"/>
 
-  <!-- Anneau principal -->
-  <circle cx="500" cy="500" r="484" fill="none"
-    stroke="url(#ringGrad)" stroke-width="20"/>
+  <!-- W -->
+  <text x="500" y="620"
+    text-anchor="middle"
+    font-family="SF Pro Display, Helvetica Neue, Arial Black, sans-serif"
+    font-weight="900"
+    font-size="548"
+    fill="url(#wGrad)"
+    filter="url(#wShadow)">W</text>
 
-  <!-- Séparateur blanc -->
-  <circle cx="500" cy="500" r="469" fill="white"/>
-
-  <!-- Contenu -->
-  <g clip-path="url(#contentClip)">
-
-    <!-- Fond blanc pur -->
-    <rect width="1000" height="1000" fill="#FFFFFF"/>
-
-    <!-- W — centré verticalement avec CEO -->
-    <text x="500" y="648"
-      text-anchor="middle"
-      font-family="SF Pro Display, Helvetica Neue, Arial Black, sans-serif"
-      font-weight="900"
-      font-size="548"
-      fill="url(#wGrad)"
-      filter="url(#wShadow)">W</text>
-
-    <!-- CEO — juste sous le W -->
-    <text x="500" y="726"
-      text-anchor="middle"
-      font-family="SF Pro Display, Helvetica Neue, Arial, sans-serif"
-      font-weight="600"
-      font-size="82"
-      letter-spacing="14"
-      fill="url(#wGrad)"
-      opacity="0.78">CEO</text>
-
-  </g>
+  <!-- CEO -->
+  <text x="500" y="760"
+    text-anchor="middle"
+    font-family="SF Pro Display, Helvetica Neue, Arial, sans-serif"
+    font-weight="600"
+    font-size="90"
+    letter-spacing="18"
+    fill="url(#wGrad)"
+    opacity="0.78">CEO</text>
 
 </svg>
