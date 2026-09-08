@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Wallio Dashboard",
     short_name: "Wallio",
     description: "Espace marchand Wallio — cartes de fidélité digitales",
-    start_url: "/dashboard",
+    start_url: "/mes-cartes",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
