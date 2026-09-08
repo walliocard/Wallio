@@ -117,6 +117,7 @@ export async function POST(req: Request) {
     "double_tampons_fin",
     "automatisations",
     "milestone_rewards",
+    "parrainage_actif",
   ];
 
   const data: Record<string, unknown> = { updated_at: FieldValue.serverTimestamp() };

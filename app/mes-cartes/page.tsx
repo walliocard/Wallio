@@ -514,7 +514,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
           )}
           <p style={{ fontSize: 11, color: "#AEAEB2", textAlign: "center" }}>{pct === 100 ? "Récompense disponible !" : `${pct}% complété`}</p>
 
-          {card.parrainageActif && card.nfcId && (
+          {card.parrainageActif && (
             <button
               onClick={partager}
               style={{
