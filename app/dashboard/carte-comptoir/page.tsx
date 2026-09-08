@@ -24,7 +24,7 @@ function TemplatePreview({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    drawEnseigne(canvas, marchand.couleur_principale, marchand.couleur_secondaire, marchand.nom, texte, marchand.nfc_id, template.id, 1, false)
+    drawEnseigne(canvas, marchand.couleur_principale, marchand.couleur_secondaire, marchand.nom, texte, marchand.nfc_id, template.id, 1, true, false)
       .catch(() => {});
   }, [template.id, marchand, texte]);
 
@@ -57,9 +57,8 @@ export default function CarteComptoirPage() {
   const { user, marchand, loading } = useAuth();
   const router = useRouter();
   const [template, setTemplate] = useState<Template>("dark");
-  const [showQR, setShowQR] = useState(true);
   const [texte, setTexte] = useState("Posez votre téléphone pour gagner vos points");
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState<"nfc"|"qr"|null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !marchand?.actif)) router.push("/auth/connexion");
@@ -79,15 +78,24 @@ export default function CarteComptoirPage() {
     nfc_id: marchand.nfc_id,
   };
 
-  async function telecharger() {
-    setDownloading(true);
+  async function telecharger(mode: "nfc" | "qr") {
+    setDownloading(mode);
     const canvas = document.createElement("canvas");
-    await drawEnseigne(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, texte, marchandData.nfc_id, template, 4, showQR);
-    const link = document.createElement("a");
-    link.download = `wallio-enseigne-${template}-${marchand?.nom?.replace(/\s+/g, "-").toLowerCase() || "comptoir"}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-    setDownloading(false);
+    const slug = marchand?.nom?.replace(/\s+/g, "-").toLowerCase() || "comptoir";
+    if (mode === "nfc") {
+      await drawEnseigne(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, texte, marchandData.nfc_id, template, 4, true, false);
+      const link = document.createElement("a");
+      link.download = `wallio-nfc-qr-${slug}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } else {
+      await drawEnseigne(canvas, marchandData.couleur_principale, marchandData.couleur_secondaire, marchandData.nom, texte, marchandData.nfc_id, template, 4, true, true);
+      const link = document.createElement("a");
+      link.download = `wallio-qr-${slug}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }
+    setDownloading(null);
   }
 
   return (
@@ -146,38 +154,34 @@ export default function CarteComptoirPage() {
         />
       </div>
 
-      {/* QR */}
-      <div className="flex items-start gap-3 p-4 rounded-2xl mb-4"
-        style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-        <input type="checkbox" id="show-qr" checked={showQR} onChange={e => setShowQR(e.target.checked)}
-          style={{ accentColor: "var(--accent)", width: 16, height: 16, marginTop: 2, cursor: "pointer", flexShrink: 0 }}
-        />
-        <label htmlFor="show-qr" style={{ cursor: "pointer" }}>
-          <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>QR code</p>
-          <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
-            Affiché à droite · même lien que le NFC
-          </p>
-        </label>
-      </div>
-
       {!marchand.nfc_id && (
         <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.2)" }}>
           <p className="text-[13px]" style={{ color: "#FF9F0A" }}>
-            ⚠️ Génère d&apos;abord ton identifiant NFC dans{" "}
+            Génère d&apos;abord ton identifiant NFC dans{" "}
             <Link href="/dashboard/reglages" className="font-semibold underline">Réglages</Link>
             {" "}pour que l&apos;URL apparaisse sur l&apos;enseigne.
           </p>
         </div>
       )}
 
-      <button
-        onClick={telecharger}
-        disabled={downloading}
-        className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all"
-        style={{ background: "var(--accent)", boxShadow: "0 8px 24px rgba(0,122,255,0.3)" }}
-      >
-        {downloading ? "Génération…" : "⬇ Télécharger l'enseigne"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={() => telecharger("nfc")}
+          disabled={downloading !== null}
+          className="flex-1 py-4 rounded-2xl text-[14px] font-semibold text-white transition-all"
+          style={{ background: "var(--accent)", boxShadow: "0 8px 24px rgba(0,122,255,0.25)", opacity: downloading === "qr" ? 0.5 : 1 }}
+        >
+          {downloading === "nfc" ? "Génération…" : "NFC + QR"}
+        </button>
+        <button
+          onClick={() => telecharger("qr")}
+          disabled={downloading !== null}
+          className="flex-1 py-4 rounded-2xl text-[14px] font-semibold transition-all"
+          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", opacity: downloading === "nfc" ? 0.5 : 1 }}
+        >
+          {downloading === "qr" ? "Génération…" : "QR uniquement"}
+        </button>
+      </div>
     </div>
   );
 }

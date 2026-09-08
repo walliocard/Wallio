@@ -63,6 +63,7 @@ export async function drawEnseigne(
   template: Template,
   scale = 1,
   showQR = true,
+  qrOnly = false,
 ) {
   // 160×100mm at 300 DPI ≈ 1890×1181px — we use 1600×1000 for simplicity
   const W = 1600 * scale;
@@ -94,84 +95,121 @@ export async function drawEnseigne(
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Padding
   const PAD = W * 0.06;
-
-  // --- NFC icon (gauche, centré verticalement) ---
-  const nfcCX = PAD + H * 0.2;
-  const nfcCY = H / 2;
-  drawNFC(ctx, nfcCX, nfcCY, H * 0.28, nfcColor);
-
-  // Séparateur vertical
-  const sepX = nfcCX + H * 0.28 + PAD * 0.8;
-  ctx.beginPath();
-  ctx.moveTo(sepX, H * 0.2);
-  ctx.lineTo(sepX, H * 0.8);
-  ctx.strokeStyle = `${textColor}18`;
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // --- Zone texte (centre) ---
-  const textX = sepX + PAD;
-  const textAreaW = showQR && nfc_id ? W * 0.44 : W - textX - PAD;
-  const textCY = H / 2;
-
-  // Nom marchand
-  const nomSize = H * 0.11;
-  ctx.font = `700 ${nomSize}px Arial, sans-serif`;
-  ctx.fillStyle = textColor;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-
-  // Tronquer le nom si trop long
-  let nomDisplay = nom || "Nom marchand";
-  while (ctx.measureText(nomDisplay).width > textAreaW && nomDisplay.length > 4) {
-    nomDisplay = nomDisplay.slice(0, -1);
-  }
-  if (nomDisplay !== nom) nomDisplay += "…";
-  ctx.fillText(nomDisplay, textX, textCY - H * 0.1);
-
-  // Texte
-  const texteSize = H * 0.07;
-  ctx.font = `400 ${texteSize}px Arial, sans-serif`;
-  ctx.fillStyle = `${textColor}90`;
-  let texteDisplay = texte || "Posez votre téléphone pour gagner vos points";
-  while (ctx.measureText(texteDisplay).width > textAreaW && texteDisplay.length > 4) {
-    texteDisplay = texteDisplay.slice(0, -1);
-  }
-  if (texteDisplay !== (texte || "Posez votre téléphone pour gagner vos points")) texteDisplay += "…";
-  ctx.fillText(texteDisplay, textX, textCY + H * 0.06);
-
-  // URL discrète
   const url = nfc_id ? `app.walliocard.com/nfc/${nfc_id}` : "app.walliocard.com";
-  ctx.font = `400 ${H * 0.038}px Arial, sans-serif`;
-  ctx.fillStyle = `${textColor}30`;
-  ctx.fillText(url, textX, textCY + H * 0.2);
 
-  // --- QR code (droite) ---
-  if (showQR && nfc_id) {
-    const qrSize = Math.round(H * 0.38);
-    const qrImg = await generateQRImage(`https://app.walliocard.com/nfc/${nfc_id}`, qrSize);
-    if (qrImg) {
-      const pad = Math.round(H * 0.025);
-      const labelH = Math.round(H * 0.06);
-      const boxW = qrSize + pad * 2;
-      const boxH = qrSize + pad * 2 + labelH;
-      const bx = W - boxW - PAD;
-      const by = (H - boxH) / 2;
-      ctx.fillStyle = isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.07)";
-      ctx.beginPath();
-      ctx.roundRect(bx, by, boxW, boxH, Math.round(H * 0.025));
-      ctx.fill();
-      ctx.drawImage(qrImg, bx + pad, by + pad, qrSize, qrSize);
-      ctx.font = `500 ${H * 0.038}px Arial, sans-serif`;
-      ctx.fillStyle = isDark ? "#555" : `${textColor}60`;
-      ctx.textAlign = "center";
-      ctx.fillText("Scanner", bx + boxW / 2, by + qrSize + pad + labelH * 0.65);
+  if (qrOnly) {
+    // ── Layout QR seul : tout centré ──
+    const cx = W / 2;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Nom marchand centré en haut
+    ctx.font = `700 ${H * 0.12}px Arial, sans-serif`;
+    ctx.fillStyle = textColor;
+    const maxNomW = W - PAD * 4;
+    let nomD = nom || "Nom marchand";
+    while (ctx.measureText(nomD).width > maxNomW && nomD.length > 4) nomD = nomD.slice(0, -1);
+    if (nomD !== (nom || "Nom marchand")) nomD += "…";
+    ctx.fillText(nomD, cx, H * 0.14);
+
+    // Texte sous le nom
+    ctx.font = `400 ${H * 0.065}px Arial, sans-serif`;
+    ctx.fillStyle = `${textColor}80`;
+    let txD = texte || "Scannez pour gagner vos points";
+    while (ctx.measureText(txD).width > maxNomW && txD.length > 4) txD = txD.slice(0, -1);
+    if (txD !== (texte || "Scannez pour gagner vos points")) txD += "…";
+    ctx.fillText(txD, cx, H * 0.25);
+
+    // QR code grand et centré
+    if (nfc_id) {
+      const qrSize = Math.round(H * 0.52);
+      const qrImg = await generateQRImage(`https://app.walliocard.com/nfc/${nfc_id}`, qrSize);
+      if (qrImg) {
+        const pad = Math.round(H * 0.03);
+        const labelH = Math.round(H * 0.07);
+        const boxW = qrSize + pad * 2;
+        const boxH = qrSize + pad * 2 + labelH;
+        const bx = cx - boxW / 2;
+        const by = H * 0.31;
+        ctx.fillStyle = isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.07)";
+        ctx.beginPath();
+        ctx.roundRect(bx, by, boxW, boxH, Math.round(H * 0.025));
+        ctx.fill();
+        ctx.drawImage(qrImg, bx + pad, by + pad, qrSize, qrSize);
+        ctx.font = `600 ${Math.round(H * 0.045)}px Arial, sans-serif`;
+        ctx.fillStyle = isDark ? "#444" : `${textColor}60`;
+        ctx.fillText("Scanner", cx, by + qrSize + pad + labelH * 0.6);
+      }
+    }
+
+    // URL discrète bas centre
+    ctx.font = `400 ${H * 0.034}px Arial, sans-serif`;
+    ctx.fillStyle = `${textColor}28`;
+    ctx.fillText(url, cx, H * 0.935);
+  } else {
+    // ── Layout NFC + QR (original) ──
+    const nfcCX = PAD + H * 0.2;
+    const nfcCY = H / 2;
+    drawNFC(ctx, nfcCX, nfcCY, H * 0.28, nfcColor);
+
+    const sepX = nfcCX + H * 0.28 + PAD * 0.8;
+    ctx.beginPath();
+    ctx.moveTo(sepX, H * 0.2);
+    ctx.lineTo(sepX, H * 0.8);
+    ctx.strokeStyle = `${textColor}18`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const textX = sepX + PAD;
+    const textAreaW = showQR && nfc_id ? W * 0.44 : W - textX - PAD;
+    const textCY = H / 2;
+
+    const nomSize = H * 0.11;
+    ctx.font = `700 ${nomSize}px Arial, sans-serif`;
+    ctx.fillStyle = textColor;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    let nomDisplay = nom || "Nom marchand";
+    while (ctx.measureText(nomDisplay).width > textAreaW && nomDisplay.length > 4) nomDisplay = nomDisplay.slice(0, -1);
+    if (nomDisplay !== nom) nomDisplay += "…";
+    ctx.fillText(nomDisplay, textX, textCY - H * 0.1);
+
+    ctx.font = `400 ${H * 0.07}px Arial, sans-serif`;
+    ctx.fillStyle = `${textColor}90`;
+    let texteDisplay = texte || "Posez votre téléphone pour gagner vos points";
+    while (ctx.measureText(texteDisplay).width > textAreaW && texteDisplay.length > 4) texteDisplay = texteDisplay.slice(0, -1);
+    if (texteDisplay !== (texte || "Posez votre téléphone pour gagner vos points")) texteDisplay += "…";
+    ctx.fillText(texteDisplay, textX, textCY + H * 0.06);
+
+    ctx.font = `400 ${H * 0.038}px Arial, sans-serif`;
+    ctx.fillStyle = `${textColor}30`;
+    ctx.fillText(url, textX, textCY + H * 0.2);
+
+    if (showQR && nfc_id) {
+      const qrSize = Math.round(H * 0.38);
+      const qrImg = await generateQRImage(`https://app.walliocard.com/nfc/${nfc_id}`, qrSize);
+      if (qrImg) {
+        const pad = Math.round(H * 0.025);
+        const labelH = Math.round(H * 0.06);
+        const boxW = qrSize + pad * 2;
+        const boxH = qrSize + pad * 2 + labelH;
+        const bx = W - boxW - PAD;
+        const by = (H - boxH) / 2;
+        ctx.fillStyle = isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.07)";
+        ctx.beginPath();
+        ctx.roundRect(bx, by, boxW, boxH, Math.round(H * 0.025));
+        ctx.fill();
+        ctx.drawImage(qrImg, bx + pad, by + pad, qrSize, qrSize);
+        ctx.font = `500 ${H * 0.038}px Arial, sans-serif`;
+        ctx.fillStyle = isDark ? "#555" : `${textColor}60`;
+        ctx.textAlign = "center";
+        ctx.fillText("Scanner", bx + boxW / 2, by + qrSize + pad + labelH * 0.65);
+      }
     }
   }
 
-  // Wallio watermark (discret, coin bas gauche)
+  // Wallio watermark (toujours, coin bas gauche)
   ctx.font = `600 ${H * 0.042}px Arial, sans-serif`;
   ctx.fillStyle = `${textColor}22`;
   ctx.textAlign = "left";
