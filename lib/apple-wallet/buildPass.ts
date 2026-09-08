@@ -98,21 +98,18 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       const { createCanvas, loadImage } = await import("@napi-rs/canvas");
       const logo = await loadImage(input.logoUrl);
 
-      // Spec Apple PassKit : logo max 160×50 pt (1x), 320×100 (2x), 480×150 (3x)
-      // paddingBottom : transparent ajouté en bas pour équilibrer visuellement
-      // le padding interne d'Apple (haut > bas). Ratio ~16% de la hauteur logo.
-      const mkLogo = async (maxW: number, maxH: number, paddingBottomRatio = 0.16) => {
+      // Pas de contrainte de hauteur — Apple adapte le header à la taille naturelle du logo.
+      // On contraint uniquement la largeur max pour éviter les logos trop larges.
+      const mkLogo = async (maxW: number) => {
         const natW = logo.width || maxW;
-        const natH = logo.height || maxH;
-        const ratio = Math.min(maxW / natW, maxH / natH);
+        const natH = logo.height || maxW;
+        const ratio = natW > maxW ? maxW / natW : 1;
         const logoW = Math.round(natW * ratio);
         const logoH = Math.round(natH * ratio);
-        const padB  = Math.round(logoH * paddingBottomRatio);
-        // Canvas = logo + padding bas transparent
-        const canvas = createCanvas(logoW, logoH + padB);
+        const canvas = createCanvas(logoW, logoH);
         const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, logoW, logoH + padB);
-        // Coins arrondis sur la zone logo uniquement (~20% du plus petit côté)
+        ctx.clearRect(0, 0, logoW, logoH);
+        // Coins arrondis ~20% du plus petit côté
         const r = Math.round(Math.min(logoW, logoH) * 0.20);
         ctx.beginPath();
         ctx.moveTo(r, 0);
@@ -130,9 +127,9 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         return canvas.encode("png");
       };
 
-      const logo1x = await mkLogo(160, 50);
-      const logo2x = await mkLogo(320, 100);
-      const logo3x = await mkLogo(480, 150);
+      const logo1x = await mkLogo(160);
+      const logo2x = await mkLogo(320);
+      const logo3x = await mkLogo(480);
       files["logo.png"]    = logo1x;
       files["logo@2x.png"] = logo2x;
       files["logo@3x.png"] = logo3x;
