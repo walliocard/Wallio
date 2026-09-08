@@ -259,7 +259,7 @@ export default function AppleWalletCard({
         <div style={{
           maxHeight: 50, maxWidth: 160, minWidth: 16, flexShrink: 0,
           border: logoUrl ? "none" : `1.5px dashed ${dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
-          borderRadius: logoUrl ? 0 : 6,
+          borderRadius: 6,
           overflow: "hidden",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
