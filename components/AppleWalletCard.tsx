@@ -255,16 +255,16 @@ export default function AppleWalletCard({
     >
       {/* ── Header (spec PKPass : logo max 160×50pt, texte 15pt, header field 9pt/14pt) ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px 10px" }}>
-        {/* Logo — Apple affiche à max 29×29pt pour les logos carrés */}
+        {/* Logo — spec PassKit : max 160×50 pt affiché par Apple Wallet */}
         <div style={{
-          height: 29, minWidth: 16, maxWidth: 90, flexShrink: 0,
+          maxHeight: 50, maxWidth: 160, minWidth: 16, flexShrink: 0,
           border: logoUrl ? "none" : `1.5px dashed ${dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
-          borderRadius: 6,
+          borderRadius: logoUrl ? 0 : 6,
           overflow: "hidden",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           {logoUrl
-            ? <img src={logoUrl} alt="" style={{ height: 29, maxWidth: 90, objectFit: "contain", display: "block" }} />
+            ? <img src={logoUrl} alt="" style={{ maxHeight: 50, maxWidth: 160, objectFit: "contain", display: "block" }} />
             : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
           }
         </div>
