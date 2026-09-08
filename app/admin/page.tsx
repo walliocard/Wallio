@@ -35,7 +35,7 @@ const L = {
   blur: "blur(28px) saturate(150%)", shadow: "0 2px 12px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.04)",
   shadowModal: "0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
   overlay: "rgba(0,0,0,0.18)",
-  btnBg: "#111113", btnFg: "#FFFFFF",
+  btnBg: "#FFFFFF", btnFg: "#111113",
   btnSecBg: "rgba(255,255,255,0.72)", btnSecBorder: "rgba(0,0,0,0.10)", btnSecFg: "#6E6E73",
   actifFg: "#1C7A37", actifDot: "#34C759", inactifFg: "#A1A1A6", inactifDot: "rgba(0,0,0,0.15)",
   paidBg: "rgba(52,199,89,0.10)", paidFg: "#1C7A37",
@@ -455,7 +455,7 @@ export default function AdminPage() {
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setShowCreate(true)}
-              style={{ padding: "9px 16px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+              style={{ padding: "9px 16px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: `1px solid ${T.border}`, boxShadow: T.shadow, cursor: "pointer" }}>
               + Nouveau
             </button>
             <button onClick={logout}
