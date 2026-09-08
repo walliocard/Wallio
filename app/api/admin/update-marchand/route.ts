@@ -76,7 +76,7 @@ export async function PATCH(req: Request) {
   return NextResponse.json({ ok: true });
 }
 
-// DELETE — suppression d'un marchand
+// DELETE — suppression complète d'un marchand (Firestore + Auth + clients)
 export async function DELETE(req: Request) {
   if (!await checkAdmin()) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
@@ -86,6 +86,32 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "marchandId requis" }, { status: 400 });
   }
   initAdmin();
-  await adminDb().collection("marchands").doc(marchandId).delete();
-  return NextResponse.json({ ok: true });
+  const db = adminDb();
+
+  // 1. Supprimer tous les clients liés à ce marchand
+  const clientsSnap = await db.collection("clients")
+    .where("marchand_id", "==", marchandId)
+    .get();
+
+  // Batch delete (max 500 par batch)
+  const batchSize = 499;
+  const docs = clientsSnap.docs;
+  for (let i = 0; i < docs.length; i += batchSize) {
+    const batch = db.batch();
+    docs.slice(i, i + batchSize).forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+
+  // 2. Supprimer le document marchand
+  await db.collection("marchands").doc(marchandId).delete();
+
+  // 3. Supprimer le compte Firebase Auth
+  try {
+    const { getAuth } = await import("firebase-admin/auth");
+    await getAuth().deleteUser(marchandId);
+  } catch {
+    // Si l'utilisateur Auth n'existe plus, on ignore
+  }
+
+  return NextResponse.json({ ok: true, clientsDeleted: docs.length });
 }
