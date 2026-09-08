@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import WallioIcon from "@/components/WallioIcon";
+import WallioLogo from "@/components/WallioLogo";
+
+const GREEN = "#00F5A0";
+const FG = "#FFFFFF";
+const FG2 = "rgba(255,255,255,0.45)";
+const BORDER = "rgba(255,255,255,0.07)";
 
 export default function AdminLoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -31,21 +36,47 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[800px] h-[500px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(94,92,230,0.25) 0%, transparent 70%)" }} />
+    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "#0A0A0A" }}>
+
+      {/* Ambient */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", top: "-25%", left: "50%", transform: "translateX(-50%)",
+          width: 700, height: 600, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,245,160,0.07) 0%, transparent 65%)",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "-20%", right: "-10%",
+          width: 500, height: 400, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(0,245,160,0.04) 0%, transparent 65%)",
+        }} />
       </div>
 
-      <div className="w-full max-w-[380px] relative">
-        <div className="text-center mb-12">
-          <WallioIcon size={56} className="mb-5 mx-auto" />
-          <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Wallio</h1>
-          <p className="text-[15px] mt-1.5" style={{ color: "var(--fg-secondary)" }}>Administration</p>
+      <div className="w-full max-w-[360px] relative">
+
+        {/* Logo */}
+        <div className="text-center mb-10">
+          <div className="mx-auto mb-5 w-14 h-14 rounded-[20px] flex items-center justify-center"
+            style={{
+              background: "rgba(0,245,160,0.08)",
+              border: "1px solid rgba(0,245,160,0.2)",
+              boxShadow: "0 0 32px rgba(0,245,160,0.12)",
+            }}>
+            <WallioLogo size={32} color={GREEN} />
+          </div>
+          <h1 className="text-[26px] font-semibold tracking-[-0.5px]" style={{ color: FG }}>Wallio</h1>
+          <p className="text-[14px] mt-1" style={{ color: FG2 }}>Administration</p>
         </div>
 
-        <div className="rounded-[28px] p-8"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(30px)", boxShadow: "var(--shadow-lg)" }}>
+        {/* Formulaire */}
+        <div className="rounded-[28px] p-7"
+          style={{
+            background: "rgba(255,255,255,0.03)",
+            backdropFilter: "blur(48px) saturate(180%)",
+            WebkitBackdropFilter: "blur(48px) saturate(180%)",
+            border: `1px solid ${BORDER}`,
+            boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+          }}>
           <form onSubmit={handleSubmit} className="space-y-3">
             {[
               { key: "email", type: "email", placeholder: "Email" },
@@ -55,15 +86,25 @@ export default function AdminLoginPage() {
                 value={form[f.key as keyof typeof form]}
                 onChange={e => setForm({ ...form, [f.key]: e.target.value })}
                 className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-                onFocus={e => e.target.style.borderColor = "var(--accent)"}
-                onBlur={e => e.target.style.borderColor = "var(--border)"}
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: `1px solid ${BORDER}`,
+                  color: FG,
+                  boxSizing: "border-box",
+                }}
+                onFocus={e => (e.target.style.borderColor = "rgba(0,245,160,0.3)")}
+                onBlur={e => (e.target.style.borderColor = BORDER)}
               />
             ))}
-            {error && <p className="text-red-500 text-[13px]">{error}</p>}
+            {error && <p className="text-[13px]" style={{ color: "#FF3B30" }}>{error}</p>}
             <button type="submit" disabled={loading}
-              className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all mt-1"
-              style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(94,92,230,0.3)" }}>
+              className="w-full py-3.5 rounded-2xl text-[15px] font-bold mt-1"
+              style={{
+                background: loading ? "rgba(0,245,160,0.4)" : GREEN,
+                color: "#0A0A0A",
+                boxShadow: loading ? "none" : "0 4px 24px rgba(0,245,160,0.2)",
+                transition: "all 0.2s",
+              }}>
               {loading ? "Vérification…" : "Accéder"}
             </button>
           </form>

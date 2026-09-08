@@ -1,10 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
-import ThemeToggle from "@/components/ThemeToggle";
 import { drawPrintCard, drawPrintCardQROnly, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
 type Marchand = {
@@ -38,87 +37,26 @@ function formatDate(ts?: { seconds: number }) {
   return new Date(ts.seconds * 1000).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function drawNfcCard(canvas: HTMLCanvasElement, marchand: Marchand) {
-  const W = 1890, H = 1063;
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d")!;
-  const green = "#00F5A0";
+// ── Styles glass réutilisables ──────────────────────────────────────────────
+const G: React.CSSProperties = {
+  background: "rgba(255,255,255,0.03)",
+  backdropFilter: "blur(48px) saturate(180%)",
+  WebkitBackdropFilter: "blur(48px) saturate(180%)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+};
 
-  // Background
-  ctx.fillStyle = "#0A0A0A";
-  ctx.fillRect(0, 0, W, H);
-
-  // Subtle green ambient
-  const grad = ctx.createRadialGradient(W * 0.75, H * 0.15, 0, W * 0.75, H * 0.15, 600);
-  grad.addColorStop(0, "rgba(0,245,160,0.06)");
-  grad.addColorStop(1, "transparent");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  // Hole indicator top-center
-  ctx.beginPath();
-  ctx.arc(W / 2, 52, 22, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(255,255,255,0.12)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // WALLIO top-left
-  ctx.font = "bold 56px Inter, Arial, sans-serif";
-  ctx.fillStyle = green;
-  ctx.textBaseline = "top";
-  ctx.textAlign = "left";
-  ctx.fillText("WALLIO", 90, 80);
-
-  // Nom marchand top-right
-  ctx.font = "500 44px Inter, Arial, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.7)";
-  ctx.textAlign = "right";
-  ctx.fillText(marchand.nom || "", W - 90, 90);
-
-  // NFC wave icon — center-left of card
-  const ox = W / 2 - 80, oy = H / 2 - 20;
-  ctx.lineWidth = 14;
-  ctx.lineCap = "round";
-
-  // Dot at origin
-  ctx.beginPath();
-  ctx.arc(ox, oy, 20, 0, Math.PI * 2);
-  ctx.fillStyle = green;
-  ctx.fill();
-
-  // 4 arcs radiating right
-  for (let i = 0; i < 4; i++) {
-    const r = 70 + i * 85;
-    const opacity = 1 - i * 0.15;
-    ctx.beginPath();
-    ctx.arc(ox, oy, r, -Math.PI * 0.38, Math.PI * 0.38);
-    ctx.strokeStyle = `rgba(0,245,160,${opacity})`;
-    ctx.stroke();
-  }
-
-  // Text
-  const textX = W / 2 + 80;
-  ctx.textAlign = "center";
-  ctx.font = "600 42px Inter, Arial, sans-serif";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillText("Posez votre téléphone", textX, oy + 310);
-  ctx.font = "400 38px Inter, Arial, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.5)";
-  ctx.fillText("pour gagner vos points", textX, oy + 365);
-
-  // URL bottom
-  ctx.font = "400 28px Inter, Arial, sans-serif";
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
-  ctx.textAlign = "center";
-  ctx.fillText("app.walliocard.com", W / 2, H - 60);
-}
+const FG = "#FFFFFF";
+const FG2 = "rgba(255,255,255,0.45)";
+const FG3 = "rgba(255,255,255,0.25)";
+const GREEN = "#00F5A0";
+const BORDER = "rgba(255,255,255,0.07)";
 
 function Row({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
-    <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid var(--border)" }}>
-      <span className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{label}</span>
-      <span className="text-[14px] font-medium" style={{ color: valueColor || "var(--fg)" }}>{value}</span>
+    <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
+      <span className="text-[13px]" style={{ color: FG3 }}>{label}</span>
+      <span className="text-[14px] font-medium" style={{ color: valueColor || FG }}>{value}</span>
     </div>
   );
 }
@@ -126,7 +64,7 @@ function Row({ label, value, valueColor }: { label: string; value: string; value
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-7">
-      <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--fg-tertiary)" }}>{title}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "rgba(0,245,160,0.55)" }}>{title}</p>
       {children}
     </div>
   );
@@ -146,7 +84,6 @@ export default function AdminPage() {
   const [downloadingCard, setDownloadingCard] = useState(false);
   const [downloadingQR, setDownloadingQR] = useState(false);
 
-  // Nouveau marchand
   const [showCreate, setShowCreate] = useState(false);
   const [createNom, setCreateNom] = useState("");
   const [createEmail, setCreateEmail] = useState("");
@@ -154,10 +91,8 @@ export default function AdminPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
-  // Onglets
   const [tab, setTab] = useState<"marchands" | "impression">("marchands");
 
-  // Impression
   const [impUrl, setImpUrl] = useState("https://app.walliocard.com/nfc/demo");
   const [impUrls, setImpUrls] = useState("");
   const [impGenerating, setImpGenerating] = useState(false);
@@ -171,10 +106,8 @@ export default function AdminPage() {
     async function init() {
       const res = await fetch("/api/admin/check");
       if (!res.ok) { router.push("/admin/login"); return; }
-      // Pas de orderBy pour inclure les marchands sans date_inscription (auto-inscrits avant le fix)
       unsubSnap = onSnapshot(collection(db, "marchands"), snap => {
         const all = snap.docs.map(d => ({ id: d.id, nom: "", email: "", actif: false, ...d.data() } as Marchand));
-        // Tri client-side : sans date en dernier
         all.sort((a, b) => (b.date_inscription?.seconds ?? 0) - (a.date_inscription?.seconds ?? 0));
         setMarchands(all);
         setLoading(false);
@@ -203,14 +136,13 @@ export default function AdminPage() {
   }
 
   async function toggleActif(m: Marchand) {
-    // Optimistic : UI immédiate
     const newActif = !m.actif;
     const updated = { ...m, actif: newActif };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     if (selected?.id === m.id) setSelected(updated);
     setToggling(m.id);
     try { await adminPatch(m.id, { actif: newActif }); }
-    catch { // Rollback
+    catch {
       setMarchands(prev => prev.map(x => x.id === m.id ? m : x));
       if (selected?.id === m.id) setSelected(m);
     }
@@ -219,7 +151,6 @@ export default function AdminPage() {
 
   async function supprimerMarchand(id: string) {
     setDeleting(id);
-    // Optimistic
     setMarchands(prev => prev.filter(m => m.id !== id));
     if (selected?.id === id) setSelected(null);
     setConfirmDelete(null);
@@ -231,12 +162,11 @@ export default function AdminPage() {
   async function genererNfc(m: Marchand) {
     setGeneratingNfc(true);
     const nfc_id = genNfcId(m.nom);
-    // Optimistic
     const updated = { ...m, nfc_id };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     setSelected(updated);
     try { await adminPatch(m.id, { nfc_id }); }
-    catch { // Rollback
+    catch {
       setMarchands(prev => prev.map(x => x.id === m.id ? m : x));
       setSelected(m);
     }
@@ -247,12 +177,11 @@ export default function AdminPage() {
     setUpdatingAbo(true);
     const newStatut: Marchand["abonnement_statut"] =
       m.abonnement_statut === "actif" ? "en_attente" : "actif";
-    // Optimistic
     const updated = { ...m, abonnement_statut: newStatut };
     setMarchands(prev => prev.map(x => x.id === m.id ? updated : x));
     setSelected(updated);
     try { await adminPatch(m.id, { abonnement_statut: newStatut }); }
-    catch { // Rollback
+    catch {
       setMarchands(prev => prev.map(x => x.id === m.id ? m : x));
       setSelected(m);
     }
@@ -293,11 +222,9 @@ export default function AdminPage() {
     });
     const data = await res.json();
     if (!res.ok) { setCreateError(data.error || "Erreur"); setCreating(false); return; }
-    // onSnapshot met à jour la liste automatiquement
     setShowCreate(false);
     setCreateNom(""); setCreateEmail(""); setCreatePassword("");
     setCreating(false);
-    // Ouvrir le nouveau marchand dans le drawer
     const { getDoc, doc } = await import("firebase/firestore");
     const snap = await getDoc(doc((await import("@/lib/firebase")).db, "marchands", data.uid));
     if (snap.exists()) setSelected({ id: snap.id, nom: "", email: "", actif: false, ...snap.data() } as Marchand);
@@ -309,7 +236,6 @@ export default function AdminPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  // Preview impression
   useEffect(() => {
     const canvas = previewRef.current;
     if (!canvas) return;
@@ -354,9 +280,9 @@ export default function AdminPage() {
   }
 
   if (loading) return (
-    <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
-      <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
+    <main className="min-h-screen flex items-center justify-center" style={{ background: "#0A0A0A" }}>
+      <div className="w-7 h-7 rounded-full border-2 animate-spin"
+        style={{ borderColor: "rgba(0,245,160,0.3)", borderTopColor: GREEN }} />
     </main>
   );
 
@@ -370,53 +296,61 @@ export default function AdminPage() {
     m.email?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const inputStyle: React.CSSProperties = {
+    background: "rgba(255,255,255,0.04)",
+    border: `1px solid ${BORDER}`,
+    color: FG,
+    borderRadius: 14,
+    padding: "10px 14px",
+    fontSize: 14,
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
+  };
+
   return (
-    <main className="min-h-screen px-4 md:px-8 py-8 md:py-12" style={{ background: "var(--bg)" }}>
-      {/* Ambient */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] right-[10%] w-[600px] h-[500px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, rgba(94,92,230,0.2) 0%, transparent 70%)" }} />
+    <main className="min-h-screen" style={{ background: "#0A0A0A" }}>
+
+      {/* ── Ambient background ── */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
+        <div style={{ position: "absolute", top: "-20%", right: "-8%", width: 800, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,245,160,0.06) 0%, transparent 65%)" }} />
+        <div style={{ position: "absolute", bottom: "-15%", left: "-12%", width: 600, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,245,160,0.04) 0%, transparent 65%)" }} />
+        <div style={{ position: "absolute", top: "45%", left: "35%", width: 500, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.012) 0%, transparent 65%)" }} />
       </div>
 
-      {/* Modal nouveau marchand */}
+      {/* ── Modal nouveau marchand ── */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
-          <div className="w-full max-w-sm rounded-[28px] p-7"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <h3 className="text-[18px] font-semibold mb-1" style={{ color: "var(--fg)" }}>Nouveau marchand</h3>
-            <p className="text-[13px] mb-5" style={{ color: "var(--fg-secondary)" }}>
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}>
+          <div className="w-full max-w-sm rounded-[28px] p-7" style={{ ...G, borderRadius: 28 }}>
+            <h3 className="text-[18px] font-semibold mb-1" style={{ color: FG }}>Nouveau marchand</h3>
+            <p className="text-[13px] mb-5" style={{ color: FG2 }}>
               Crée le compte + génère automatiquement le NFC ID
             </p>
-
             {[
               { label: "Nom du commerce", value: createNom, set: setCreateNom, placeholder: "Café Central", type: "text" },
               { label: "Email", value: createEmail, set: setCreateEmail, placeholder: "contact@cafe.ma", type: "email" },
               { label: "Mot de passe", value: createPassword, set: setCreatePassword, placeholder: "Min. 8 caractères", type: "password" },
             ].map(f => (
               <div key={f.label} className="mb-3">
-                <label className="block text-[11px] font-medium mb-1 uppercase tracking-wide"
-                  style={{ color: "var(--fg-tertiary)" }}>{f.label}</label>
+                <label className="block text-[10px] font-bold mb-1.5 uppercase tracking-[0.12em]"
+                  style={{ color: "rgba(0,245,160,0.55)" }}>{f.label}</label>
                 <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)}
-                  placeholder={f.placeholder}
-                  className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
-                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }} />
+                  placeholder={f.placeholder} style={inputStyle} />
               </div>
             ))}
-
             {createError && (
               <p className="text-[13px] mb-3" style={{ color: "#FF3B30" }}>{createError}</p>
             )}
-
             <div className="flex gap-3 mt-5">
               <button onClick={() => { setShowCreate(false); setCreateError(""); }}
-                className="flex-1 py-3 rounded-2xl text-[15px] font-medium"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
+                className="flex-1 py-3 rounded-2xl text-[14px] font-medium"
+                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG2 }}>
                 Annuler
               </button>
               <button onClick={creerMarchand} disabled={creating || !createNom || !createEmail || !createPassword}
-                className="flex-1 py-3 rounded-2xl text-[15px] font-semibold text-white"
-                style={{ background: creating ? "#888" : "var(--accent)" }}>
+                className="flex-1 py-3 rounded-2xl text-[14px] font-bold"
+                style={{ background: creating ? "rgba(0,245,160,0.3)" : GREEN, color: "#0A0A0A", opacity: (!createNom || !createEmail || !createPassword) ? 0.5 : 1 }}>
                 {creating ? "Création…" : "Créer"}
               </button>
             </div>
@@ -424,24 +358,23 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Modal confirmation suppression */}
+      {/* ── Modal confirmation suppression ── */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
-          <div className="w-full max-w-sm rounded-[28px] p-7"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-            <h3 className="text-[18px] font-semibold mb-2" style={{ color: "var(--fg)" }}>Supprimer ce marchand ?</h3>
-            <p className="text-[14px] mb-6" style={{ color: "var(--fg-secondary)" }}>
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}>
+          <div className="w-full max-w-sm rounded-[28px] p-7" style={{ ...G, borderRadius: 28 }}>
+            <h3 className="text-[18px] font-semibold mb-2" style={{ color: FG }}>Supprimer ce marchand ?</h3>
+            <p className="text-[14px] mb-6" style={{ color: FG2 }}>
               Action irréversible. Le compte et toutes les données seront définitivement supprimés.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDelete(null)}
-                className="flex-1 py-3 rounded-2xl text-[15px] font-medium"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
+                className="flex-1 py-3 rounded-2xl text-[14px] font-medium"
+                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG2 }}>
                 Annuler
               </button>
               <button onClick={() => supprimerMarchand(confirmDelete)} disabled={!!deleting}
-                className="flex-1 py-3 rounded-2xl text-[15px] font-semibold text-white"
+                className="flex-1 py-3 rounded-2xl text-[14px] font-bold text-white"
                 style={{ background: "#FF3B30" }}>
                 {deleting ? "…" : "Supprimer"}
               </button>
@@ -450,45 +383,42 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Drawer marchand */}
+      {/* ── Drawer marchand ── */}
       {selected && (
         <div className="fixed inset-0 z-40 flex" onClick={() => setSelected(null)}>
-          <div className="flex-1" style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }} />
+          <div className="flex-1" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }} />
           <div className="w-full max-w-[420px] h-full overflow-y-auto flex-shrink-0"
-            style={{ background: "var(--bg)", borderLeft: "1px solid var(--border)" }}
+            style={{
+              background: "rgba(12,12,14,0.92)",
+              backdropFilter: "blur(60px) saturate(200%)",
+              WebkitBackdropFilter: "blur(60px) saturate(200%)",
+              borderLeft: "1px solid rgba(0,245,160,0.1)",
+            }}
             onClick={e => e.stopPropagation()}>
             <div className="p-8">
               {/* Header drawer */}
               <div className="flex items-start justify-between mb-8">
                 <div>
-                  <h2 className="text-[20px] font-semibold" style={{ color: "var(--fg)" }}>{selected.nom || "Marchand"}</h2>
-                  <p className="text-[13px] mt-1" style={{ color: "var(--fg-secondary)" }}>{selected.email}</p>
+                  <h2 className="text-[20px] font-semibold" style={{ color: FG }}>{selected.nom || "Marchand"}</h2>
+                  <p className="text-[13px] mt-1" style={{ color: FG2 }}>{selected.email}</p>
                 </div>
                 <button onClick={() => setSelected(null)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-[14px]"
+                  style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, color: FG3 }}>
                   ✕
                 </button>
               </div>
 
-              {/* Infos */}
               <Section title="Informations">
                 <Row label="Inscription" value={formatDate(selected.date_inscription)} />
-                <Row
-                  label="Compte"
-                  value={selected.actif ? "Activé" : "Désactivé"}
-                  valueColor={selected.actif ? "var(--accent)" : "#FF9F0A"}
-                />
-                <Row
-                  label="ID Firebase"
-                  value={selected.id}
-                />
+                <Row label="Compte" value={selected.actif ? "Activé" : "Désactivé"}
+                  valueColor={selected.actif ? GREEN : "#FF9F0A"} />
+                <Row label="ID Firebase" value={selected.id} />
               </Section>
 
-              {/* Abonnement */}
               <Section title="Abonnement">
                 <div className="rounded-2xl p-4 mb-3"
-                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                  style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}` }}>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-[15px] font-semibold"
@@ -496,44 +426,38 @@ export default function AdminPage() {
                         {selected.abonnement_statut === "actif" ? "Payé" : "En attente de paiement"}
                       </p>
                       {selected.abonnement_statut === "actif" && (
-                        <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>350 DH / mois</p>
+                        <p className="text-[12px] mt-0.5" style={{ color: FG3 }}>350 DH / mois</p>
                       )}
                     </div>
                     <button onClick={() => toggleAbonnement(selected)} disabled={updatingAbo}
                       className="text-[12px] font-medium px-3 py-1.5 rounded-xl"
-                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>
+                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG2 }}>
                       {updatingAbo ? "…" : selected.abonnement_statut === "actif" ? "Marquer impayé" : "Marquer payé"}
                     </button>
                   </div>
                 </div>
               </Section>
 
-              {/* NFC + Carte */}
               <Section title="Tag NFC physique">
                 {selected.nfc_id ? (
                   <div className="space-y-3">
-                    {/* URL */}
                     <div className="rounded-2xl px-4 py-3 font-mono text-[12px] break-all"
-                      style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>
-                      app.walliocard.com/nfc/<span style={{ color: "var(--fg)", fontWeight: 600 }}>{selected.nfc_id}</span>
+                      style={{ background: "rgba(0,245,160,0.04)", border: "1px solid rgba(0,245,160,0.12)", color: FG2 }}>
+                      app.walliocard.com/nfc/<span style={{ color: GREEN, fontWeight: 600 }}>{selected.nfc_id}</span>
                     </div>
-
-                    {/* Copier — grand bouton pour iPhone */}
                     <button onClick={() => copierNfc(selected.nfc_id!)}
-                      className="w-full py-3.5 rounded-2xl text-[15px] font-semibold"
+                      className="w-full py-3.5 rounded-2xl text-[15px] font-bold"
                       style={{
-                        background: copied ? "rgba(48,209,88,0.12)" : "var(--accent)",
-                        color: copied ? "#30D158" : "white",
+                        background: copied ? "rgba(48,209,88,0.12)" : GREEN,
+                        color: copied ? "#30D158" : "#0A0A0A",
                         transition: "all 0.2s",
                       }}>
                       {copied ? "✓ URL copiée" : "Copier l'URL NFC"}
                     </button>
-
-                    {/* Steps iPhone */}
                     <div className="rounded-2xl p-4 space-y-2.5"
-                      style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide mb-2"
-                        style={{ color: "var(--fg-tertiary)" }}>Programmer le tag — iPhone</p>
+                      style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}` }}>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-2"
+                        style={{ color: "rgba(0,245,160,0.55)" }}>Programmer le tag — iPhone</p>
                       {[
                         ["1", "Copie l'URL ci-dessus"],
                         ["2", "Ouvre NFC Tools → Write"],
@@ -542,70 +466,66 @@ export default function AdminPage() {
                         ["5", "Approche le tag → Done ✓"],
                       ].map(([n, t]) => (
                         <div key={n} className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-                            style={{ background: "var(--accent)", color: "white" }}>{n}</span>
-                          <span className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>{t}</span>
+                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                            style={{ background: "rgba(0,245,160,0.15)", color: GREEN }}>{n}</span>
+                          <span className="text-[13px]" style={{ color: FG2 }}>{t}</span>
                         </div>
                       ))}
                     </div>
-
                     <button onClick={() => genererNfc(selected)} disabled={generatingNfc}
                       className="w-full py-2.5 rounded-xl text-[12px] font-medium"
-                      style={{ background: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.15)", color: "#FF9F0A" }}>
+                      style={{ background: "rgba(255,159,10,0.07)", border: "1px solid rgba(255,159,10,0.15)", color: "#FF9F0A" }}>
                       {generatingNfc ? "…" : "Régénérer l'ID NFC"}
                     </button>
                   </div>
                 ) : (
                   <button onClick={() => genererNfc(selected)} disabled={generatingNfc}
-                    className="w-full py-3 rounded-2xl text-[14px] font-semibold"
-                    style={{ background: "var(--accent)", color: "white" }}>
+                    className="w-full py-3 rounded-2xl text-[14px] font-bold"
+                    style={{ background: GREEN, color: "#0A0A0A" }}>
                     {generatingNfc ? "Génération…" : "+ Générer l'ID NFC"}
                   </button>
                 )}
               </Section>
 
-              {/* Carte comptoir */}
               <Section title="Carte comptoir imprimable">
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => telechargerCarte(selected)}
+                  <button onClick={() => telechargerCarte(selected)}
                     disabled={!selected.nfc_id || downloadingCard || downloadingQR}
                     className="flex-1 py-3 rounded-2xl text-[13px] font-semibold"
                     style={{
-                      background: selected.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)",
-                      border: `1px solid ${selected.nfc_id ? "var(--accent)" : "var(--border)"}`,
-                      color: selected.nfc_id ? "var(--accent)" : "var(--fg-tertiary)",
+                      background: selected.nfc_id ? "rgba(0,245,160,0.07)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${selected.nfc_id ? "rgba(0,245,160,0.2)" : BORDER}`,
+                      color: selected.nfc_id ? GREEN : FG3,
                       cursor: selected.nfc_id ? "pointer" : "not-allowed",
                     }}>
-                    {downloadingCard ? "…" : "⬇ NFC + QR"}
+                    {downloadingCard ? "…" : "NFC + QR"}
                   </button>
-                  <button
-                    onClick={() => telechargerCarteQR(selected)}
+                  <button onClick={() => telechargerCarteQR(selected)}
                     disabled={downloadingCard || downloadingQR}
                     className="flex-1 py-3 rounded-2xl text-[13px] font-semibold"
-                    style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>
-                    {downloadingQR ? "…" : "⬇ QR seul"}
+                    style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, color: FG, cursor: "pointer" }}>
+                    {downloadingQR ? "…" : "QR seul"}
                   </button>
                 </div>
-                <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
+                <p className="text-[11px] mt-2" style={{ color: FG3 }}>
                   4K · prêt imprimeur · {selected.nfc_id ? "NFC + QR ou QR uniquement" : "QR uniquement disponible sans ID NFC"}
                 </p>
               </Section>
 
-              {/* Actions compte */}
               <Section title="Gestion du compte">
                 <div className="space-y-2">
                   <button onClick={() => toggleActif(selected)} disabled={toggling === selected.id}
                     className="w-full py-3 rounded-2xl text-[14px] font-medium"
                     style={{
-                      background: selected.actif ? "rgba(255,59,48,0.06)" : "rgba(0,122,255,0.08)",
-                      color: selected.actif ? "#FF3B30" : "var(--accent)",
+                      background: selected.actif ? "rgba(255,59,48,0.07)" : "rgba(0,245,160,0.07)",
+                      border: `1px solid ${selected.actif ? "rgba(255,59,48,0.15)" : "rgba(0,245,160,0.15)"}`,
+                      color: selected.actif ? "#FF3B30" : GREEN,
                     }}>
                     {toggling === selected.id ? "…" : selected.actif ? "Désactiver le compte" : "Activer le compte"}
                   </button>
                   <button onClick={() => setConfirmDelete(selected.id)}
                     className="w-full py-3 rounded-2xl text-[14px] font-medium"
-                    style={{ background: "rgba(255,59,48,0.04)", color: "#FF3B30" }}>
+                    style={{ background: "rgba(255,59,48,0.05)", color: "#FF3B30" }}>
                     Supprimer le compte
                   </button>
                 </div>
@@ -615,46 +535,52 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto relative">
+      {/* ── Contenu principal ── */}
+      <div className="max-w-6xl mx-auto px-6 md:px-8 py-10 md:py-14" style={{ position: "relative", zIndex: 1 }}>
+
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-10 gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "#0F1117", border: "1px solid rgba(94,92,230,0.25)", boxShadow: "0 4px 16px rgba(94,92,230,0.15), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
-              <WallioLogo size={30} />
+            <div className="w-12 h-12 rounded-[18px] flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "rgba(0,245,160,0.08)",
+                border: "1px solid rgba(0,245,160,0.2)",
+                boxShadow: "0 0 28px rgba(0,245,160,0.12)",
+              }}>
+              <WallioLogo size={28} color={GREEN} />
             </div>
             <div>
-              <p className="text-[10px] font-semibold tracking-[0.16em] uppercase mb-0.5" style={{ color: "var(--accent)" }}>WALLIO</p>
-              <h1 className="text-[22px] md:text-[28px] font-semibold tracking-[-0.5px] leading-none" style={{ color: "var(--fg)" }}>Administration</h1>
-              <p className="text-[12px] md:text-[13px] mt-1" style={{ color: "var(--fg-tertiary)" }}>
+              <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-0.5" style={{ color: GREEN }}>WALLIO</p>
+              <h1 className="text-[24px] md:text-[28px] font-semibold tracking-[-0.5px] leading-none" style={{ color: FG }}>Administration</h1>
+              <p className="text-[12px] mt-1.5" style={{ color: FG3 }}>
                 {actifs} actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
               </p>
             </div>
           </div>
           <div className="flex gap-2 items-center">
-            <ThemeToggle />
             <button onClick={() => setShowCreate(true)}
-              className="text-[13px] px-3 md:px-4 py-2 rounded-xl font-semibold text-white"
-              style={{ background: "var(--accent)" }}>
+              className="text-[13px] px-4 py-2.5 rounded-xl font-bold"
+              style={{ background: GREEN, color: "#0A0A0A" }}>
               + Nouveau
             </button>
             <button onClick={logout}
-              className="text-[13px] px-3 md:px-4 py-2 rounded-xl"
-              style={{ color: "var(--fg-secondary)", background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+              className="text-[13px] px-4 py-2.5 rounded-xl"
+              style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG3 }}>
               Sortir
             </button>
           </div>
         </div>
 
         {/* Onglets */}
-        <div className="flex gap-2 mb-6 md:mb-8 p-1 rounded-2xl w-full md:w-fit"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+        <div className="flex gap-1.5 mb-8 p-1 rounded-2xl w-full md:w-fit"
+          style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}` }}>
           {([["marchands", "Marchands"], ["impression", "Cartes comptoir"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className="px-5 py-2 rounded-xl text-[14px] font-medium transition-all"
+              className="px-5 py-2 rounded-[14px] text-[14px] font-medium transition-all"
               style={{
-                background: tab === key ? "var(--accent)" : "transparent",
-                color: tab === key ? "white" : "var(--fg-secondary)",
+                background: tab === key ? GREEN : "transparent",
+                color: tab === key ? "#0A0A0A" : FG2,
+                fontWeight: tab === key ? 700 : 500,
               }}>
               {label}
             </button>
@@ -662,143 +588,156 @@ export default function AdminPage() {
         </div>
 
         {tab === "marchands" && <>
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-          {[
-            { label: "Total",         value: String(marchands.length),                          color: "var(--fg)" },
-            { label: "Actifs",        value: String(actifs),                                    color: "var(--accent)" },
-            { label: "En attente",    value: String(marchands.length - actifs),                 color: "#FF9F0A" },
-            { label: "Revenus / mois",value: `${revenus.toLocaleString("fr-FR")} DH`,          color: "#30D158" },
-          ].map(s => (
-            <div key={s.label} className="rounded-[20px] md:rounded-[24px] p-4 md:p-6"
-              style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)" }}>
-              <p className="text-[24px] md:text-[30px] font-semibold tracking-tight leading-none" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-[11px] md:text-[12px] mt-1.5 md:mt-2" style={{ color: "var(--fg-secondary)" }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
 
-        {/* Recherche */}
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Rechercher un marchand…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full md:max-w-xs px-4 py-2.5 rounded-2xl text-[14px] outline-none"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-            onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-            onBlur={e => (e.target.style.borderColor = "var(--border)")}
-          />
-        </div>
-
-        {filtered.length === 0 ? (
-          <div className="py-20 text-center rounded-[24px]"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-tertiary)" }}>
-            <p className="text-[15px]">{search ? "Aucun résultat." : "Aucun marchand inscrit."}</p>
-          </div>
-        ) : (<>
-
-          {/* ── Cards mobile ── */}
-          <div className="md:hidden space-y-2">
-            {filtered.map(m => (
-              <button key={m.id} onClick={() => setSelected(m)}
-                className="w-full text-left rounded-2xl p-4 flex items-center gap-3 active:opacity-70 transition-opacity"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                {/* Avatar */}
-                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[14px] text-white flex-shrink-0"
-                  style={{ background: m.actif ? "var(--accent)" : "var(--border)" }}>
-                  {(m.nom?.[0] || "?").toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold truncate" style={{ color: "var(--fg)" }}>{m.nom || "—"}</p>
-                  <p className="text-[11px] truncate" style={{ color: "var(--fg-tertiary)" }}>{m.email || "—"}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                    style={{
-                      background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)",
-                      color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A",
-                    }}>
-                    {m.abonnement_statut === "actif" ? "Payé" : "Attente"}
-                  </span>
-                  <span className="text-[10px] font-medium" style={{ color: m.actif ? "var(--accent)" : "var(--fg-tertiary)" }}>
-                    {m.actif ? "● Actif" : "● Inactif"}
-                  </span>
-                </div>
-                <span style={{ color: "var(--fg-tertiary)", fontSize: 16 }}>›</span>
-              </button>
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            {[
+              { label: "Total",          value: String(marchands.length),             color: FG },
+              { label: "Actifs",         value: String(actifs),                       color: GREEN },
+              { label: "En attente",     value: String(marchands.length - actifs),    color: "#FF9F0A" },
+              { label: "Revenus / mois", value: `${revenus.toLocaleString("fr-FR")} DH`, color: "#30D158" },
+            ].map(s => (
+              <div key={s.label} className="rounded-[22px] p-5 md:p-6" style={G}>
+                <p className="text-[26px] md:text-[32px] font-bold tracking-tight leading-none" style={{ color: s.color }}>{s.value}</p>
+                <p className="text-[11px] mt-2" style={{ color: FG3 }}>{s.label}</p>
+              </div>
             ))}
           </div>
 
-          {/* ── Table desktop ── */}
-          <div className="hidden md:block rounded-[24px] overflow-hidden"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)", boxShadow: "var(--shadow-md)" }}>
-            <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                  {["Établissement", "Email", "NFC", "Inscription", "Abonnement", "Compte", "Carte", ""].map(h => (
-                    <th key={h} className="text-left text-[11px] font-medium px-5 py-4 uppercase tracking-wide"
-                      style={{ color: "var(--fg-tertiary)" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((m, i) => (
-                  <tr key={m.id} className="cursor-pointer" onClick={() => setSelected(m)}
-                    style={{ borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                    <td className="px-5 py-4 text-[15px] font-medium" style={{ color: "var(--fg)" }}>{m.nom || "—"}</td>
-                    <td className="px-5 py-4 text-[13px]" style={{ color: "var(--fg-secondary)" }}>{m.email || "—"}</td>
-                    <td className="px-5 py-4">
-                      {m.nfc_id
-                        ? <span className="text-[11px] font-medium px-2 py-1 rounded-lg" style={{ background: "rgba(0,245,160,0.08)", color: "#00F5A0" }}>✓ NFC</span>
-                        : <span className="text-[11px] px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)", color: "var(--fg-tertiary)" }}>—</span>
-                      }
-                    </td>
-                    <td className="px-5 py-4 text-[13px]" style={{ color: "var(--fg-secondary)" }}>{formatDate(m.date_inscription)}</td>
-                    <td className="px-5 py-4">
-                      <span className="text-[12px] font-medium px-2.5 py-1 rounded-full"
-                        style={{ background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)", color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A" }}>
-                        {m.abonnement_statut === "actif" ? "Payé" : "En attente"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full"
-                        style={{ background: m.actif ? "rgba(0,122,255,0.1)" : "rgba(142,142,147,0.12)", color: m.actif ? "var(--accent)" : "var(--fg-secondary)" }}>
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.actif ? "var(--accent)" : "var(--fg-tertiary)" }} />
-                        {m.actif ? "Actif" : "Inactif"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-4">
-                      <div className="flex gap-1.5">
-                        <button onClick={async e => { e.stopPropagation(); if (!m.nfc_id) return; const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarte(m); btn.textContent = "NFC+QR"; btn.removeAttribute("disabled"); }}
-                          disabled={!m.nfc_id}
-                          className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap"
-                          style={{ background: m.nfc_id ? "rgba(0,122,255,0.08)" : "var(--glass-bg)", border: `1px solid ${m.nfc_id ? "var(--accent)" : "var(--border)"}`, color: m.nfc_id ? "var(--accent)" : "var(--fg-tertiary)", cursor: m.nfc_id ? "pointer" : "not-allowed", opacity: m.nfc_id ? 1 : 0.5 }}>
-                          ⬇ NFC+QR
-                        </button>
-                        <button onClick={async e => { e.stopPropagation(); const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarteQR(m); btn.textContent = "⬇ QR"; btn.removeAttribute("disabled"); }}
-                          className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap"
-                          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>
-                          ⬇ QR
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-3 py-4">
-                      <button onClick={e => { e.stopPropagation(); setSelected(m); }}
-                        className="text-[13px] font-medium px-4 py-2 rounded-xl"
-                        style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
-                        Voir →
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Recherche */}
+          <div className="mb-5">
+            <input
+              type="text"
+              placeholder="Rechercher un marchand…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full md:max-w-xs text-[14px] outline-none"
+              style={{ ...inputStyle, borderRadius: 16, padding: "10px 16px" }}
+              onFocus={e => (e.target.style.borderColor = "rgba(0,245,160,0.3)")}
+              onBlur={e => (e.target.style.borderColor = BORDER)}
+            />
           </div>
-        </>)}
+
+          {filtered.length === 0 ? (
+            <div className="py-20 text-center rounded-[24px]" style={G}>
+              <p className="text-[15px]" style={{ color: FG3 }}>{search ? "Aucun résultat." : "Aucun marchand inscrit."}</p>
+            </div>
+          ) : (<>
+
+            {/* ── Cards mobile ── */}
+            <div className="md:hidden space-y-2">
+              {filtered.map(m => (
+                <button key={m.id} onClick={() => setSelected(m)}
+                  className="w-full text-left rounded-2xl p-4 flex items-center gap-3 active:opacity-70 transition-opacity"
+                  style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}` }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[13px] flex-shrink-0"
+                    style={{ background: m.actif ? "rgba(0,245,160,0.15)" : "rgba(255,255,255,0.06)", color: m.actif ? GREEN : FG3 }}>
+                    {(m.nom?.[0] || "?").toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold truncate" style={{ color: FG }}>{m.nom || "—"}</p>
+                    <p className="text-[11px] truncate" style={{ color: FG3 }}>{m.email || "—"}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                      style={{
+                        background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)",
+                        color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A",
+                      }}>
+                      {m.abonnement_statut === "actif" ? "Payé" : "Attente"}
+                    </span>
+                    <span className="text-[10px] font-medium" style={{ color: m.actif ? GREEN : FG3 }}>
+                      {m.actif ? "● Actif" : "● Inactif"}
+                    </span>
+                  </div>
+                  <span style={{ color: FG3, fontSize: 16 }}>›</span>
+                </button>
+              ))}
+            </div>
+
+            {/* ── Table desktop ── */}
+            <div className="hidden md:block rounded-[26px] overflow-hidden" style={G}>
+              <table className="w-full">
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                    {["Établissement", "Email", "NFC", "Inscription", "Abonnement", "Compte", "Carte", ""].map(h => (
+                      <th key={h} className="text-left text-[10px] font-bold px-5 py-4 uppercase tracking-[0.1em]"
+                        style={{ color: "rgba(0,245,160,0.45)" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((m, i) => (
+                    <tr key={m.id} className="cursor-pointer transition-colors"
+                      style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${BORDER}` : "none" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      onClick={() => setSelected(m)}>
+                      <td className="px-5 py-4 text-[15px] font-semibold" style={{ color: FG }}>{m.nom || "—"}</td>
+                      <td className="px-5 py-4 text-[13px]" style={{ color: FG2 }}>{m.email || "—"}</td>
+                      <td className="px-5 py-4">
+                        {m.nfc_id
+                          ? <span className="text-[11px] font-semibold px-2 py-1 rounded-lg"
+                              style={{ background: "rgba(0,245,160,0.08)", color: GREEN }}>NFC</span>
+                          : <span className="text-[11px] px-2 py-1 rounded-lg" style={{ color: FG3 }}>—</span>
+                        }
+                      </td>
+                      <td className="px-5 py-4 text-[13px]" style={{ color: FG2 }}>{formatDate(m.date_inscription)}</td>
+                      <td className="px-5 py-4">
+                        <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full"
+                          style={{
+                            background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)",
+                            color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A",
+                          }}>
+                          {m.abonnement_statut === "actif" ? "Payé" : "En attente"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full"
+                          style={{
+                            background: m.actif ? "rgba(0,245,160,0.08)" : "rgba(255,255,255,0.05)",
+                            color: m.actif ? GREEN : FG3,
+                          }}>
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.actif ? GREEN : FG3 }} />
+                          {m.actif ? "Actif" : "Inactif"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-4">
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={async e => { e.stopPropagation(); if (!m.nfc_id) return; const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarte(m); btn.textContent = "NFC+QR"; btn.removeAttribute("disabled"); }}
+                            disabled={!m.nfc_id}
+                            className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap"
+                            style={{
+                              background: m.nfc_id ? "rgba(0,245,160,0.07)" : "rgba(255,255,255,0.03)",
+                              border: `1px solid ${m.nfc_id ? "rgba(0,245,160,0.2)" : BORDER}`,
+                              color: m.nfc_id ? GREEN : FG3,
+                              cursor: m.nfc_id ? "pointer" : "not-allowed",
+                              opacity: m.nfc_id ? 1 : 0.4,
+                            }}>
+                            NFC+QR
+                          </button>
+                          <button
+                            onClick={async e => { e.stopPropagation(); const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarteQR(m); btn.textContent = "QR"; btn.removeAttribute("disabled"); }}
+                            className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap"
+                            style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, color: FG, cursor: "pointer" }}>
+                            QR
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-3 py-4">
+                        <button onClick={e => { e.stopPropagation(); setSelected(m); }}
+                          className="text-[13px] font-medium px-4 py-2 rounded-xl"
+                          style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG2 }}>
+                          Voir →
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>)}
         </>}
 
         {/* ── Onglet Cartes comptoir ── */}
@@ -808,53 +747,48 @@ export default function AdminPage() {
             {/* Contrôles */}
             <div style={{ flex: "0 0 300px", display: "flex", flexDirection: "column", gap: 16 }}>
 
-              {/* URL unique */}
-              <div className="rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--fg-tertiary)" }}>
+              <div className="rounded-[20px] p-5" style={G}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-3" style={{ color: "rgba(0,245,160,0.55)" }}>
                   URL unique — aperçu
                 </p>
                 <input type="text" value={impUrl} onChange={e => setImpUrl(e.target.value)}
                   placeholder="https://app.walliocard.com/nfc/xxx"
-                  className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none mb-3"
-                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", boxSizing: "border-box" }} />
+                  style={{ ...inputStyle, fontSize: 13, marginBottom: 12 }} />
                 <button onClick={impDownloadSingle} disabled={impGenerating}
-                  className="w-full py-3 rounded-xl text-[14px] font-semibold text-white"
-                  style={{ background: impGenerating ? "#888" : "var(--accent)" }}>
-                  {impGenerating ? "Génération…" : "⬇ Télécharger PNG 4K"}
+                  className="w-full py-3 rounded-xl text-[14px] font-bold"
+                  style={{ background: impGenerating ? "rgba(0,245,160,0.3)" : GREEN, color: "#0A0A0A" }}>
+                  {impGenerating ? "Génération…" : "Télécharger PNG 4K"}
                 </button>
               </div>
 
-              {/* Batch */}
-              <div className="rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--fg-tertiary)" }}>
+              <div className="rounded-[20px] p-5" style={G}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-3" style={{ color: "rgba(0,245,160,0.55)" }}>
                   Batch — une URL par ligne
                 </p>
                 <textarea value={impUrls} onChange={e => setImpUrls(e.target.value)} rows={8}
                   placeholder={"https://app.walliocard.com/nfc/abc\nhttps://app.walliocard.com/nfc/def\n…"}
-                  className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none mb-2"
-                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", fontFamily: "monospace", boxSizing: "border-box" }} />
-                <p className="text-[11px] mb-3" style={{ color: "var(--fg-tertiary)" }}>
+                  style={{ ...inputStyle, fontSize: 12, fontFamily: "monospace", resize: "none", marginBottom: 8 }} />
+                <p className="text-[11px] mb-3" style={{ color: FG3 }}>
                   {impUrls.split("\n").map(l => l.trim()).filter(Boolean).length} carte(s) détectée(s)
                 </p>
                 {impGenerating && impProgress > 0 && (
                   <div className="mb-3">
-                    <div style={{ height: 4, background: "var(--border)", borderRadius: 4, overflow: "hidden" }}>
-                      <div style={{ width: `${impProgress}%`, height: "100%", background: "var(--accent)", borderRadius: 4, transition: "width 0.3s" }} />
+                    <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ width: `${impProgress}%`, height: "100%", background: GREEN, borderRadius: 4, transition: "width 0.3s" }} />
                     </div>
-                    <p className="text-[11px] mt-1" style={{ color: "var(--fg-tertiary)" }}>{impProgress}%</p>
+                    <p className="text-[11px] mt-1" style={{ color: FG3 }}>{impProgress}%</p>
                   </div>
                 )}
                 <button onClick={impDownloadBatch}
                   disabled={impGenerating || !impUrls.split("\n").some(l => l.trim())}
-                  className="w-full py-3 rounded-xl text-[14px] font-semibold text-white"
-                  style={{ background: impGenerating ? "#888" : "#6A5AF9" }}>
-                  {impGenerating ? `Génération… ${impProgress}%` : `⬇ Télécharger ZIP`}
+                  className="w-full py-3 rounded-xl text-[14px] font-bold"
+                  style={{ background: impGenerating ? "rgba(0,245,160,0.3)" : GREEN, color: "#0A0A0A", opacity: !impUrls.split("\n").some(l => l.trim()) ? 0.4 : 1 }}>
+                  {impGenerating ? `Génération… ${impProgress}%` : "Télécharger ZIP"}
                 </button>
               </div>
 
-              {/* Specs */}
-              <div className="rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                <p className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--fg-tertiary)" }}>Specs imprimeur</p>
+              <div className="rounded-[20px] p-5" style={G}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-3" style={{ color: "rgba(0,245,160,0.55)" }}>Specs imprimeur</p>
                 {[
                   ["Canvas", `${PRINT_W}×${PRINT_H}px`],
                   ["Export", "4500×3000px (×3)"],
@@ -863,23 +797,23 @@ export default function AdminPage() {
                   ["Support", "PVC rigide 1mm"],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between mb-1.5">
-                    <span className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>{k}</span>
-                    <span className="text-[12px] font-medium" style={{ color: "var(--fg)" }}>{v}</span>
+                    <span className="text-[12px]" style={{ color: FG3 }}>{k}</span>
+                    <span className="text-[12px] font-medium" style={{ color: FG }}>{v}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Preview canvas */}
-            <div className="flex-1 rounded-[20px] p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-              <p className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--fg-tertiary)" }}>
+            <div className="flex-1 rounded-[20px] p-5" style={G}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-4" style={{ color: "rgba(0,245,160,0.55)" }}>
                 Aperçu — échelle 42%
               </p>
-              <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.15)", display: "inline-block" }}>
+              <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,0.5)", display: "inline-block" }}>
                 <canvas ref={previewRef}
                   style={{ display: "block", width: Math.round(PRINT_W * 0.42), height: Math.round(PRINT_H * 0.42) }} />
               </div>
-              <p className="text-[11px] mt-3" style={{ color: "var(--fg-tertiary)" }}>
+              <p className="text-[11px] mt-3" style={{ color: FG3 }}>
                 Le fichier téléchargé est en pleine résolution (4500×3000px).
               </p>
             </div>
