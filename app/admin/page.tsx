@@ -6,11 +6,18 @@ import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
 import { drawPrintCard, drawPrintCardQROnly, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
 
+type AboType = "mensuel" | "6mois" | "annuel";
+type Paiement = { date: number; type: AboType; montant: number };
+
 type Marchand = {
   id: string; nom: string; email: string; actif: boolean;
   date_inscription?: { seconds: number }; nfc_id?: string;
   logo_url?: string; couleur_principale?: string; couleur_secondaire?: string;
   abonnement_statut?: "actif" | "en_attente" | "suspendu";
+  abonnement_type?: AboType;
+  abonnement_debut?: number;
+  abonnement_fin?: number;
+  abonnement_paiements?: Paiement[];
 };
 
 function slugify(str: string) {
@@ -23,6 +30,38 @@ function formatDate(ts?: { seconds: number }) {
   if (!ts) return "—";
   return new Date(ts.seconds * 1000).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
+function formatDateSec(sec?: number) {
+  if (!sec) return "—";
+  return new Date(sec * 1000).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+}
+function calcAbonnementFin(debutSec: number, type: AboType): number {
+  const d = new Date(debutSec * 1000);
+  if (type === "mensuel") d.setMonth(d.getMonth() + 1);
+  else if (type === "6mois") d.setMonth(d.getMonth() + 6);
+  else d.setFullYear(d.getFullYear() + 1);
+  return Math.floor(d.getTime() / 1000);
+}
+function getAboStatus(fin?: number): "actif" | "bientot" | "expire" | "aucun" {
+  if (!fin) return "aucun";
+  const ms = fin * 1000 - Date.now();
+  if (ms < 0) return "expire";
+  if (ms < 15 * 86400000) return "bientot";
+  return "actif";
+}
+function daysLeft(fin?: number): number {
+  if (!fin) return 0;
+  return Math.ceil((fin * 1000 - Date.now()) / 86400000);
+}
+function getMontant(type: AboType): number {
+  return type === "6mois" ? 2100 : type === "annuel" ? 4200 : 350;
+}
+const ABO_LABELS: Record<AboType, string> = { mensuel: "Mensuel", "6mois": "6 mois", annuel: "Annuel" };
+const ABO_COLORS = {
+  actif:  { bg: "rgba(52,199,89,0.10)",   fg: "#1C7A37",  label: "Actif" },
+  bientot:{ bg: "rgba(255,159,10,0.12)",  fg: "#7A4A00",  label: "Expire bientôt" },
+  expire: { bg: "rgba(255,59,48,0.10)",   fg: "#C0392B",  label: "Expiré" },
+  aucun:  { bg: "rgba(0,0,0,0.05)",       fg: "#6E6E73",  label: "Aucun" },
+};
 
 // ── Palette (toujours clair) ─────────────────────────────────────────────────
 const DANGER  = "#FF3B30";
@@ -67,7 +106,11 @@ export default function AdminPage() {
   const [createPassword, setCreatePassword] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [tab, setTab] = useState<"marchands" | "impression">("marchands");
+  const [tab, setTab] = useState<"marchands" | "impression" | "comptabilite">("marchands");
+  const [showPaiement, setShowPaiement] = useState<Marchand | null>(null);
+  const [paiementType, setPaiementType] = useState<AboType>("mensuel");
+  const [paiementDebut, setPaiementDebut] = useState("");
+  const [savingPaiement, setSavingPaiement] = useState(false);
   const [page, setPage] = useState(0);
   const [impUrl, setImpUrl] = useState("https://app.walliocard.com/nfc/demo");
   const [impUrls, setImpUrls] = useState("");
@@ -128,6 +171,34 @@ export default function AdminPage() {
     try { await adminPatch(m.id, { nfc_id }); }
     catch { setMarchands(prev => prev.map(x => x.id === m.id ? m : x)); setSelected(m); }
     setGeneratingNfc(false);
+  }
+  function openPaiementModal(m: Marchand) {
+    let debutDefault = new Date();
+    if (m.abonnement_fin && m.abonnement_fin * 1000 > Date.now()) {
+      debutDefault = new Date(m.abonnement_fin * 1000);
+    }
+    setPaiementDebut(debutDefault.toISOString().slice(0, 10));
+    setPaiementType(m.abonnement_type || "mensuel");
+    setShowPaiement(m);
+  }
+  async function confirmerPaiement() {
+    if (!showPaiement || !paiementDebut) return;
+    setSavingPaiement(true);
+    const debutSec = Math.floor(new Date(paiementDebut + "T00:00:00").getTime() / 1000);
+    const finSec = calcAbonnementFin(debutSec, paiementType);
+    const newPaiement: Paiement = { date: Math.floor(Date.now() / 1000), type: paiementType, montant: getMontant(paiementType) };
+    const paiements = [...(showPaiement.abonnement_paiements || []), newPaiement];
+    const updated = { ...showPaiement, abonnement_type: paiementType, abonnement_debut: debutSec, abonnement_fin: finSec, abonnement_paiements: paiements };
+    setMarchands(prev => prev.map(x => x.id === showPaiement.id ? updated : x));
+    if (selected?.id === showPaiement.id) setSelected(updated);
+    try {
+      await adminPatch(showPaiement.id, { abonnement_type: paiementType, abonnement_debut: debutSec, abonnement_fin: finSec, abonnement_paiements: paiements });
+    } catch {
+      setMarchands(prev => prev.map(x => x.id === showPaiement.id ? showPaiement : x));
+      if (selected?.id === showPaiement.id) setSelected(showPaiement);
+    }
+    setShowPaiement(null);
+    setSavingPaiement(false);
   }
   async function toggleAbonnement(m: Marchand) {
     setUpdatingAbo(true);
@@ -292,6 +363,62 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ── Modal paiement ── */}
+      {showPaiement && (() => {
+        const debutSec = paiementDebut ? Math.floor(new Date(paiementDebut + "T00:00:00").getTime() / 1000) : 0;
+        const finSec = debutSec ? calcAbonnementFin(debutSec, paiementType) : 0;
+        const montant = getMontant(paiementType);
+        return (
+          <div style={{ position: "fixed", inset: 0, zIndex: 55, display: "flex", alignItems: "flex-end", justifyContent: "center", background: T.overlay, backdropFilter: "blur(8px)" }}
+            onClick={() => setShowPaiement(null)}>
+            <div style={{ width: "100%", maxWidth: 480, background: "#FFFFFF", borderRadius: "24px 24px 0 0", padding: "28px 24px 44px", boxShadow: T.shadowModal }}
+              onClick={e => e.stopPropagation()}>
+              <div style={{ width: 32, height: 4, background: T.border, borderRadius: 2, margin: "0 auto 22px" }} />
+              <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>Nouveau paiement</p>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: T.label, marginBottom: 20 }}>{showPaiement.nom}</h3>
+
+              <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Type</p>
+              <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+                {(["mensuel", "6mois", "annuel"] as AboType[]).map(t => (
+                  <button key={t} onClick={() => setPaiementType(t)}
+                    style={{ flex: 1, padding: "10px 8px", borderRadius: 10, fontSize: 13, fontWeight: 500, border: `1.5px solid ${paiementType === t ? "#007AFF" : T.border}`, background: paiementType === t ? "rgba(0,122,255,0.08)" : T.surfCard, color: paiementType === t ? "#007AFF" : T.sec, cursor: "pointer", transition: "all 0.15s" }}>
+                    <span style={{ display: "block", fontWeight: 600 }}>{ABO_LABELS[t]}</span>
+                    <span style={{ fontSize: 12, color: paiementType === t ? "#007AFF" : T.tert }}>{getMontant(t).toLocaleString("fr-FR")} DH</span>
+                  </button>
+                ))}
+              </div>
+
+              <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Date de début</p>
+              <input type="date" value={paiementDebut} onChange={e => setPaiementDebut(e.target.value)}
+                style={{ ...inputStyle, marginBottom: 14 }} />
+
+              {finSec > 0 && (
+                <div style={{ background: T.surfForm, borderRadius: 10, padding: "10px 14px", marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 13, color: T.sec }}>Fin calculée</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: T.label }}>{formatDateSec(finSec)}</span>
+                </div>
+              )}
+
+              <div style={{ background: "rgba(0,122,255,0.08)", borderRadius: 10, padding: "10px 14px", marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 13, color: "#007AFF" }}>Montant reçu</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: "#007AFF" }}>{montant.toLocaleString("fr-FR")} DH</span>
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => setShowPaiement(null)}
+                  style={{ flex: 1, padding: "13px 0", borderRadius: 12, background: T.surfForm, color: T.label, fontSize: 15, fontWeight: 500, border: `1px solid ${T.border}`, cursor: "pointer" }}>
+                  Annuler
+                </button>
+                <button onClick={confirmerPaiement} disabled={savingPaiement || !paiementDebut}
+                  style={{ flex: 1, padding: "13px 0", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 15, fontWeight: 600, border: "none", cursor: "pointer", opacity: !paiementDebut ? 0.45 : 1 }}>
+                  {savingPaiement ? "Enregistrement…" : "Confirmer"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Modal suppression ── */}
       {confirmDelete && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 32px", background: T.overlay, backdropFilter: "blur(8px)" }}>
@@ -345,18 +472,56 @@ export default function AdminPage() {
               </div>
 
               <SLabel>Abonnement</SLabel>
-              <div style={{ background: T.surfCard, borderRadius: 14, padding: "14px 16px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: selected.abonnement_statut === "actif" ? T.paidFg : WARNING }}>
-                    {selected.abonnement_statut === "actif" ? "Payé" : "En attente"}
-                  </p>
-                  {selected.abonnement_statut === "actif" && <p style={{ fontSize: 12, color: T.tert, marginTop: 2 }}>350 DH / mois</p>}
-                </div>
-                <button onClick={() => toggleAbonnement(selected)} disabled={updatingAbo}
-                  style={{ fontSize: 12, fontWeight: 500, padding: "7px 12px", borderRadius: 8, background: T.surfForm, color: T.sec, border: `1px solid ${T.border}`, cursor: "pointer" }}>
-                  {updatingAbo ? "…" : selected.abonnement_statut === "actif" ? "Marquer impayé" : "Marquer payé"}
-                </button>
-              </div>
+              {(() => {
+                const status = getAboStatus(selected.abonnement_fin);
+                const col = ABO_COLORS[status];
+                const days = daysLeft(selected.abonnement_fin);
+                return (
+                  <div style={{ background: T.surfCard, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                    <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${T.sep}` }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: col.bg, color: col.fg }}>{col.label}</span>
+                      {selected.abonnement_type && <span style={{ fontSize: 13, color: T.sec }}>{ABO_LABELS[selected.abonnement_type]}</span>}
+                    </div>
+                    {selected.abonnement_fin ? (
+                      <div style={{ padding: "10px 16px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 13, color: T.sec }}>Début</span>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: T.label }}>{formatDateSec(selected.abonnement_debut)}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 13, color: T.sec }}>Fin</span>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: status === "expire" ? "#C0392B" : T.label }}>{formatDateSec(selected.abonnement_fin)}</span>
+                        </div>
+                        {status !== "expire" && (
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: 13, color: T.sec }}>Jours restants</span>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: col.fg }}>{days}j</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p style={{ padding: "12px 16px", fontSize: 13, color: T.tert }}>Aucune période enregistrée.</p>
+                    )}
+                    {(selected.abonnement_paiements?.length ?? 0) > 0 && (
+                      <div style={{ borderTop: `1px solid ${T.sep}`, padding: "10px 16px" }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Derniers paiements</p>
+                        {[...(selected.abonnement_paiements || [])].reverse().slice(0, 3).map((p, i) => (
+                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                            <span style={{ fontSize: 12, color: T.sec }}>{formatDateSec(p.date)} · {ABO_LABELS[p.type]}</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: T.paidFg }}>{p.montant.toLocaleString("fr-FR")} DH</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ padding: "10px 16px", borderTop: `1px solid ${T.sep}` }}>
+                      <button onClick={() => openPaiementModal(selected)}
+                        style={{ width: "100%", padding: "11px 0", borderRadius: 10, background: T.btnBg, color: T.btnFg, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                        Confirmer paiement reçu
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <SLabel>Tag NFC physique</SLabel>
               {selected.nfc_id ? (
@@ -448,7 +613,7 @@ export default function AdminPage() {
 
         {/* Onglets */}
         <div style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, width: "fit-content" }}>
-          {([["marchands", "Marchands"], ["impression", "Cartes comptoir"]] as const).map(([key, label]) => (
+          {([["marchands", "Marchands"], ["comptabilite", "Comptabilité"], ["impression", "Cartes comptoir"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               style={{ padding: "7px 18px", borderRadius: 8, fontSize: 14, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s" }}>
               {label}
@@ -592,6 +757,92 @@ export default function AdminPage() {
           )}
           </>)}
         </>}
+
+        {/* ── Comptabilité ── */}
+        {tab === "comptabilite" && (() => {
+          const now = Date.now();
+          const aboActifList = marchands.filter(m => getAboStatus(m.abonnement_fin) === "actif");
+          const aboBientotList = marchands.filter(m => getAboStatus(m.abonnement_fin) === "bientot");
+          const aboExpireList = marchands.filter(m => getAboStatus(m.abonnement_fin) === "expire");
+          const mrrTotal = (aboActifList.length + aboBientotList.length) * 350;
+          const comptaList = [...marchands].sort((a, b) => {
+            if (!a.abonnement_fin && !b.abonnement_fin) return 0;
+            if (!a.abonnement_fin) return 1;
+            if (!b.abonnement_fin) return -1;
+            return a.abonnement_fin - b.abonnement_fin;
+          });
+          return (
+            <div>
+              {/* Stats */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
+                {[
+                  { label: "MRR estimé",    value: `${mrrTotal.toLocaleString("fr-FR")} DH`, color: T.label },
+                  { label: "Abonnements actifs", value: String(aboActifList.length + aboBientotList.length), color: T.actifFg },
+                  { label: "Expire < 15j",  value: String(aboBientotList.length), color: "#7A4A00" },
+                  { label: "Expirés",       value: String(aboExpireList.length), color: DANGER },
+                ].map(s => (
+                  <div key={s.label} style={{ ...G, borderRadius: 18, padding: "18px 20px" }}>
+                    <p style={{ fontSize: 26, fontWeight: 600, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.value}</p>
+                    <p style={{ fontSize: 12, color: T.sec, marginTop: 6 }}>{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Table */}
+              <div style={{ ...G, borderRadius: 18, overflow: "hidden" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${T.sep}` }}>
+                      {["Établissement", "Type", "Début", "Fin", "Statut", "Paiements"].map(h => (
+                        <th key={h} style={{ textAlign: "left", fontSize: 11, fontWeight: 600, color: T.tert, padding: "12px 16px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                      ))}
+                      <th style={{ padding: "12px 16px" }} />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comptaList.map((m, i) => {
+                      const status = getAboStatus(m.abonnement_fin);
+                      const col = ABO_COLORS[status];
+                      const days = daysLeft(m.abonnement_fin);
+                      return (
+                        <tr key={m.id} style={{ borderBottom: i < comptaList.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = T.rowHover)}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          onClick={() => setSelected(m)}>
+                          <td style={{ padding: "12px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ width: 30, height: 30, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 12, color: T.label, flexShrink: 0 }}>
+                                {m.logo_url ? <img src={m.logo_url} alt={m.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (m.nom?.[0] || "?").toUpperCase()}
+                              </div>
+                              <span style={{ fontSize: 14, fontWeight: 500, color: T.label }}>{m.nom || "—"}</span>
+                            </div>
+                          </td>
+                          <td style={{ padding: "12px 16px", fontSize: 13, color: T.sec }}>{m.abonnement_type ? ABO_LABELS[m.abonnement_type] : "—"}</td>
+                          <td style={{ padding: "12px 16px", fontSize: 13, color: T.sec }}>{formatDateSec(m.abonnement_debut)}</td>
+                          <td style={{ padding: "12px 16px", fontSize: 13, color: status === "expire" ? "#C0392B" : T.sec }}>{formatDateSec(m.abonnement_fin)}</td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: col.bg, color: col.fg, whiteSpace: "nowrap" }}>
+                              {col.label}{status === "bientot" ? ` (${days}j)` : status === "actif" ? ` (${days}j)` : ""}
+                            </span>
+                          </td>
+                          <td style={{ padding: "12px 16px", fontSize: 13, color: T.sec }}>
+                            {m.abonnement_paiements?.length ? `${m.abonnement_paiements.length} paiement${m.abonnement_paiements.length > 1 ? "s" : ""}` : "—"}
+                          </td>
+                          <td style={{ padding: "12px 12px", textAlign: "right" }}>
+                            <button onClick={e => { e.stopPropagation(); openPaiementModal(m); }}
+                              style={{ fontSize: 12, fontWeight: 600, padding: "7px 12px", borderRadius: 8, background: T.btnBg, color: T.btnFg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+                              + Paiement
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Cartes comptoir ── */}
         {tab === "impression" && (
