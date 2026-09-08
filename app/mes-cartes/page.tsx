@@ -453,10 +453,11 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
 
   function partager() {
     const url = `${window.location.origin}/ref/${card.walletId}`;
+    const message = `Salut ! Je suis client chez ${card.marchandNom} et je t'invite a rejoindre leur programme de fidelite. Cree ta carte gratuitement et on gagne tous les deux un tampon bonus :\n${url}`;
     if (navigator.share) {
-      navigator.share({ title: `Rejoins-moi chez ${card.marchandNom} !`, url }).catch(() => {});
+      navigator.share({ text: message }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url).then(() => {
+      navigator.clipboard.writeText(message).then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }).catch(() => {});
