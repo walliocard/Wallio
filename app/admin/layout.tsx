@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import DashboardClientLayout from "./client-layout";
 
 export const metadata: Metadata = {
-  title: "Wallio Marchand",
-  manifest: "/dashboard/manifest.webmanifest",
+  title: "Wallio Admin",
+  manifest: "/admin/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Wallio",
+    title: "Wallio Admin",
   },
   icons: {
     icon: [
@@ -18,6 +17,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <DashboardClientLayout>{children}</DashboardClientLayout>;
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
