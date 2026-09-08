@@ -348,9 +348,16 @@ export default function AdminPage() {
             onClick={e => e.stopPropagation()}>
             <div style={{ padding: "28px 22px 48px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
-                <div>
-                  <p style={{ fontSize: 19, fontWeight: 600, color: T.label }}>{selected.nom || "Marchand"}</p>
-                  <p style={{ fontSize: 13, color: T.sec, marginTop: 2 }}>{selected.email}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 18, color: T.label, flexShrink: 0 }}>
+                    {selected.logo_url
+                      ? <img src={selected.logo_url} alt={selected.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : (selected.nom?.[0] || "?").toUpperCase()}
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 19, fontWeight: 600, color: T.label }}>{selected.nom || "Marchand"}</p>
+                    <p style={{ fontSize: 13, color: T.sec, marginTop: 2 }}>{selected.email}</p>
+                  </div>
                 </div>
                 <button onClick={() => setSelected(null)}
                   style={{ width: 28, height: 28, borderRadius: "50%", background: T.closeBtn, border: `1px solid ${T.border}`, color: T.sec, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
@@ -509,8 +516,10 @@ export default function AdminPage() {
               {filtered.map((m, i) => (
                 <button key={m.id} onClick={() => setSelected(m)}
                   style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "transparent", border: "none", borderBottom: i < filtered.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer", textAlign: "left" }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 13, color: T.label, flexShrink: 0 }}>
-                    {(m.nom?.[0] || "?").toUpperCase()}
+                  <div style={{ width: 38, height: 38, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 14, color: T.label, flexShrink: 0 }}>
+                    {m.logo_url
+                      ? <img src={m.logo_url} alt={m.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : (m.nom?.[0] || "?").toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 15, fontWeight: 500, color: T.label, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.nom || "—"}</p>
@@ -541,7 +550,16 @@ export default function AdminPage() {
                       onMouseEnter={e => (e.currentTarget.style.background = T.rowHover)}
                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                       onClick={() => setSelected(m)}>
-                      <td style={{ padding: "13px 20px", fontSize: 15, fontWeight: 500, color: T.label }}>{m.nom || "—"}</td>
+                      <td style={{ padding: "13px 20px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 12, color: T.label, flexShrink: 0 }}>
+                            {m.logo_url
+                              ? <img src={m.logo_url} alt={m.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              : (m.nom?.[0] || "?").toUpperCase()}
+                          </div>
+                          <span style={{ fontSize: 15, fontWeight: 500, color: T.label }}>{m.nom || "—"}</span>
+                        </div>
+                      </td>
                       <td style={{ padding: "13px 20px", fontSize: 13, color: T.sec }}>{m.email || "—"}</td>
                       <td style={{ padding: "13px 20px" }}>
                         {m.nfc_id
