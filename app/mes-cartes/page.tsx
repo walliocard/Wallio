@@ -225,7 +225,6 @@ export default function MesCartesPage() {
   function handleLogout() {
     unsubRef.current?.();
     unsubRef.current = null;
-    marchandCacheRef.current.clear();
     localStorage.removeItem(PHONE_KEY);
     setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom(""); setPhoneInput(""); setNotFound(false); setStep("login");
   }
