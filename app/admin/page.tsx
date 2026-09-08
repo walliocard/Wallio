@@ -247,6 +247,10 @@ export default function AdminPage() {
   const filtered = marchands.filter(m =>
     !search || m.nom?.toLowerCase().includes(search.toLowerCase()) || m.email?.toLowerCase().includes(search.toLowerCase())
   );
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(0);
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <main style={{ minHeight: "100vh", background: T.bg, color: T.label }}>
@@ -470,7 +474,7 @@ export default function AdminPage() {
 
           {/* Recherche */}
           <div style={{ position: "relative", marginBottom: 14, maxWidth: 280 }}>
-            <input type="text" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)}
+            <input type="text" placeholder="Rechercher…" value={search} onChange={e => { setSearch(e.target.value); setPage(0); }}
               style={{ ...inputStyle, borderRadius: 10 }}
               onFocus={e => { e.target.style.borderColor = T.inputFocus; }}
               onBlur={e => { e.target.style.borderColor = T.borderInput; }} />
@@ -483,9 +487,9 @@ export default function AdminPage() {
           ) : (<>
             {/* Cards mobile */}
             <div className="md:hidden" style={{ ...G, borderRadius: 18, overflow: "hidden" }}>
-              {filtered.map((m, i) => (
+              {paginated.map((m, i) => (
                 <button key={m.id} onClick={() => setSelected(m)}
-                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "transparent", border: "none", borderBottom: i < filtered.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer", textAlign: "left" }}>
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "transparent", border: "none", borderBottom: i < paginated.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer", textAlign: "left" }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 14, color: T.label, flexShrink: 0 }}>
                     {m.logo_url
                       ? <img src={m.logo_url} alt={m.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -515,8 +519,8 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((m, i) => (
-                    <tr key={m.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer" }}
+                  {paginated.map((m, i) => (
+                    <tr key={m.id} style={{ borderBottom: i < paginated.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer" }}
                       onMouseEnter={e => (e.currentTarget.style.background = T.rowHover)}
                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                       onClick={() => setSelected(m)}>
@@ -527,10 +531,12 @@ export default function AdminPage() {
                               ? <img src={m.logo_url} alt={m.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                               : (m.nom?.[0] || "?").toUpperCase()}
                           </div>
-                          <span style={{ fontSize: 15, fontWeight: 500, color: T.label }}>{m.nom || "—"}</span>
+                          <span style={{ fontSize: 15, fontWeight: 500, color: T.label, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 160 }}>{m.nom || "—"}</span>
                         </div>
                       </td>
-                      <td style={{ padding: "13px 20px", fontSize: 13, color: T.sec }}>{m.email || "—"}</td>
+                      <td style={{ padding: "13px 20px", maxWidth: 180 }}>
+                        <span style={{ fontSize: 13, color: T.sec, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{m.email || "—"}</span>
+                      </td>
                       <td style={{ padding: "13px 20px" }}>
                         {m.nfc_id
                           ? <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: T.nfcBg, color: T.nfcFg }}>NFC</span>
@@ -568,6 +574,22 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 16 }}>
+              <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+                style={{ padding: "8px 16px", borderRadius: 10, background: T.surfCard, border: `1px solid ${T.border}`, color: page === 0 ? T.tert : T.label, fontSize: 14, cursor: page === 0 ? "default" : "pointer" }}>
+                ←
+              </button>
+              <span style={{ fontSize: 13, color: T.sec }}>
+                {page + 1} / {totalPages} · {filtered.length} marchands
+              </span>
+              <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
+                style={{ padding: "8px 16px", borderRadius: 10, background: T.surfCard, border: `1px solid ${T.border}`, color: page >= totalPages - 1 ? T.tert : T.label, fontSize: 14, cursor: page >= totalPages - 1 ? "default" : "pointer" }}>
+                →
+              </button>
+            </div>
+          )}
           </>)}
         </>}
 
