@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
-import { drawPrintCard, drawPrintCardQROnly, PRINT_W, PRINT_H } from "@/lib/print-card-draw";
+import { drawPrintCard, drawPrintCardQROnly } from "@/lib/print-card-draw";
 
 type AboType = "mensuel" | "6mois" | "annuel";
 type Paiement = { date: number; type: AboType; montant: number };
@@ -106,17 +106,12 @@ export default function AdminPage() {
   const [createPassword, setCreatePassword] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [tab, setTab] = useState<"marchands" | "impression" | "comptabilite">("marchands");
+  const [tab, setTab] = useState<"marchands" | "comptabilite">("marchands");
   const [showPaiement, setShowPaiement] = useState<Marchand | null>(null);
   const [paiementType, setPaiementType] = useState<AboType>("mensuel");
   const [paiementDebut, setPaiementDebut] = useState("");
   const [savingPaiement, setSavingPaiement] = useState(false);
   const [page, setPage] = useState(0);
-  const [impUrl, setImpUrl] = useState("https://app.walliocard.com/nfc/demo");
-  const [impUrls, setImpUrls] = useState("");
-  const [impGenerating, setImpGenerating] = useState(false);
-  const [impProgress, setImpProgress] = useState(0);
-  const previewRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -244,37 +239,6 @@ export default function AdminPage() {
   async function copierNfc(nfc_id: string) {
     await navigator.clipboard.writeText(`https://app.walliocard.com/nfc/${nfc_id}`);
     setCopied(true); setTimeout(() => setCopied(false), 2000);
-  }
-  useEffect(() => {
-    const canvas = previewRef.current;
-    if (!canvas) return;
-    drawPrintCard(canvas, impUrl, 0.42).catch(() => {});
-  }, [impUrl]);
-  async function impDownloadSingle() {
-    setImpGenerating(true);
-    const canvas = document.createElement("canvas");
-    await drawPrintCard(canvas, impUrl, 3);
-    const a = document.createElement("a");
-    a.download = "wallio-carte-comptoir.png"; a.href = canvas.toDataURL("image/png"); a.click();
-    setImpGenerating(false);
-  }
-  async function impDownloadBatch() {
-    const list = impUrls.split("\n").map(l => l.trim()).filter(Boolean);
-    if (!list.length) return;
-    setImpGenerating(true); setImpProgress(0);
-    const JSZip = (await import("jszip")).default;
-    const zip = new JSZip();
-    for (let i = 0; i < list.length; i++) {
-      const canvas = document.createElement("canvas");
-      await drawPrintCard(canvas, list[i], 3);
-      const blob = await new Promise<Blob>(r => canvas.toBlob(b => r(b!), "image/png"));
-      zip.file(`wallio-carte-${String(i + 1).padStart(2, "0")}.png`, blob);
-      setImpProgress(Math.round(((i + 1) / list.length) * 100));
-    }
-    const content = await zip.generateAsync({ type: "blob" });
-    const a = document.createElement("a");
-    a.download = `wallio-cartes-${list.length}.zip`; a.href = URL.createObjectURL(content); a.click();
-    setImpGenerating(false); setImpProgress(0);
   }
   async function logout() { await fetch("/api/admin/logout", { method: "POST" }); router.push("/admin/login"); }
 
@@ -613,7 +577,7 @@ export default function AdminPage() {
 
         {/* Onglets */}
         <div style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, width: "fit-content" }}>
-          {([["marchands", "Marchands"], ["comptabilite", "Comptabilité"], ["impression", "Cartes comptoir"]] as const).map(([key, label]) => (
+          {([["marchands", "Marchands"], ["comptabilite", "Comptabilité"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               style={{ padding: "7px 18px", borderRadius: 8, fontSize: 14, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s" }}>
               {label}
@@ -844,58 +808,6 @@ export default function AdminPage() {
           );
         })()}
 
-        {/* ── Cartes comptoir ── */}
-        {tab === "impression" && (
-          <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-            <div style={{ flex: "0 0 280px", display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ ...G, borderRadius: 18, padding: 20 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>URL unique</p>
-                <input type="text" value={impUrl} onChange={e => setImpUrl(e.target.value)}
-                  placeholder="https://app.walliocard.com/nfc/xxx"
-                  style={{ ...inputStyle, fontSize: 13, marginBottom: 10 }} />
-                <button onClick={impDownloadSingle} disabled={impGenerating}
-                  style={{ width: "100%", padding: "12px 0", borderRadius: 10, background: impGenerating ? T.surfForm : T.btnBg, color: impGenerating ? T.sec : T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
-                  {impGenerating ? "Génération…" : "Télécharger PNG 4K"}
-                </button>
-              </div>
-              <div style={{ ...G, borderRadius: 18, padding: 20 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>Batch — une URL par ligne</p>
-                <textarea value={impUrls} onChange={e => setImpUrls(e.target.value)} rows={7}
-                  placeholder={"https://app.walliocard.com/nfc/abc\nhttps://app.walliocard.com/nfc/def"}
-                  style={{ ...inputStyle, fontSize: 12, fontFamily: "monospace", resize: "none", marginBottom: 8 }} />
-                <p style={{ fontSize: 11, color: T.tert, marginBottom: 10 }}>{impUrls.split("\n").map(l => l.trim()).filter(Boolean).length} carte(s)</p>
-                {impGenerating && impProgress > 0 && (
-                  <div style={{ marginBottom: 10 }}>
-                    <div style={{ height: 3, background: T.border, borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{ width: `${impProgress}%`, height: "100%", background: T.btnBg, transition: "width 0.3s" }} />
-                    </div>
-                    <p style={{ fontSize: 11, color: T.sec, marginTop: 4 }}>{impProgress}%</p>
-                  </div>
-                )}
-                <button onClick={impDownloadBatch} disabled={impGenerating || !impUrls.split("\n").some(l => l.trim())}
-                  style={{ width: "100%", padding: "12px 0", borderRadius: 10, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", opacity: !impUrls.split("\n").some(l => l.trim()) ? 0.4 : 1 }}>
-                  {impGenerating ? `Génération… ${impProgress}%` : "Télécharger ZIP"}
-                </button>
-              </div>
-              <div style={{ ...G, borderRadius: 18, padding: 20 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>Specs imprimeur</p>
-                {[["Canvas", `${PRINT_W}×${PRINT_H}px`], ["Export", "4500×3000px"], ["Ratio", "3:2"], ["Format", "PNG RVB"], ["Support", "PVC 1mm"]].map(([k, v]) => (
-                  <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 13, color: T.sec }}>{k}</span>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: T.label }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ flex: 1, ...G, borderRadius: 18, padding: 20 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 16 }}>Aperçu — 42%</p>
-              <div style={{ borderRadius: 8, overflow: "hidden", display: "inline-block", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-                <canvas ref={previewRef} style={{ display: "block", width: Math.round(PRINT_W * 0.42), height: Math.round(PRINT_H * 0.42) }} />
-              </div>
-              <p style={{ fontSize: 11, color: T.tert, marginTop: 10 }}>Fichier téléchargé : 4500×3000px</p>
-            </div>
-          </div>
-        )}
       </div>
     </main>
   );
