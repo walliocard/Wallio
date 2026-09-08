@@ -37,38 +37,47 @@ function formatDate(ts?: { seconds: number }) {
   return new Date(ts.seconds * 1000).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
 
-// ── Styles glass réutilisables ──────────────────────────────────────────────
-const G: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  backdropFilter: "blur(48px) saturate(180%)",
-  WebkitBackdropFilter: "blur(48px) saturate(180%)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
-};
-
-const FG = "#FFFFFF";
-const FG2 = "rgba(255,255,255,0.45)";
-const FG3 = "rgba(255,255,255,0.25)";
-const GREEN = "#00F5A0";
-const BORDER = "rgba(255,255,255,0.07)";
+// Palette iOS dark mode réelle
+const BG      = "#000000";
+const SURFACE = "#1C1C1E";
+const SURFACE2= "#2C2C2E";
+const SEP     = "rgba(60,60,67,0.36)";
+const LABEL   = "#FFFFFF";
+const SEC     = "#8E8E93";
+const TERT    = "#48484A";
+const GREEN   = "#00F5A0";
+const RED     = "#FF453A";
+const ORANGE  = "#FF9F0A";
+const TGREEN  = "#30D158";
 
 function Row({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
-    <div className="flex items-center justify-between py-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
-      <span className="text-[13px]" style={{ color: FG3 }}>{label}</span>
-      <span className="text-[14px] font-medium" style={{ color: valueColor || FG }}>{value}</span>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${SEP}` }}>
+      <span style={{ fontSize: 14, color: SEC }}>{label}</span>
+      <span style={{ fontSize: 14, fontWeight: 500, color: valueColor || LABEL }}>{value}</span>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-7">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "rgba(0,245,160,0.55)" }}>{title}</p>
+    <p style={{ fontSize: 12, fontWeight: 500, color: SEC, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8, marginTop: 24 }}>
       {children}
-    </div>
+    </p>
   );
 }
+
+const inputStyle: React.CSSProperties = {
+  background: SURFACE,
+  border: "none",
+  color: LABEL,
+  borderRadius: 10,
+  padding: "12px 14px",
+  fontSize: 15,
+  outline: "none",
+  width: "100%",
+  boxSizing: "border-box",
+};
 
 export default function AdminPage() {
   const [marchands, setMarchands] = useState<Marchand[]>([]);
@@ -280,77 +289,54 @@ export default function AdminPage() {
   }
 
   if (loading) return (
-    <main className="min-h-screen flex items-center justify-center" style={{ background: "#0A0A0A" }}>
-      <div className="w-7 h-7 rounded-full border-2 animate-spin"
-        style={{ borderColor: "rgba(0,245,160,0.3)", borderTopColor: GREEN }} />
+    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: BG }}>
+      <div style={{ width: 24, height: 24, borderRadius: "50%", border: `2px solid ${TERT}`, borderTopColor: GREEN, animation: "spin 0.8s linear infinite" }} />
     </main>
   );
 
   const actifs = marchands.filter(m => m.actif).length;
   const aboActifs = marchands.filter(m => m.abonnement_statut === "actif").length;
   const revenus = aboActifs * 350;
-
   const filtered = marchands.filter(m =>
     !search ||
     m.nom?.toLowerCase().includes(search.toLowerCase()) ||
     m.email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const inputStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.04)",
-    border: `1px solid ${BORDER}`,
-    color: FG,
-    borderRadius: 14,
-    padding: "10px 14px",
-    fontSize: 14,
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box",
-  };
-
   return (
-    <main className="min-h-screen" style={{ background: "#0A0A0A" }}>
-
-      {/* ── Ambient background ── */}
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "-20%", right: "-8%", width: 800, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,245,160,0.06) 0%, transparent 65%)" }} />
-        <div style={{ position: "absolute", bottom: "-15%", left: "-12%", width: 600, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(0,245,160,0.04) 0%, transparent 65%)" }} />
-        <div style={{ position: "absolute", top: "45%", left: "35%", width: 500, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.012) 0%, transparent 65%)" }} />
-      </div>
+    <main style={{ minHeight: "100vh", background: BG, color: LABEL }}>
 
       {/* ── Modal nouveau marchand ── */}
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-6"
-          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}>
-          <div className="w-full max-w-sm rounded-[28px] p-7" style={{ ...G, borderRadius: 28 }}>
-            <h3 className="text-[18px] font-semibold mb-1" style={{ color: FG }}>Nouveau marchand</h3>
-            <p className="text-[13px] mb-5" style={{ color: FG2 }}>
-              Crée le compte + génère automatiquement le NFC ID
-            </p>
-            {[
-              { label: "Nom du commerce", value: createNom, set: setCreateNom, placeholder: "Café Central", type: "text" },
-              { label: "Email", value: createEmail, set: setCreateEmail, placeholder: "contact@cafe.ma", type: "email" },
-              { label: "Mot de passe", value: createPassword, set: setCreatePassword, placeholder: "Min. 8 caractères", type: "password" },
-            ].map(f => (
-              <div key={f.label} className="mb-3">
-                <label className="block text-[10px] font-bold mb-1.5 uppercase tracking-[0.12em]"
-                  style={{ color: "rgba(0,245,160,0.55)" }}>{f.label}</label>
-                <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)}
-                  placeholder={f.placeholder} style={inputStyle} />
-              </div>
-            ))}
-            {createError && (
-              <p className="text-[13px] mb-3" style={{ color: "#FF3B30" }}>{createError}</p>
-            )}
-            <div className="flex gap-3 mt-5">
+        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+          onClick={() => { setShowCreate(false); setCreateError(""); }}>
+          <div style={{ width: "100%", maxWidth: 480, background: SURFACE, borderRadius: "20px 20px 0 0", padding: "32px 24px 40px" }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ width: 36, height: 4, background: TERT, borderRadius: 2, margin: "0 auto 24px" }} />
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: LABEL, marginBottom: 4 }}>Nouveau marchand</h3>
+            <p style={{ fontSize: 14, color: SEC, marginBottom: 20 }}>Crée le compte + génère le NFC ID automatiquement</p>
+            <div style={{ background: SURFACE2, borderRadius: 12, overflow: "hidden", marginBottom: 12 }}>
+              {[
+                { label: "Nom du commerce", value: createNom, set: setCreateNom, placeholder: "Café Central", type: "text" },
+                { label: "Email", value: createEmail, set: setCreateEmail, placeholder: "contact@cafe.ma", type: "email" },
+                { label: "Mot de passe", value: createPassword, set: setCreatePassword, placeholder: "Min. 8 caractères", type: "password" },
+              ].map((f, i, arr) => (
+                <div key={f.label}>
+                  <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)}
+                    placeholder={f.placeholder}
+                    style={{ ...inputStyle, background: "transparent", borderRadius: 0, padding: "14px 16px", fontSize: 16 }} />
+                  {i < arr.length - 1 && <div style={{ height: 1, background: SEP, marginLeft: 16 }} />}
+                </div>
+              ))}
+            </div>
+            {createError && <p style={{ fontSize: 13, color: RED, marginBottom: 12 }}>{createError}</p>}
+            <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
               <button onClick={() => { setShowCreate(false); setCreateError(""); }}
-                className="flex-1 py-3 rounded-2xl text-[14px] font-medium"
-                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG2 }}>
+                style={{ flex: 1, padding: "14px 0", borderRadius: 12, background: SURFACE2, color: LABEL, fontSize: 15, fontWeight: 500, border: "none", cursor: "pointer" }}>
                 Annuler
               </button>
               <button onClick={creerMarchand} disabled={creating || !createNom || !createEmail || !createPassword}
-                className="flex-1 py-3 rounded-2xl text-[14px] font-bold"
-                style={{ background: creating ? "rgba(0,245,160,0.3)" : GREEN, color: "#0A0A0A", opacity: (!createNom || !createEmail || !createPassword) ? 0.5 : 1 }}>
+                style={{ flex: 1, padding: "14px 0", borderRadius: 12, background: GREEN, color: "#000", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", opacity: (!createNom || !createEmail || !createPassword) ? 0.4 : 1 }}>
                 {creating ? "Création…" : "Créer"}
               </button>
             </div>
@@ -360,22 +346,19 @@ export default function AdminPage() {
 
       {/* ── Modal confirmation suppression ── */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-6"
-          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}>
-          <div className="w-full max-w-sm rounded-[28px] p-7" style={{ ...G, borderRadius: 28 }}>
-            <h3 className="text-[18px] font-semibold mb-2" style={{ color: FG }}>Supprimer ce marchand ?</h3>
-            <p className="text-[14px] mb-6" style={{ color: FG2 }}>
-              Action irréversible. Le compte et toutes les données seront définitivement supprimés.
-            </p>
-            <div className="flex gap-3">
+        <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
+          <div style={{ width: "100%", maxWidth: 300, background: SURFACE, borderRadius: 16, overflow: "hidden", textAlign: "center" }}>
+            <div style={{ padding: "20px 24px 0" }}>
+              <p style={{ fontSize: 17, fontWeight: 600, color: LABEL, marginBottom: 4 }}>Supprimer ce marchand ?</p>
+              <p style={{ fontSize: 13, color: SEC, lineHeight: 1.5 }}>Action irréversible. Compte et données supprimés définitivement.</p>
+            </div>
+            <div style={{ display: "flex", borderTop: `1px solid ${SEP}`, marginTop: 20 }}>
               <button onClick={() => setConfirmDelete(null)}
-                className="flex-1 py-3 rounded-2xl text-[14px] font-medium"
-                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG2 }}>
+                style={{ flex: 1, padding: "14px 0", background: "transparent", color: LABEL, fontSize: 17, border: "none", borderRight: `1px solid ${SEP}`, cursor: "pointer" }}>
                 Annuler
               </button>
               <button onClick={() => supprimerMarchand(confirmDelete)} disabled={!!deleting}
-                className="flex-1 py-3 rounded-2xl text-[14px] font-bold text-white"
-                style={{ background: "#FF3B30" }}>
+                style={{ flex: 1, padding: "14px 0", background: "transparent", color: RED, fontSize: 17, fontWeight: 600, border: "none", cursor: "pointer" }}>
                 {deleting ? "…" : "Supprimer"}
               </button>
             </div>
@@ -385,202 +368,155 @@ export default function AdminPage() {
 
       {/* ── Drawer marchand ── */}
       {selected && (
-        <div className="fixed inset-0 z-40 flex" onClick={() => setSelected(null)}>
-          <div className="flex-1" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }} />
-          <div className="w-full max-w-[420px] h-full overflow-y-auto flex-shrink-0"
-            style={{
-              background: "rgba(12,12,14,0.92)",
-              backdropFilter: "blur(60px) saturate(200%)",
-              WebkitBackdropFilter: "blur(60px) saturate(200%)",
-              borderLeft: "1px solid rgba(0,245,160,0.1)",
-            }}
+        <div style={{ position: "fixed", inset: 0, zIndex: 40, display: "flex" }} onClick={() => setSelected(null)}>
+          <div style={{ flex: 1, background: "rgba(0,0,0,0.5)" }} />
+          <div style={{ width: "100%", maxWidth: 400, height: "100%", overflowY: "auto", background: "#111111", borderLeft: `1px solid ${SURFACE2}` }}
             onClick={e => e.stopPropagation()}>
-            <div className="p-8">
-              {/* Header drawer */}
-              <div className="flex items-start justify-between mb-8">
+            <div style={{ padding: "24px 20px 40px" }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
                 <div>
-                  <h2 className="text-[20px] font-semibold" style={{ color: FG }}>{selected.nom || "Marchand"}</h2>
-                  <p className="text-[13px] mt-1" style={{ color: FG2 }}>{selected.email}</p>
+                  <p style={{ fontSize: 20, fontWeight: 600, color: LABEL }}>{selected.nom || "Marchand"}</p>
+                  <p style={{ fontSize: 13, color: SEC, marginTop: 2 }}>{selected.email}</p>
                 </div>
                 <button onClick={() => setSelected(null)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-[14px]"
-                  style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}`, color: FG3 }}>
+                  style={{ width: 30, height: 30, borderRadius: "50%", background: SURFACE2, border: "none", color: SEC, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   ✕
                 </button>
               </div>
 
-              <Section title="Informations">
+              <SectionTitle>Informations</SectionTitle>
+              <div style={{ background: SURFACE, borderRadius: 12, padding: "0 16px" }}>
                 <Row label="Inscription" value={formatDate(selected.date_inscription)} />
-                <Row label="Compte" value={selected.actif ? "Activé" : "Désactivé"}
-                  valueColor={selected.actif ? GREEN : "#FF9F0A"} />
-                <Row label="ID Firebase" value={selected.id} />
-              </Section>
+                <Row label="Compte" value={selected.actif ? "Activé" : "Désactivé"} valueColor={selected.actif ? GREEN : ORANGE} />
+                <Row label="ID Firebase" value={selected.id.slice(0, 18) + "…"} />
+              </div>
 
-              <Section title="Abonnement">
-                <div className="rounded-2xl p-4 mb-3"
-                  style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}` }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[15px] font-semibold"
-                        style={{ color: selected.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A" }}>
-                        {selected.abonnement_statut === "actif" ? "Payé" : "En attente de paiement"}
-                      </p>
-                      {selected.abonnement_statut === "actif" && (
-                        <p className="text-[12px] mt-0.5" style={{ color: FG3 }}>350 DH / mois</p>
-                      )}
-                    </div>
-                    <button onClick={() => toggleAbonnement(selected)} disabled={updatingAbo}
-                      className="text-[12px] font-medium px-3 py-1.5 rounded-xl"
-                      style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG2 }}>
-                      {updatingAbo ? "…" : selected.abonnement_statut === "actif" ? "Marquer impayé" : "Marquer payé"}
-                    </button>
-                  </div>
+              <SectionTitle>Abonnement</SectionTitle>
+              <div style={{ background: SURFACE, borderRadius: 12, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: selected.abonnement_statut === "actif" ? TGREEN : ORANGE }}>
+                    {selected.abonnement_statut === "actif" ? "Payé" : "En attente"}
+                  </p>
+                  {selected.abonnement_statut === "actif" && (
+                    <p style={{ fontSize: 12, color: SEC, marginTop: 2 }}>350 DH / mois</p>
+                  )}
                 </div>
-              </Section>
+                <button onClick={() => toggleAbonnement(selected)} disabled={updatingAbo}
+                  style={{ fontSize: 13, padding: "7px 12px", borderRadius: 8, background: SURFACE2, color: SEC, border: "none", cursor: "pointer" }}>
+                  {updatingAbo ? "…" : selected.abonnement_statut === "actif" ? "Marquer impayé" : "Marquer payé"}
+                </button>
+              </div>
 
-              <Section title="Tag NFC physique">
-                {selected.nfc_id ? (
-                  <div className="space-y-3">
-                    <div className="rounded-2xl px-4 py-3 font-mono text-[12px] break-all"
-                      style={{ background: "rgba(0,245,160,0.04)", border: "1px solid rgba(0,245,160,0.12)", color: FG2 }}>
-                      app.walliocard.com/nfc/<span style={{ color: GREEN, fontWeight: 600 }}>{selected.nfc_id}</span>
-                    </div>
-                    <button onClick={() => copierNfc(selected.nfc_id!)}
-                      className="w-full py-3.5 rounded-2xl text-[15px] font-bold"
-                      style={{
-                        background: copied ? "rgba(48,209,88,0.12)" : GREEN,
-                        color: copied ? "#30D158" : "#0A0A0A",
-                        transition: "all 0.2s",
-                      }}>
-                      {copied ? "✓ URL copiée" : "Copier l'URL NFC"}
-                    </button>
-                    <div className="rounded-2xl p-4 space-y-2.5"
-                      style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}` }}>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-2"
-                        style={{ color: "rgba(0,245,160,0.55)" }}>Programmer le tag — iPhone</p>
-                      {[
-                        ["1", "Copie l'URL ci-dessus"],
-                        ["2", "Ouvre NFC Tools → Write"],
-                        ["3", "Add a record → URL"],
-                        ["4", "Colle l'URL → OK → Write"],
-                        ["5", "Approche le tag → Done ✓"],
-                      ].map(([n, t]) => (
-                        <div key={n} className="flex items-center gap-3">
-                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                            style={{ background: "rgba(0,245,160,0.15)", color: GREEN }}>{n}</span>
-                          <span className="text-[13px]" style={{ color: FG2 }}>{t}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={() => genererNfc(selected)} disabled={generatingNfc}
-                      className="w-full py-2.5 rounded-xl text-[12px] font-medium"
-                      style={{ background: "rgba(255,159,10,0.07)", border: "1px solid rgba(255,159,10,0.15)", color: "#FF9F0A" }}>
-                      {generatingNfc ? "…" : "Régénérer l'ID NFC"}
-                    </button>
+              <SectionTitle>Tag NFC physique</SectionTitle>
+              {selected.nfc_id ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ background: SURFACE, borderRadius: 12, padding: "12px 14px", fontFamily: "monospace", fontSize: 12, color: SEC, wordBreak: "break-all" }}>
+                    app.walliocard.com/nfc/<span style={{ color: GREEN, fontWeight: 600 }}>{selected.nfc_id}</span>
                   </div>
-                ) : (
+                  <button onClick={() => copierNfc(selected.nfc_id!)}
+                    style={{ padding: "14px 0", borderRadius: 12, background: copied ? SURFACE2 : GREEN, color: copied ? TGREEN : "#000", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.15s" }}>
+                    {copied ? "URL copiée" : "Copier l'URL NFC"}
+                  </button>
+                  <div style={{ background: SURFACE, borderRadius: 12, padding: "14px 16px" }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: SEC, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Programmer le tag — iPhone</p>
+                    {[
+                      "Copier l'URL ci-dessus",
+                      "NFC Tools → Write → Add a record → URL",
+                      "Coller l'URL → OK → Write",
+                      "Approcher le tag → Done",
+                    ].map((t, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                        <span style={{ width: 20, height: 20, borderRadius: "50%", background: SURFACE2, color: SEC, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                        <span style={{ fontSize: 13, color: SEC }}>{t}</span>
+                      </div>
+                    ))}
+                  </div>
                   <button onClick={() => genererNfc(selected)} disabled={generatingNfc}
-                    className="w-full py-3 rounded-2xl text-[14px] font-bold"
-                    style={{ background: GREEN, color: "#0A0A0A" }}>
-                    {generatingNfc ? "Génération…" : "+ Générer l'ID NFC"}
-                  </button>
-                )}
-              </Section>
-
-              <Section title="Carte comptoir imprimable">
-                <div className="flex gap-2">
-                  <button onClick={() => telechargerCarte(selected)}
-                    disabled={!selected.nfc_id || downloadingCard || downloadingQR}
-                    className="flex-1 py-3 rounded-2xl text-[13px] font-semibold"
-                    style={{
-                      background: selected.nfc_id ? "rgba(0,245,160,0.07)" : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${selected.nfc_id ? "rgba(0,245,160,0.2)" : BORDER}`,
-                      color: selected.nfc_id ? GREEN : FG3,
-                      cursor: selected.nfc_id ? "pointer" : "not-allowed",
-                    }}>
-                    {downloadingCard ? "…" : "NFC + QR"}
-                  </button>
-                  <button onClick={() => telechargerCarteQR(selected)}
-                    disabled={downloadingCard || downloadingQR}
-                    className="flex-1 py-3 rounded-2xl text-[13px] font-semibold"
-                    style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, color: FG, cursor: "pointer" }}>
-                    {downloadingQR ? "…" : "QR seul"}
+                    style={{ padding: "12px 0", borderRadius: 12, background: "transparent", color: ORANGE, fontSize: 14, border: `1px solid rgba(255,159,10,0.2)`, cursor: "pointer" }}>
+                    {generatingNfc ? "…" : "Régénérer l'ID NFC"}
                   </button>
                 </div>
-                <p className="text-[11px] mt-2" style={{ color: FG3 }}>
-                  4K · prêt imprimeur · {selected.nfc_id ? "NFC + QR ou QR uniquement" : "QR uniquement disponible sans ID NFC"}
-                </p>
-              </Section>
+              ) : (
+                <button onClick={() => genererNfc(selected)} disabled={generatingNfc}
+                  style={{ width: "100%", padding: "14px 0", borderRadius: 12, background: GREEN, color: "#000", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer" }}>
+                  {generatingNfc ? "Génération…" : "Générer l'ID NFC"}
+                </button>
+              )}
 
-              <Section title="Gestion du compte">
-                <div className="space-y-2">
-                  <button onClick={() => toggleActif(selected)} disabled={toggling === selected.id}
-                    className="w-full py-3 rounded-2xl text-[14px] font-medium"
-                    style={{
-                      background: selected.actif ? "rgba(255,59,48,0.07)" : "rgba(0,245,160,0.07)",
-                      border: `1px solid ${selected.actif ? "rgba(255,59,48,0.15)" : "rgba(0,245,160,0.15)"}`,
-                      color: selected.actif ? "#FF3B30" : GREEN,
-                    }}>
-                    {toggling === selected.id ? "…" : selected.actif ? "Désactiver le compte" : "Activer le compte"}
-                  </button>
-                  <button onClick={() => setConfirmDelete(selected.id)}
-                    className="w-full py-3 rounded-2xl text-[14px] font-medium"
-                    style={{ background: "rgba(255,59,48,0.05)", color: "#FF3B30" }}>
-                    Supprimer le compte
-                  </button>
-                </div>
-              </Section>
+              <SectionTitle>Carte comptoir imprimable</SectionTitle>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => telechargerCarte(selected)} disabled={!selected.nfc_id || downloadingCard || downloadingQR}
+                  style={{ flex: 1, padding: "13px 0", borderRadius: 12, background: SURFACE, color: selected.nfc_id ? LABEL : TERT, fontSize: 14, fontWeight: 500, border: "none", cursor: selected.nfc_id ? "pointer" : "not-allowed" }}>
+                  {downloadingCard ? "…" : "NFC + QR"}
+                </button>
+                <button onClick={() => telechargerCarteQR(selected)} disabled={downloadingCard || downloadingQR}
+                  style={{ flex: 1, padding: "13px 0", borderRadius: 12, background: SURFACE, color: LABEL, fontSize: 14, fontWeight: 500, border: "none", cursor: "pointer" }}>
+                  {downloadingQR ? "…" : "QR seul"}
+                </button>
+              </div>
+              <p style={{ fontSize: 11, color: TERT, marginTop: 6 }}>
+                4K · prêt imprimeur
+              </p>
+
+              <SectionTitle>Gestion du compte</SectionTitle>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button onClick={() => toggleActif(selected)} disabled={toggling === selected.id}
+                  style={{ padding: "14px 0", borderRadius: 12, background: SURFACE, color: selected.actif ? RED : GREEN, fontSize: 15, fontWeight: 500, border: "none", cursor: "pointer" }}>
+                  {toggling === selected.id ? "…" : selected.actif ? "Désactiver le compte" : "Activer le compte"}
+                </button>
+                <button onClick={() => setConfirmDelete(selected.id)}
+                  style={{ padding: "14px 0", borderRadius: 12, background: SURFACE, color: RED, fontSize: 15, fontWeight: 500, border: "none", cursor: "pointer" }}>
+                  Supprimer le compte
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* ── Contenu principal ── */}
-      <div className="max-w-6xl mx-auto px-6 md:px-8 py-10 md:py-14" style={{ position: "relative", zIndex: 1 }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", padding: "52px 20px 40px" }}>
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-[18px] flex items-center justify-center flex-shrink-0"
-              style={{
-                background: "rgba(0,245,160,0.08)",
-                border: "1px solid rgba(0,245,160,0.2)",
-                boxShadow: "0 0 28px rgba(0,245,160,0.12)",
-              }}>
-              <WallioLogo size={28} color={GREEN} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: SURFACE, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <WallioLogo size={26} color={LABEL} />
             </div>
             <div>
-              <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-0.5" style={{ color: GREEN }}>WALLIO</p>
-              <h1 className="text-[24px] md:text-[28px] font-semibold tracking-[-0.5px] leading-none" style={{ color: FG }}>Administration</h1>
-              <p className="text-[12px] mt-1.5" style={{ color: FG3 }}>
-                {actifs} actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: LABEL, letterSpacing: "-0.4px", lineHeight: 1 }}>Administration</h1>
+              <p style={{ fontSize: 13, color: SEC, marginTop: 4 }}>
+                <span style={{ color: GREEN }}>{actifs}</span> actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
               </p>
             </div>
           </div>
-          <div className="flex gap-2 items-center">
+          <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setShowCreate(true)}
-              className="text-[13px] px-4 py-2.5 rounded-xl font-bold"
-              style={{ background: GREEN, color: "#0A0A0A" }}>
+              style={{ padding: "9px 16px", borderRadius: 10, background: GREEN, color: "#000", fontSize: 14, fontWeight: 700, border: "none", cursor: "pointer" }}>
               + Nouveau
             </button>
             <button onClick={logout}
-              className="text-[13px] px-4 py-2.5 rounded-xl"
-              style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG3 }}>
+              style={{ padding: "9px 14px", borderRadius: 10, background: SURFACE, color: SEC, fontSize: 14, border: "none", cursor: "pointer" }}>
               Sortir
             </button>
           </div>
         </div>
 
         {/* Onglets */}
-        <div className="flex gap-1.5 mb-8 p-1 rounded-2xl w-full md:w-fit"
-          style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}` }}>
+        <div style={{ display: "flex", gap: 0, marginBottom: 28, background: SURFACE, borderRadius: 10, padding: 3, width: "fit-content" }}>
           {([["marchands", "Marchands"], ["impression", "Cartes comptoir"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className="px-5 py-2 rounded-[14px] text-[14px] font-medium transition-all"
               style={{
-                background: tab === key ? GREEN : "transparent",
-                color: tab === key ? "#0A0A0A" : FG2,
-                fontWeight: tab === key ? 700 : 500,
+                padding: "7px 18px",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: tab === key ? 600 : 400,
+                background: tab === key ? SURFACE2 : "transparent",
+                color: tab === key ? LABEL : SEC,
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.15s",
               }}>
               {label}
             </button>
@@ -590,145 +526,114 @@ export default function AdminPage() {
         {tab === "marchands" && <>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}
+            className="md:grid-cols-4">
             {[
-              { label: "Total",          value: String(marchands.length),             color: FG },
-              { label: "Actifs",         value: String(actifs),                       color: GREEN },
-              { label: "En attente",     value: String(marchands.length - actifs),    color: "#FF9F0A" },
-              { label: "Revenus / mois", value: `${revenus.toLocaleString("fr-FR")} DH`, color: "#30D158" },
+              { label: "Total",          value: String(marchands.length),                       color: LABEL },
+              { label: "Actifs",         value: String(actifs),                                 color: GREEN },
+              { label: "En attente",     value: String(marchands.length - actifs),              color: ORANGE },
+              { label: "Revenus / mois", value: `${revenus.toLocaleString("fr-FR")} DH`,       color: TGREEN },
             ].map(s => (
-              <div key={s.label} className="rounded-[22px] p-5 md:p-6" style={G}>
-                <p className="text-[26px] md:text-[32px] font-bold tracking-tight leading-none" style={{ color: s.color }}>{s.value}</p>
-                <p className="text-[11px] mt-2" style={{ color: FG3 }}>{s.label}</p>
+              <div key={s.label} style={{ background: SURFACE, borderRadius: 16, padding: "18px 20px" }}>
+                <p style={{ fontSize: 28, fontWeight: 700, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.value}</p>
+                <p style={{ fontSize: 12, color: SEC, marginTop: 6 }}>{s.label}</p>
               </div>
             ))}
           </div>
 
           {/* Recherche */}
-          <div className="mb-5">
-            <input
-              type="text"
-              placeholder="Rechercher un marchand…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full md:max-w-xs text-[14px] outline-none"
-              style={{ ...inputStyle, borderRadius: 16, padding: "10px 16px" }}
-              onFocus={e => (e.target.style.borderColor = "rgba(0,245,160,0.3)")}
-              onBlur={e => (e.target.style.borderColor = BORDER)}
-            />
+          <div style={{ position: "relative", marginBottom: 16, maxWidth: 320 }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: TERT, fontSize: 15 }}>⌕</span>
+            <input type="text" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)}
+              style={{ ...inputStyle, paddingLeft: 34, borderRadius: 10 }}
+              onFocus={e => (e.target.style.outline = `2px solid ${GREEN}`, e.target.style.outlineOffset = "-2px")}
+              onBlur={e => (e.target.style.outline = "none")} />
           </div>
 
           {filtered.length === 0 ? (
-            <div className="py-20 text-center rounded-[24px]" style={G}>
-              <p className="text-[15px]" style={{ color: FG3 }}>{search ? "Aucun résultat." : "Aucun marchand inscrit."}</p>
+            <div style={{ padding: "60px 0", textAlign: "center", background: SURFACE, borderRadius: 16 }}>
+              <p style={{ color: TERT, fontSize: 15 }}>{search ? "Aucun résultat." : "Aucun marchand inscrit."}</p>
             </div>
           ) : (<>
 
             {/* ── Cards mobile ── */}
-            <div className="md:hidden space-y-2">
-              {filtered.map(m => (
+            <div className="md:hidden" style={{ background: SURFACE, borderRadius: 16, overflow: "hidden" }}>
+              {filtered.map((m, i) => (
                 <button key={m.id} onClick={() => setSelected(m)}
-                  className="w-full text-left rounded-2xl p-4 flex items-center gap-3 active:opacity-70 transition-opacity"
-                  style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${BORDER}` }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[13px] flex-shrink-0"
-                    style={{ background: m.actif ? "rgba(0,245,160,0.15)" : "rgba(255,255,255,0.06)", color: m.actif ? GREEN : FG3 }}>
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "transparent", border: "none", borderBottom: i < filtered.length - 1 ? `1px solid ${SEP}` : "none", cursor: "pointer", textAlign: "left" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: "50%", background: SURFACE2, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, color: LABEL, flexShrink: 0 }}>
                     {(m.nom?.[0] || "?").toUpperCase()}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold truncate" style={{ color: FG }}>{m.nom || "—"}</p>
-                    <p className="text-[11px] truncate" style={{ color: FG3 }}>{m.email || "—"}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: LABEL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.nom || "—"}</p>
+                    <p style={{ fontSize: 12, color: SEC, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.email || "—"}</p>
                   </div>
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                      style={{
-                        background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)",
-                        color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A",
-                      }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.12)" : "rgba(255,159,10,0.12)", color: m.abonnement_statut === "actif" ? TGREEN : ORANGE }}>
                       {m.abonnement_statut === "actif" ? "Payé" : "Attente"}
                     </span>
-                    <span className="text-[10px] font-medium" style={{ color: m.actif ? GREEN : FG3 }}>
+                    <span style={{ fontSize: 11, color: m.actif ? GREEN : TERT, fontWeight: 500 }}>
                       {m.actif ? "● Actif" : "● Inactif"}
                     </span>
                   </div>
-                  <span style={{ color: FG3, fontSize: 16 }}>›</span>
+                  <span style={{ color: TERT, fontSize: 18, marginLeft: 4 }}>›</span>
                 </button>
               ))}
             </div>
 
             {/* ── Table desktop ── */}
-            <div className="hidden md:block rounded-[26px] overflow-hidden" style={G}>
-              <table className="w-full">
+            <div className="hidden md:block" style={{ background: SURFACE, borderRadius: 16, overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                  <tr style={{ borderBottom: `1px solid ${SEP}` }}>
                     {["Établissement", "Email", "NFC", "Inscription", "Abonnement", "Compte", "Carte", ""].map(h => (
-                      <th key={h} className="text-left text-[10px] font-bold px-5 py-4 uppercase tracking-[0.1em]"
-                        style={{ color: "rgba(0,245,160,0.45)" }}>{h}</th>
+                      <th key={h} style={{ textAlign: "left", fontSize: 11, fontWeight: 500, color: SEC, padding: "12px 20px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((m, i) => (
-                    <tr key={m.id} className="cursor-pointer transition-colors"
-                      style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${BORDER}` : "none" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+                    <tr key={m.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${SEP}` : "none", cursor: "pointer" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = SURFACE2)}
                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                       onClick={() => setSelected(m)}>
-                      <td className="px-5 py-4 text-[15px] font-semibold" style={{ color: FG }}>{m.nom || "—"}</td>
-                      <td className="px-5 py-4 text-[13px]" style={{ color: FG2 }}>{m.email || "—"}</td>
-                      <td className="px-5 py-4">
+                      <td style={{ padding: "14px 20px", fontSize: 15, fontWeight: 600, color: LABEL }}>{m.nom || "—"}</td>
+                      <td style={{ padding: "14px 20px", fontSize: 13, color: SEC }}>{m.email || "—"}</td>
+                      <td style={{ padding: "14px 20px" }}>
                         {m.nfc_id
-                          ? <span className="text-[11px] font-semibold px-2 py-1 rounded-lg"
-                              style={{ background: "rgba(0,245,160,0.08)", color: GREEN }}>NFC</span>
-                          : <span className="text-[11px] px-2 py-1 rounded-lg" style={{ color: FG3 }}>—</span>
-                        }
+                          ? <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(0,245,160,0.1)", color: GREEN }}>NFC</span>
+                          : <span style={{ color: TERT }}>—</span>}
                       </td>
-                      <td className="px-5 py-4 text-[13px]" style={{ color: FG2 }}>{formatDate(m.date_inscription)}</td>
-                      <td className="px-5 py-4">
-                        <span className="text-[12px] font-semibold px-2.5 py-1 rounded-full"
-                          style={{
-                            background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)",
-                            color: m.abonnement_statut === "actif" ? "#30D158" : "#FF9F0A",
-                          }}>
+                      <td style={{ padding: "14px 20px", fontSize: 13, color: SEC }}>{formatDate(m.date_inscription)}</td>
+                      <td style={{ padding: "14px 20px" }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: m.abonnement_statut === "actif" ? "rgba(48,209,88,0.1)" : "rgba(255,159,10,0.1)", color: m.abonnement_statut === "actif" ? TGREEN : ORANGE }}>
                           {m.abonnement_statut === "actif" ? "Payé" : "En attente"}
                         </span>
                       </td>
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-full"
-                          style={{
-                            background: m.actif ? "rgba(0,245,160,0.08)" : "rgba(255,255,255,0.05)",
-                            color: m.actif ? GREEN : FG3,
-                          }}>
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.actif ? GREEN : FG3 }} />
+                      <td style={{ padding: "14px 20px" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: m.actif ? GREEN : TERT }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: m.actif ? GREEN : TERT }} />
                           {m.actif ? "Actif" : "Inactif"}
                         </span>
                       </td>
-                      <td className="px-3 py-4">
-                        <div className="flex gap-1.5">
+                      <td style={{ padding: "14px 12px" }}>
+                        <div style={{ display: "flex", gap: 6 }}>
                           <button
                             onClick={async e => { e.stopPropagation(); if (!m.nfc_id) return; const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarte(m); btn.textContent = "NFC+QR"; btn.removeAttribute("disabled"); }}
                             disabled={!m.nfc_id}
-                            className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap"
-                            style={{
-                              background: m.nfc_id ? "rgba(0,245,160,0.07)" : "rgba(255,255,255,0.03)",
-                              border: `1px solid ${m.nfc_id ? "rgba(0,245,160,0.2)" : BORDER}`,
-                              color: m.nfc_id ? GREEN : FG3,
-                              cursor: m.nfc_id ? "pointer" : "not-allowed",
-                              opacity: m.nfc_id ? 1 : 0.4,
-                            }}>
+                            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, background: SURFACE2, color: m.nfc_id ? LABEL : TERT, border: "none", cursor: m.nfc_id ? "pointer" : "not-allowed", opacity: m.nfc_id ? 1 : 0.4 }}>
                             NFC+QR
                           </button>
                           <button
                             onClick={async e => { e.stopPropagation(); const btn = e.currentTarget; btn.textContent = "…"; btn.setAttribute("disabled","true"); await telechargerCarteQR(m); btn.textContent = "QR"; btn.removeAttribute("disabled"); }}
-                            className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg whitespace-nowrap"
-                            style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}`, color: FG, cursor: "pointer" }}>
+                            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, background: SURFACE2, color: LABEL, border: "none", cursor: "pointer" }}>
                             QR
                           </button>
                         </div>
                       </td>
-                      <td className="px-3 py-4">
+                      <td style={{ padding: "14px 12px" }}>
                         <button onClick={e => { e.stopPropagation(); setSelected(m); }}
-                          className="text-[13px] font-medium px-4 py-2 rounded-xl"
-                          style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`, color: FG2 }}>
+                          style={{ fontSize: 13, padding: "7px 14px", borderRadius: 8, background: SURFACE2, color: SEC, border: "none", cursor: "pointer" }}>
                           Voir →
                         </button>
                       </td>
@@ -742,80 +647,60 @@ export default function AdminPage() {
 
         {/* ── Onglet Cartes comptoir ── */}
         {tab === "impression" && (
-          <div className="flex gap-6 items-start flex-wrap">
+          <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div style={{ flex: "0 0 280px", display: "flex", flexDirection: "column", gap: 12 }}>
 
-            {/* Contrôles */}
-            <div style={{ flex: "0 0 300px", display: "flex", flexDirection: "column", gap: 16 }}>
-
-              <div className="rounded-[20px] p-5" style={G}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-3" style={{ color: "rgba(0,245,160,0.55)" }}>
-                  URL unique — aperçu
-                </p>
+              <div style={{ background: SURFACE, borderRadius: 16, padding: 20 }}>
+                <p style={{ fontSize: 11, fontWeight: 500, color: SEC, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>URL unique</p>
                 <input type="text" value={impUrl} onChange={e => setImpUrl(e.target.value)}
                   placeholder="https://app.walliocard.com/nfc/xxx"
-                  style={{ ...inputStyle, fontSize: 13, marginBottom: 12 }} />
+                  style={{ ...inputStyle, background: SURFACE2, fontSize: 13, borderRadius: 10, marginBottom: 10 }} />
                 <button onClick={impDownloadSingle} disabled={impGenerating}
-                  className="w-full py-3 rounded-xl text-[14px] font-bold"
-                  style={{ background: impGenerating ? "rgba(0,245,160,0.3)" : GREEN, color: "#0A0A0A" }}>
+                  style={{ width: "100%", padding: "13px 0", borderRadius: 10, background: impGenerating ? TERT : GREEN, color: "#000", fontSize: 14, fontWeight: 700, border: "none", cursor: "pointer" }}>
                   {impGenerating ? "Génération…" : "Télécharger PNG 4K"}
                 </button>
               </div>
 
-              <div className="rounded-[20px] p-5" style={G}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-3" style={{ color: "rgba(0,245,160,0.55)" }}>
-                  Batch — une URL par ligne
-                </p>
-                <textarea value={impUrls} onChange={e => setImpUrls(e.target.value)} rows={8}
-                  placeholder={"https://app.walliocard.com/nfc/abc\nhttps://app.walliocard.com/nfc/def\n…"}
-                  style={{ ...inputStyle, fontSize: 12, fontFamily: "monospace", resize: "none", marginBottom: 8 }} />
-                <p className="text-[11px] mb-3" style={{ color: FG3 }}>
-                  {impUrls.split("\n").map(l => l.trim()).filter(Boolean).length} carte(s) détectée(s)
+              <div style={{ background: SURFACE, borderRadius: 16, padding: 20 }}>
+                <p style={{ fontSize: 11, fontWeight: 500, color: SEC, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>Batch — une URL par ligne</p>
+                <textarea value={impUrls} onChange={e => setImpUrls(e.target.value)} rows={7}
+                  placeholder={"https://app.walliocard.com/nfc/abc\nhttps://app.walliocard.com/nfc/def"}
+                  style={{ ...inputStyle, background: SURFACE2, fontSize: 12, fontFamily: "monospace", resize: "none", borderRadius: 10, marginBottom: 8 }} />
+                <p style={{ fontSize: 11, color: TERT, marginBottom: 10 }}>
+                  {impUrls.split("\n").map(l => l.trim()).filter(Boolean).length} carte(s)
                 </p>
                 {impGenerating && impProgress > 0 && (
-                  <div className="mb-3">
-                    <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
-                      <div style={{ width: `${impProgress}%`, height: "100%", background: GREEN, borderRadius: 4, transition: "width 0.3s" }} />
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ height: 3, background: SURFACE2, borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{ width: `${impProgress}%`, height: "100%", background: GREEN, transition: "width 0.3s" }} />
                     </div>
-                    <p className="text-[11px] mt-1" style={{ color: FG3 }}>{impProgress}%</p>
+                    <p style={{ fontSize: 11, color: SEC, marginTop: 4 }}>{impProgress}%</p>
                   </div>
                 )}
                 <button onClick={impDownloadBatch}
                   disabled={impGenerating || !impUrls.split("\n").some(l => l.trim())}
-                  className="w-full py-3 rounded-xl text-[14px] font-bold"
-                  style={{ background: impGenerating ? "rgba(0,245,160,0.3)" : GREEN, color: "#0A0A0A", opacity: !impUrls.split("\n").some(l => l.trim()) ? 0.4 : 1 }}>
+                  style={{ width: "100%", padding: "13px 0", borderRadius: 10, background: GREEN, color: "#000", fontSize: 14, fontWeight: 700, border: "none", cursor: "pointer", opacity: !impUrls.split("\n").some(l => l.trim()) ? 0.4 : 1 }}>
                   {impGenerating ? `Génération… ${impProgress}%` : "Télécharger ZIP"}
                 </button>
               </div>
 
-              <div className="rounded-[20px] p-5" style={G}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-3" style={{ color: "rgba(0,245,160,0.55)" }}>Specs imprimeur</p>
-                {[
-                  ["Canvas", `${PRINT_W}×${PRINT_H}px`],
-                  ["Export", "4500×3000px (×3)"],
-                  ["Ratio", "3:2"],
-                  ["Format", "PNG RVB"],
-                  ["Support", "PVC rigide 1mm"],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex justify-between mb-1.5">
-                    <span className="text-[12px]" style={{ color: FG3 }}>{k}</span>
-                    <span className="text-[12px] font-medium" style={{ color: FG }}>{v}</span>
+              <div style={{ background: SURFACE, borderRadius: 16, padding: 20 }}>
+                <p style={{ fontSize: 11, fontWeight: 500, color: SEC, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>Specs imprimeur</p>
+                {[["Canvas", `${PRINT_W}×${PRINT_H}px`], ["Export", "4500×3000px"], ["Ratio", "3:2"], ["Format", "PNG RVB"], ["Support", "PVC 1mm"]].map(([k, v]) => (
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontSize: 13, color: SEC }}>{k}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: LABEL }}>{v}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Preview canvas */}
-            <div className="flex-1 rounded-[20px] p-5" style={G}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-4" style={{ color: "rgba(0,245,160,0.55)" }}>
-                Aperçu — échelle 42%
-              </p>
-              <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,0.5)", display: "inline-block" }}>
-                <canvas ref={previewRef}
-                  style={{ display: "block", width: Math.round(PRINT_W * 0.42), height: Math.round(PRINT_H * 0.42) }} />
+            <div style={{ flex: 1, background: SURFACE, borderRadius: 16, padding: 20 }}>
+              <p style={{ fontSize: 11, fontWeight: 500, color: SEC, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>Aperçu — 42%</p>
+              <div style={{ borderRadius: 8, overflow: "hidden", display: "inline-block" }}>
+                <canvas ref={previewRef} style={{ display: "block", width: Math.round(PRINT_W * 0.42), height: Math.round(PRINT_H * 0.42) }} />
               </div>
-              <p className="text-[11px] mt-3" style={{ color: FG3 }}>
-                Le fichier téléchargé est en pleine résolution (4500×3000px).
-              </p>
+              <p style={{ fontSize: 11, color: TERT, marginTop: 10 }}>Fichier téléchargé : 4500×3000px</p>
             </div>
           </div>
         )}
