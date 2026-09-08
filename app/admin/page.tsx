@@ -95,14 +95,23 @@ export default function AdminPage() {
   const previewRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
 
-  // Détection dark mode système
+  // Thème : localStorage prioritaire, sinon système
   useEffect(() => {
+    const saved = localStorage.getItem("wallio_admin_theme");
+    if (saved === "dark") { setDark(true); return; }
+    if (saved === "light") { setDark(false); return; }
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     setDark(mq.matches);
     const h = (e: MediaQueryListEvent) => setDark(e.matches);
     mq.addEventListener("change", h);
     return () => mq.removeEventListener("change", h);
   }, []);
+
+  function toggleTheme() {
+    const next = !dark;
+    setDark(next);
+    localStorage.setItem("wallio_admin_theme", next ? "dark" : "light");
+  }
 
   useEffect(() => {
     let unsub: (() => void) | null = null;
@@ -460,13 +469,17 @@ export default function AdminPage() {
               </p>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => setShowCreate(true)}
               style={{ padding: "9px 16px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: `1px solid ${T.border}`, boxShadow: T.shadow, cursor: "pointer" }}>
               + Nouveau
             </button>
+            <button onClick={toggleTheme} title={dark ? "Passer en mode clair" : "Passer en mode sombre"}
+              style={{ width: 36, height: 36, borderRadius: 10, background: T.btnSecBg, border: `1px solid ${T.btnSecBorder}`, color: T.btnSecFg, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {dark ? "○" : "●"}
+            </button>
             <button onClick={logout}
-              style={{ padding: "9px 14px", borderRadius: 12, background: T.btnSecBg, border: `1px solid ${T.btnSecBorder}`, color: T.btnSecFg, fontSize: 14, fontWeight: 500, cursor: "pointer", backdropFilter: T.blur, WebkitBackdropFilter: T.blur }}>
+              style={{ padding: "9px 14px", borderRadius: 12, background: T.btnSecBg, border: `1px solid ${T.btnSecBorder}`, color: T.btnSecFg, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
               Sortir
             </button>
           </div>
