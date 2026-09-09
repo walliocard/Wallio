@@ -2480,8 +2480,8 @@ function ColorRow({ label, value, onChange, presets }: {
         </span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(9, 22px)", gap: 4 }}>
-        {presets.map(c => (
-          <button key={c} onClick={() => onChange(c)} style={{
+        {presets.map((c, i) => (
+          <button key={`${i}-${c}`} onClick={() => onChange(c)} style={{
             width: 22, height: 22, borderRadius: 5,
             background: c,
             border: value === c ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.25)",
