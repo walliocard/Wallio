@@ -355,12 +355,51 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
           </div>
         )}
 
-        {/* Anti-doublon countdown */}
-        {isAntiDoublon && result.secondes_restantes > 0 && (
-          <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl mb-6"
-            style={{ background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.22)" }}>
-            <span className="text-[13px] font-medium" style={{ color: "#FF9F0A" }}>Prochain tampon dans</span>
-            <span className="text-[15px] font-bold" style={{ color: "#FF9F0A" }}>{formatTemps(result.secondes_restantes)}</span>
+        {/* Anti-doublon : bouton Wallet en priorité + countdown */}
+        {isAntiDoublon && (
+          <div className="flex flex-col gap-3 mb-6">
+            {/* Bouton Google Wallet mis en avant */}
+            {isAndroid && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
+              <div>
+                <p className="text-[13px] mb-2 text-center" style={{ color: "#6E6E73" }}>
+                  Ajoutez votre carte pour suivre vos tampons
+                </p>
+                <a href={`/api/google-wallet/generate/${walletId}`}
+                  className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
+                  style={{ background: "#1a73e8" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 7H3a1 1 0 00-1 1v8a1 1 0 001 1h18a1 1 0 001-1V8a1 1 0 00-1-1z" stroke="white" strokeWidth="1.5"/>
+                    <path d="M1 10h22" stroke="white" strokeWidth="1.5"/>
+                  </svg>
+                  <span className="text-[14px] font-semibold text-white">Ajouter à Google Wallet</span>
+                </a>
+              </div>
+            )}
+            {!isAndroid && process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" && (
+              <div>
+                <p className="text-[13px] mb-2 text-center" style={{ color: "#6E6E73" }}>
+                  Ajoutez votre carte pour suivre vos tampons
+                </p>
+                <a href={`/api/apple-wallet/generate/${walletId}`}
+                  className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
+                  style={{ background: "#000" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="5" width="20" height="14" rx="3" stroke="white" strokeWidth="1.5"/>
+                    <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
+                    <circle cx="7" cy="14.5" r="1.5" fill="white"/>
+                  </svg>
+                  <span className="text-[14px] font-semibold text-white">Ajouter à Apple Wallet</span>
+                </a>
+              </div>
+            )}
+            {/* Countdown */}
+            {result.secondes_restantes > 0 && (
+              <div className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl"
+                style={{ background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.22)" }}>
+                <span className="text-[13px] font-medium" style={{ color: "#FF9F0A" }}>Prochain tampon dans</span>
+                <span className="text-[15px] font-bold" style={{ color: "#FF9F0A" }}>{formatTemps(result.secondes_restantes)}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -902,12 +941,13 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
 
   return (
     <main className="min-h-screen flex flex-col px-5 pt-12 pb-16" style={{ background: "var(--bg)" }}>
-      <div className="fixed inset-0 pointer-events-none">
+      {/* Glow en position absolute (pas fixed) pour ne pas bloquer le scroll */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
         <div className="absolute top-[-10%] left-[50%] translate-x-[-50%] w-[500px] h-[400px] rounded-full"
           style={{ background: `radial-gradient(circle, ${couleur}22 0%, transparent 70%)` }} />
       </div>
 
-      <div className="w-full max-w-[390px] mx-auto relative">
+      <div className="w-full max-w-[390px] mx-auto relative" style={{ zIndex: 1 }}>
         {/* Header */}
         <div className="text-center mb-7">
           <h1 className="text-[26px] font-semibold tracking-tight mb-1" style={{ color: "var(--fg)" }}>
@@ -926,8 +966,8 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
           )}
         </div>
 
-        {/* Carte preview — Google sur Android, Apple sur iOS */}
-        <div className="mb-5 -mx-5 flex justify-center overflow-hidden">
+        {/* Carte preview — touch-action: pan-y pour scroll Android */}
+        <div className="mb-5 -mx-5 flex justify-center" style={{ touchAction: "pan-y", overflowX: "hidden" }}>
           <Suspense fallback={<div style={{ width: 340, height: 300, borderRadius: 16, background: couleur, opacity: 0.3 }} />}>
           {isAndroid ? (
             <GoogleWalletCard
