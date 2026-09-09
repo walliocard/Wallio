@@ -6,11 +6,12 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { saveMarchandFields } from "@/lib/save-marchand";
 
 const ANTI_DOUBLON = [
-  { label: "15 minutes", value: 900 },
-  { label: "1 heure",    value: 3600 },
-  { label: "4 heures",   value: 14400 },
-  { label: "8 heures",   value: 28800 },
-  { label: "1 jour",     value: 86400 },
+  { label: "Désactivé",   value: 0 },
+  { label: "15 minutes",  value: 900 },
+  { label: "1 heure",     value: 3600 },
+  { label: "4 heures",    value: 14400 },
+  { label: "8 heures",    value: 28800 },
+  { label: "1 jour",      value: 86400 },
 ];
 
 const FUSEAUX = [
@@ -29,7 +30,7 @@ export default function ReglagesPage() {
   const [objectif, setObjectif] = useState<number>(marchand?.objectif_tampons || 10);
   const [nomRecompense, setNomRecompense] = useState<string>(marchand?.nom_recompense || "");
   const [config, setConfig] = useState({
-    anti_doublon_delai: marchand?.anti_doublon_delai || 86400,
+    anti_doublon_delai: marchand?.anti_doublon_delai ?? 86400,
     fuseau_horaire:   marchand?.fuseau_horaire || Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
   const [auto, setAuto] = useState({
