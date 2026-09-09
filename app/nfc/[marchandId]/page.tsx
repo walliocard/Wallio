@@ -143,6 +143,12 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
                 const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
                 fetch("/api/apple-wallet/push-update", o).catch(() => {});
                 fetch("/api/google-wallet/push-update", o).catch(() => {});
+                // Notif FCM spécifique au parrain
+                fetch("/api/notify-parrainage", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ parrainWalletId: wid, filleulPrenom: cachedPrenom, filleulNom: cachedNom }),
+                }).catch(() => {});
               }
             }).catch(() => {});
             setScreen({ type: "carte", client: newClient, marchand, parraine: true });
@@ -198,6 +204,12 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
               const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
               fetch("/api/apple-wallet/push-update", o).catch(() => {});
               fetch("/api/google-wallet/push-update", o).catch(() => {});
+              // Notif FCM spécifique au parrain
+              fetch("/api/notify-parrainage", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ parrainWalletId: wid, filleulPrenom: client.prenom, filleulNom: client.nom }),
+              }).catch(() => {});
             }
           }).catch(() => {});
           setScreen({ type: "carte", client: { ...client, tampons: 1 }, marchand: screen.marchand, parraine: true });
