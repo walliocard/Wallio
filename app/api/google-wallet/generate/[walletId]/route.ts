@@ -74,6 +74,12 @@ export async function GET(
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
+  // Localisation pour affichage sur écran de verrouillage quand le client est proche
+  const loc = m.apple_location as { latitude?: number; longitude?: number; relevantText?: string } | undefined;
+  const googleLocations = loc?.latitude && loc?.longitude
+    ? [{ kind: "walletobjects#latLongPoint", latitude: loc.latitude, longitude: loc.longitude }]
+    : undefined;
+
   const classBase: Record<string, unknown> = {
     reviewStatus: "UNDER_REVIEW",
     id: cid,
@@ -88,6 +94,7 @@ export async function GET(
     textModulesData: classTextModules,
     ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } } } } : {}),
     ...(validLinks.length > 0 ? { linksModuleData: { uris: validLinks.map(l => ({ uri: l.uri, description: l.description })) } } : {}),
+    ...(googleLocations ? { locations: googleLocations } : {}),
   };
 
   if (classRes.status === 404) {

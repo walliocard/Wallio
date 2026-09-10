@@ -19,6 +19,7 @@ interface CardData {
   hasFcmToken: boolean;
   nfcId?: string;
   parrainageActif?: boolean;
+  ville?: string;
 }
 
 interface ClientNotif {
@@ -37,6 +38,7 @@ interface MarchandDiscover {
   logoUrl?: string;
   couleur: string;
   nfc_id?: string;
+  ville?: string;
 }
 
 const PHONE_KEY   = "wallio_client_phone";
@@ -125,6 +127,7 @@ export default function MesCartesPage() {
             hasFcmToken: !!client.fcm_token,
             nfcId: (m.nfc_id as string) || undefined,
             parrainageActif: !!(m.parrainage_actif as boolean),
+            ville: (m.ville as string) || undefined,
           });
         } catch { /* skip */ }
       }));
@@ -158,7 +161,7 @@ export default function MesCartesPage() {
         .filter((d: QueryDocumentSnapshot<DocumentData>) => !registeredIds.includes(d.id))
         .map((d: QueryDocumentSnapshot<DocumentData>) => {
           const m = d.data();
-          return { id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined, couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id };
+          return { id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined, couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id, ville: m.ville || undefined };
         });
       setMerchants(list);
     } catch { /* silent */ }
@@ -375,7 +378,18 @@ export default function MesCartesPage() {
               <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Aucune carte</p>
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>Scannez le tag NFC d'un établissement ou découvrez-en un dans l'onglet Découvrir.</p>
             </div>
-          ) : cards.map((card, i) => <CardItem key={card.walletId} card={card} delay={i * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} isAndroid={isAndroid} />)
+          ) : (() => {
+            const grouped: Record<string, typeof cards> = {};
+            cards.forEach(c => { const k = c.ville || "Autres"; grouped[k] = grouped[k] || []; grouped[k].push(c); });
+            const sortedVilles = Object.keys(grouped).sort((a, b) => a === "Autres" ? 1 : b === "Autres" ? -1 : a.localeCompare(b, "fr"));
+            let idx = 0;
+            return sortedVilles.map(ville => (
+              <div key={ville}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#8E9BB5", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 8, marginTop: 4, paddingLeft: 2 }}>{ville}</p>
+                {grouped[ville].map(card => <CardItem key={card.walletId} card={card} delay={(idx++) * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} isAndroid={isAndroid} />)}
+              </div>
+            ));
+          })()
         )}
 
         {/* ── Tab Messages ── */}
@@ -426,7 +440,15 @@ export default function MesCartesPage() {
               <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Vous êtes partout !</p>
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>Vous avez une carte dans tous les établissements Wallio.</p>
             </div>
-          ) : merchants.map((m, i) => (
+          ) : (() => {
+            const grouped: Record<string, typeof merchants> = {};
+            merchants.forEach(m => { const k = m.ville || "Autres"; grouped[k] = grouped[k] || []; grouped[k].push(m); });
+            const sortedVilles = Object.keys(grouped).sort((a, b) => a === "Autres" ? 1 : b === "Autres" ? -1 : a.localeCompare(b, "fr"));
+            let idx = 0;
+            return sortedVilles.map(ville => (
+              <div key={ville}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#8E9BB5", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 8, marginTop: 4, paddingLeft: 2 }}>{ville}</p>
+                {grouped[ville].map((m, i) => (
             <div key={m.id} className="card-appear" style={{ animationDelay: `${i * 0.06}s`, ...glass, borderRadius: 22, overflow: "hidden" }}>
               <div style={{ padding: "18px 18px 14px", display: "flex", alignItems: "center", gap: 14 }}>
                 {m.logoUrl ? (
@@ -463,7 +485,10 @@ export default function MesCartesPage() {
                 </div>
               )}
             </div>
-          ))
+                ))}
+              </div>
+            ));
+          })()
         )}
       </div>
 
