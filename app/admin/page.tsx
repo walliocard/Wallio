@@ -830,8 +830,41 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              {/* Table */}
-              <div style={{ ...G, borderRadius: 18, overflow: "hidden" }}>
+              {/* Cards mobile */}
+              <div className="md:hidden" style={{ ...G, borderRadius: 18, overflow: "hidden" }}>
+                {comptaList.map((m, i) => {
+                  const status = getAboStatus(m.abonnement_fin);
+                  const col = ABO_COLORS[status];
+                  const days = daysLeft(m.abonnement_fin);
+                  return (
+                    <div key={m.id} style={{ padding: "14px 16px", borderBottom: i < comptaList.length - 1 ? `1px solid ${T.sep}` : "none" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 13, color: T.label, flexShrink: 0 }}>
+                          {m.logo_url ? <img src={m.logo_url} alt={m.nom} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (m.nom?.[0] || "?").toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 15, fontWeight: 600, color: T.label, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.nom || "—"}</p>
+                          <p style={{ fontSize: 12, color: T.sec }}>{m.abonnement_type ? ABO_LABELS[m.abonnement_type] : "Pas d'abonnement"}</p>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: col.bg, color: col.fg, whiteSpace: "nowrap", flexShrink: 0 }}>
+                          {col.label}{status === "bientot" || status === "actif" ? ` (${days}j)` : ""}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: T.sec, marginBottom: 10 }}>
+                        <span>{formatDateSec(m.abonnement_debut)} → <span style={{ color: status === "expire" ? "#C0392B" : T.sec }}>{formatDateSec(m.abonnement_fin)}</span></span>
+                        <span>{m.abonnement_paiements?.length ? `${m.abonnement_paiements.length} paiement${m.abonnement_paiements.length > 1 ? "s" : ""}` : "—"}</span>
+                      </div>
+                      <button onClick={() => openPaiementModal(m)}
+                        style={{ width: "100%", padding: "10px 0", borderRadius: 10, background: T.btnBg, color: T.btnFg, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                        + Paiement
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Table desktop */}
+              <div className="hidden md:block" style={{ ...G, borderRadius: 18, overflow: "hidden" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: `1px solid ${T.sep}` }}>
@@ -885,6 +918,7 @@ export default function AdminPage() {
             </div>
           );
         })()}
+
 
       </div>
     </main>
