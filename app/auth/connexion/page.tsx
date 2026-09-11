@@ -46,8 +46,8 @@ function ConnexionInner() {
       ]);
       router.push("/dashboard");
     } catch (e: unknown) {
-      // Purge l'état Firebase corrompu (IndexedDB Safari) avant d'afficher l'erreur
-      try { await signOut(auth); } catch { /* déjà déconnecté */ }
+      // Fire-and-forget — si IndexedDB est corrompue, await signOut() hang aussi
+      signOut(auth).catch(() => {});
       const msg = e instanceof Error ? e.message : "";
       if (msg === "timeout" || msg.includes("network") || msg.includes("unavailable")) {
         setError("Connexion lente — réessaie dans quelques secondes.");

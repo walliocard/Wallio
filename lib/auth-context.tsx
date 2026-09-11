@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       // IndexedDB corrompue ou token invalide → purge silencieuse et reset
       async () => {
-        try { await signOut(auth); } catch { /* déjà déconnecté */ }
+        signOut(auth).catch(() => {});
         clearTimeout(fallback);
         setUser(null);
         setMarchand(null);
