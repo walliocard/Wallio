@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -46,6 +46,8 @@ function ConnexionInner() {
       ]);
       router.push("/dashboard");
     } catch (e: unknown) {
+      // Purge l'état Firebase corrompu (IndexedDB Safari) avant d'afficher l'erreur
+      try { await signOut(auth); } catch { /* déjà déconnecté */ }
       const msg = e instanceof Error ? e.message : "";
       if (msg === "timeout" || msg.includes("network") || msg.includes("unavailable")) {
         setError("Connexion lente — réessaie dans quelques secondes.");

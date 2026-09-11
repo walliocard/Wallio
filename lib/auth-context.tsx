@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { onSnapshot, getDoc, doc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
@@ -43,43 +43,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fallback = setTimeout(() => setLoading(false), 5000);
 
-    const unsubAuth = onAuthStateChanged(auth, (u) => {
-      clearTimeout(fallback);
-      setUser(u);
+    const unsubAuth = onAuthStateChanged(
+      auth,
+      (u) => {
+        clearTimeout(fallback);
+        setUser(u);
 
-      // Annuler l'éventuel snapshot précédent
-      unsubSnap?.();
-      unsubSnap = null;
+        // Annuler l'éventuel snapshot précédent
+        unsubSnap?.();
+        unsubSnap = null;
 
-      if (u) {
-        const marchandRef = doc(db, "marchands", u.uid);
+        if (u) {
+          const marchandRef = doc(db, "marchands", u.uid);
 
-        // getDoc immédiat — charge le marchand dès que possible sans attendre onSnapshot
-        getDoc(marchandRef).then(snap => {
-          if (snap.exists()) {
-            setMarchand(prev => prev ?? ({ id: snap.id, actif: false, ...snap.data() } as MarchandData));
-          }
-          setLoading(false);
-        }).catch(() => setLoading(false));
-
-        // onSnapshot garde le marchand à jour en temps réel
-        unsubSnap = onSnapshot(
-          marchandRef,
-          (snap) => {
+          // getDoc immédiat — charge le marchand dès que possible sans attendre onSnapshot
+          getDoc(marchandRef).then(snap => {
             if (snap.exists()) {
-              setMarchand({ id: snap.id, actif: false, ...snap.data() } as MarchandData);
-            } else {
-              setMarchand(null);
+              setMarchand(prev => prev ?? ({ id: snap.id, actif: false, ...snap.data() } as MarchandData));
             }
             setLoading(false);
-          },
-          () => {}
-        );
-      } else {
+          }).catch(() => setLoading(false));
+
+          // onSnapshot garde le marchand à jour en temps réel
+          unsubSnap = onSnapshot(
+            marchandRef,
+            (snap) => {
+              if (snap.exists()) {
+                setMarchand({ id: snap.id, actif: false, ...snap.data() } as MarchandData);
+              } else {
+                setMarchand(null);
+              }
+              setLoading(false);
+            },
+            () => {}
+          );
+        } else {
+          setMarchand(null);
+          setLoading(false);
+        }
+      },
+      // IndexedDB corrompue ou token invalide → purge silencieuse et reset
+      async () => {
+        try { await signOut(auth); } catch { /* déjà déconnecté */ }
+        clearTimeout(fallback);
+        setUser(null);
         setMarchand(null);
         setLoading(false);
       }
-    });
+    );
 
     return () => {
       unsubAuth();
