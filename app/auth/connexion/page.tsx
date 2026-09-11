@@ -37,11 +37,17 @@ function ConnexionInner() {
     setError("");
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, form.email, form.password);
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 10000)
+      );
+      await Promise.race([
+        signInWithEmailAndPassword(auth, form.email, form.password),
+        timeout,
+      ]);
       router.push("/dashboard");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
-      if (msg.includes("network") || msg.includes("timeout") || msg.includes("unavailable")) {
+      if (msg === "timeout" || msg.includes("network") || msg.includes("unavailable")) {
         setError("Connexion lente — réessaie dans quelques secondes.");
       } else {
         setError("Email ou mot de passe incorrect.");
