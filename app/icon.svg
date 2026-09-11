@@ -5,7 +5,7 @@
       <stop offset="100%" stop-color="#A855F7"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" fill="#F0EEFF"/>
+  <rect width="32" height="32" rx="7" fill="#F0EEFF"/>
   <text x="16" y="24"
         font-size="22"
         font-family="-apple-system,BlinkMacSystemFont,Helvetica Neue,Arial,sans-serif"
