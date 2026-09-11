@@ -40,6 +40,18 @@ export const viewport: Viewport = {
   themeColor: "#EEF2F7",
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Wallio",
+  alternateName: "Wallio Card",
+  url: "https://app.walliocard.com",
+  logo: "https://app.walliocard.com/wallio-instagram-profil.png",
+  description: "SaaS de cartes de fidélité digitales Apple Wallet & Google Wallet pour commerçants. Sans application à télécharger.",
+  sameAs: ["https://www.instagram.com/walliocard"],
+  contactPoint: { "@type": "ContactPoint", contactType: "customer support", availableLanguage: ["French", "Arabic"] },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -47,6 +59,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${geist.variable} h-full antialiased`}>
+      <head>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      </head>
       <body className="min-h-full font-[family-name:var(--font-geist)]">
         <AuthProvider>{children}</AuthProvider>
       </body>
