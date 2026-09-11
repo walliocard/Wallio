@@ -18,6 +18,14 @@ type Marchand = {
   abonnement_debut?: number;
   abonnement_fin?: number;
   abonnement_paiements?: Paiement[];
+  ville?: string;
+  pays?: string;
+  telephone?: string;
+};
+
+const VILLES_ADMIN: Record<string, string[]> = {
+  Maroc: ["Agadir","Béni Mellal","Casablanca","El Jadida","Fès","Kénitra","Khouribga","Laâyoune","Marrakech","Meknès","Mohammedia","Nador","Oujda","Rabat","Safi","Salé","Settat","Tanger","Tétouan"],
+  Roumanie: ["Cluj-Napoca"],
 };
 
 function slugify(str: string) {
@@ -53,7 +61,7 @@ function daysLeft(fin?: number): number {
   return Math.ceil((fin * 1000 - Date.now()) / 86400000);
 }
 function getMontant(type: AboType): number {
-  return type === "6mois" ? 2100 : type === "annuel" ? 4200 : 350;
+  return type === "6mois" ? 1799 : type === "annuel" ? 2999 : 349;
 }
 const ABO_LABELS: Record<AboType, string> = { mensuel: "Mensuel", "6mois": "6 mois", annuel: "Annuel" };
 const ABO_COLORS = {
@@ -90,6 +98,7 @@ const T = {
 export default function AdminPage() {
   const [marchands, setMarchands] = useState<Marchand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Marchand | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
@@ -104,6 +113,9 @@ export default function AdminPage() {
   const [createNom, setCreateNom] = useState("");
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
+  const [createTel, setCreateTel] = useState("");
+  const [createPays, setCreatePays] = useState("Maroc");
+  const [createVille, setCreateVille] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [tab, setTab] = useState<"marchands" | "comptabilite">("marchands");
@@ -112,14 +124,21 @@ export default function AdminPage() {
   const [paiementDebut, setPaiementDebut] = useState("");
   const [savingPaiement, setSavingPaiement] = useState(false);
   const [page, setPage] = useState(0);
+  const [locPays, setLocPays] = useState("Maroc");
+  const [locVille, setLocVille] = useState("");
+  const [locTel, setLocTel] = useState("");
+  const [savingLoc, setSavingLoc] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     let unsub: (() => void) | null = null;
+    let timeout: ReturnType<typeof setTimeout>;
     async function init() {
       const res = await fetch("/api/admin/check");
       if (!res.ok) { router.push("/admin/login"); return; }
+      timeout = setTimeout(() => setLoadError(true), 8000);
       unsub = onSnapshot(collection(db, "marchands"), snap => {
+        clearTimeout(timeout);
         const all = snap.docs.map(d => ({ id: d.id, nom: "", email: "", actif: false, ...d.data() } as Marchand));
         all.sort((a, b) => (b.date_inscription?.seconds ?? 0) - (a.date_inscription?.seconds ?? 0));
         setMarchands(all);
@@ -127,7 +146,7 @@ export default function AdminPage() {
       });
     }
     init();
-    return () => { unsub?.(); };
+    return () => { unsub?.(); clearTimeout(timeout); };
   }, [router]);
 
   async function adminPatch(marchandId: string, fields: Record<string, unknown>) {
@@ -166,6 +185,22 @@ export default function AdminPage() {
     try { await adminPatch(m.id, { nfc_id }); }
     catch { setMarchands(prev => prev.map(x => x.id === m.id ? m : x)); setSelected(m); }
     setGeneratingNfc(false);
+  }
+  function openDrawer(m: Marchand) {
+    setSelected(m);
+    setLocPays(m.pays || "Maroc");
+    setLocVille(m.ville || "");
+    setLocTel(m.telephone || "");
+  }
+  async function saveLocalisation() {
+    if (!selected || !locVille) return;
+    setSavingLoc(true);
+    const updated = { ...selected, pays: locPays, ville: locVille, telephone: locTel || undefined };
+    setMarchands(prev => prev.map(x => x.id === selected.id ? updated : x));
+    setSelected(updated);
+    try { await adminPatch(selected.id, { pays: locPays, ville: locVille, telephone: locTel || null }); }
+    catch { setMarchands(prev => prev.map(x => x.id === selected.id ? selected : x)); setSelected(selected); }
+    setSavingLoc(false);
   }
   function openPaiementModal(m: Marchand) {
     let debutDefault = new Date();
@@ -226,12 +261,12 @@ export default function AdminPage() {
     setDownloadingQR(false);
   }
   async function creerMarchand() {
-    if (!createNom || !createEmail || !createPassword) return;
+    if (!createNom || !createEmail || !createPassword || !createVille) return;
     setCreating(true); setCreateError("");
-    const res = await fetch("/api/admin/create-marchand", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nom: createNom, email: createEmail, password: createPassword }) });
+    const res = await fetch("/api/admin/create-marchand", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nom: createNom, email: createEmail, password: createPassword, telephone: createTel || null, pays: createPays, ville: createVille }) });
     const data = await res.json();
     if (!res.ok) { setCreateError(data.error || "Erreur"); setCreating(false); return; }
-    setShowCreate(false); setCreateNom(""); setCreateEmail(""); setCreatePassword(""); setCreating(false);
+    setShowCreate(false); setCreateNom(""); setCreateEmail(""); setCreatePassword(""); setCreateTel(""); setCreatePays("Maroc"); setCreateVille(""); setCreating(false);
     const { getDoc, doc } = await import("firebase/firestore");
     const snap = await getDoc(doc((await import("@/lib/firebase")).db, "marchands", data.uid));
     if (snap.exists()) setSelected({ id: snap.id, nom: "", email: "", actif: false, ...snap.data() } as Marchand);
@@ -273,13 +308,24 @@ export default function AdminPage() {
 
   if (loading) return (
     <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}>
-      <div style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${T.border}`, borderTopColor: T.btnBg, animation: "spin 0.8s linear infinite" }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      {loadError ? (
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <p style={{ fontSize: 15, color: T.sec }}>Connexion lente ou indisponible.</p>
+          <button onClick={() => window.location.reload()}
+            style={{ padding: "11px 28px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+            Recharger la page
+          </button>
+        </div>
+      ) : (
+        <div style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${T.border}`, borderTopColor: T.btnBg, animation: "spin 0.8s linear infinite" }} />
+      )}
     </main>
   );
 
   const actifs = marchands.filter(m => m.actif).length;
   const aboActifs = marchands.filter(m => m.abonnement_statut === "actif").length;
-  const revenus = aboActifs * 350;
+  const revenus = aboActifs * 349;
   const filtered = marchands.filter(m =>
     !search || m.nom?.toLowerCase().includes(search.toLowerCase()) || m.email?.toLowerCase().includes(search.toLowerCase())
   );
@@ -304,6 +350,7 @@ export default function AdminPage() {
                 { label: "Nom du commerce", value: createNom, set: setCreateNom, placeholder: "Café Central", type: "text" },
                 { label: "Email", value: createEmail, set: setCreateEmail, placeholder: "contact@cafe.ma", type: "email" },
                 { label: "Mot de passe", value: createPassword, set: setCreatePassword, placeholder: "Min. 8 caractères", type: "password" },
+                { label: "Téléphone", value: createTel, set: setCreateTel, placeholder: "Téléphone (optionnel)", type: "tel" },
               ].map((f, i, arr) => (
                 <div key={f.label}>
                   <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.placeholder}
@@ -312,14 +359,25 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+            <div style={{ background: T.surfForm, borderRadius: 12, overflow: "hidden", marginBottom: 10 }}>
+              <select value={createPays} onChange={e => { setCreatePays(e.target.value); setCreateVille(""); }}
+                style={{ ...inputStyle, background: "transparent", borderRadius: 0, border: "none", borderBottom: `1px solid ${T.sep}`, padding: "13px 16px", fontSize: 15, appearance: "none" }}>
+                {Object.keys(VILLES_ADMIN).map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <select value={createVille} onChange={e => setCreateVille(e.target.value)} required
+                style={{ ...inputStyle, background: "transparent", borderRadius: 0, border: "none", padding: "13px 16px", fontSize: 15, appearance: "none", color: createVille ? T.label : T.tert }}>
+                <option value="">Sélectionner une ville *</option>
+                {(VILLES_ADMIN[createPays] ?? []).map(v => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </div>
             {createError && <p style={{ fontSize: 13, color: DANGER, marginBottom: 10 }}>{createError}</p>}
             <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
               <button onClick={() => { setShowCreate(false); setCreateError(""); }}
                 style={{ flex: 1, padding: "13px 0", borderRadius: 12, background: T.surfForm, color: T.label, fontSize: 15, fontWeight: 500, border: `1px solid ${T.border}`, cursor: "pointer" }}>
                 Annuler
               </button>
-              <button onClick={creerMarchand} disabled={creating || !createNom || !createEmail || !createPassword}
-                style={{ flex: 1, padding: "13px 0", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 15, fontWeight: 600, border: "none", cursor: "pointer", opacity: (!createNom || !createEmail || !createPassword) ? 0.45 : 1 }}>
+              <button onClick={creerMarchand} disabled={creating || !createNom || !createEmail || !createPassword || !createVille}
+                style={{ flex: 1, padding: "13px 0", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 15, fontWeight: 600, border: "none", cursor: "pointer", opacity: (!createNom || !createEmail || !createPassword || !createVille) ? 0.45 : 1 }}>
                 {creating ? "Création…" : "Créer"}
               </button>
             </div>
@@ -487,6 +545,26 @@ export default function AdminPage() {
                 );
               })()}
 
+              <SLabel>Localisation & Contact</SLabel>
+              <div style={{ background: T.surfCard, borderRadius: 14, padding: "14px 16px", border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
+                <select value={locPays} onChange={e => { setLocPays(e.target.value); setLocVille(""); }}
+                  style={{ ...inputStyle }}>
+                  {Object.keys(VILLES_ADMIN).map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <select value={locVille} onChange={e => setLocVille(e.target.value)}
+                  style={{ ...inputStyle, color: locVille ? T.label : T.tert }}>
+                  <option value="">Sélectionner une ville</option>
+                  {(VILLES_ADMIN[locPays] ?? []).map(v => <option key={v} value={v}>{v}</option>)}
+                </select>
+                <input type="tel" placeholder="Téléphone" value={locTel} onChange={e => setLocTel(e.target.value)}
+                  style={{ ...inputStyle }} />
+                <button onClick={saveLocalisation} disabled={savingLoc || !locVille}
+                  style={{ padding: "11px 0", borderRadius: 10, background: T.btnBg, color: T.btnFg, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", opacity: !locVille ? 0.45 : 1 }}>
+                  {savingLoc ? "Enregistrement…" : "Enregistrer"}
+                </button>
+                {selected.ville && <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>Actuellement : {selected.ville}</p>}
+              </div>
+
               <SLabel>Tag NFC physique</SLabel>
               {selected.nfc_id ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -617,7 +695,7 @@ export default function AdminPage() {
             {/* Cards mobile */}
             <div className="md:hidden" style={{ ...G, borderRadius: 18, overflow: "hidden" }}>
               {paginated.map((m, i) => (
-                <button key={m.id} onClick={() => setSelected(m)}
+                <button key={m.id} onClick={() => openDrawer(m)}
                   style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "transparent", border: "none", borderBottom: i < paginated.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer", textAlign: "left" }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 14, color: T.label, flexShrink: 0 }}>
                     {m.logo_url
@@ -652,7 +730,7 @@ export default function AdminPage() {
                     <tr key={m.id} style={{ borderBottom: i < paginated.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer" }}
                       onMouseEnter={e => (e.currentTarget.style.background = T.rowHover)}
                       onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                      onClick={() => setSelected(m)}>
+                      onClick={() => openDrawer(m)}>
                       <td style={{ padding: "13px 20px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <div style={{ width: 32, height: 32, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 12, color: T.label, flexShrink: 0 }}>
@@ -693,7 +771,7 @@ export default function AdminPage() {
                         </div>
                       </td>
                       <td style={{ padding: "13px 12px" }}>
-                        <button onClick={e => { e.stopPropagation(); setSelected(m); }}
+                        <button onClick={e => { e.stopPropagation(); openDrawer(m); }}
                           style={{ fontSize: 13, fontWeight: 500, padding: "7px 14px", borderRadius: 8, background: T.surfCard, color: T.sec, border: `1px solid ${T.border}`, cursor: "pointer" }}>
                           Voir →
                         </button>
@@ -728,7 +806,7 @@ export default function AdminPage() {
           const aboActifList = marchands.filter(m => getAboStatus(m.abonnement_fin) === "actif");
           const aboBientotList = marchands.filter(m => getAboStatus(m.abonnement_fin) === "bientot");
           const aboExpireList = marchands.filter(m => getAboStatus(m.abonnement_fin) === "expire");
-          const mrrTotal = (aboActifList.length + aboBientotList.length) * 350;
+          const mrrTotal = (aboActifList.length + aboBientotList.length) * 349;
           const comptaList = [...marchands].sort((a, b) => {
             if (!a.abonnement_fin && !b.abonnement_fin) return 0;
             if (!a.abonnement_fin) return 1;
@@ -772,7 +850,7 @@ export default function AdminPage() {
                         <tr key={m.id} style={{ borderBottom: i < comptaList.length - 1 ? `1px solid ${T.sep}` : "none", cursor: "pointer" }}
                           onMouseEnter={e => (e.currentTarget.style.background = T.rowHover)}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                          onClick={() => setSelected(m)}>
+                          onClick={() => openDrawer(m)}>
                           <td style={{ padding: "12px 16px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                               <div style={{ width: 30, height: 30, borderRadius: "50%", background: T.surfForm, border: `1px solid ${T.border}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 12, color: T.label, flexShrink: 0 }}>

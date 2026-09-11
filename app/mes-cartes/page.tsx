@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { collection, query, where, onSnapshot, getDocs, doc, getDoc, updateDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient } from "@/lib/loyalty";
 
@@ -78,12 +78,31 @@ export default function MesCartesPage() {
   const [joined, setJoined]     = useState<Set<string>>(new Set());
   const [notifs, setNotifs]     = useState<ClientNotif[]>([]);
   const unsubRef = useRef<(() => void) | null>(null);
+  const unsubMerchantsRef = useRef<(() => void) | null>(null);
+  const registeredIdsRef = useRef<string[]>([]);
+  const allMerchantsRef = useRef<MarchandDiscover[]>([]);
+
+  function refreshMerchants() {
+    setMerchants(allMerchantsRef.current.filter(m => !registeredIdsRef.current.includes(m.id)));
+  }
+
+  function setupMerchantsListener() {
+    if (unsubMerchantsRef.current) return;
+    const q = query(collection(db, "marchands"), where("actif", "==", true));
+    unsubMerchantsRef.current = onSnapshot(q, snap => {
+      allMerchantsRef.current = snap.docs.map(d => {
+        const m = d.data();
+        return { id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined, couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id, ville: m.ville || undefined };
+      });
+      refreshMerchants();
+    });
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem(PHONE_KEY);
     if (saved) { setPhone(saved); loadCards(saved); }
     else setStep("login");
-    return () => { unsubRef.current?.(); };
+    return () => { unsubRef.current?.(); unsubMerchantsRef.current?.(); };
   }, []);
 
   async function loadCards(fullPhone: string) {
@@ -145,27 +164,17 @@ export default function MesCartesPage() {
       allNotifs.sort((a, b) => b.sentAt.localeCompare(a.sentAt));
       setNotifs(allNotifs.slice(0, 50));
 
+      registeredIdsRef.current = results.map(c => c.marchandId);
+      refreshMerchants();
       setStep("main");
       if (firstSnapshot) {
-        loadMerchants(results.map(c => c.marchandId));
+        setupMerchantsListener();
         setFetching(false);
         firstSnapshot = false;
       }
     }, () => { setNotFound(true); setStep("login"); setFetching(false); });
   }
 
-  async function loadMerchants(registeredIds: string[]) {
-    try {
-      const snap = await getDocs(query(collection(db, "marchands"), where("actif", "==", true)));
-      const list: MarchandDiscover[] = snap.docs
-        .filter((d: QueryDocumentSnapshot<DocumentData>) => !registeredIds.includes(d.id))
-        .map((d: QueryDocumentSnapshot<DocumentData>) => {
-          const m = d.data();
-          return { id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined, couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id, ville: m.ville || undefined };
-        });
-      setMerchants(list);
-    } catch { /* silent */ }
-  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();

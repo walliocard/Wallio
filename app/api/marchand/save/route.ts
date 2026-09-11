@@ -87,6 +87,8 @@ export async function POST(req: Request) {
 
   // Whitelist stricte — jamais actif, nfc_id, abonnement_statut (champs admin uniquement)
   const allowed = [
+    // Profil de base (inscription)
+    "telephone", "ville", "pays",
     // Carte Apple Wallet
     "logo_url", "strip_url", "strip_raw_url",
     "apple_bg_color", "apple_fg_color", "apple_label_color",
@@ -125,8 +127,16 @@ export async function POST(req: Request) {
     if (key in body) data[key] = body[key] ?? null;
   }
 
-  // set(merge) fonctionne pour création (inscription) ET mise à jour
-  await adminDb().collection("marchands").doc(uid).set(data, { merge: true });
+  // Sur première création : initialiser les champs admin non modifiables par le marchand
+  const ref = adminDb().collection("marchands").doc(uid);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    data.actif = false;
+    data.abonnement_statut = "en_attente";
+    data.date_inscription = FieldValue.serverTimestamp();
+  }
+
+  await ref.set(data, { merge: true });
 
   // Sync Google Wallet class si des champs visuels ont changé
   const triggerGW = ["google_bg_color", "google_hero_url", "logo_url", "google_primary_label", "nom"].some(f => f in body);

@@ -364,7 +364,7 @@ const T = {
       {value:"0€",label:"coût d'acquisition",sub:"100% organique"},
     ],
     tarifsTag:"Tarifs", tarifsH2:"Simple et transparent.",
-    tarifsSub:"Pas d'abonnement caché, pas de frais à la transaction. Un tarif clair adapté à votre établissement.",
+    tarifsSub:"Plus vous vous engagez, plus vous économisez — sans frais cachés, sans engagement forcé.",
     tarifsIncludedLabel:"Inclus dans votre accès",
     tarifsIncluded:["Carte de fidélité Apple & Google Wallet","Carte comptoir 4K (QR + NFC optionnel)","Dashboard temps réel","Notifications push illimitées","Automatisations anniversaire & relance","Listing dans l'annuaire Wallio","Support dédié par WhatsApp"],
     tarifsPriceLabel:"Tarif adapté à votre commerce", tarifsPrice:"Sur mesure", tarifsResponseTime:"Réponse sous 24h",
@@ -524,7 +524,7 @@ const T = {
       {value:"€0",label:"acquisition cost",sub:"100% organic"},
     ],
     tarifsTag:"Pricing", tarifsH2:"Simple and transparent.",
-    tarifsSub:"No hidden subscription, no transaction fees. A clear price adapted to your business.",
+    tarifsSub:"The more you commit, the more you save — no hidden fees, no forced lock-in.",
     tarifsIncludedLabel:"Included in your plan",
     tarifsIncluded:["Apple & Google Wallet loyalty card","4K counter card (QR + optional NFC)","Real-time dashboard","Unlimited push notifications","Birthday & re-engagement automations","Listing in Wallio directory","Dedicated WhatsApp support"],
     tarifsPriceLabel:"Price tailored to your business", tarifsPrice:"Custom", tarifsResponseTime:"Response within 24h",
@@ -713,6 +713,14 @@ export default function LandingPage() {
         @media (max-width: 480px) {
           .custom-grid-3 { grid-template-columns:1fr !important; }
           .pricing-inner { flex-direction:column !important; }
+        }
+        @media (max-width: 900px) {
+          .pricing-grid { grid-template-columns:1fr !important; }
+          .included-grid { grid-template-columns:1fr !important; }
+          .counter-card-band { flex-direction:column !important; padding:32px 28px !important; }
+        }
+        @media (max-width: 900px) {
+          .counter-card-band img { width:180px !important; transform:none !important; }
         }
         @media (max-width: 480px) {
           .lp-nav { padding:0 16px; }
@@ -1495,64 +1503,142 @@ export default function LandingPage() {
 
           {/* ── TARIFS ── */}
           <section id="tarifs" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-            <div style={{ maxWidth:760, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
+            <div style={{ maxWidth:960, margin:"0 auto" }}>
+
+              {/* Header */}
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">{t.tarifsTag}</span>
                 <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:16 }}>{t.tarifsH2}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>{t.tarifsSub}</p>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.tarifsSub}</p>
               </div>
 
-              <div data-reveal style={{ background:"linear-gradient(135deg,#1D1D1F 0%,#2C2C2E 100%)", borderRadius:28, padding:"48px 52px", position:"relative", overflow:"hidden" }}>
-                {/* Fond décoratif */}
-                <div style={{ position:"absolute", top:-60, right:-60, width:240, height:240, borderRadius:"50%", background:"rgba(68,114,245,0.08)", pointerEvents:"none" }} />
-                <div style={{ position:"absolute", bottom:-40, left:-40, width:160, height:160, borderRadius:"50%", background:"rgba(138,92,246,0.08)", pointerEvents:"none" }} />
+              {/* Plans */}
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:40, alignItems:"end" }} className="pricing-grid">
 
-                <div style={{ position:"relative", display:"flex", gap:48, alignItems:"flex-start", flexWrap:"wrap" }} className="pricing-inner">
-                  {/* Gauche — ce qui est inclus */}
-                  <div style={{ flex:1, minWidth:240 }}>
-                    <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", marginBottom:20 }}>{t.tarifsIncludedLabel}</div>
-                    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-                      {t.tarifsIncluded.map(f => (
-                        <div key={f} style={{ display:"flex", alignItems:"center", gap:12 }}>
-                          <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(68,114,245,0.20)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          </div>
-                          <span style={{ fontSize:14, color:"rgba(255,255,255,0.80)", lineHeight:1.4 }}>{f}</span>
-                        </div>
-                      ))}
+                {/* Mensuel */}
+                <div style={{ background:"#F5F5F7", borderRadius:24, padding:"32px 28px" }}>
+                  <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"#8E8E93", marginBottom:28 }}>
+                    {lang === "fr" ? "Mensuel" : "Monthly"}
+                  </div>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:6 }}>
+                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"#1D1D1F", lineHeight:1 }}>349</span>
+                    <span style={{ fontSize:16, color:"#8E8E93", fontWeight:500, marginLeft:4 }}>DH / {lang === "fr" ? "mois" : "month"}</span>
+                  </div>
+                  <div style={{ fontSize:13, color:"#8E8E93", marginBottom:32 }}>
+                    349 DH / {lang === "fr" ? "mois" : "month"}
+                  </div>
+                  <a href={WA} target="_blank" rel="noopener noreferrer"
+                    style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"#1D1D1F", color:"white", fontSize:14, fontWeight:600, textDecoration:"none", transition:"opacity 0.15s" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity="0.8"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity="1"; }}>
+                    {lang === "fr" ? "Commencer" : "Get started"}
+                  </a>
+                </div>
+
+                {/* 6 mois */}
+                <div style={{ background:"#F5F5F7", borderRadius:24, padding:"32px 28px", position:"relative" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:28 }}>
+                    <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"#8E8E93" }}>
+                      {lang === "fr" ? "6 mois" : "6 months"}
                     </div>
+                    <span style={{ fontSize:12, fontWeight:700, background:"rgba(52,199,89,0.14)", color:"#1C7A37", padding:"4px 10px", borderRadius:20 }}>-14%</span>
+                  </div>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:6 }}>
+                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"#1D1D1F", lineHeight:1 }}>1 799</span>
+                    <span style={{ fontSize:16, color:"#8E8E93", fontWeight:500, marginLeft:4 }}>DH</span>
+                  </div>
+                  <div style={{ marginBottom:32 }}>
+                    <div style={{ fontSize:14, color:"#34C759", fontWeight:700, marginBottom:2 }}>300 DH / {lang === "fr" ? "mois" : "month"}</div>
+                    <div style={{ fontSize:12, color:"#8E8E93" }}>{lang === "fr" ? "Économisez 295 DH" : "Save 295 MAD"}</div>
+                  </div>
+                  <a href={WA} target="_blank" rel="noopener noreferrer"
+                    style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"#1D1D1F", color:"white", fontSize:14, fontWeight:600, textDecoration:"none", transition:"opacity 0.15s" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity="0.8"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity="1"; }}>
+                    {lang === "fr" ? "Commencer" : "Get started"}
+                  </a>
+                </div>
+
+                {/* Annuel — featured */}
+                <div style={{ background:"linear-gradient(145deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)", borderRadius:24, padding:"36px 28px 32px", position:"relative", overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:-50, right:-50, width:150, height:150, borderRadius:"50%", background:"rgba(68,114,245,0.15)", pointerEvents:"none" }} />
+                  <div style={{ position:"absolute", bottom:-30, left:-30, width:100, height:100, borderRadius:"50%", background:"rgba(138,92,246,0.12)", pointerEvents:"none" }} />
+
+                  {/* Badge meilleur rapport */}
+                  <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(68,114,245,0.22)", borderRadius:20, padding:"5px 12px", marginBottom:20, position:"relative" }}>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="#90B3FF"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"#90B3FF" }}>
+                      {lang === "fr" ? "Meilleur rapport" : "Best value"}
+                    </span>
                   </div>
 
-                  {/* Droite — CTA */}
-                  <div style={{ flexShrink:0, display:"flex", flexDirection:"column", alignItems:"center", gap:16, minWidth:200 }}>
-                    <div style={{ textAlign:"center", marginBottom:8 }}>
-                      <div style={{ fontSize:13, color:"rgba(255,255,255,0.45)", marginBottom:8 }}>{t.tarifsPriceLabel}</div>
-                      <div style={{ fontSize:42, fontWeight:700, color:"white", letterSpacing:-1.5, lineHeight:1 }}>{t.tarifsPrice}</div>
-                      <div style={{ fontSize:13, color:"rgba(255,255,255,0.45)", marginTop:8 }}>{t.tarifsResponseTime}</div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:28, position:"relative" }}>
+                    <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)" }}>
+                      {lang === "fr" ? "Annuel" : "Annual"}
                     </div>
-
-                    <a href={WA} target="_blank" rel="noopener noreferrer"
-                      style={{ width:"100%", background:"#25D366", color:"white", padding:"14px 24px", borderRadius:14, fontSize:15, fontWeight:600, textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:10, boxShadow:"0 8px 24px rgba(37,211,102,0.35)", transition:"transform 0.15s, box-shadow 0.15s" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform="translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 32px rgba(37,211,102,0.45)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=""; (e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(37,211,102,0.35)"; }}>
-                      <svg width="18" height="18" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1.0 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9zm0 22.9c-2.0 0-3.9-.5-5.5-1.5l-.4-.2-4.4 1.1 1.2-4.2-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.7 0-5.9 4.8-10.8 10.8-10.8 2.9 0 5.6 1.1 7.6 3.2 2.0 2.0 3.2 4.7 3.2 7.6 0 5.9-4.8 10.9-10.5 10.9zm5.8-8.1c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.7-1.6-2.0-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.2-.7-1.7-1.0-2.4-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1.1 1.0-1.1 2.5s1.1 2.9 1.3 3.1c.2.2 2.2 3.4 5.4 4.7.8.3 1.4.5 1.8.6.8.2 1.5.2 2.0.1.6-.1 1.8-.7 2.1-1.4.3-.7.3-1.2.2-1.4-.1-.2-.3-.3-.6-.4z"/></svg>
-                      {t.tarifsCtaWa}
-                    </a>
-
-                    <a href="mailto:wallio.card@gmail.com?subject=Demande%20de%20tarif%20Wallio"
-                      style={{ width:"100%", background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.75)", padding:"13px 24px", borderRadius:14, fontSize:14, fontWeight:500, textDecoration:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:8, border:"0.5px solid rgba(255,255,255,0.12)", transition:"background 0.15s" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.13)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.08)"; }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                      wallio.card@gmail.com
-                    </a>
-
-                    <div style={{ fontSize:11, color:"rgba(255,255,255,0.30)", textAlign:"center", lineHeight:1.5 }}>
-                      {t.tarifsNote.split("\n").map((line, i) => <span key={i}>{line}{i === 0 && <br />}</span>)}
-                    </div>
+                    <span style={{ fontSize:12, fontWeight:700, background:"rgba(68,114,245,0.30)", color:"#90B3FF", padding:"4px 10px", borderRadius:20 }}>-28%</span>
                   </div>
+
+                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:6, position:"relative" }}>
+                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"white", lineHeight:1 }}>2 999</span>
+                    <span style={{ fontSize:16, color:"rgba(255,255,255,0.4)", fontWeight:500, marginLeft:4 }}>DH</span>
+                  </div>
+                  <div style={{ marginBottom:32, position:"relative" }}>
+                    <div style={{ fontSize:14, color:"#90B3FF", fontWeight:700, marginBottom:2 }}>250 DH / {lang === "fr" ? "mois" : "month"}</div>
+                    <div style={{ fontSize:12, color:"rgba(255,255,255,0.35)" }}>{lang === "fr" ? "Économisez 1 189 DH" : "Save 1,189 MAD"}</div>
+                  </div>
+
+                  <a href={WA} target="_blank" rel="noopener noreferrer"
+                    style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"#4472F5", color:"white", fontSize:14, fontWeight:600, textDecoration:"none", boxShadow:"0 8px 24px rgba(68,114,245,0.45)", transition:"transform 0.15s, box-shadow 0.15s", position:"relative" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform="translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 32px rgba(68,114,245,0.55)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=""; (e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(68,114,245,0.45)"; }}>
+                    {lang === "fr" ? "Commencer" : "Get started"}
+                  </a>
                 </div>
               </div>
+
+              {/* Ce qui est inclus */}
+              <div data-reveal style={{ background:"#F5F5F7", borderRadius:24, padding:"36px 40px", marginBottom:24 }}>
+                <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:20 }}>{t.tarifsIncludedLabel}</div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"10px 32px" }} className="included-grid">
+                  {t.tarifsIncluded.map(f => (
+                    <div key={f} style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(68,114,245,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                      <span style={{ fontSize:14, color:"#3C3C43", lineHeight:1.4 }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Carte comptoir — GRATUITE */}
+              <div data-reveal style={{ background:"linear-gradient(135deg,#EEF2FF 0%,#E8EDF8 100%)", borderRadius:24, padding:"44px 52px", display:"flex", alignItems:"center", gap:52, overflow:"hidden", position:"relative" }} className="counter-card-band">
+                <div style={{ position:"absolute", top:-60, right:220, width:200, height:200, borderRadius:"50%", background:"rgba(68,114,245,0.07)", pointerEvents:"none" }} />
+                <div style={{ flex:1, position:"relative" }}>
+                  <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"#4472F5", marginBottom:12, display:"block" }}>
+                    {lang === "fr" ? "Carte comptoir imprimable" : "Printable counter card"}
+                  </span>
+                  <h3 style={{ fontSize:"clamp(22px,2.8vw,30px)", fontWeight:700, color:"#1D1D1F", letterSpacing:-0.5, marginBottom:12, lineHeight:1.2 }}>
+                    {lang === "fr" ? "Incluse avec votre abonnement" : "Included with your plan"}
+                  </h3>
+                  <p style={{ fontSize:15, color:"#6E6E73", lineHeight:1.65, marginBottom:24, maxWidth:380 }}>
+                    {lang === "fr"
+                      ? "Support physique imprimé en 4K, à vos couleurs et avec votre logo. QR code intégré + option tag NFC. Posé sur votre comptoir — vos clients s'en servent immédiatement."
+                      : "4K physical print at your colors with your logo. Integrated QR code + optional NFC tag. Place it on your counter — customers use it right away."}
+                  </p>
+                  <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"white", borderRadius:14, padding:"10px 20px", boxShadow:"0 2px 16px rgba(0,0,0,0.08)", border:"1.5px solid rgba(52,199,89,0.25)" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span style={{ fontSize:16, fontWeight:800, color:"#1C7A37", letterSpacing:-0.2 }}>100% GRATUITE</span>
+                  </div>
+                </div>
+                <div style={{ flexShrink:0, width:220 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/wallio-carte-comptoir.png" alt="Carte comptoir Wallio"
+                    style={{ width:"100%", borderRadius:14, boxShadow:"0 20px 48px rgba(0,0,0,0.18)", transform:"rotate(-3deg)", display:"block" }} />
+                </div>
+              </div>
+
             </div>
           </section>
 

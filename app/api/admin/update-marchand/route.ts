@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 });
   }
 
-  const adminAllowed = ["actif", "nfc_id", "abonnement_statut", "abonnement_type", "abonnement_debut", "abonnement_fin", "abonnement_paiements"];
+  const adminAllowed = ["actif", "nfc_id", "abonnement_statut", "abonnement_type", "abonnement_debut", "abonnement_fin", "abonnement_paiements", "ville", "pays", "telephone"];
   const data: Record<string, unknown> = { updated_at: FieldValue.serverTimestamp() };
   for (const key of adminAllowed) {
     if (key in fields) data[key] = fields[key];

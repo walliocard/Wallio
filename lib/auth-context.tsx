@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { onSnapshot, doc } from "firebase/firestore";
+import { onSnapshot, getDoc, doc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
 type MarchandData = {
@@ -52,18 +52,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unsubSnap = null;
 
       if (u) {
-        // onSnapshot garde le marchand toujours à jour
+        const marchandRef = doc(db, "marchands", u.uid);
+
+        // getDoc immédiat — charge le marchand dès que possible sans attendre onSnapshot
+        getDoc(marchandRef).then(snap => {
+          if (snap.exists()) {
+            setMarchand(prev => prev ?? ({ id: snap.id, actif: false, ...snap.data() } as MarchandData));
+          }
+          setLoading(false);
+        }).catch(() => setLoading(false));
+
+        // onSnapshot garde le marchand à jour en temps réel
         unsubSnap = onSnapshot(
-          doc(db, "marchands", u.uid),
+          marchandRef,
           (snap) => {
             if (snap.exists()) {
-              setMarchand({ id: snap.id, ...snap.data() } as MarchandData);
+              setMarchand({ id: snap.id, actif: false, ...snap.data() } as MarchandData);
             } else {
               setMarchand(null);
             }
             setLoading(false);
           },
-          () => { setMarchand(null); setLoading(false); }
+          () => {}
         );
       } else {
         setMarchand(null);

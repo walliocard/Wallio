@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
   const expected = Buffer.from(`${ADMIN_EMAIL}:${SECRET}`).toString("base64");
   if (token !== expected) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const { nom, email, password } = await req.json();
-  if (!nom || !email || !password) return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
+  const { nom, email, password, telephone, pays, ville } = await req.json();
+  if (!nom || !email || !password || !ville) return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
 
   try {
     initAdmin();
@@ -47,6 +47,9 @@ export async function POST(req: NextRequest) {
       nfc_id,
       abonnement_statut: "en_attente",
       date_inscription: FieldValue.serverTimestamp(),
+      ville,
+      ...(pays && { pays }),
+      ...(telephone && { telephone }),
     });
 
     return NextResponse.json({ uid: user.uid, nfc_id });

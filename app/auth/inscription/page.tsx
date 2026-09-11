@@ -37,14 +37,14 @@ export default function InscriptionPage() {
     setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
-      await saveMarchandFields(user, {
+
+      // Firestore + notif admin en background — le serveur Vercel termine même si le client quitte
+      saveMarchandFields(user, {
         nom: form.nom,
         email: form.email,
         telephone: form.telephone || null,
         ville: form.ville,
         pays: form.pays,
-        actif: false,
-        date_inscription: Timestamp.now(),
         objectif_tampons: 10,
         nom_recompense: "Récompense offerte",
         icone_tampons: "⭐",
@@ -52,12 +52,14 @@ export default function InscriptionPage() {
         couleur_secondaire: "#F5F5F7",
         anti_doublon_delai: 86400,
         fuseau_horaire: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      });
+      }).catch(() => {});
+
       fetch("/api/notify-admin-inscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nom: form.nom, email: form.email, ville: form.ville }),
       }).catch(() => {});
+
       setSuccess(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";

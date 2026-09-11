@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { getMarchand } from "@/lib/firestore";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 
-export default function ConnexionPage() {
+function ConnexionInner() {
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    searchParams.get("inactive") ? "Votre compte est en attente d'activation par l'équipe Wallio." : ""
+  );
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -29,58 +32,20 @@ export default function ConnexionPage() {
     }
   }
 
-  async function trySignIn() {
-    const signInTimeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), 10000)
-    );
-    const { user } = await Promise.race([
-      signInWithEmailAndPassword(auth, form.email, form.password),
-      signInTimeout,
-    ]);
-    const marchandTimeout = new Promise<null>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), 6000)
-    );
-    const marchand = await Promise.race([getMarchand(user.uid), marchandTimeout]);
-    if (!marchand || !marchand.actif) {
-      await auth.signOut();
-      throw new Error("inactive");
-    }
-    return true;
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await trySignIn();
+      await signInWithEmailAndPassword(auth, form.email, form.password);
       router.push("/dashboard");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";
-      if (msg === "inactive") {
-        setError("Votre compte est en attente d'activation par l'équipe Wallio.");
-        setLoading(false);
-        return;
+      if (msg.includes("network") || msg.includes("timeout") || msg.includes("unavailable")) {
+        setError("Connexion lente — réessaie dans quelques secondes.");
+      } else {
+        setError("Email ou mot de passe incorrect.");
       }
-      if (msg === "timeout") {
-        // Retry automatique une fois
-        try {
-          await trySignIn();
-          router.push("/dashboard");
-          return;
-        } catch (e2: unknown) {
-          const msg2 = e2 instanceof Error ? e2.message : "";
-          if (msg2 === "inactive") {
-            setError("Votre compte est en attente d'activation par l'équipe Wallio.");
-            setLoading(false);
-            return;
-          }
-          setError(msg2 === "timeout" ? "Connexion lente — réessaie dans quelques secondes." : "Email ou mot de passe incorrect.");
-          setLoading(false);
-          return;
-        }
-      }
-      setError("Email ou mot de passe incorrect.");
     } finally {
       setLoading(false);
     }
@@ -183,4 +148,8 @@ export default function ConnexionPage() {
       </div>
     </main>
   );
+}
+
+export default function ConnexionPage() {
+  return <Suspense><ConnexionInner /></Suspense>;
 }
