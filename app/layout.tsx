@@ -32,10 +32,6 @@ export const metadata: Metadata = {
     images: ["https://app.walliocard.com/og-image.png"],
   },
   icons: {
-    icon: [
-      { url: "/favicon-32.png?v=3", sizes: "32x32", type: "image/png" },
-      { url: "/icon-192.png?v=3", sizes: "192x192", type: "image/png" },
-    ],
     apple: "/wallio-instagram-profil.png",
   },
 };
