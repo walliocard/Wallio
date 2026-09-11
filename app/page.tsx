@@ -1548,9 +1548,11 @@ export default function LandingPage() {
                     <span style={{ fontSize:16, color:"#8E8E93", fontWeight:500, marginLeft:4 }}>DH / {lang === "fr" ? "mois" : "month"}</span>
                   </div>
                   <div style={{ marginBottom:32 }}>
-                    <span style={{ fontSize:13, color:"#8E8E93", textDecoration:"line-through", marginRight:8 }}>349 DH/{lang === "fr" ? "mois" : "mo"}</span>
-                    <span style={{ fontSize:12, color:"#34C759", fontWeight:600 }}>-14%</span>
-                    <div style={{ fontSize:12, color:"#8E8E93", marginTop:4 }}>{lang === "fr" ? "Total 1 799 DH · Économisez 295 DH" : "Total 1,799 MAD · Save 295 MAD"}</div>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:13, color:"#8E8E93", textDecoration:"line-through" }}>{lang === "fr" ? "2 094 DH" : "2,094 MAD"}</span>
+                      <span style={{ fontSize:12, color:"#34C759", fontWeight:600 }}>-14%</span>
+                    </div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#1D1D1F", marginTop:2 }}>1 799 DH {lang === "fr" ? "au total" : "total"}</div>
                   </div>
                   <a href={WA} target="_blank" rel="noopener noreferrer"
                     style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"#1D1D1F", color:"white", fontSize:14, fontWeight:600, textDecoration:"none", transition:"opacity 0.15s" }}
@@ -1585,9 +1587,11 @@ export default function LandingPage() {
                     <span style={{ fontSize:16, color:"rgba(255,255,255,0.4)", fontWeight:500, marginLeft:4 }}>DH / {lang === "fr" ? "mois" : "month"}</span>
                   </div>
                   <div style={{ marginBottom:32, position:"relative" }}>
-                    <span style={{ fontSize:13, color:"rgba(255,255,255,0.35)", textDecoration:"line-through", marginRight:8 }}>349 DH/{lang === "fr" ? "mois" : "mo"}</span>
-                    <span style={{ fontSize:12, color:"#90B3FF", fontWeight:600 }}>-28%</span>
-                    <div style={{ fontSize:12, color:"rgba(255,255,255,0.35)", marginTop:4 }}>{lang === "fr" ? "Total 2 999 DH · Économisez 1 189 DH" : "Total 2,999 MAD · Save 1,189 MAD"}</div>
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      <span style={{ fontSize:13, color:"rgba(255,255,255,0.35)", textDecoration:"line-through" }}>{lang === "fr" ? "4 188 DH" : "4,188 MAD"}</span>
+                      <span style={{ fontSize:12, color:"#90B3FF", fontWeight:600 }}>-28%</span>
+                    </div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,0.85)", marginTop:2 }}>2 999 DH {lang === "fr" ? "au total" : "total"}</div>
                   </div>
 
                   <a href={WA} target="_blank" rel="noopener noreferrer"
