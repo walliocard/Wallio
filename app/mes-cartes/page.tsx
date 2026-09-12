@@ -115,7 +115,19 @@ export default function MesCartesPage() {
 
     unsubRef.current = onSnapshot(q, async (snap) => {
       if (snap.empty) {
-        setNotFound(true); setStep("login");
+        // Nouveau client venant de /inscription — profil en localStorage mais pas encore de carte
+        const savedPrenom = localStorage.getItem(PRENOM_KEY);
+        if (savedPrenom) {
+          setPrenom(savedPrenom);
+          setNom(localStorage.getItem(NOM_KEY) || "");
+          setDob(localStorage.getItem(DOB_KEY) || "");
+          registeredIdsRef.current = [];
+          setupMerchantsListener();
+          setTab("decouvrir");
+          setStep("main");
+        } else {
+          setNotFound(true); setStep("login");
+        }
         if (firstSnapshot) setFetching(false);
         firstSnapshot = false;
         return;
