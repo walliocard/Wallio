@@ -1,8 +1,9 @@
 "use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 export default function InscriptionPage() {
-  return (
-    <main className="min-h-screen bg-[#0A0A0A] text-white flex items-center justify-center">
-      <p>Inscription</p>
-    </main>
-  );
+  const router = useRouter();
+  useEffect(() => { router.replace("/choisir"); }, [router]);
+  return null;
 }
