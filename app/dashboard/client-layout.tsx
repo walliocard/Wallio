@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import DashboardNav from "@/components/dashboard/Nav";
 import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
+import { useLang } from "@/lib/lang-context";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, marchand, loading } = useAuth();
+  const { t } = useLang();
   const router = useRouter();
 
   useEffect(() => {
@@ -34,10 +36,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div style={{ textAlign: "center", maxWidth: 360 }}>
           <div style={{ fontSize: 40, marginBottom: 20 }}>⏳</div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--fg)", marginBottom: 10 }}>
-            Compte en attente d&apos;activation
+            {t.dash_pending_title}
           </h1>
           <p style={{ fontSize: 15, color: "var(--fg-sec)", lineHeight: 1.6 }}>
-            Ton compte a bien été créé. Notre équipe va l&apos;activer sous peu — tu recevras un email dès que c&apos;est fait.
+            {t.dash_pending_body}
           </p>
         </div>
       </div>

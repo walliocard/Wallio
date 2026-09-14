@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
 import WallioIcon from "@/components/WallioIcon";
+import { useLang } from "@/lib/lang-context";
 
 type TopClient = { prenom: string; nom: string; tampons: number; id: string };
 
@@ -24,10 +25,9 @@ type Stats = {
   proches_recompense: number;  // clients à 1-2 tampons du but
 };
 
-const JOURS = ["L", "M", "M", "J", "V", "S", "D"];
-
 export default function AccueilPage() {
   const { user, marchand } = useAuth();
+  const { t } = useLang();
   const [stats, setStats] = useState<Stats>({
     total: 0, aujourd_hui: 0, tampons_total: 0, ce_mois: 0,
     semaine: [0,0,0,0,0,0,0], semaine_precedente: [0,0,0,0,0,0,0],
@@ -104,11 +104,11 @@ export default function AccueilPage() {
   const doubleActif = doubleFin ? new Date(doubleFin) > new Date() : false;
 
   const STAT_CARDS = [
-    { label: "Aujourd'hui",   value: stats.aujourd_hui,  gradient: true },
-    { label: "Ce mois",       value: stats.ce_mois,      color: "#34C759" },
-    { label: "Total clients", value: stats.total,        color: "var(--fg)" },
-    { label: "Tampons",       value: stats.tampons_total, color: "var(--fg)" },
-    { label: "Récompenses",   value: stats.recompenses,  color: stats.recompenses > 0 ? "#FF9F0A" : "var(--fg-tertiary)" },
+    { label: t.dash_today,         value: stats.aujourd_hui,  gradient: true },
+    { label: t.dash_this_month,    value: stats.ce_mois,      color: "#34C759" },
+    { label: t.dash_total_clients, value: stats.total,        color: "var(--fg)" },
+    { label: t.dash_stamps,        value: stats.tampons_total, color: "var(--fg)" },
+    { label: t.dash_rewards,       value: stats.recompenses,  color: stats.recompenses > 0 ? "#FF9F0A" : "var(--fg-tertiary)" },
   ];
 
   return (
@@ -149,10 +149,10 @@ export default function AccueilPage() {
           </div>
           <div className="flex-1">
             <p className="text-[14px] font-semibold" style={{ color: "#FF9F0A" }}>
-              {stats.recompenses} récompense{stats.recompenses > 1 ? "s" : ""} en attente
+              {stats.recompenses} {t.dash_pending_rewards}
             </p>
             <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>
-              Des clients ont atteint leur objectif — validez leurs récompenses
+              {t.dash_clients_reached}
             </p>
           </div>
           <Icons.ChevronRight />
@@ -171,10 +171,10 @@ export default function AccueilPage() {
           </div>
           <div className="flex-1">
             <p className="text-[14px] font-semibold" style={{ background: "var(--wallio-gradient)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Double tampons actif
+              {t.dash_double_stamps}
             </p>
             <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>
-              Jusqu'au {new Date(doubleFin!).toLocaleDateString("fr-FR")} — chaque visite vaut 2 tampons
+              {new Date(doubleFin!).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function AccueilPage() {
           style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
           <div className="flex items-center justify-between mb-5">
             <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>
-              Visites — 7 derniers jours
+              {t.dash_activity}
             </p>
             {tendance !== null && (
               <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full"
@@ -240,7 +240,7 @@ export default function AccueilPage() {
                     }}
                   />
                   <span className="text-[10px] font-medium" style={{ color: "var(--fg-tertiary)" }}>
-                    {JOURS[i]}
+                    {t.dash_days[i]}
                   </span>
                 </div>
               );
@@ -278,13 +278,13 @@ export default function AccueilPage() {
         {/* Taux de fidélité */}
         <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Fidélité</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>{t.dash_stamps}</p>
             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
               style={{
                 background: stats.taux_fidelite >= 50 ? "rgba(52,199,89,0.12)" : stats.taux_fidelite >= 25 ? "rgba(255,159,10,0.12)" : "rgba(142,142,147,0.12)",
                 color: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--fg-tertiary)",
               }}>
-              {stats.taux_fidelite >= 50 ? "Bon" : stats.taux_fidelite >= 25 ? "Moyen" : "Faible"}
+              {stats.taux_fidelite >= 50 ? "✓" : stats.taux_fidelite >= 25 ? "~" : "↓"}
             </span>
           </div>
           <p className="text-[32px] font-bold tracking-tight leading-none mb-1" style={{ color: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--fg-tertiary)" }}>
@@ -312,7 +312,7 @@ export default function AccueilPage() {
             {stats.nouvelles_semaine > 0 ? `+${stats.nouvelles_semaine}` : "0"}
           </p>
           <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
-            inscription{stats.nouvelles_semaine > 1 ? "s" : ""} cette semaine
+            {t.dash_today} — 7j
           </p>
         </div>
 
@@ -331,7 +331,7 @@ export default function AccueilPage() {
             {stats.proches_recompense}
           </p>
           <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
-            client{stats.proches_recompense > 1 ? "s" : ""} à 1–2 tampons du but
+            {t.dash_stamps} →  {marchand?.nom_recompense || t.dash_rewards}
           </p>
         </Link>
       </div>
@@ -354,7 +354,7 @@ export default function AccueilPage() {
                   <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
                 </svg>
                 <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#FF9F0A" }}>
-                  Meilleur client
+                  {t.dash_best_clients}
                 </p>
               </div>
               <p className="text-[14px] font-medium truncate" style={{ color: "var(--fg)" }}>
@@ -368,7 +368,7 @@ export default function AccueilPage() {
           </Link>
         ) : (
           <div className="p-4 rounded-2xl" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-            <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>Aucun client encore — partagez votre lien NFC !</p>
+            <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{t.clients_empty}</p>
           </div>
         )}
 
@@ -382,8 +382,8 @@ export default function AccueilPage() {
               <Icons.Users size={16} />
             </div>
             <div>
-              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Voir tous les clients</p>
-              <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>{stats.total} inscrits</p>
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.clients_title}</p>
+              <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>{stats.total}</p>
             </div>
           </div>
           <Icons.ChevronRight />
