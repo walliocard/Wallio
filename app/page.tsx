@@ -1713,16 +1713,16 @@ export default function LandingPage() {
                     </div>
                     <span style={{ fontSize:12, fontWeight:700, background:"rgba(52,199,89,0.14)", color:"#1C7A37", padding:"4px 10px", borderRadius:20 }}>-14%</span>
                   </div>
-                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:4 }}>
-                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"#1D1D1F", lineHeight:1 }}>{pricing.monthlyEquiv6}</span>
-                    <span style={{ fontSize:16, color:"#8E8E93", fontWeight:500, marginLeft:4 }}>{pricing.currency} / {lang === "fr" ? "mois" : "month"}</span>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:6 }}>
+                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"#1D1D1F", lineHeight:1 }}>{pricing.sixMonths.toLocaleString()}</span>
+                    <span style={{ fontSize:16, color:"#8E8E93", fontWeight:500, marginLeft:4 }}>{pricing.currency}</span>
                   </div>
                   <div style={{ marginBottom:32 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                      <span style={{ fontSize:17, color:"#B0B0B8", textDecoration:"line-through", fontWeight:500 }}>{pricing.strikethrough6.toLocaleString()} {pricing.currency}</span>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                      <span style={{ fontSize:16, color:"#B0B0B8", textDecoration:"line-through", fontWeight:500 }}>{pricing.strikethrough6.toLocaleString()} {pricing.currency}</span>
                       <span style={{ fontSize:12, color:"#34C759", fontWeight:700 }}>-14%</span>
                     </div>
-                    <div style={{ fontSize:18, fontWeight:700, color:"#1D1D1F", marginTop:4, letterSpacing:-0.3 }}>{pricing.sixMonths.toLocaleString()} {pricing.currency} <span style={{ fontSize:13, fontWeight:500, color:"#8E8E93" }}>{lang === "fr" ? "au total" : "total"}</span></div>
+                    <div style={{ fontSize:13, color:"#8E8E93", fontWeight:500 }}>≈ {pricing.monthlyEquiv6} {pricing.currency} / {lang === "fr" ? "mois" : "month"}</div>
                   </div>
                   <a href={WA} target="_blank" rel="noopener noreferrer"
                     style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"#1D1D1F", color:"white", fontSize:14, fontWeight:600, textDecoration:"none", transition:"opacity 0.15s" }}
@@ -1752,16 +1752,16 @@ export default function LandingPage() {
                     <span style={{ fontSize:12, fontWeight:700, background:"rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.75)", padding:"4px 10px", borderRadius:20 }}>-28%</span>
                   </div>
 
-                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:4, position:"relative" }}>
-                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"white", lineHeight:1 }}>{pricing.monthlyEquivAnnual}</span>
-                    <span style={{ fontSize:16, color:"rgba(255,255,255,0.4)", fontWeight:500, marginLeft:4 }}>{pricing.currency} / {lang === "fr" ? "mois" : "month"}</span>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:6, position:"relative" }}>
+                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"white", lineHeight:1 }}>{pricing.annual.toLocaleString()}</span>
+                    <span style={{ fontSize:16, color:"rgba(255,255,255,0.45)", fontWeight:500, marginLeft:4 }}>{pricing.currency}</span>
                   </div>
                   <div style={{ marginBottom:32, position:"relative" }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                      <span style={{ fontSize:17, color:"rgba(255,255,255,0.35)", textDecoration:"line-through", fontWeight:500 }}>{pricing.strikethroughAnnual.toLocaleString()} {pricing.currency}</span>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                      <span style={{ fontSize:16, color:"rgba(255,255,255,0.35)", textDecoration:"line-through", fontWeight:500 }}>{pricing.strikethroughAnnual.toLocaleString()} {pricing.currency}</span>
                       <span style={{ fontSize:12, color:"rgba(255,255,255,0.6)", fontWeight:700 }}>-28%</span>
                     </div>
-                    <div style={{ fontSize:18, fontWeight:700, color:"white", marginTop:4, letterSpacing:-0.3 }}>{pricing.annual.toLocaleString()} {pricing.currency} <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.5)" }}>{lang === "fr" ? "au total" : "total"}</span></div>
+                    <div style={{ fontSize:13, color:"rgba(255,255,255,0.45)", fontWeight:500 }}>≈ {pricing.monthlyEquivAnnual} {pricing.currency} / {lang === "fr" ? "mois" : "month"}</div>
                   </div>
 
                   <a href={WA} target="_blank" rel="noopener noreferrer"
