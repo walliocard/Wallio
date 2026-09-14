@@ -7,6 +7,7 @@ import AppleWalletCard, { type StampStyle } from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
 import CropEditor from "@/components/CropEditor";
+import { useLang } from "@/lib/lang-context";
 
 // ── History snapshot ──────────────────────────────────
 interface Snapshot {
@@ -26,6 +27,7 @@ interface Snapshot {
 
 export default function CartePage() {
   const { user, marchand } = useAuth();
+  const { t: tr } = useLang();
 
   const nom = (marchand?.nom as string) || "";
   const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
@@ -754,7 +756,7 @@ export default function CartePage() {
             Carte Apple Wallet
           </p>
           <h1 style={{ fontSize: 20, fontWeight: 600, letterSpacing: -0.5, color: "var(--fg)", marginTop: 1 }}>
-            Ma carte
+            {tr.carte_title}
           </h1>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -797,7 +799,7 @@ export default function CartePage() {
                 border: "none", cursor: "pointer",
                 boxShadow: "0 4px 14px rgba(0,122,255,0.25)",
               }}>
-                {saving ? "…" : saved ? "✓" : "Sauvegarder"}
+                {saving ? "…" : saved ? "✓" : tr.carte_save}
               </button>
             </>
           )}
@@ -814,7 +816,7 @@ export default function CartePage() {
               background: "none", border: "none",
               borderBottom: mobileTab === t ? "2px solid var(--accent)" : "2px solid transparent",
             }}>
-              {t === "preview" ? "Aperçu" : "Personnaliser"}
+              {t === "preview" ? tr.carte_preview : tr.carte_customize}
             </button>
           ))}
         </div>
