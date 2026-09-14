@@ -47,6 +47,7 @@ export default function InscriptionPage() {
         telephone: form.telephone || null,
         ville: form.ville,
         pays: form.pays,
+        langue: form.pays === "Roumanie" ? "ro" : "fr",
         objectif_tampons: 10,
         nom_recompense: "Récompense offerte",
         icone_tampons: "⭐",
