@@ -1733,23 +1733,23 @@ export default function LandingPage() {
                 </div>
 
                 {/* Annuel — featured */}
-                <div style={{ background:"linear-gradient(145deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)", borderRadius:24, padding:"36px 28px 32px", position:"relative", overflow:"hidden" }}>
-                  <div style={{ position:"absolute", top:-50, right:-50, width:150, height:150, borderRadius:"50%", background:"rgba(68,114,245,0.15)", pointerEvents:"none" }} />
-                  <div style={{ position:"absolute", bottom:-30, left:-30, width:100, height:100, borderRadius:"50%", background:"rgba(138,92,246,0.12)", pointerEvents:"none" }} />
+                <div style={{ background:"linear-gradient(145deg,#0A0A0A 0%,#1C1C1E 60%,#2C2C2E 100%)", borderRadius:24, padding:"36px 28px 32px", position:"relative", overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:-50, right:-50, width:150, height:150, borderRadius:"50%", background:"rgba(255,255,255,0.04)", pointerEvents:"none" }} />
+                  <div style={{ position:"absolute", bottom:-30, left:-30, width:100, height:100, borderRadius:"50%", background:"rgba(255,255,255,0.03)", pointerEvents:"none" }} />
 
                   {/* Badge meilleur rapport */}
-                  <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(68,114,245,0.22)", borderRadius:20, padding:"5px 12px", marginBottom:20, position:"relative" }}>
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="#90B3FF"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"#90B3FF" }}>
+                  <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(255,255,255,0.10)", borderRadius:20, padding:"5px 12px", marginBottom:20, position:"relative" }}>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"rgba(255,255,255,0.7)" }}>
                       {lang === "fr" ? "Meilleur rapport" : "Best value"}
                     </span>
                   </div>
 
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:28, position:"relative" }}>
-                    <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)" }}>
+                    <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)" }}>
                       {lang === "fr" ? "Annuel" : "Annual"}
                     </div>
-                    <span style={{ fontSize:12, fontWeight:700, background:"rgba(68,114,245,0.30)", color:"#90B3FF", padding:"4px 10px", borderRadius:20 }}>-28%</span>
+                    <span style={{ fontSize:12, fontWeight:700, background:"rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.75)", padding:"4px 10px", borderRadius:20 }}>-28%</span>
                   </div>
 
                   <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:4, position:"relative" }}>
@@ -1759,15 +1759,15 @@ export default function LandingPage() {
                   <div style={{ marginBottom:32, position:"relative" }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                       <span style={{ fontSize:17, color:"rgba(255,255,255,0.35)", textDecoration:"line-through", fontWeight:500 }}>{pricing.strikethroughAnnual.toLocaleString()} {pricing.currency}</span>
-                      <span style={{ fontSize:12, color:"#90B3FF", fontWeight:700 }}>-28%</span>
+                      <span style={{ fontSize:12, color:"rgba(255,255,255,0.6)", fontWeight:700 }}>-28%</span>
                     </div>
                     <div style={{ fontSize:18, fontWeight:700, color:"white", marginTop:4, letterSpacing:-0.3 }}>{pricing.annual.toLocaleString()} {pricing.currency} <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.5)" }}>{lang === "fr" ? "au total" : "total"}</span></div>
                   </div>
 
                   <a href={WA} target="_blank" rel="noopener noreferrer"
-                    style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"#4472F5", color:"white", fontSize:14, fontWeight:600, textDecoration:"none", boxShadow:"0 8px 24px rgba(68,114,245,0.45)", transition:"transform 0.15s, box-shadow 0.15s", position:"relative" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform="translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 32px rgba(68,114,245,0.55)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=""; (e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(68,114,245,0.45)"; }}>
+                    style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"white", color:"#0A0A0A", fontSize:14, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px rgba(0,0,0,0.35)", transition:"transform 0.15s, box-shadow 0.15s", position:"relative" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform="translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 32px rgba(0,0,0,0.45)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=""; (e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(0,0,0,0.35)"; }}>
                     {lang === "fr" ? "Commencer" : "Get started"}
                   </a>
                 </div>
