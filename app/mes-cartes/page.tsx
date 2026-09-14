@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient } from "@/lib/loyalty";
+import { useLang } from "@/lib/lang-context";
 
 interface CardData {
   clientId: string;
@@ -62,6 +63,7 @@ const PAYS = [
 ];
 
 export default function MesCartesPage() {
+  const { t } = useLang();
   const [step, setStep]         = useState<"loading"|"login"|"main">("loading");
   const [tab, setTab]           = useState<"cartes"|"messages"|"decouvrir">("cartes");
   const [countryCode, setCountryCode] = useState("+212");
@@ -301,9 +303,9 @@ export default function MesCartesPage() {
         <div style={{ maxWidth: 390, width: "100%", margin: "0 auto" }}>
 
           <div style={{ ...glass, padding: "32px 28px", borderRadius: 28, marginBottom: 16 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: "#1C2333", marginBottom: 8 }}>Mes cartes</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: "#1C2333", marginBottom: 8 }}>{t.mes_cartes_title}</h1>
             <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 28, lineHeight: 1.55 }}>
-              Entrez votre numéro pour retrouver toutes vos cartes et découvrir de nouveaux établissements.
+              {t.mes_cartes_subtitle}
             </p>
 
             <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -318,27 +320,27 @@ export default function MesCartesPage() {
                   onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
                 />
               </div>
-              {notFound && <p style={{ fontSize: 13, color: "#FF453A", textAlign: "center" }}>Aucune carte trouvée pour ce numéro.</p>}
+              {notFound && <p style={{ fontSize: 13, color: "#FF453A", textAlign: "center" }}>{t.mes_cartes_not_found}</p>}
               <button type="submit" disabled={!phoneInput.trim()} style={{
                 padding: "15px", borderRadius: 16, border: "none", cursor: phoneInput.trim() ? "pointer" : "not-allowed",
                 background: phoneInput.trim() ? "linear-gradient(135deg,#5B7CFA,#7C5BFA)" : "rgba(142,155,181,0.15)",
                 color: phoneInput.trim() ? "white" : "#8E9BB5", fontSize: 15, fontWeight: 600,
                 boxShadow: phoneInput.trim() ? "0 8px 24px rgba(91,124,250,0.35)" : "none", transition: "all 0.2s",
               }}>
-                Voir mes cartes
+                {t.mes_cartes_see}
               </button>
             </form>
           </div>
 
           <div style={{ textAlign: "center", marginTop: 8 }}>
-            <p style={{ fontSize: 13, color: "#8E9BB5", marginBottom: 12 }}>Pas encore de carte ?</p>
+            <p style={{ fontSize: 13, color: "#8E9BB5", marginBottom: 12 }}>{t.mes_cartes_no_card}</p>
             <a href="/inscription" style={{
               display: "inline-block", fontSize: 14, fontWeight: 600,
               color: "#5B7CFA", textDecoration: "none",
               padding: "12px 28px", borderRadius: 14,
               background: "rgba(91,124,250,0.08)", border: "1px solid rgba(91,124,250,0.2)",
             }}>
-              Créer un compte
+              {t.mes_cartes_create}
             </a>
           </div>
         </div>
@@ -362,16 +364,16 @@ export default function MesCartesPage() {
             <p style={{ fontSize: 13, color: "#8E9BB5", marginTop: 3 }}>{phone}</p>
           </div>
           <button onClick={handleLogout} style={{ background: "rgba(142,155,181,0.15)", border: "none", borderRadius: 12, padding: "8px 14px", fontSize: 13, color: "#8E9BB5", cursor: "pointer", fontWeight: 500, backdropFilter: "blur(8px)" }}>
-            Changer
+            {t.mes_cartes_change}
           </button>
         </div>
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 6, padding: "5px", background: "rgba(142,155,181,0.12)", borderRadius: 18, marginBottom: 20, backdropFilter: "blur(8px)" }}>
           {([
-            ["cartes", `Mes cartes (${cards.length})`],
-            ["messages", notifs.filter(n => !n.read).length > 0 ? `Messages (${notifs.filter(n => !n.read).length})` : "Messages"],
-            ["decouvrir", `Découvrir (${merchants.length})`],
+            ["cartes", `${t.mes_cartes_tab_cards} (${cards.length})`],
+            ["messages", notifs.filter(n => !n.read).length > 0 ? `${t.mes_cartes_tab_messages} (${notifs.filter(n => !n.read).length})` : t.mes_cartes_tab_messages],
+            ["decouvrir", `${t.mes_cartes_tab_discover} (${merchants.length})`],
           ] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               flex: 1, padding: "10px", borderRadius: 13, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
@@ -396,8 +398,8 @@ export default function MesCartesPage() {
               <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(91,124,250,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="#5B7CFA" stroke="none"/></svg>
               </div>
-              <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Aucune carte</p>
-              <p style={{ fontSize: 13, color: "#8E9BB5" }}>Scannez le tag NFC d'un établissement ou découvrez-en un dans l'onglet Découvrir.</p>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>{t.mes_cartes_empty_cards}</p>
+              <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_cards_sub}</p>
             </div>
           ) : (() => {
             const grouped: Record<string, typeof cards> = {};
@@ -417,8 +419,8 @@ export default function MesCartesPage() {
         {tab === "messages" && (
           notifs.length === 0 ? (
             <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
-              <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Aucun message</p>
-              <p style={{ fontSize: 13, color: "#8E9BB5" }}>Les offres et annonces de vos établissements apparaîtront ici.</p>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>{t.mes_cartes_empty_messages}</p>
+              <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_messages_sub}</p>
             </div>
           ) : notifs.map(n => {
             const card = cards.find(c => c.marchandId === n.marchandId);
@@ -458,8 +460,8 @@ export default function MesCartesPage() {
               <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(52,199,89,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="1.8" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
               </div>
-              <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>Vous êtes partout !</p>
-              <p style={{ fontSize: 13, color: "#8E9BB5" }}>Vous avez une carte dans tous les établissements Wallio.</p>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>{t.mes_cartes_empty_discover}</p>
+              <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_discover_sub}</p>
             </div>
           ) : (() => {
             const grouped: Record<string, typeof merchants> = {};
@@ -481,7 +483,7 @@ export default function MesCartesPage() {
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 16, fontWeight: 600, color: "#1C2333", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.nom}</p>
-                  <p style={{ fontSize: 12, color: "#8E9BB5" }}>Carte de fidélité disponible</p>
+                  <p style={{ fontSize: 12, color: "#8E9BB5" }}>{t.mes_cartes_loyalty}</p>
                 </div>
                 <button
                   onClick={() => rejoindre(m)}
@@ -495,13 +497,13 @@ export default function MesCartesPage() {
                     transition: "all 0.2s",
                   }}
                 >
-                  {joining.has(m.id) ? "…" : joined.has(m.id) ? "Rejoint ✓" : "Rejoindre"}
+                  {joining.has(m.id) ? "…" : joined.has(m.id) ? t.mes_cartes_joined : t.mes_cartes_join}
                 </button>
               </div>
               {!prenom && (
                 <div style={{ padding: "10px 18px 14px", borderTop: "1px solid rgba(142,155,181,0.1)" }}>
                   <p style={{ fontSize: 12, color: "#8E9BB5", textAlign: "center" }}>
-                    Scannez d'abord le NFC d'un établissement pour créer votre profil.
+                    {t.mes_cartes_nfc_required}
                   </p>
                 </div>
               )}
@@ -518,7 +520,7 @@ export default function MesCartesPage() {
         <button
           onClick={() => setDeleteConfirm(true)}
           style={{ fontSize: 12, color: "#C0C8D8", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
-          Supprimer mon compte Wallio
+          {t.mes_cartes_delete_account}
         </button>
       </div>
 
@@ -527,33 +529,34 @@ export default function MesCartesPage() {
         <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)" }}>
           <div style={{ width: "100%", maxWidth: 430, background: "#FFFFFF", borderRadius: "24px 24px 0 0", padding: "28px 24px 48px" }}>
             <div style={{ width: 36, height: 4, background: "rgba(0,0,0,0.1)", borderRadius: 2, margin: "0 auto 24px" }} />
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#1C2333", marginBottom: 8, textAlign: "center" }}>Supprimer mon compte ?</p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#1C2333", marginBottom: 8, textAlign: "center" }}>{t.mes_cartes_delete_title}</p>
             <p style={{ fontSize: 14, color: "#8E9BB5", lineHeight: 1.6, textAlign: "center", marginBottom: 28 }}>
-              Toutes vos cartes de fidélité seront supprimées définitivement. Cette action est irréversible.
+              {t.mes_cartes_delete_body}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleting}
                 style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: "#FF3B30", color: "white", fontSize: 16, fontWeight: 700, border: "none", cursor: deleting ? "default" : "pointer", opacity: deleting ? 0.6 : 1 }}>
-                {deleting ? "Suppression…" : "Supprimer définitivement"}
+                {deleting ? t.mes_cartes_deleting : t.mes_cartes_delete_confirm}
               </button>
               <button
                 onClick={() => setDeleteConfirm(false)}
                 style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: "rgba(0,0,0,0.05)", color: "#1C2333", fontSize: 16, fontWeight: 500, border: "none", cursor: "pointer" }}>
-                Annuler
+                {t.mes_cartes_delete_cancel}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 16 }}>Wallio · cartes de fidélité digitales</p>
+      <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 16 }}>{t.mes_cartes_footer}</p>
     </main>
   );
 }
 
 function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { card: CardData; delay: number; onEnableNotif: () => void; enablingNotif: boolean; isAndroid: boolean }) {
+  const { t } = useLang();
   const pct = Math.min(100, Math.round((card.stampsCurrent / card.stampsObjective) * 100));
   const restants = card.stampsObjective - card.stampsCurrent;
   const dark = isColorDark(card.couleur);
@@ -598,7 +601,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
           <div style={{ height: "100%", width: `${pct}%`, borderRadius: 10, background: dark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.45)", transition: "width 0.8s cubic-bezier(.16,1,.3,1)" }} />
         </div>
         <p style={{ fontSize: 12, color: dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)", marginTop: 8 }}>
-          {restants > 0 ? `${restants} tampon${restants > 1 ? "s" : ""} avant : ${card.rewardName}` : `! ${card.rewardName} disponible`}
+          {restants > 0 ? `${restants} ${restants > 1 ? t.mes_cartes_stamps_before_pl : t.mes_cartes_stamps_before} → ${card.rewardName}` : `${t.mes_cartes_reward_available} ${card.rewardName}`}
         </p>
       </div>
 
@@ -607,20 +610,20 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
         {!card.hasPushToken && (
           <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 10, background: "rgba(255,149,0,0.08)", border: "1px solid rgba(255,149,0,0.2)", display: "flex", alignItems: "center", gap: 8 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span style={{ fontSize: 11, color: "#FF9500", fontWeight: 500 }}>Re-téléchargez pour activer les mises à jour auto</span>
+            <span style={{ fontSize: 11, color: "#FF9500", fontWeight: 500 }}>{t.mes_cartes_redownload}</span>
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {!isAndroid && (
             <a href={`/api/apple-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#000", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="white" stroke="none"/></svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>Ajouter à Apple Wallet</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>{t.mes_cartes_apple_wallet}</span>
             </a>
           )}
           {isAndroid && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
             <a href={`/api/google-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#1a73e8", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>Ajouter à Google Wallet</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>{t.mes_cartes_google_wallet}</span>
             </a>
           )}
           <p style={{ fontSize: 11, color: "#AEAEB2", textAlign: "center" }}>{pct === 100 ? "Récompense disponible !" : `${pct}% complété`}</p>
@@ -641,7 +644,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
                 <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
                 <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
               </svg>
-              {copied ? "Lien copié !" : "Inviter un ami (+1 tampon)"}
+              {copied ? t.mes_cartes_link_copied : t.mes_cartes_invite}
             </button>
           )}
 
@@ -660,7 +663,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round">
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
               </svg>
-              {enablingNotif ? "Activation..." : "Activer les notifications"}
+              {enablingNotif ? t.mes_cartes_enabling_notif : t.mes_cartes_enable_notif}
             </button>
           )}
         </div>
