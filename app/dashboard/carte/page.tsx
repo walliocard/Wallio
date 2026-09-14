@@ -861,9 +861,9 @@ export default function CartePage() {
           {walletType === "apple" && (
             <div style={{ display: "flex", gap: 6 }}>
               {([
-                { key: "full", label: "Complète" },
-                { key: "compact", label: "Liste" },
-                { key: "back", label: "Dos" },
+                { key: "full", label: tr.carte_view_full },
+                { key: "compact", label: tr.carte_view_list },
+                { key: "back", label: tr.carte_view_back },
               ] as const).map(({ key, label }) => (
                 <button key={key} onClick={() => setPreviewMode(key)} style={{
                   padding: "6px 14px", borderRadius: 20, fontSize: 11, fontWeight: 600,
@@ -977,7 +977,7 @@ export default function CartePage() {
         }}>
 
           {/* Logo */}
-          <Section label="Logo">
+          <Section label={tr.carte_logo}>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <label style={{
                 width: 52, height: 52, borderRadius: 12,
@@ -999,7 +999,7 @@ export default function CartePage() {
                   cursor: uploadingLogo ? "wait" : "pointer", textAlign: "center",
                 }}>
                   <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
-                  {uploadingLogo ? "Upload…" : logoUrl ? "Changer" : "Ajouter"}
+                  {uploadingLogo ? tr.carte_importing : logoUrl ? tr.carte_change : tr.carte_upload}
                 </label>
                 {logoUrl && (
                   <button onClick={() => setLogoUrl("")} style={{ width: "100%", marginTop: 4, padding: "5px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
@@ -1117,7 +1117,7 @@ export default function CartePage() {
                   color: "var(--fg)", cursor: uploadingStrip ? "wait" : "pointer", textAlign: "center",
                 }}>
                   <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleStripUpload} disabled={uploadingStrip}/>
-                  {uploadingStrip ? "Upload…" : stripUrl ? "Changer" : "Importer"}
+                  {uploadingStrip ? tr.carte_importing : stripUrl ? tr.carte_change : tr.carte_upload}
                 </label>
                 {(stripUrl || rawStripUrl) && (
                   <button onClick={() => setShowStripCrop(true)}
@@ -1201,7 +1201,7 @@ export default function CartePage() {
                         border: `1px solid ${stripTextSize === s ? "var(--accent)" : "var(--border)"}`,
                         cursor: "pointer",
                       }}>
-                        {s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}
+                        {s === "s" ? tr.carte_small : s === "m" ? tr.carte_medium : tr.carte_large}
                       </button>
                     ))}
                   </div>
@@ -1222,7 +1222,7 @@ export default function CartePage() {
                           border: `1px solid ${stripText2Size === s ? "var(--accent)" : "var(--border)"}`,
                           cursor: "pointer",
                         }}>
-                          {s === "s" ? "Petit" : s === "m" ? "Moyen" : "Grand"}
+                          {s === "s" ? tr.carte_small : s === "m" ? tr.carte_medium : tr.carte_large}
                         </button>
                       ))}
                     </div>
@@ -1268,9 +1268,9 @@ export default function CartePage() {
                 <Field label="Position X du texte">
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 5 }}>
                     {([
-                      { k: "bl", label: "Gauche" },
-                      { k: "bc", label: "Centre" },
-                      { k: "br", label: "Droite" },
+                      { k: "bl", label: tr.carte_left },
+                      { k: "bc", label: tr.carte_center },
+                      { k: "br", label: tr.carte_right },
                     ] as const).map(({ k, label }) => (
                       <button key={k} onClick={() => setStripTextPos(k)} style={{
                         padding: "5px 3px", borderRadius: 8, fontSize: 11, fontWeight: (stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? 600 : 400,
@@ -1695,7 +1695,7 @@ export default function CartePage() {
                     cursor: uploadingIcon ? "wait" : "pointer", textAlign: "center",
                   }}>
                     <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleIconUpload} disabled={uploadingIcon}/>
-                    {uploadingIcon ? "Upload…" : iconUrl ? "Changer" : "Ajouter"}
+                    {uploadingIcon ? tr.carte_importing : iconUrl ? tr.carte_change : tr.carte_upload}
                   </label>
                   {iconUrl && (
                     <button onClick={() => setIconUrl("")} style={{ width: "100%", marginTop: 4, padding: "4px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
@@ -1888,7 +1888,7 @@ export default function CartePage() {
                     cursor: uploadingGoogleHero ? "wait" : "pointer", textAlign: "center",
                   }}>
                     <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleGoogleHeroUpload} disabled={uploadingGoogleHero} />
-                    {uploadingGoogleHero ? "Upload…" : googleHeroUrl ? "Changer" : "Ajouter une photo"}
+                    {uploadingGoogleHero ? tr.carte_importing : googleHeroUrl ? tr.carte_change : tr.carte_upload}
                   </label>
                   {(googleHeroUrl || rawGoogleHeroUrl) && (
                     <button onClick={() => setShowGoogleCrop(true)}

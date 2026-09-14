@@ -187,8 +187,8 @@ export default function ReglagesPage() {
             <div>
               <p className="text-[14px]" style={{ color: "var(--fg)" }}>
                 {doubleTamponsActif
-                  ? `Actif jusqu'au ${new Date(doubleTamponsFin).toLocaleDateString("fr-FR")}`
-                  : "Désactivé"}
+                  ? new Date(doubleTamponsFin).toLocaleDateString()
+                  : t.settings_anti_doublon_off}
               </p>
               <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
                 Chaque visite ajoute 2 tampons au lieu de 1
@@ -419,7 +419,7 @@ export default function ReglagesPage() {
                     color: langue === l ? "white" : "var(--fg-secondary)",
                     border: `1px solid ${langue === l ? "var(--accent)" : "var(--border)"}`,
                   }}>
-                  {l === "fr" ? "🇫🇷 FR" : "🇷🇴 RO"}
+                  {l === "fr" ? "FR" : "RO"}
                 </button>
               ))}
             </div>
