@@ -101,9 +101,9 @@ export default function CartePage() {
   const isZoomingStripRef = useRef(false);
   const isZoomingGoogleRef = useRef(false);
 
-  const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || "Tampons");
-  const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || "Récompense");
-  const [memberLabel, setMemberLabel] = useState<string>((marchand?.apple_member_label as string) || "Membre");
+  const [primaryLabel, setPrimaryLabel] = useState<string>((marchand?.apple_primary_label as string) || tr.carte_stamps_default);
+  const [rewardLabel, setRewardLabel] = useState<string>((marchand?.apple_reward_label as string) || tr.carte_reward_default);
+  const [memberLabel, setMemberLabel] = useState<string>((marchand?.apple_member_label as string) || tr.carte_member_default);
   const [description, setDescription] = useState<string>((marchand?.apple_description as string) || "");
   const [backInfo, setBackInfo] = useState<string>((marchand?.apple_back_info as string) || "");
 
@@ -144,8 +144,8 @@ export default function CartePage() {
   // Wallet type
   const [walletType, setWalletType] = useState<"apple" | "google">("apple");
   // Google Wallet labels
-  const [googlePrimaryLabel, setGooglePrimaryLabel] = useState<string>((marchand as Record<string, unknown>).google_primary_label as string || "Tampons");
-  const [googleSecondaryLabel, setGoogleSecondaryLabel] = useState<string>((marchand as Record<string, unknown>).google_secondary_label as string || "Objectif");
+  const [googlePrimaryLabel, setGooglePrimaryLabel] = useState<string>((marchand as Record<string, unknown>).google_primary_label as string || tr.carte_stamps_default);
+  const [googleSecondaryLabel, setGoogleSecondaryLabel] = useState<string>((marchand as Record<string, unknown>).google_secondary_label as string || tr.carte_objective_default);
   // Google Wallet modules texte et liens
   const [googleTextModules, setGoogleTextModules] = useState<{header: string; body: string; id: string}[]>(
     ((marchand as Record<string, unknown>).google_text_modules as {header: string; body: string; id: string}[]) || []
@@ -650,7 +650,7 @@ export default function CartePage() {
 
   function detectLocation() {
     if (!navigator.geolocation) {
-      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      alert(tr.carte_geo_not_supported);
       return;
     }
     setDetectingLocation(true);
@@ -664,7 +664,7 @@ export default function CartePage() {
         setDetectingLocation(false);
       },
       () => {
-        alert("Impossible de détecter la position. Vérifiez les permissions du navigateur.");
+        alert(tr.carte_geo_denied);
         setDetectingLocation(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -718,9 +718,9 @@ export default function CartePage() {
     setStampLogoOpacity((m.apple_stamp_logo_opacity as number) ?? 1);
     setRawStripUrl(""); setIsUploadedStrip(false); setCropZoom(1);
     setCropY((m.apple_strip_crop_y as number) ?? 50);
-    setPrimaryLabel((m.apple_primary_label as string) || "Tampons");
-    setRewardLabel((m.apple_reward_label as string) || "Récompense");
-    setMemberLabel((m.apple_member_label as string) || "Membre");
+    setPrimaryLabel((m.apple_primary_label as string) || tr.carte_stamps_default);
+    setRewardLabel((m.apple_reward_label as string) || tr.carte_reward_default);
+    setMemberLabel((m.apple_member_label as string) || tr.carte_member_default);
     setDescription((m.apple_description as string) || "");
     setBackInfo((m.apple_back_info as string) || "");
     setHeaderLabel((m.apple_header_label as string) || "");
@@ -732,8 +732,8 @@ export default function CartePage() {
     setStoreLocation((m.apple_location as { latitude: number; longitude: number; relevantText: string } | null) ?? null);
     setGoogleBgColor((m.google_bg_color as string) || couleurPrincipale || "#007AFF");
     setGoogleHeroUrl((m.google_hero_url as string) || "");
-    setGooglePrimaryLabel((m.google_primary_label as string) || "Tampons");
-    setGoogleSecondaryLabel((m.google_secondary_label as string) || "Objectif");
+    setGooglePrimaryLabel((m.google_primary_label as string) || tr.carte_stamps_default);
+    setGoogleSecondaryLabel((m.google_secondary_label as string) || tr.carte_objective_default);
     setGoogleTextModules((m.google_text_modules as {header: string; body: string; id: string}[]) || []);
     setGoogleLinks((m.google_links as {uri: string; description: string}[]) || []);
     historyRef.current = []; historyIndexRef.current = -1; setCanUndo(false);
@@ -766,7 +766,7 @@ export default function CartePage() {
               background: "var(--glass-bg)", border: "1px solid var(--border)",
               color: "var(--fg)", cursor: "pointer",
             }}>
-              Modifier la carte
+              {tr.carte_modify}
             </button>
           ) : (
             <>
@@ -775,7 +775,7 @@ export default function CartePage() {
                 <button
                   onClick={undo}
                   disabled={!canUndo}
-                  title="Annuler la dernière action"
+                  title={tr.carte_undo_title}
                   style={{
                     padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
                     background: "var(--glass-bg)", border: "1px solid var(--border)",
@@ -783,14 +783,14 @@ export default function CartePage() {
                     cursor: canUndo ? "pointer" : "not-allowed", opacity: canUndo ? 1 : 0.5,
                   }}
                 >
-                  ↩ Annuler
+                  ↩ {tr.carte_undo}
                 </button>
                 <button onClick={resetToSaved} style={{
                   padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600,
                   background: "var(--glass-bg)", border: "1px solid var(--border)",
                   color: "var(--fg-secondary)", cursor: "pointer",
                 }}>
-                  Annuler les modifs
+                  {tr.carte_cancel_changes}
                 </button>
               </span>
               <button onClick={sauvegarder} disabled={saving} style={{
@@ -910,8 +910,8 @@ export default function CartePage() {
               stampsCurrent={stampsCurrent}
               stampsObjective={objectif}
               rewardName={recompense}
-              clientPrenom="Prénom"
-              clientNom="Nom"
+              clientPrenom={tr.clients_prenom.replace(" *", "")}
+              clientNom={tr.clients_nom}
               primaryLabel={primaryLabel}
               rewardLabel={rewardLabel}
               memberLabel={memberLabel}
@@ -1003,18 +1003,18 @@ export default function CartePage() {
                 </label>
                 {logoUrl && (
                   <button onClick={() => setLogoUrl("")} style={{ width: "100%", marginTop: 4, padding: "5px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
-                    Supprimer
+                    {tr.carte_delete}
                   </button>
                 )}
               </div>
             </div>
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
-              Affiché en haut à gauche · max 160×50pt
+              {tr.carte_logo_hint}
             </p>
           </Section>
 
           {/* Bannière — Apple uniquement */}
-          {walletType === "apple" && <Section label="Bannière">
+          {walletType === "apple" && <Section label={tr.carte_banner_label}>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {(stripUrl || rawStripUrl) ? (() => {
                 const canCrop = isUploadedStrip && !!rawStripUrl;
@@ -1053,7 +1053,7 @@ export default function CartePage() {
                       borderRadius: 6, padding: "2px 8px", fontSize: 10, color: "white",
                       pointerEvents: "none",
                     }}>
-                      Glissez pour cadrer
+                      {tr.carte_drag_crop}
                     </div>
                   )}
                 </div>
@@ -1123,7 +1123,7 @@ export default function CartePage() {
                   <button onClick={() => setShowStripCrop(true)}
                     style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}
                   >
-                    Recadrer
+                    {tr.carte_crop}
                   </button>
                 )}
                 {stripUrl && (
@@ -1140,17 +1140,17 @@ export default function CartePage() {
               </div>
 
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: 0 }}>
-                Format paysage large · min 750×288px · recadrage auto
+                {tr.carte_banner_size_hint}
               </p>
             </div>
           </Section>}
 
           {/* Éditeur bannière — Apple uniquement */}
-          {walletType === "apple" && <Section label="Éditeur bannière">
+          {walletType === "apple" && <Section label={tr.carte_banner_section}>
 
             {/* Thèmes dégradés */}
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-              Choisir un thème dégradé
+              {tr.carte_gradient_theme}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 5 }}>
               {GRADIENT_THEMES.map(t => (
@@ -1184,14 +1184,14 @@ export default function CartePage() {
             </div>
 
             {/* Texte sur la bannière */}
-            <Field label="Texte sur la bannière">
+            <Field label={tr.carte_banner_text}>
               <TextInput value={stripText} onChange={setStripText} placeholder="Nom, slogan, accroche…"/>
             </Field>
 
             {stripText && (
               <>
                 {/* Taille texte 1 */}
-                <Field label="Taille du texte">
+                <Field label={tr.carte_text_size}>
                   <div style={{ display: "flex", gap: 6 }}>
                     {(["s","m","l"] as const).map(s => (
                       <button key={s} onClick={() => setStripTextSize(s)} style={{
@@ -1208,11 +1208,11 @@ export default function CartePage() {
                 </Field>
 
                 {/* Feature 5 — Sous-titre */}
-                <Field label="Sous-titre (ligne 2)">
-                  <TextInput value={stripText2} onChange={setStripText2} placeholder="Sous-titre, accroche…"/>
+                <Field label={tr.carte_subtitle_label}>
+                  <TextInput value={stripText2} onChange={setStripText2} placeholder={tr.carte_subtitle_placeholder}/>
                 </Field>
                 {stripText2 && (
-                  <Field label="Taille du sous-titre">
+                  <Field label={tr.carte_subtitle_size}>
                     <div style={{ display: "flex", gap: 6 }}>
                       {(["s","m","l"] as const).map(s => (
                         <button key={s} onClick={() => setStripText2Size(s)} style={{
@@ -1230,7 +1230,7 @@ export default function CartePage() {
                 )}
 
                 {/* Police */}
-                <Field label="Police">
+                <Field label={tr.carte_font}>
                   <div style={{ display: "flex", gap: 6 }}>
                     {(["sans", "serif", "mono"] as const).map(f => (
                       <button key={f} onClick={() => setStripTextFont(f)} style={{
@@ -1241,14 +1241,14 @@ export default function CartePage() {
                         cursor: "pointer",
                         fontFamily: f === "sans" ? "sans-serif" : f === "serif" ? "serif" : "monospace",
                       }}>
-                        {f === "sans" ? "Sans" : f === "serif" ? "Serif" : "Mono"}
+                        {f === "sans" ? tr.carte_sans : f === "serif" ? tr.carte_serif : tr.carte_mono}
                       </button>
                     ))}
                   </div>
                 </Field>
 
                 {/* Couleur texte */}
-                <Field label="Couleur du texte">
+                <Field label={tr.carte_text_color}>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     {["#FFFFFF","#000000","#F5F0E8","#FFD60A","#00F5A0"].map(c => (
                       <button key={c} onClick={() => setStripTextColor(c)} style={{
@@ -1265,7 +1265,7 @@ export default function CartePage() {
                 </Field>
 
                 {/* Position */}
-                <Field label="Position X du texte">
+                <Field label={tr.carte_position_size}>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 5 }}>
                     {([
                       { k: "bl", label: tr.carte_left },
@@ -1331,9 +1331,9 @@ export default function CartePage() {
                       {([
                         { key: "dot",   label: "·",  desc: "Point" },
                         { key: "ring",  label: "◎",  desc: "Anneau" },
-                        { key: "plus",  label: "+",  desc: "Croix" },
+                        { key: "plus",  label: "+",  desc: tr.carte_stamp_cross },
                         { key: "check", label: "✓",  desc: "Check" },
-                        { key: "heart", label: "♡",  desc: "Cœur" },
+                        { key: "heart", label: "♡",  desc: tr.carte_stamp_heart },
                         { key: "star",  label: "☆",  desc: "Étoile" },
                         { key: "text",  label: "Aa", desc: "Texte" },
                         { key: "logo",  label: "⊕",  desc: "Logo" },
@@ -1374,7 +1374,7 @@ export default function CartePage() {
                   {/* ── Épaisseur ── */}
                   <div>
                     <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>
-                      Épaisseur des cercles — {stampThickness === 1 ? "Fin" : stampThickness === 2 ? "Normal" : stampThickness === 3 ? "Épais" : stampThickness === 4 ? "Très épais" : "Maximum"}
+                      {tr.carte_stamp_thickness} — {stampThickness}
                     </p>
                     <input type="range" min={1} max={5} step={1} value={stampThickness}
                       onChange={e => setStampThickness(+e.target.value)}
@@ -1386,7 +1386,7 @@ export default function CartePage() {
                   {stripStampStyle === "logo" && (
                     <div>
                       <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>
-                        Opacité du logo — {Math.round(stampLogoOpacity * 100)}%
+                        {tr.carte_stamp_opacity} — {Math.round(stampLogoOpacity * 100)}%
                       </p>
                       <input type="range" min={0} max={1} step={0.05} value={stampLogoOpacity}
                         onChange={e => setStampLogoOpacity(+e.target.value)}
@@ -1409,7 +1409,7 @@ export default function CartePage() {
 
                   {/* ── Taille ── */}
                   <div>
-                    <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>Taille des tampons</p>
+                    <p style={{ fontSize: 10, color: "var(--fg-tertiary)", marginBottom: 6 }}>{tr.carte_stamp_size}</p>
                     <div style={{ display: "flex", gap: 5 }}>
                       {(["s","m","l"] as const).map(sz => (
                         <button key={sz} onClick={() => setStampSizePreset(sz)} style={{
@@ -1490,8 +1490,8 @@ export default function CartePage() {
                     background: "var(--glass-bg)", border: "1px solid var(--border)",
                     color: "var(--fg)", cursor: "pointer",
                   }}>
-                    ↺ Régénérer
-                  </button>
+                    {tr.carte_regenerate}
+</button>
                 )}
                 {stripUrl && (
                   <button onClick={() => downloadStrip(stripUrl, `wallio-strip-${nom || "carte"}.jpg`)} style={{
@@ -1499,8 +1499,8 @@ export default function CartePage() {
                     background: "var(--glass-bg)", border: "1px solid var(--border)",
                     color: "var(--fg)", cursor: "pointer",
                   }}>
-                    ⬇ Télécharger
-                  </button>
+                    {tr.carte_download}
+</button>
                 )}
               </div>
             )}
@@ -1511,7 +1511,7 @@ export default function CartePage() {
 
             {/* Fond */}
             <ColorRow
-              label="Fond"
+              label={tr.carte_bg}
               value={bgColor}
               onChange={handleBgColorChange}
               presets={BG_PRESETS}
@@ -1528,7 +1528,7 @@ export default function CartePage() {
               }}
             >
               <span>⬇</span>
-              <span>Télécharger bannière</span>
+              <span>{tr.carte_download}</span>
               <span style={{
                 display: "inline-block", width: 14, height: 14, borderRadius: 4,
                 background: bgColor, border: "1px solid var(--border)",
@@ -1561,10 +1561,10 @@ export default function CartePage() {
                 color: contrastLevel === "fail" ? "#FF3B30" : contrastLevel === "weak" ? "#FF9F0A" : "#34C759",
               }}>
                 {contrastLevel === "fail"
-                  ? "Contraste insuffisant"
-                  : contrastLevel === "weak"
-                  ? "Contraste faible"
-                  : "Contraste OK"}
+                  ? tr.carte_contrast_low
+: contrastLevel === "weak"
+                  ? tr.carte_contrast_weak
+                  : tr.carte_contrast_ok}
               </span>
               <span style={{ color: "var(--fg-tertiary)", marginLeft: "auto" }}>
                 {contrastRatioValue.toFixed(2)}:1
@@ -1574,7 +1574,7 @@ export default function CartePage() {
             {/* Texte */}
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>Texte principal</span>
+                <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>{tr.carte_text_main}</span>
                 <Toggle label="Auto" active={fgAuto} onToggle={() => setFgAuto(v => !v)}/>
               </div>
               {!fgAuto && (
@@ -1590,7 +1590,7 @@ export default function CartePage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 22, height: 22, borderRadius: 6, background: effectiveFg, border: "1px solid var(--border)" }}/>
                   <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>
-                    {effectiveFg === "#FFFFFF" ? "Blanc" : "Noir"} — calculé depuis le fond
+                    {effectiveFg === "#FFFFFF" ? "W" : "B"} — {tr.carte_auto_from_bg}
                   </span>
                 </div>
               )}
@@ -1623,28 +1623,28 @@ export default function CartePage() {
           </Section>}
 
           {/* Labels des champs — Apple uniquement */}
-          {walletType === "apple" && <Section label="Labels des champs">
+          {walletType === "apple" && <Section label={tr.carte_labels_section}>
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
-              Texte affiché au-dessus de chaque valeur — imposé en majuscules par Apple.
+              {tr.carte_labels_hint}
             </p>
 
             <LabelField
-              label="Champ principal"
+              label={tr.carte_field_primary}
               value={primaryLabel}
               onChange={v => { pushHistory(); setPrimaryLabel(v); }}
-              suggestions={["Tampons","Points","Visites","Cafés","Soins","Séances","Passages"]}
+              suggestions={[tr.carte_stamps_default,"Points","Visites","Cafés","Soins","Séances","Passages"]}
             />
             <LabelField
-              label="Récompense"
+              label={tr.carte_field_reward}
               value={rewardLabel}
               onChange={v => { pushHistory(); setRewardLabel(v); }}
-              suggestions={["Récompense","Cadeau","Offre","Avantage","Bonus","Surprise"]}
+              suggestions={[tr.carte_reward_default,"Cadeau","Offre","Avantage","Bonus","Surprise"]}
             />
             <LabelField
-              label="Membre"
+              label={tr.carte_field_member}
               value={memberLabel}
               onChange={v => { pushHistory(); setMemberLabel(v); }}
-              suggestions={["Membre","Client","Titulaire","Fidèle","Abonné","Nom"]}
+              suggestions={[tr.carte_member_default,"Client","Titulaire","Fidèle","Abonné","Nom"]}
             />
           </Section>}
 
@@ -1653,17 +1653,17 @@ export default function CartePage() {
 
           {/* Champs auxiliaires — Apple uniquement */}
           {walletType === "apple" && (
-            <Section label="Info établissement">
+            <Section label={tr.carte_info_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                Affichés sous la récompense et le membre, avant le QR code.
+                {tr.carte_info_hint}
               </p>
-              <Field label="Info 1 (optionnel)">
+              <Field label="Info 1">
                 <TextInput value={aux1Value} onChange={setAux1Value} placeholder="ex : Du lundi au vendredi"/>
               </Field>
-              <Field label="Info 2 (optionnel)">
+              <Field label="Info 2">
                 <TextInput value={aux2Value} onChange={setAux2Value} placeholder="ex : 8h-18h"/>
               </Field>
-              <Field label="Info 3 (optionnel)">
+              <Field label="Info 3">
                 <TextInput value={aux3Value} onChange={setAux3Value} placeholder="ex : 06 00 00 00 00"/>
               </Field>
             </Section>
@@ -1671,7 +1671,7 @@ export default function CartePage() {
 
           {/* Icône notification — Apple uniquement */}
           {walletType === "apple" && (
-            <Section label="Icône notification">
+            <Section label={tr.carte_icon_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
                 29×29px — affichée dans les pushs Apple Wallet.
               </p>
@@ -1699,7 +1699,7 @@ export default function CartePage() {
                   </label>
                   {iconUrl && (
                     <button onClick={() => setIconUrl("")} style={{ width: "100%", marginTop: 4, padding: "4px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
-                      Supprimer
+                      {tr.carte_delete}
                     </button>
                   )}
                 </div>
@@ -1709,7 +1709,7 @@ export default function CartePage() {
 
           {/* Géolocalisation — Apple uniquement */}
           {walletType === "apple" && (
-            <Section label="Géolocalisation">
+            <Section label={tr.carte_geo_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                 Apple affiche une notification sur l'écran de verrouillage quand le client s'approche de votre établissement.
               </p>
@@ -1723,7 +1723,7 @@ export default function CartePage() {
                       {storeLocation.latitude.toFixed(5)}, {storeLocation.longitude.toFixed(5)}
                     </p>
                   </div>
-                  <Field label="Message de notification">
+                  <Field label={tr.carte_geo_notif_label}>
                     <TextInput
                       value={storeLocation.relevantText}
                       onChange={v => setStoreLocation({ ...storeLocation, relevantText: v })}
@@ -1735,7 +1735,7 @@ export default function CartePage() {
                     background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.25)",
                     color: "#FF3B30", cursor: "pointer",
                   }}>
-                    Supprimer la localisation
+                    {tr.carte_geo_delete}
                   </button>
                 </div>
               ) : (
@@ -1745,7 +1745,7 @@ export default function CartePage() {
                   border: "none", color: detectingLocation ? "var(--fg-tertiary)" : "white",
                   cursor: detectingLocation ? "wait" : "pointer",
                 }}>
-                  {detectingLocation ? "Détection en cours…" : "Détecter ma position actuelle"}
+                  {detectingLocation ? tr.carte_geo_detecting : tr.carte_geo_detect}
                 </button>
               )}
             </Section>
@@ -1753,7 +1753,7 @@ export default function CartePage() {
 
           {/* Dos de la carte — Apple uniquement */}
           {walletType === "apple" && (
-            <Section label="Dos de la carte">
+            <Section label={tr.carte_back_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
                 Visible quand le client retourne sa carte dans Wallet.
               </p>
@@ -1802,7 +1802,7 @@ export default function CartePage() {
                 </button>
               </div>
               {/* 1/4 — Bannière photo */}
-              <Section label="Bannière">
+              <Section label={tr.carte_banner_label}>
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Photo · Ratio 3:1 · Remplace le dégradé si définie
                 </p>
@@ -1843,7 +1843,7 @@ export default function CartePage() {
                         borderRadius: 5, padding: "2px 7px", fontSize: 10, color: "white",
                         pointerEvents: "none",
                       }}>
-                        Glissez pour cadrer
+                        {tr.carte_drag_crop}
                       </div>
                     )}
                   </div>
@@ -1893,7 +1893,7 @@ export default function CartePage() {
                   {(googleHeroUrl || rawGoogleHeroUrl) && (
                     <button onClick={() => setShowGoogleCrop(true)}
                       style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>
-                      Recadrer
+                      {tr.carte_crop}
                     </button>
                   )}
                   {googleHeroUrl && (
@@ -1909,7 +1909,7 @@ export default function CartePage() {
               </Section>
 
               {/* 2/4 — Éditeur bannière dégradé */}
-              <Section label="Éditeur bannière">
+              <Section label={tr.carte_banner_section}>
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>Choisir un thème dégradé</p>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 5 }}>
                   {GRADIENT_THEMES.map(t => (
@@ -1933,11 +1933,11 @@ export default function CartePage() {
                     }}/>
                   ))}
                 </div>
-                <Field label="Texte sur la bannière">
+                <Field label={tr.carte_banner_text}>
                   <TextInput value={googleStripText} onChange={setGoogleStripText} placeholder="Nom, slogan, accroche…"/>
                 </Field>
                 {googleStripText && (<>
-                  <Field label="Taille">
+                  <Field label={tr.carte_size_label}>
                     <div style={{ display: "flex", gap: 5 }}>
                       {(["xs","s","m","l","xl"] as const).map(s => (
                         <button key={s} onClick={() => setGoogleStripTextSize(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 600, background: googleStripTextSize === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextSize === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextSize === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>
@@ -1946,7 +1946,7 @@ export default function CartePage() {
                       ))}
                     </div>
                   </Field>
-                  <Field label="Position">
+                  <Field label={tr.carte_position_size}>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 5 }}>
                       {([
                         ["tl","↖ H.G"],["tc","↑ H.C"],["tr","↗ H.D"],
@@ -1957,19 +1957,19 @@ export default function CartePage() {
                       ))}
                     </div>
                   </Field>
-                  <Field label="Police">
+                  <Field label={tr.carte_font}>
                     <div style={{ display: "flex", gap: 6 }}>
                       {([["sans","Sans"],["serif","Serif"],["mono","Mono"]] as const).map(([v,l]) => (
                         <button key={v} onClick={() => setGoogleStripFont(v)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontFamily: v === "serif" ? "Georgia, serif" : v === "mono" ? "monospace" : "inherit", background: googleStripFont === v ? "var(--accent)" : "var(--glass-bg)", color: googleStripFont === v ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripFont === v ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{l}</button>
                       ))}
                     </div>
                   </Field>
-                  <ColorRow label="Couleur texte" value={googleStripTextColor} onChange={setGoogleStripTextColor} presets={["#FFFFFF","#F0F0F0","#CCCCCC","#000000","#1C1C1E","#FFD700","#FFB300","#FF9500","#FF6600","#FF3B30","#FF2D55","#AF52DE","#007AFF","#34C759","#5AC8FA"]}/>
-                  <Field label="Sous-titre">
-                    <TextInput value={googleStripText2} onChange={setGoogleStripText2} placeholder="Sous-titre, tagline…"/>
+                  <ColorRow label={tr.carte_text_color} value={googleStripTextColor} onChange={setGoogleStripTextColor} presets={["#FFFFFF","#F0F0F0","#CCCCCC","#000000","#1C1C1E","#FFD700","#FFB300","#FF9500","#FF6600","#FF3B30","#FF2D55","#AF52DE","#007AFF","#34C759","#5AC8FA"]}/>
+                  <Field label={tr.carte_subtitle_label}>
+                    <TextInput value={googleStripText2} onChange={setGoogleStripText2} placeholder={tr.carte_subtitle_placeholder}/>
                   </Field>
                   {googleStripText2 && (
-                    <Field label="Taille sous-titre">
+                    <Field label={tr.carte_subtitle_size}>
                       <div style={{ display: "flex", gap: 5 }}>
                         {(["xs","s","m","l","xl"] as const).map(s => (
                           <button key={s} onClick={() => setGoogleStripText2Size(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 600, background: googleStripText2Size === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripText2Size === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripText2Size === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>
@@ -1988,16 +1988,16 @@ export default function CartePage() {
                 </div>
                 {googleStripFrom && (
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={async () => { const hero = await buildStrip(googleStripFrom, googleStripTo, googleStripAngle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, googleStripGlass, 88, 1032, 344); setGoogleHeroUrl(hero); }} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>↺ Régénérer</button>
-                    {googleHeroUrl && <button onClick={() => downloadStrip(googleHeroUrl, `wallio-hero-${nom || "carte"}.jpg`)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>⬇ Télécharger</button>}
+                    <button onClick={async () => { const hero = await buildStrip(googleStripFrom, googleStripTo, googleStripAngle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, googleStripGlass, 88, 1032, 344); setGoogleHeroUrl(hero); }} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>{tr.carte_regenerate}</button>
+                    {googleHeroUrl && <button onClick={() => downloadStrip(googleHeroUrl, `wallio-hero-${nom || "carte"}.jpg`)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>{tr.carte_download}</button>}
                     <button onClick={() => { setGoogleHeroUrl(""); setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleStripGlass(false); }} style={{ padding: "8px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)", color: "#FF3B30", cursor: "pointer" }}>×</button>
                   </div>
                 )}
               </Section>
 
               {/* 3/4 — Couleur de fond */}
-              <Section label="Couleur de fond">
-                <ColorRow label="Fond" value={googleBgColor} onChange={setGoogleBgColor} presets={BG_PRESETS}/>
+              <Section label={tr.carte_bg}>
+                <ColorRow label={tr.carte_bg} value={googleBgColor} onChange={setGoogleBgColor} presets={BG_PRESETS}/>
                 {googleBgColor === bgColor && (
                   <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 7L9 18l-5-5"/></svg>
@@ -2007,11 +2007,11 @@ export default function CartePage() {
               </Section>
 
               {/* 4/4 — Labels */}
-              <Section label="Labels des champs">
+              <Section label={tr.carte_labels_section}>
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Seuls textes personnalisables — le reste est imposé par Google.
                 </p>
-                <Field label="Label tampons">
+                <Field label={tr.carte_google_stamps_label}>
                   <TextInput value={googlePrimaryLabel} onChange={setGooglePrimaryLabel} placeholder="ex: Tampons, Points, Visites" />
                 </Field>
                 <Field label="Label objectif">
@@ -2023,7 +2023,7 @@ export default function CartePage() {
               </Section>
 
               {/* 5/5 — Modules texte */}
-              <Section label="Infos supplémentaires">
+              <Section label={tr.carte_google_extra}>
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Blocs d'info visibles au dos de la carte (horaires, adresse, promo…). Max 5.
                 </p>
@@ -2057,7 +2057,7 @@ export default function CartePage() {
               </Section>
 
               {/* 6/6 — Liens */}
-              <Section label="Liens">
+              <Section label={tr.carte_google_links}>
                 <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                   Liens cliquables sur la carte (site web, téléphone, email…). Max 3.
                 </p>

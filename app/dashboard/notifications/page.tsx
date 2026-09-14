@@ -27,10 +27,10 @@ export default function NotificationsPage() {
   ];
 
   const TEMPLATES = [
-    { label: "★", title: "Offre exclusive", body: "Une surprise vous attend — venez nous rendre visite !" },
-    { label: "×2", title: "Double tampons", body: "Ce week-end, chaque visite compte double. Profitez-en !" },
-    { label: "♟", title: "Événement spécial", body: "Rejoignez-nous pour un moment unique. On vous attend !" },
-    { label: "🏆", title: "Vous y êtes presque !", body: "Il vous manque peu de tampons pour votre récompense. Passez nous voir !" },
+    { label: "★", title: t.notif_tpl_offer_title, body: t.notif_tpl_offer_body },
+    { label: "×2", title: t.notif_tpl_double_title, body: t.notif_tpl_double_body },
+    { label: "♟", title: t.notif_tpl_event_title, body: t.notif_tpl_event_body },
+    { label: "🏆", title: t.notif_tpl_reward_title, body: t.notif_tpl_reward_body },
   ];
 
   const charTitle = title.length;
@@ -125,7 +125,7 @@ export default function NotificationsPage() {
               </div>
               <input
                 type="text" value={title} onChange={e => setTitle(e.target.value)} maxLength={65}
-                placeholder="Ex: Offre exclusive"
+                placeholder={t.notif_placeholder_title}
                 className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
                 onFocus={e => (e.target.style.borderColor = "var(--accent)")}
@@ -140,7 +140,7 @@ export default function NotificationsPage() {
               </div>
               <textarea
                 value={body} onChange={e => setBody(e.target.value)} maxLength={180} rows={3}
-                placeholder="Ex: Une surprise vous attend !"
+                placeholder={t.notif_placeholder_body}
                 className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none resize-none"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", lineHeight: 1.5 }}
                 onFocus={e => (e.target.style.borderColor = "var(--accent)")}
@@ -180,7 +180,7 @@ export default function NotificationsPage() {
 
         {sendState === "error" && (
           <div className="rounded-2xl p-4" style={{ background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)" }}>
-            <p className="text-[13px] font-medium" style={{ color: "#FF3B30" }}>Erreur. Réessayez.</p>
+            <p className="text-[13px] font-medium" style={{ color: "#FF3B30" }}>{t.notif_error}</p>
           </div>
         )}
 

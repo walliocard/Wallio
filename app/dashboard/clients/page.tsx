@@ -63,14 +63,14 @@ export default function ClientsPage() {
 
   async function ajouterClient() {
     if (!user || !form.prenom.trim() || !form.telephone.trim()) {
-      setFormError("Prénom et téléphone requis.");
+      setFormError(t.clients_error_required_msg);
       return;
     }
     setSaving(true);
     setFormError("");
     const existing = await getClientByTelephone(form.telephone.trim(), user.uid);
     if (existing) {
-      setFormError("Ce numéro est déjà inscrit.");
+      setFormError(t.clients_error_exists_msg);
       setSaving(false);
       return;
     }
@@ -198,7 +198,7 @@ export default function ClientsPage() {
           >
             <option value="recent">{t.clients_sort_recent}</option>
             <option value="tampons">{t.clients_sort_stamps}</option>
-            <option value="alpha">A → Z</option>
+            <option value="alpha">{t.clients_sort_alpha_label}</option>
           </select>
 
           {recompensesCount > 0 && (

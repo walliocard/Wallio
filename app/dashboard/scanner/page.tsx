@@ -141,7 +141,7 @@ export default function ScannerPage() {
       {/* Header */}
       <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 mb-5">
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
-          Identification client
+          {t.scan_subtitle}
         </p>
         <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>{t.scan_title}</h1>
 
@@ -209,16 +209,16 @@ export default function ScannerPage() {
                     style={{ background: "rgba(0,122,255,0.08)", color: "var(--accent)" }}>
                     <Icons.Camera size={28} />
                   </div>
-                  <p className="text-[16px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>Scanner un QR</p>
+                  <p className="text-[16px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>{t.scan_scan_qr}</p>
                   <p className="text-[13px] mb-6 max-w-[220px]" style={{ color: "var(--fg-secondary)" }}>
-                    Pointez vers le QR de la carte du client
+                    {t.scan_point_qr}
                   </p>
                   <button
                     onClick={startCamera}
                     className="w-full max-w-[200px] py-4 rounded-2xl text-white font-bold text-[15px]"
                     style={{ background: "var(--accent)", boxShadow: "0 6px 24px rgba(0,122,255,0.35)" }}
                   >
-                    Activer la caméra
+                    {t.scan_enable_camera}
                   </button>
                 </div>
               )}
@@ -227,13 +227,9 @@ export default function ScannerPage() {
             <div className="hidden md:block rounded-2xl p-5 max-w-xs"
               style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
               <p className="text-[12px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
-                Comment ça marche
+                {t.scan_how}
               </p>
-              {[
-                "Le client ouvre son Apple Wallet ou Google Wallet",
-                "Il affiche sa carte de fidélité Wallio",
-                "Scannez son QR code pour valider un tampon",
-              ].map((step, i) => (
+              {[t.scan_how_1, t.scan_how_2, t.scan_how_3].map((step, i) => (
                 <div key={i} className="flex gap-3 mb-3 last:mb-0">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white mt-0.5"
                     style={{ background: "var(--accent)" }}>
@@ -250,7 +246,7 @@ export default function ScannerPage() {
         {tab === "telephone" && (
           <div className="max-w-md">
             <p className="text-[14px] mb-4" style={{ color: "var(--fg-secondary)" }}>
-              Recherchez un client par son numéro de téléphone.
+              {t.scan_search_phone_hint}
             </p>
 
             <div className="flex gap-2 mb-5">
@@ -271,36 +267,27 @@ export default function ScannerPage() {
                 className="px-5 py-3.5 rounded-2xl font-semibold text-white text-[14px]"
                 style={{ background: "var(--accent)", opacity: !phone.trim() ? 0.5 : 1 }}
               >
-                {searching ? "…" : "Chercher"}
+                {searching ? "…" : t.scan_search_btn}
               </button>
             </div>
 
-            {/* Résultat */}
             {phoneResult === "not_found" && (
               <div className="rounded-2xl p-5 text-center"
                 style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                <p className="text-[16px] font-semibold mb-1" style={{ color: "var(--fg)" }}>Client introuvable</p>
+                <p className="text-[16px] font-semibold mb-1" style={{ color: "var(--fg)" }}>{t.scan_not_found_title}</p>
                 <p className="text-[13px] mb-4" style={{ color: "var(--fg-secondary)" }}>
-                  Ce numéro n&apos;est pas encore inscrit pour cet établissement.
+                  {t.scan_not_found_body}
                 </p>
-                <Link
-                  href="/dashboard/clients"
-                  className="text-[14px] font-medium"
-                  style={{ color: "var(--accent)" }}
-                >
-                  Ajouter manuellement dans Clients →
+                <Link href="/dashboard/clients" className="text-[14px] font-medium" style={{ color: "var(--accent)" }}>
+                  {t.scan_add_manually}
                 </Link>
               </div>
             )}
 
             {phoneResult && phoneResult !== "not_found" && (
-              <div className="rounded-2xl p-5"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+              <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
                 <div className="flex items-center gap-3.5 mb-4">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-[15px] flex-shrink-0"
-                    style={{ background: "var(--accent)" }}
-                  >
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-[15px] flex-shrink-0" style={{ background: "var(--accent)" }}>
                     {(phoneResult.prenom?.[0] || "").toUpperCase()}{(phoneResult.nom?.[0] || "").toUpperCase()}
                   </div>
                   <div>
@@ -308,17 +295,13 @@ export default function ScannerPage() {
                       {phoneResult.prenom} {phoneResult.nom}
                     </p>
                     <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
-                      {phoneResult.tampons} tampon{phoneResult.tampons > 1 ? "s" : ""}
-                      {phoneResult.recompense_en_attente && " · Récompense en attente"}
+                      {phoneResult.tampons} {t.dash_stamps.toLowerCase()}
+                      {phoneResult.recompense_en_attente && ` · ${t.clients_pending_reward}`}
                     </p>
                   </div>
                 </div>
-                <Link
-                  href={`/client/${phoneResult.wallet_id}`}
-                  className="w-full py-3.5 rounded-2xl text-center text-white font-semibold text-[14px] block"
-                  style={{ background: "var(--accent)", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }}
-                >
-                  Accéder au profil →
+                <Link href={`/client/${phoneResult.wallet_id}`} className="w-full py-3.5 rounded-2xl text-center text-white font-semibold text-[14px] block" style={{ background: "var(--accent)", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }}>
+                  {t.scan_access_profile}
                 </Link>
               </div>
             )}
@@ -329,13 +312,13 @@ export default function ScannerPage() {
         {tab === "nom" && (
           <div className="max-w-md">
             <p className="text-[14px] mb-4" style={{ color: "var(--fg-secondary)" }}>
-              Recherchez un client par son prénom ou nom.
+              {t.scan_search_name_hint}
             </p>
 
             <div className="flex gap-2 mb-5">
               <input
                 type="text"
-                placeholder="Prénom ou nom..."
+                placeholder={t.scan_name_placeholder}
                 value={nom}
                 onChange={e => { setNom(e.target.value); setNomResults(null); }}
                 onKeyDown={e => e.key === "Enter" && rechercherParNom()}
@@ -350,34 +333,26 @@ export default function ScannerPage() {
                 className="px-5 py-3.5 rounded-2xl font-semibold text-white text-[14px]"
                 style={{ background: "var(--accent)", opacity: !nom.trim() ? 0.5 : 1 }}
               >
-                {searchingNom ? "…" : "Chercher"}
+                {searchingNom ? "…" : t.scan_search_btn}
               </button>
             </div>
 
             {nomResults !== null && nomResults.length === 0 && (
-              <div className="rounded-2xl p-5 text-center"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                <p className="text-[16px] font-semibold mb-1" style={{ color: "var(--fg)" }}>Aucun résultat</p>
+              <div className="rounded-2xl p-5 text-center" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                <p className="text-[16px] font-semibold mb-1" style={{ color: "var(--fg)" }}>{t.scan_no_result}</p>
                 <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
-                  Aucun client ne correspond à &quot;{nom}&quot;.
+                  {t.scan_no_result_body} &quot;{nom}&quot;.
                 </p>
               </div>
             )}
 
             {nomResults && nomResults.length > 0 && (
-              <div className="rounded-2xl overflow-hidden"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+              <div className="rounded-2xl overflow-hidden" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
                 {nomResults.map((c, i) => (
-                  <Link
-                    key={c.id}
-                    href={`/client/${c.wallet_id}`}
+                  <Link key={c.id} href={`/client/${c.wallet_id}`}
                     className="flex items-center gap-3.5 px-5 py-4 transition-opacity active:opacity-70"
-                    style={{ borderBottom: i < nomResults.length - 1 ? "1px solid var(--border)" : "none" }}
-                  >
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[13px] flex-shrink-0"
-                      style={{ background: "var(--accent)" }}
-                    >
+                    style={{ borderBottom: i < nomResults.length - 1 ? "1px solid var(--border)" : "none" }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-[13px] flex-shrink-0" style={{ background: "var(--accent)" }}>
                       {(c.prenom?.[0] || "").toUpperCase()}{(c.nom?.[0] || "").toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -385,8 +360,8 @@ export default function ScannerPage() {
                         {c.prenom} {c.nom}
                       </p>
                       <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>
-                        {c.tampons} tampon{c.tampons > 1 ? "s" : ""}
-                        {c.recompense_en_attente && " · Récompense en attente"}
+                        {c.tampons} {t.dash_stamps.toLowerCase()}
+                        {c.recompense_en_attente && ` · ${t.clients_pending_reward}`}
                       </p>
                     </div>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>

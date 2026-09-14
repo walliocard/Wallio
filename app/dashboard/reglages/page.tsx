@@ -38,15 +38,15 @@ export default function ReglagesPage() {
   const [auto, setAuto] = useState({
     anniversaire_actif:     Boolean(autoRaw?.anniversaire?.actif),
     anniversaire_jours_avant: Number(autoRaw?.anniversaire?.jours_avant ?? 0),
-    anniversaire_message:   String(autoRaw?.anniversaire?.message ?? `Joyeux anniversaire ! Un tampon offert vous attend chez ${marchand?.nom || "nous"}.`),
+    anniversaire_message:   String(autoRaw?.anniversaire?.message ?? `${t.settings_birthday_msg_default} ${marchand?.nom || "nous"}.`),
     relance_actif:          Boolean(autoRaw?.relance?.actif),
     relance_delai_jours:    Number(autoRaw?.relance?.delai_jours ?? 30),
-    relance_message:        String(autoRaw?.relance?.message ?? `Vous nous manquez ! Venez récupérer vos tampons chez ${marchand?.nom || "nous"}.`),
+    relance_message:        String(autoRaw?.relance?.message ?? `${t.settings_relance_msg_default} ${marchand?.nom || "nous"}.`),
   });
   const [notifActif, setNotifActif] = useState<boolean>((marchand as Record<string,unknown>)?.notif_actif !== false);
   const [notifMessage, setNotifMessage] = useState<string>(
     ((marchand as Record<string,unknown>)?.notif_message as string) ||
-    `Pour ne manquer aucune de vos récompenses chez ${marchand?.nom || "nous"}, activez les notifications !`
+    `${t.settings_notif_msg_default} ${marchand?.nom || "nous"}, ${t.settings_notif_msg_default2}`
   );
   const m = marchand as Record<string, unknown>;
   const doubleFin = m.double_tampons_fin as string | undefined;
@@ -122,7 +122,7 @@ export default function ReglagesPage() {
                 type="text"
                 value={nomEtablissement}
                 onChange={e => setNomEtablissement(e.target.value)}
-                placeholder="ex : Café du Centre"
+                placeholder={t.settings_name_placeholder}
                 className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
                 onFocus={e => (e.target.style.borderColor = "var(--accent)")}
@@ -137,7 +137,7 @@ export default function ReglagesPage() {
                 type="text"
                 value={nomRecompense}
                 onChange={e => setNomRecompense(e.target.value)}
-                placeholder="ex : 1 café offert"
+                placeholder={t.settings_reward_placeholder}
                 className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
                 onFocus={e => (e.target.style.borderColor = "var(--accent)")}
@@ -146,7 +146,7 @@ export default function ReglagesPage() {
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                Tampons nécessaires — <span style={{ color: "var(--accent)" }}>{objectif}</span>
+                {t.settings_stamps_needed} — <span style={{ color: "var(--accent)" }}>{objectif}</span>
               </p>
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                 {[5, 6, 8, 10, 12, 15, 20].map(n => (
@@ -177,7 +177,7 @@ export default function ReglagesPage() {
             {ANTI_DOUBLON.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
-            Délai minimum entre deux tampons pour un même client
+            {t.settings_delay_hint}
           </p>
         </Card>
 
@@ -191,14 +191,14 @@ export default function ReglagesPage() {
                   : t.settings_anti_doublon_off}
               </p>
               <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
-                Chaque visite ajoute 2 tampons au lieu de 1
+                {t.settings_double_desc}
               </p>
             </div>
             <Toggle value={doubleTamponsActif} onChange={setDoubleTamponsActif} />
           </div>
           {doubleTamponsActif && (
             <div className="pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-              <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>Actif jusqu'au</p>
+              <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>{t.settings_active_until}</p>
               <input type="date" value={doubleTamponsFin}
                 min={new Date().toISOString().slice(0, 10)}
                 onChange={e => setDoubleTamponsFin(e.target.value)}
@@ -217,7 +217,7 @@ export default function ReglagesPage() {
               <div className="flex items-start justify-between gap-3 mb-1">
                 <div>
                   <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_birthday}</p>
-                  <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Bonus tampon automatique</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>{t.settings_birthday_auto}</p>
                 </div>
                 <Toggle value={auto.anniversaire_actif} onChange={v => setA("anniversaire_actif", v)} />
               </div>
@@ -225,14 +225,14 @@ export default function ReglagesPage() {
                 <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--border)" }}>
                   <div>
                     <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>
-                      {auto.anniversaire_jours_avant === 0 ? "Le jour J" : `${auto.anniversaire_jours_avant} jour(s) avant`}
+                      {auto.anniversaire_jours_avant === 0 ? t.settings_birthday_day_0 : `${auto.anniversaire_jours_avant} ${t.settings_birthday_days}`}
                     </p>
                     <input type="range" min={0} max={7} value={auto.anniversaire_jours_avant}
                       onChange={e => setA("anniversaire_jours_avant", Number(e.target.value))}
                       className="w-full" />
                   </div>
                   <div>
-                    <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>Message d'anniversaire</p>
+                    <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>{t.settings_birthday_msg_label}</p>
                     <textarea value={auto.anniversaire_message}
                       onChange={e => setA("anniversaire_message", e.target.value)}
                       rows={2} className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none"
@@ -248,7 +248,7 @@ export default function ReglagesPage() {
               <div className="flex items-start justify-between gap-3 mb-1">
                 <div>
                   <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_reminder}</p>
-                  <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Clients sans visite depuis X jours</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>{t.settings_relance_desc}</p>
                 </div>
                 <Toggle value={auto.relance_actif} onChange={v => setA("relance_actif", v)} />
               </div>
@@ -256,14 +256,14 @@ export default function ReglagesPage() {
                 <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--border)" }}>
                   <div>
                     <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>
-                      Après {auto.relance_delai_jours} jours d&apos;inactivité
+                      {auto.relance_delai_jours} {t.settings_relance_days}
                     </p>
                     <input type="range" min={7} max={90} step={7} value={auto.relance_delai_jours}
                       onChange={e => setA("relance_delai_jours", Number(e.target.value))}
                       className="w-full" />
                   </div>
                   <div>
-                    <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>Message de relance</p>
+                    <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>{t.settings_relance_msg_label}</p>
                     <textarea value={auto.relance_message}
                       onChange={e => setA("relance_message", e.target.value)}
                       rows={2} className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none"
@@ -293,9 +293,9 @@ export default function ReglagesPage() {
         <Card title={t.settings_referral}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Activer le parrainage</p>
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_referral_title}</p>
               <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
-                Vos clients peuvent inviter leurs amis. Chaque nouveau client parrainé rapporte 1 tampon au parrain.
+                {t.settings_referral_desc}
               </p>
             </div>
             <Toggle value={parrainageActif} onChange={async (v) => {
@@ -305,16 +305,12 @@ export default function ReglagesPage() {
           </div>
           {parrainageActif && (
             <div className="mt-4 rounded-2xl p-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-              <p className="text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-tertiary)" }}>Comment ça marche</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-tertiary)" }}>{t.settings_referral_how}</p>
               <div className="space-y-1.5">
-                {[
-                  "Un client partage son lien depuis « Mes cartes »",
-                  "Un ami clique et s'inscrit → 1er tampon crédité",
-                  "Le parrain reçoit automatiquement +1 tampon",
-                ].map(t => (
-                  <div key={t} className="flex items-start gap-2">
+                {[t.settings_referral_step1, t.settings_referral_step2, t.settings_referral_step3].map(step => (
+                  <div key={step} className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "var(--accent)" }} />
-                    <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>{t}</p>
+                    <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>{step}</p>
                   </div>
                 ))}
               </div>
@@ -323,12 +319,12 @@ export default function ReglagesPage() {
         </Card>
 
         {/* Notifications clients */}
-        <Card title="Notifications clients" className="lg:col-span-2">
+        <Card title={t.settings_notif_card_title} className="lg:col-span-2">
           <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Prompt d&apos;activation</p>
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_notif_prompt_title}</p>
               <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
-                Affiché au client juste après la création de sa carte, pour activer les notifications push.
+                {t.settings_notif_prompt_desc}
               </p>
             </div>
             <Toggle value={notifActif} onChange={setNotifActif} />
@@ -337,7 +333,7 @@ export default function ReglagesPage() {
           {notifActif && (
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                Message personnalisé
+                {t.settings_notif_msg_label}
               </p>
               <textarea
                 value={notifMessage}
@@ -358,7 +354,7 @@ export default function ReglagesPage() {
                     }
                   </div>
                   <div>
-                    <p className="text-[13px] font-medium mb-0.5" style={{ color: "var(--fg)" }}>Restez informé</p>
+                    <p className="text-[13px] font-medium mb-0.5" style={{ color: "var(--fg)" }}>{t.settings_notif_preview}</p>
                     <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>{notifMessage}</p>
                   </div>
                 </div>
@@ -402,10 +398,10 @@ export default function ReglagesPage() {
         <div className="mt-4 rounded-2xl p-5"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
           <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>
-            Apparence
+            {t.settings_appearance}
           </p>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Mode d&apos;affichage</p>
+            <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_display_mode}</p>
             <ThemeToggle />
           </div>
           <div className="flex items-center justify-between">

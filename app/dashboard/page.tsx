@@ -219,7 +219,7 @@ export default function AccueilPage() {
                   background: tendance >= 0 ? "rgba(52,199,89,0.12)" : "rgba(255,59,48,0.10)",
                   color: tendance >= 0 ? "#34C759" : "#FF3B30",
                 }}>
-                {tendance >= 0 ? "+" : ""}{tendance}% vs sem. préc.
+                {tendance >= 0 ? "+" : ""}{tendance}% {t.dash_vs_prev}
               </span>
             )}
           </div>
@@ -295,17 +295,17 @@ export default function AccueilPage() {
               style={{ width: `${stats.taux_fidelite}%`, background: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--border)" }} />
           </div>
           <p className="text-[11px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>
-            clients revenus ≥ 2×
+            {t.dash_returned}
           </p>
         </div>
 
         {/* Nouvelles inscriptions */}
         <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Nouveaux</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>{t.dash_new_label}</p>
             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
               style={{ background: "rgba(0,122,255,0.10)", color: "var(--accent)" }}>
-              7 jours
+              7j
             </span>
           </div>
           <p className="text-[32px] font-bold tracking-tight leading-none mb-1" style={{ color: stats.nouvelles_semaine > 0 ? "var(--accent)" : "var(--fg-tertiary)" }}>
@@ -321,7 +321,7 @@ export default function AccueilPage() {
           className="rounded-2xl p-4 transition-all hover:opacity-90 active:scale-[0.98] block"
           style={{ background: stats.proches_recompense > 0 ? "rgba(255,159,10,0.06)" : "var(--glass-bg)", border: `1px solid ${stats.proches_recompense > 0 ? "rgba(255,159,10,0.25)" : "var(--border)"}`, backdropFilter: "blur(20px)" }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Presque là</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>{t.dash_almost}</p>
             {stats.proches_recompense > 0 && (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#FF9F0A"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
             )}
