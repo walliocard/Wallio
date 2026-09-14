@@ -4,15 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { saveMarchandFields } from "@/lib/save-marchand";
-
-const ANTI_DOUBLON = [
-  { label: "Désactivé",   value: 0 },
-  { label: "15 minutes",  value: 900 },
-  { label: "1 heure",     value: 3600 },
-  { label: "4 heures",    value: 14400 },
-  { label: "8 heures",    value: 28800 },
-  { label: "1 jour",      value: 86400 },
-];
+import { useLang } from "@/lib/lang-context";
 
 const FUSEAUX = [
   "Africa/Casablanca",
@@ -24,6 +16,16 @@ const FUSEAUX = [
 
 export default function ReglagesPage() {
   const { user, marchand } = useAuth();
+  const { t } = useLang();
+
+  const ANTI_DOUBLON = [
+    { label: t.settings_anti_doublon_off, value: 0 },
+    { label: t.settings_anti_doublon_15m, value: 900 },
+    { label: t.settings_anti_doublon_1h,  value: 3600 },
+    { label: t.settings_anti_doublon_4h,  value: 14400 },
+    { label: t.settings_anti_doublon_8h,  value: 28800 },
+    { label: t.settings_anti_doublon_1d,  value: 86400 },
+  ];
   const autoRaw = (marchand as Record<string, unknown>)?.automatisations as Record<string, Record<string, unknown>> | undefined;
 
   const [nomEtablissement, setNomEtablissement] = useState<string>(marchand?.nom || "");
@@ -97,19 +99,19 @@ export default function ReglagesPage() {
       {/* Header */}
       <div className="mb-6">
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
-          Configuration
+          {t.settings_config}
         </p>
-        <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Réglages</h1>
+        <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>{t.settings_title}</h1>
       </div>
 
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
 
         {/* Programme fidélité */}
-        <Card title="Programme de fidélité" className="lg:col-span-2">
+        <Card title={t.settings_establishment} className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="md:col-span-2">
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                Nom de l'établissement
+                {t.settings_name}
               </p>
               <input
                 type="text"
@@ -124,7 +126,7 @@ export default function ReglagesPage() {
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                Récompense
+                {t.settings_reward}
               </p>
               <input
                 type="text"
@@ -160,7 +162,7 @@ export default function ReglagesPage() {
         </Card>
 
         {/* Anti-doublon */}
-        <Card title="Anti-doublon">
+        <Card title={t.settings_anti_doublon}>
           <select
             value={config.anti_doublon_delai}
             onChange={e => set("anti_doublon_delai", Number(e.target.value))}
@@ -175,7 +177,7 @@ export default function ReglagesPage() {
         </Card>
 
         {/* Double tampons */}
-        <Card title="Double tampons">
+        <Card title={t.settings_double_stamps}>
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
               <p className="text-[14px]" style={{ color: "var(--fg)" }}>
@@ -203,13 +205,13 @@ export default function ReglagesPage() {
         </Card>
 
         {/* Automatisations */}
-        <Card title="Automatisations" className="lg:col-span-2">
+        <Card title={t.settings_automations} className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
             <div>
               <div className="flex items-start justify-between gap-3 mb-1">
                 <div>
-                  <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Anniversaire client</p>
+                  <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_birthday}</p>
                   <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Bonus tampon automatique</p>
                 </div>
                 <Toggle value={auto.anniversaire_actif} onChange={v => setA("anniversaire_actif", v)} />
@@ -240,7 +242,7 @@ export default function ReglagesPage() {
             <div>
               <div className="flex items-start justify-between gap-3 mb-1">
                 <div>
-                  <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Relance inactifs</p>
+                  <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_reminder}</p>
                   <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Clients sans visite depuis X jours</p>
                 </div>
                 <Toggle value={auto.relance_actif} onChange={v => setA("relance_actif", v)} />
@@ -271,7 +273,7 @@ export default function ReglagesPage() {
         </Card>
 
         {/* Fuseau horaire */}
-        <Card title="Fuseau horaire">
+        <Card title={t.settings_timezone}>
           <select
             value={config.fuseau_horaire}
             onChange={e => set("fuseau_horaire", e.target.value)}
@@ -283,7 +285,7 @@ export default function ReglagesPage() {
         </Card>
 
         {/* Parrainage */}
-        <Card title="Parrainage">
+        <Card title={t.settings_referral}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Activer le parrainage</p>
@@ -376,7 +378,7 @@ export default function ReglagesPage() {
           className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
           style={{ background: saved ? "#34C759" : "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.25)" }}
         >
-          {saving ? "Sauvegarde…" : saved ? "Sauvegardé ✓" : "Sauvegarder"}
+          {saving ? t.settings_saving : saved ? `${t.settings_saved} ✓` : t.settings_save}
         </button>
       </div>
 
@@ -388,7 +390,7 @@ export default function ReglagesPage() {
           className="hidden md:block w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
           style={{ background: saved ? "#34C759" : "var(--accent)", boxShadow: "0 4px 20px rgba(0,122,255,0.2)" }}
         >
-          {saving ? "Sauvegarde…" : saved ? "Sauvegardé ✓" : "Sauvegarder les réglages"}
+          {saving ? t.settings_saving : saved ? `${t.settings_saved} ✓` : t.settings_save}
         </button>
 
         {/* Apparence */}
