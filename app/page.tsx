@@ -5,7 +5,12 @@ import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/lang-context";
 import { REGIONS } from "@/lib/regions";
 
-const WA = "https://wa.me/40749056483?text=Bonjour%2C%20je%20souhaite%20d%C3%A9couvrir%20Wallio%20pour%20mon%20commerce.";
+const WA_BASE = "https://wa.me/40749056483";
+const WA_MSGS: Record<string, string> = {
+  fr: "Bonjour, je souhaite découvrir Wallio pour mon commerce.",
+  en: "Hello, I'd like to discover Wallio for my business.",
+  ro: "Bună ziua, doresc să descopăr Wallio pentru afacerea mea.",
+};
 
 function useReveal() {
   useEffect(() => {
@@ -739,6 +744,7 @@ export default function LandingPage() {
   const { region } = useLang();
   const [lang, setLang] = useState<Lang>(region === "ro" ? "ro" : "fr");
   const t = T[lang];
+  const WA = `${WA_BASE}?text=${encodeURIComponent(WA_MSGS[lang] || WA_MSGS.fr)}`;
   const pricing = REGIONS[region];
   useReveal();
 
@@ -932,7 +938,7 @@ export default function LandingPage() {
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             <button
-              onClick={() => setLang(l => l === "fr" ? (region === "ro" ? "ro" : "en") : l === "ro" ? "en" : "fr")}
+              onClick={() => setLang(l => l === "fr" ? "en" : l === "en" ? "ro" : "fr")}
               style={{ background:"none", border:"0.5px solid rgba(0,0,0,0.18)", borderRadius:20, padding:"5px 13px", cursor:"pointer", fontSize:12, fontWeight:700, color:"#1D1D1F", letterSpacing:"0.08em", transition:"background 0.15s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background="rgba(0,0,0,0.06)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background="none"; }}
