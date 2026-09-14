@@ -25,7 +25,8 @@ type Marchand = {
 
 const VILLES_ADMIN: Record<string, string[]> = {
   Maroc: ["Agadir","Béni Mellal","Casablanca","El Jadida","Fès","Kénitra","Khouribga","Laâyoune","Marrakech","Meknès","Mohammedia","Nador","Oujda","Rabat","Safi","Salé","Settat","Tanger","Tétouan"],
-  Roumanie: ["Cluj-Napoca"],
+  Roumanie: ["Cluj-Napoca","București","Brașov","Timișoara","Iași","Constanța","Craiova","Galați","Ploiești","Sibiu"],
+  France: ["Paris","Lyon","Marseille","Bordeaux","Lille","Nantes","Toulouse","Strasbourg","Nice","Montpellier"],
 };
 
 function slugify(str: string) {

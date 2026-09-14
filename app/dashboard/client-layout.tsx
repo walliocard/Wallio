@@ -9,8 +9,13 @@ import { useLang } from "@/lib/lang-context";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, marchand, loading } = useAuth();
-  const { t } = useLang();
+  const { t, setLang } = useLang();
   const router = useRouter();
+
+  useEffect(() => {
+    const saved = (marchand as Record<string, unknown>)?.langue as "fr" | "ro" | undefined;
+    if (saved === "fr" || saved === "ro") setLang(saved);
+  }, [marchand, setLang]);
 
   useEffect(() => {
     if (!loading && !user) router.push("/auth/connexion");

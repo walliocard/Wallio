@@ -14,7 +14,8 @@ const VILLES: Record<string, string[]> = {
     "Khouribga","Laâyoune","Marrakech","Meknès","Mohammedia","Nador",
     "Oujda","Rabat","Safi","Salé","Settat","Tanger","Tétouan",
   ],
-  Roumanie: ["Cluj-Napoca","București","Brașov","Timișoara","Cluj","Iași","Constanța","Craiova","Galați","Ploiești"],
+  Roumanie: ["Cluj-Napoca","București","Brașov","Timișoara","Iași","Constanța","Craiova","Galați","Ploiești","Sibiu"],
+  France: ["Paris","Lyon","Marseille","Bordeaux","Lille","Nantes","Toulouse","Strasbourg","Nice","Montpellier"],
 };
 
 const inputStyle: React.CSSProperties = {

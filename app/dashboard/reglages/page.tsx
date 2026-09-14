@@ -16,7 +16,7 @@ const FUSEAUX = [
 
 export default function ReglagesPage() {
   const { user, marchand } = useAuth();
-  const { t } = useLang();
+  const { t, setLang } = useLang();
 
   const ANTI_DOUBLON = [
     { label: t.settings_anti_doublon_off, value: 0 },
@@ -59,6 +59,9 @@ export default function ReglagesPage() {
   const [parrainageActif, setParrainageActif] = useState<boolean>(
     !!((marchand as Record<string, unknown>)?.parrainage_actif)
   );
+  const [langue, setLangue] = useState<"fr" | "ro">(
+    ((marchand as Record<string, unknown>)?.langue as "fr" | "ro") || "fr"
+  );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -83,7 +86,9 @@ export default function ReglagesPage() {
         notif_message: notifMessage,
         double_tampons_fin: doubleTamponsActif ? doubleTamponsFin : null,
         parrainage_actif: parrainageActif,
+        langue,
       });
+      setLang(langue);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
@@ -399,9 +404,25 @@ export default function ReglagesPage() {
           <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>
             Apparence
           </p>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Mode d&apos;affichage</p>
             <ThemeToggle />
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_language}</p>
+            <div className="flex gap-2">
+              {(["fr", "ro"] as const).map(l => (
+                <button key={l} onClick={() => setLangue(l)}
+                  className="px-4 py-1.5 rounded-xl text-[13px] font-semibold transition-all"
+                  style={{
+                    background: langue === l ? "var(--accent)" : "var(--glass-bg)",
+                    color: langue === l ? "white" : "var(--fg-secondary)",
+                    border: `1px solid ${langue === l ? "var(--accent)" : "var(--border)"}`,
+                  }}>
+                  {l === "fr" ? "🇫🇷 FR" : "🇷🇴 RO"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
