@@ -228,7 +228,7 @@ function WalletCardMock({
   );
 }
 
-type Lang = "fr" | "en";
+type Lang = "fr" | "en" | "ro";
 
 const T = {
   fr: {
@@ -551,6 +551,166 @@ const T = {
       {href:"/legal",label:"Legal"},{href:"mailto:wallio.card@gmail.com",label:"wallio.card@gmail.com"},
     ],
   },
+  ro: {
+    navLogin:"Autentificare", navContact:"Contactați-ne",
+    anchors:[
+      {id:"acces",label:"Acces"},{id:"comment",label:"Cum funcționează"},
+      {id:"personnalisation",label:"Personalizare"},{id:"notifications",label:"Notificări"},
+      {id:"dashboard",label:"Dashboard"},{id:"presence",label:"Prezență"},
+      {id:"tarifs",label:"Tarife"},{id:"faq",label:"FAQ"},
+    ],
+    heroTitle1:"Fidelizarea clienților,", heroTitle2:"reinventată.",
+    heroSub:"Un singur tap NFC sau scanare QR. Clienții acumulează ștampile, dvs. le câștigați loialitatea — fără nicio aplicație de instalat.",
+    heroCta1:"Începeți acum", heroCta2:"Autentificare",
+    heroStamps:"Ștampile", heroReward:"Recompensă", heroNotif:"Notificare",
+    heroRewardVal:"Cafea gratuită", heroSent:"✓ Trimisă",
+    walletAvailable:"Disponibil nativ pe", walletNote:"iOS · Android · fără aplicație",
+    accesTag:"Suport & acces", accesH2a:"Cardul de tejghea —", accesH2b:"centrul fidelității dvs.",
+    accesSub:"Un singur suport fizic pus pe tejgheaua dvs. Conține ambele tehnologii de acces — cod QR și NFC.",
+    accesCardTag:"Card Tejghea", accesCardBadge:"Suport principal",
+    accesCardH3:"Suportul dvs. fizic complet",
+    accesCardDesc:"Tipărit în 4K cu culorile și logo-ul dvs., pus pe tejghea. Conține codul QR unic și poate integra un tag NFC — clienții îl folosesc pentru a primi ștampile, fără nicio instalare.",
+    accesCardTags:["Cod QR integrat","Tag NFC opțional","Design 4K personalizat","Logo & culori proprii"],
+    accesConnector:"două tehnologii integrate",
+    accesNfcTag:"Tag NFC", accesNfcH3:"Tap, gata.",
+    accesNfcDesc:"Clientul apropie telefonul la 4 cm de tag. Ștampilă creditată în mai puțin de o secundă, fără nicio aplicație.",
+    accesNfcFeats:["Gestul cel mai rapid posibil","iPhone 7+ și toate Android NFC","Opțional pe cardul de tejghea"],
+    accesQrTag:"Cod QR", accesQrH3:"Scanare, gata.",
+    accesQrDesc:"Clientul deschide camera și scanează codul QR de pe cardul de tejghea. Funcționează pe orice telefon, fără nicio aplicație.",
+    accesQrFeats:["Compatible cu 100% dintre smartphone-uri","Camera nativă — nicio aplicație","Mereu prezent pe cardul de tejghea"],
+    flowTag:"Parcursul clientului", flowH2a:"Două scenarii.", flowH2b:"Zero fricțiune.",
+    flowSub:"Client nou sau fidel — fluxul este gândit pentru fiecare.",
+    flowNewTitle:"Client nou", flowNewSub:"Prima vizită",
+    flowNewSteps:[
+      {title:"Vede cardul de tejghea",body:"Pus pe tejghea, bine vizibil. Cod QR sau tag NFC."},
+      {title:"Tap NFC sau scanare QR",body:"Telefonul recunoaște acțiunea instantaneu."},
+      {title:"Prenume + telefon",body:"30 de secunde. Atât cerem."},
+      {title:"Card creat, ștampilă creditată",body:"Cardul de fidelitate este creat automat cu prima ștampilă."},
+      {title:"Adăugare în Apple / Google Wallet",body:"Opțional — pentru a regăsi cardul cu un singur tap."},
+    ],
+    flowRegTitle:"Client fidel", flowRegSub:"Revenire la local",
+    flowRegSteps:[
+      {title:"Tap NFC sau scanare QR",body:"Același gest ca la prima vizită."},
+      {title:"Recunoscut în mai puțin de o secundă",body:"Wallio găsește cardul prin numărul de telefon înregistrat."},
+      {title:"Ștampilă creditată automat",body:"Nicio acțiune suplimentară. Progresul este actualizat."},
+      {title:"Notificare Apple Wallet",body:"Cardul Wallet se actualizează și trimite o notificare."},
+      {title:"Obiectiv atins — recompensă!",body:"O validați cu un clic din dashboard-ul dvs."},
+    ],
+    customTag:"Personalizare", customH2:"Cardul dvs., imaginea dvs.",
+    customSub:"Fiecare element este configurabil din dashboard — în timp real.",
+    customMocks:[
+      {name:"Mori Matcha",reward:"Matcha gratuit",label:"Cafenea Matcha"},
+      {name:"Barba Italiana",reward:"Tunsoare gratuită",label:"Frizerie"},
+      {name:"Hammam Royal",reward:"Tratament gratuit",label:"Hammam & Spa"},
+    ],
+    customFeats:[
+      {title:"Culori & Logo",body:"Culoarea fondului, textului, ștampilelor — și logo-ul dvs. afișat în capul cardului."},
+      {title:"Număr de ștampile",body:"Alegeți între 5 și 50 de ștampile pe ciclu, cu una sau mai multe recompense."},
+      {title:"Stilul ștampilelor",body:"Alegeți dintre 8 stiluri: punct, inel, bifare, inimă, stea, text sau logo-ul dvs."},
+      {title:"Banner personalizat",body:"Încărcați o fotografie a localului ca banner pe card — cu ștampilele desenate pe el."},
+      {title:"Câmpuri informative",body:"Adăugați orarul, numărul de telefon, linkurile — direct vizibile pe card."},
+      {title:"Anti-duplicare inteligent",body:"Configurați un interval minim între două ștampile (15 min, 1h, 4h, 1 zi) pentru a preveni abuzurile."},
+    ],
+    notifTag:"Notificări", notifH2a:"Rămâneți prezent", notifH2b:"la momentul potrivit",
+    notifSub:"Wallet, push țintit, automatizări, geolocalizare — patru moduri de a ajunge la clienți la momentul potrivit.",
+    notifDate:"Duminică, 7 septembrie", notifNow:"acum", notifAgo:"acum 2h", notifNear:"în apropiere",
+    notifWalletTitle:"Nomade Café — Ștampilă nouă!", notifWalletBody:"Ai acum 8/20 ștampile. Încă 12 pentru cafeaua ta gratuită.",
+    notifFcmTitle:"La mulți ani!", notifFcmBody:"Îți oferim o ștampilă dublă azi. Ne vedem curând!",
+    notifGeoTitle:"Treci pe-aici?", notifGeoBody:"Îți mai lipsesc 2 ștampile pentru cafeaua gratuită. Te așteptăm!",
+    notifTypes:[
+      {title:"Actualizare Apple Wallet",desc:"La fiecare ștampilă nouă, cardul se actualizează automat în Wallet-ul clientului cu o notificare. Fără nicio acțiune din partea dvs.",tags:["Automat","Timp real"]},
+      {title:"Push țintit (FCM)",desc:"Trimiteți un mesaj tuturor clienților, sau targetați doar pe cei activi (vizite recente) sau inactivi (+30 zile) din dashboard.",tags:["Toți","Activi","Inactivi"]},
+      {title:"Automatizări",desc:"Wallio trimite automat un mesaj de ziua clientului, sau o reangajare personalizată dacă un client nu a mai venit de X zile.",tags:["Zi de naștere","Reangajare auto"]},
+      {title:"Geolocalizare",desc:"Declanșați o notificare push automată când un client se află în apropierea localului dvs. — stimulul perfect.",tags:["Proximitate","Automat"]},
+    ],
+    dashTag:"Dashboard", dashH2a:"Datele care schimbă totul", dashH2b:"pentru afacerea dvs.",
+    dashSub:"Pentru prima dată, știți exact cine sunt clienții dvs., cine revine și pe cine îi pierdeți.",
+    dashDate:"7 sept. 2026", dashMerchant:"Nomade Café",
+    dashStats:[
+      {label:"Clienți",value:"247",sub:"+12 luna aceasta",color:"#4472F5"},
+      {label:"Ștampile",value:"312",sub:"luna aceasta",color:"#6A5AF9"},
+      {label:"Revenire",value:"78%",sub:"activi",color:"#34C759"},
+      {label:"La risc",value:"14",sub:"de reangajat!",color:"#FF9500"},
+    ],
+    dashActivity:"Activitate — ultimele 7 zile",
+    dashDays:[{v:38,d:"L"},{v:52,d:"M"},{v:31,d:"M"},{v:67,d:"J"},{v:44,d:"V"},{v:58,d:"S"},{v:29,d:"D"}],
+    dashSegTitle:"Segmentare clienți",
+    dashSegs:[{label:"Activi (≤30z)",count:193,pct:78,color:"#34C759"},{label:"Inactivi (+30z)",count:54,pct:22,color:"#FF9500"}],
+    dashInsightTitle:"14 clienți absenți de peste 30 de zile", dashInsightBody:"Trimiteți o reangajare țintită — sunt încă recuperabili.",
+    dashTopTitle:"Cei mai buni clienți luna aceasta",
+    dashTopClients:[
+      {initials:"FB",name:"Fatima B.",visits:12,stamps:10,total:10,bc:"#FF9500",badge:"Recompensă"},
+      {initials:"AM",name:"Ahmed M.",visits:9,stamps:8,total:10,bc:"#34C759",badge:"Activ"},
+      {initials:"KL",name:"Karim L.",visits:7,stamps:3,total:10,bc:"#34C759",badge:"Activ"},
+    ],
+    dashVisits:"vizite luna aceasta",
+    dashRightH3:"Ce știți în sfârșit.",
+    dashRightP:"Înainte de Wallio, clienții dvs. erau anonimi. Nu știați cine revine, cine pleacă, nici cine merită atenție specială. Acum știți.",
+    dashRightPoints:[
+      {color:"#4472F5",title:"Cine revine — și cine pleacă",body:"Fiecare client este segmentat automat. Vedeți dintr-o privire clienții activi și inactivi, fără nicio manipulare."},
+      {color:"#FF9500",title:"Clienții dvs. la risc, identificați",body:"14 clienți absenți de peste 30 de zile? Wallio vă semnalează și vă permite să îi reangajați cu un clic."},
+      {color:"#6A5AF9",title:"Activitatea dvs., zi de zi",body:"Ștampile distribuite, înregistrări noi, recompense validate — vizualizate pe 7 sau 30 de zile."},
+      {color:"#34C759",title:"Cei mai buni clienți recompensați",body:"Identificați cei mai fideli, ajustați ștampilele, oferiți-le ceva excepțional direct din fișa lor."},
+      {color:"#8A5CF6",title:"Totul dintr-un clic — niciun raport de citit",body:"Fiecare dată este acționabilă. Reangajați, corectați, recompensați, notificați — totul din dashboard."},
+    ],
+    presenceTag:"Prezență digitală", presenceH2a:"Vizibil.", presenceH2b:"Chiar și fără buget publicitar.",
+    presenceSub:"Wallio este o aplicație web progresivă (PWA) — clienții o instalează cu un tap pe ecranul de start, fără App Store. Iar localul dvs. este listat în directorul Wallio, vizibil de toți utilizatorii platformei.",
+    presenceBenefits:[
+      {title:"Listing pe categorie și oraș",body:"Localul dvs. apare în directorul Wallio, sortat pe sector. Clienți noi vă descoperă fără să vă fi căutat."},
+      {title:"Instalabil pe ecranul de start",body:"Experiența unei aplicații native, fără App Store. Clienții o adaugă cu un tap — acces instant la cardul lor."},
+      {title:"Pagină dedicată partajabilă",body:"Fiecare local primește un link unic Wallio — în bio Instagram, pe flyere, vitrină. Un clic pentru accesul la cardul de fidelitate."},
+      {title:"Push fără instalare",body:"Notificările dvs. ajung pe telefonul clienților chiar și fără aplicație instalată. Web modern — zero fricțiune."},
+    ],
+    presenceDiscover:"Descoperă", presenceSearch:"Caută un local…",
+    presenceCats:["Toate","Cafea","Frizerie","Restaurant","Frumusețe"],
+    presenceMerchants:[
+      {name:"Nomade Café",cat:"Cafea · Cluj-Napoca",rating:"4.9",clients:"247 clienți",color:"#4472F5",initial:"N"},
+      {name:"Barba Italiana",cat:"Frizerie · Cluj-Napoca",rating:"4.8",clients:"183 clienți",color:"#C8956C",initial:"B"},
+      {name:"Mori Matcha",cat:"Ceai · Cluj-Napoca",rating:"4.7",clients:"134 clienți",color:"#A8D5A2",initial:"M"},
+      {name:"Hammam Royal",cat:"Spa · Cluj-Napoca",rating:"4.6",clients:"98 clienți",color:"#C9A96E",initial:"H"},
+    ],
+    presenceJoin:"Localul dvs. aici", presenceJoinSub:"Alăturați-vă Wallio",
+    secteursTag:"Sectoare", secteursH2a:"Pentru toate localurile", secteursH2b:"de proximitate",
+    secteursSub:"O singură soluție, adaptată fiecărui tip de local.",
+    secteurs:["Cafenea & Salon de ceai","Restaurant","Frizerie","Salon de frumusețe","Boutique & Modă","Sală de sport","Brutărie","Institut & Spa"],
+    parrainageTag:"Recomandare", parrainageH2a:"Clienții dvs.,", parrainageH2b:"cei mai buni agenți de vânzări.",
+    parrainageSub:"Un client mulțumit își distribuie linkul. Prietenul se înregistrează, ambii sunt recompensați. Zero buget publicitar, zero fricțiune.",
+    parrainageSteps:[
+      {title:"Clientul distribuie linkul",body:"Din «Cardurile mele», cu un tap. Linkul este unic și legat de localul său."},
+      {title:"Prietenul scanează și se înregistrează",body:"Dă clic pe link, trece prin înregistrarea rapidă, primește prima ștampilă instant."},
+      {title:"Cel care recomandă este recompensat",body:"Cardul Wallet se actualizează automat cu +1 ștampilă. Notificare push inclusă."},
+    ],
+    parrainageStats:[
+      {value:"x3",label:"mai mulți clienți noi",sub:"vs recomandare clasică"},
+      {value:"+1",label:"ștampilă pentru cel care recomandă",sub:"creditată automat"},
+      {value:"0 RON",label:"cost de achiziție",sub:"100% organic"},
+    ],
+    tarifsTag:"Tarife", tarifsH2:"Simplu și transparent.",
+    tarifsSub:"Cu cât vă angajați mai mult, cu atât economisiți — fără costuri ascunse, fără angajament forțat.",
+    tarifsIncludedLabel:"Inclus în abonamentul dvs.",
+    tarifsIncluded:["Card de fidelitate Apple & Google Wallet","Card tejghea 4K (QR + NFC opțional)","Dashboard în timp real","Notificări push nelimitate","Automatizări zi de naștere & reangajare","Listing în directorul Wallio","Suport dedicat pe WhatsApp"],
+    tarifsPriceLabel:"Tarif adaptat localului dvs.", tarifsPrice:"Personalizat", tarifsResponseTime:"Răspuns în 24h",
+    tarifsCtaWa:"Contactați-ne pe WhatsApp",
+    tarifsNote:"Fără angajament — tarif în funcție de\ntipul localului dvs.",
+    faqTag:"FAQ", faqH2:"Întrebări frecvente", faqOther:"Altă întrebare?", faqCta:"Discutați pe WhatsApp",
+    faqs:[
+      {q:"Trebuie să descarc o aplicație?",a:"Nu — nici dvs., nici clienții. Clienții accesează cardul printr-un link web după prima scanare. Cardul se poate adăuga apoi cu un clic în Apple Wallet sau Google Wallet, direct din browser."},
+      {q:"Cum primesc clienții prima ștampilă?",a:"La plată, apropie telefonul de tag-ul NFC (sau scanează codul QR de pe cardul de tejghea). Este instant — cardul este creat automat și prima ștampilă este adăugată fără nicio altă acțiune."},
+      {q:"Ce este cardul de tejghea?",a:"Este un fișier de imprimare de înaltă rezoluție (4K) generat de Wallio. Îl imprimați și îl puneți pe tejghea. Conține un cod QR unic al localului dvs. — clienții îl scanează pentru a-și accesa cardul de fidelitate."},
+      {q:"Clienții mei au nevoie de un cont Apple sau Google?",a:"Pentru a adăuga cardul în Apple Wallet, un iPhone cu iOS 6+ este suficient. Pentru Google Wallet, un Android cu aplicația Google Wallet. Nu este necesar niciun cont Wallio."},
+      {q:"Cum îmi personalizez cardul de fidelitate?",a:"Din dashboard, alegeți culorile (fond, text, ștampile), încărcați logo-ul, setați numărul de ștampile și recompensa. Fiecare modificare se reflectă imediat în previzualizarea Apple Wallet și Google Wallet."},
+      {q:"Care este diferența între modul ciclic și progresiv?",a:"În modul ciclic, odată atins obiectivul (ex. 10 ștampile → 1 cafea gratuită), contorul repornește. În modul progresiv, definiți mai multe niveluri de recompense — de exemplu 5 ștampile = reducere 10%, 10 ștampile = articol gratuit, 20 ștampile = statut VIP."},
+      {q:"Notificările sunt automate?",a:"Da pentru actualizările de card (Apple Wallet trimite o notificare la fiecare ștampilă nouă). Pentru notificările de marketing, le configurați în dashboard: Wallio trimite automat mesajul potrivit la momentul potrivit."},
+      {q:"Cum funcționează anti-duplicarea?",a:"Wallio detectează dacă un client a primit deja o ștampilă recent și blochează cumulurile abuzive. Configurați intervalul minim între două ștampile valide (15 min, 1h, 4h, 8h, 1 zi) din setări."},
+      {q:"Pot modifica manual ștampilele unui client?",a:"Da. Din fișa clientului în dashboard, puteți ajusta numărul de ștampile direct. Util pentru a corecta o eroare sau a recompensa un client excepțional."},
+      {q:"Funcționează Wallio fără internet pentru clienți?",a:"Scanarea NFC și QR necesită o conexiune pentru a înregistra ștampila. Cardul Apple Wallet / Google Wallet rămâne vizibil offline odată adăugat pe telefon."},
+    ],
+    ctaH2:"Gata să vă fidelizați clienții?", ctaSub:"Începeți în câteva minute. Fără instalare, fără fricțiune.", ctaBtn:"Începeți pe WhatsApp",
+    footerLinks:[
+      {href:"/privacy",label:"Confidențialitate"},{href:"/terms",label:"Termeni"},
+      {href:"/legal",label:"Mențiuni legale"},{href:"mailto:wallio.card@gmail.com",label:"wallio.card@gmail.com"},
+    ],
+  },
 } satisfies Record<Lang, object>;
 
 function PhoneMock({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -576,9 +736,9 @@ export default function LandingPage() {
   const [navVisible, setNavVisible] = useState(false);
   const [activeAnchor, setActiveAnchor] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [lang, setLang] = useState<Lang>("fr");
-  const t = T[lang];
   const { region } = useLang();
+  const [lang, setLang] = useState<Lang>(region === "ro" ? "ro" : "fr");
+  const t = T[lang];
   const pricing = REGIONS[region];
   useReveal();
 
@@ -772,12 +932,12 @@ export default function LandingPage() {
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             <button
-              onClick={() => setLang(l => l === "fr" ? "en" : "fr")}
+              onClick={() => setLang(l => l === "fr" ? (region === "ro" ? "ro" : "en") : l === "ro" ? "en" : "fr")}
               style={{ background:"none", border:"0.5px solid rgba(0,0,0,0.18)", borderRadius:20, padding:"5px 13px", cursor:"pointer", fontSize:12, fontWeight:700, color:"#1D1D1F", letterSpacing:"0.08em", transition:"background 0.15s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background="rgba(0,0,0,0.06)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background="none"; }}
             >
-              {lang === "fr" ? "EN" : "FR"}
+              {lang === "fr" ? "EN" : lang === "en" ? "RO" : "FR"}
             </button>
             <Link href="/choisir" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>{t.navLogin}</Link>
             <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary nav-contact" style={{ padding:"7px 18px", fontSize:13, borderRadius:20 }}>
