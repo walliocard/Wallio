@@ -7,11 +7,13 @@ import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } from "@/lib/loyalty";
 import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
+import { useLang } from "@/lib/lang-context";
 
 type Sort = "recent" | "tampons" | "alpha";
 
 export default function ClientsPage() {
   const { user, marchand, loading: authLoading } = useAuth();
+  const { t } = useLang();
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
@@ -100,13 +102,13 @@ export default function ClientsPage() {
             style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
             onClick={e => e.stopPropagation()}
           >
-            <h3 className="text-[18px] font-semibold mb-5" style={{ color: "var(--fg)" }}>Ajouter un client</h3>
+            <h3 className="text-[18px] font-semibold mb-5" style={{ color: "var(--fg)" }}>{t.clients_add_title}</h3>
             <div className="space-y-3">
               {[
-                { key: "prenom",        label: "Prénom *",         type: "text",  placeholder: "Marie" },
-                { key: "nom",           label: "Nom",              type: "text",  placeholder: "Dupont" },
-                { key: "telephone",     label: "Téléphone *",      type: "tel",   placeholder: "+212 6 00 00 00 00" },
-                { key: "date_naissance",label: "Date de naissance",type: "date",  placeholder: "" },
+                { key: "prenom",        label: t.clients_prenom, type: "text", placeholder: "Marie" },
+                { key: "nom",           label: t.clients_nom,    type: "text", placeholder: "Dupont" },
+                { key: "telephone",     label: t.clients_phone,  type: "tel",  placeholder: "+212 6 00 00 00 00" },
+                { key: "date_naissance",label: t.clients_dob,    type: "date", placeholder: "" },
               ].map(f => (
                 <div key={f.key}>
                   <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--fg-tertiary)" }}>
@@ -134,7 +136,7 @@ export default function ClientsPage() {
                 className="flex-1 py-3 rounded-2xl text-[14px] font-medium"
                 style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
               >
-                Annuler
+                {t.mes_cartes_delete_cancel}
               </button>
               <button
                 onClick={ajouterClient}
@@ -142,7 +144,7 @@ export default function ClientsPage() {
                 className="flex-1 py-3 rounded-2xl text-[14px] font-semibold text-white"
                 style={{ background: "var(--accent)" }}
               >
-                {saving ? "Ajout…" : "Ajouter"}
+                {saving ? t.clients_adding : t.clients_add}
               </button>
             </div>
           </div>
@@ -155,7 +157,7 @@ export default function ClientsPage() {
           <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
             {loading ? "—" : `${clients.length} client${clients.length > 1 ? "s" : ""}`}
           </p>
-          <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Clients</h1>
+          <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>{t.clients_title}</h1>
         </div>
         <button
           onClick={() => { setShowModal(true); setFormError(""); }}
@@ -163,7 +165,7 @@ export default function ClientsPage() {
           style={{ background: "var(--accent)", boxShadow: "0 4px 14px rgba(0,122,255,0.25)" }}
         >
           <span className="text-[18px] leading-none font-light">+</span>
-          Ajouter
+          {t.clients_add}
         </button>
       </div>
 
@@ -176,7 +178,7 @@ export default function ClientsPage() {
           </span>
           <input
             type="text"
-            placeholder="Nom ou téléphone…"
+            placeholder={t.clients_search}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-2xl text-[14px] outline-none"
@@ -194,8 +196,8 @@ export default function ClientsPage() {
             className="flex-1 px-3 py-2.5 rounded-2xl text-[13px] outline-none"
             style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
           >
-            <option value="recent">Plus récents</option>
-            <option value="tampons">Plus de tampons</option>
+            <option value="recent">{t.clients_sort_recent}</option>
+            <option value="tampons">{t.clients_sort_stamps}</option>
             <option value="alpha">A → Z</option>
           </select>
 
@@ -228,7 +230,7 @@ export default function ClientsPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-[15px]" style={{ color: "var(--fg-tertiary)" }}>
-            {search || filterRecompense ? "Aucun résultat" : "Aucun client pour l'instant"}
+            {t.clients_empty}
           </p>
         </div>
       ) : (
@@ -261,7 +263,7 @@ export default function ClientsPage() {
                     {client.recompense_en_attente && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
                         style={{ background: "rgba(52,199,89,0.15)", color: "#34C759" }}>
-                        Récompense
+                        {t.dash_rewards}
                       </span>
                     )}
                   </div>
