@@ -9,11 +9,13 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import jsQR from "jsqr";
+import { useLang } from "@/lib/lang-context";
 
 type Tab = "qr" | "telephone" | "nom";
 
 export default function ScannerPage() {
   const { user } = useAuth();
+  const { t } = useLang();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("qr");
 
@@ -118,17 +120,17 @@ export default function ScannerPage() {
         style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
         <Icons.Check size={28} />
       </div>
-      <h2 className="text-[22px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>Client identifié</h2>
-      <p className="text-[14px] mb-8" style={{ color: "var(--fg-secondary)" }}>QR code scanné avec succès</p>
+      <h2 className="text-[22px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>{t.scan_success}</h2>
+      <p className="text-[14px] mb-8" style={{ color: "var(--fg-secondary)" }}>✓ QR</p>
       <Link
         href={`/client/${detected}`}
         className="w-full max-w-xs py-4 rounded-2xl text-center text-white font-semibold text-[15px] block"
         style={{ background: "var(--accent)", boxShadow: "0 4px 20px rgba(0,122,255,0.3)" }}
       >
-        Voir le profil client
+        {t.scan_view_profile}
       </Link>
       <button onClick={() => setDetected(null)} className="mt-4 text-[14px] px-4 py-2" style={{ color: "var(--fg-tertiary)" }}>
-        Scanner à nouveau
+        {t.scan_again}
       </button>
     </div>
   );
@@ -141,24 +143,24 @@ export default function ScannerPage() {
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
           Identification client
         </p>
-        <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Scanner</h1>
+        <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>{t.scan_title}</h1>
 
         {/* Onglets */}
         <div className="flex gap-2 mt-4">
-          {([["qr", "QR Code"], ["telephone", "Téléphone"], ["nom", "Nom"]] as [Tab, string][]).map(([t, label]) => (
+          {([["qr", t.scan_tab_qr], ["telephone", t.scan_tab_phone], ["nom", t.scan_tab_name]] as [Tab, string][]).map(([tab_, label]) => (
             <button
-              key={t}
+              key={tab_}
               onClick={() => {
-                setTab(t);
+                setTab(tab_);
                 setPhoneResult(null); setPhone("");
                 setNomResults(null); setNom("");
                 if (scanning) stopCamera();
               }}
               className="px-4 py-2 rounded-2xl text-[13px] font-medium transition-all"
               style={{
-                background: tab === t ? "var(--accent)" : "var(--glass-bg)",
-                color: tab === t ? "white" : "var(--fg-secondary)",
-                border: `1px solid ${tab === t ? "var(--accent)" : "var(--border)"}`,
+                background: tab === tab_ ? "var(--accent)" : "var(--glass-bg)",
+                color: tab === tab_ ? "white" : "var(--fg-secondary)",
+                border: `1px solid ${tab === tab_ ? "var(--accent)" : "var(--border)"}`,
               }}
             >
               {label}
@@ -195,7 +197,7 @@ export default function ScannerPage() {
                   className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
                   style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(10px)" }}
                 >
-                  Arrêter
+                  {t.scan_stop}
                 </button>
               </div>
 
