@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { useLang } from "@/lib/lang-context";
 
 export default function ChoisirPage() {
+  const { t } = useLang();
   return (
     <div style={{
       minHeight:"100vh", background:"#F2F2F7",
@@ -16,8 +18,8 @@ export default function ChoisirPage() {
       </div>
 
       <div style={{ textAlign:"center", marginBottom:48 }}>
-        <h1 style={{ fontSize:32, fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:10 }}>Bienvenue</h1>
-        <p style={{ fontSize:16, color:"#6E6E73" }}>Choisissez votre espace</p>
+        <h1 style={{ fontSize:32, fontWeight:700, letterSpacing:-1, color:"#1D1D1F", marginBottom:10 }}>{t.choisir_welcome}</h1>
+        <p style={{ fontSize:16, color:"#6E6E73" }}>{t.choisir_subtitle}</p>
       </div>
 
       <div style={{ display:"flex", gap:20, flexWrap:"wrap", justifyContent:"center", maxWidth:680, width:"100%" }}>
@@ -43,11 +45,11 @@ export default function ChoisirPage() {
               </svg>
             </div>
             <div>
-              <h2 style={{ fontSize:22, fontWeight:700, color:"white", letterSpacing:-0.5, marginBottom:8 }}>Espace Marchand</h2>
-              <p style={{ fontSize:14, color:"rgba(255,255,255,0.50)", lineHeight:1.6 }}>Accédez à votre dashboard — clients, tampons, notifications, statistiques.</p>
+              <h2 style={{ fontSize:22, fontWeight:700, color:"white", letterSpacing:-0.5, marginBottom:8 }}>{t.choisir_merchant}</h2>
+              <p style={{ fontSize:14, color:"rgba(255,255,255,0.50)", lineHeight:1.6 }}>{t.choisir_merchant_desc}</p>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-              <span style={{ fontSize:13, fontWeight:600, color:"#4472F5" }}>Se connecter</span>
+              <span style={{ fontSize:13, fontWeight:600, color:"#4472F5" }}>{t.auth_login}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
           </div>
@@ -74,8 +76,8 @@ export default function ChoisirPage() {
               </svg>
             </div>
             <div>
-              <h2 style={{ fontSize:22, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.5, marginBottom:8 }}>Espace Client</h2>
-              <p style={{ fontSize:14, color:"#6E6E73", lineHeight:1.6 }}>Retrouvez votre carte de fidélité. Accédez via le QR code ou tag NFC de votre commerce.</p>
+              <h2 style={{ fontSize:22, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.5, marginBottom:8 }}>{t.choisir_client}</h2>
+              <p style={{ fontSize:14, color:"#6E6E73", lineHeight:1.6 }}>{t.choisir_client_desc}</p>
             </div>
             <div style={{ background:"#F2F2F7", borderRadius:12, padding:"14px 16px" }}>
               <p style={{ fontSize:12, color:"#8E8E93", lineHeight:1.6 }}>
@@ -83,7 +85,7 @@ export default function ChoisirPage() {
               </p>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-              <span style={{ fontSize:13, fontWeight:600, color:"#4472F5" }}>Accéder à mon espace</span>
+              <span style={{ fontSize:13, fontWeight:600, color:"#4472F5" }}>{t.choisir_client_desc}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
           </div>
@@ -92,9 +94,9 @@ export default function ChoisirPage() {
       </div>
 
       <p style={{ marginTop:48, fontSize:13, color:"#C7C7CC", textAlign:"center" }}>
-        Pas encore sur Wallio ?{" "}
+        {t.choisir_not_on_wallio}{" "}
         <a href="https://wa.me/40749056483?text=Bonjour%2C%20je%20souhaite%20d%C3%A9couvrir%20Wallio%20pour%20mon%20commerce." target="_blank" rel="noopener noreferrer" style={{ color:"#4472F5", textDecoration:"none", fontWeight:500 }}>
-          Nous contacter
+          {t.choisir_contact}
         </a>
       </p>
     </div>

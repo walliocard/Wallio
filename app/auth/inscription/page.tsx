@@ -6,6 +6,7 @@ import { auth } from "@/lib/firebase";
 import { saveMarchandFields } from "@/lib/save-marchand";
 import { Timestamp } from "firebase/firestore";
 import Link from "next/link";
+import { useLang } from "@/lib/lang-context";
 
 const VILLES: Record<string, string[]> = {
   Maroc: [
@@ -13,7 +14,7 @@ const VILLES: Record<string, string[]> = {
     "Khouribga","Laâyoune","Marrakech","Meknès","Mohammedia","Nador",
     "Oujda","Rabat","Safi","Salé","Settat","Tanger","Tétouan",
   ],
-  Roumanie: ["Cluj-Napoca"],
+  Roumanie: ["Cluj-Napoca","București","Brașov","Timișoara","Cluj","Iași","Constanța","Craiova","Galați","Ploiești"],
 };
 
 const inputStyle: React.CSSProperties = {
@@ -23,6 +24,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function InscriptionPage() {
+  const { t } = useLang();
   const [form, setForm] = useState({ nom: "", email: "", password: "", telephone: "", pays: "Maroc", ville: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -32,13 +34,12 @@ export default function InscriptionPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.ville) { setError("Veuillez sélectionner une ville."); return; }
+    if (!form.ville) { setError(t.auth_inscription_error_city); return; }
     setError("");
     setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
 
-      // Firestore + notif admin en background — le serveur Vercel termine même si le client quitte
       saveMarchandFields(user, {
         nom: form.nom,
         email: form.email,
@@ -63,9 +64,9 @@ export default function InscriptionPage() {
       setSuccess(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("email-already-in-use")) setError("Cet email est déjà utilisé.");
-      else if (msg.includes("weak-password")) setError("Mot de passe trop court (6 caractères minimum).");
-      else setError("Une erreur est survenue. Réessayez.");
+      if (msg.includes("email-already-in-use")) setError(t.auth_inscription_error_email);
+      else if (msg.includes("weak-password")) setError(t.auth_inscription_error_password);
+      else setError(t.auth_inscription_error_generic);
     } finally {
       setLoading(false);
     }
@@ -83,9 +84,9 @@ export default function InscriptionPage() {
               <path d="M20 6L9 17L4 12" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight mb-3" style={{ color: "var(--fg)" }}>Compte créé</h1>
+          <h1 className="text-2xl font-semibold tracking-tight mb-3" style={{ color: "var(--fg)" }}>{t.auth_inscription_success_title}</h1>
           <p className="text-[15px] leading-relaxed" style={{ color: "var(--fg-secondary)" }}>
-            Votre compte est en attente d&apos;activation par l&apos;équipe Wallio. Vous serez notifié sous 24h.
+            {t.auth_inscription_success_body}
           </p>
         </div>
       </main>
@@ -103,55 +104,47 @@ export default function InscriptionPage() {
         <div className="text-center mb-10">
           <img src="/wallio-instagram-profil.png" alt="Wallio"
             style={{ width: 80, height: 80, borderRadius: 20, margin: "0 auto 14px", display: "block" }} />
-          <p className="text-[15px]" style={{ color: "var(--fg-secondary)" }}>Créer votre espace marchand</p>
+          <p className="text-[15px]" style={{ color: "var(--fg-secondary)" }}>{t.auth_inscription_title}</p>
         </div>
 
         <div className="rounded-[28px] p-7"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(30px)", boxShadow: "var(--shadow-lg)" }}>
 
           <form onSubmit={handleSubmit} className="space-y-3">
-
-            {/* Nom */}
-            <input type="text" required placeholder="Nom de l'établissement"
+            <input type="text" required placeholder={t.auth_inscription_name}
               value={form.nom} onChange={e => set("nom", e.target.value)}
               style={inputStyle}
               onFocus={e => (e.target as HTMLInputElement).style.borderColor = "var(--accent)"}
               onBlur={e => (e.target as HTMLInputElement).style.borderColor = "var(--border)"} />
 
-            {/* Email */}
-            <input type="email" required placeholder="Email"
+            <input type="email" required placeholder={t.auth_inscription_email}
               value={form.email} onChange={e => set("email", e.target.value)}
               style={inputStyle}
               onFocus={e => (e.target as HTMLInputElement).style.borderColor = "var(--accent)"}
               onBlur={e => (e.target as HTMLInputElement).style.borderColor = "var(--border)"} />
 
-            {/* Mot de passe */}
-            <input type="password" required placeholder="Mot de passe (min. 6 caractères)"
+            <input type="password" required placeholder={t.auth_inscription_password}
               value={form.password} onChange={e => set("password", e.target.value)}
               style={inputStyle}
               onFocus={e => (e.target as HTMLInputElement).style.borderColor = "var(--accent)"}
               onBlur={e => (e.target as HTMLInputElement).style.borderColor = "var(--border)"} />
 
-            {/* Téléphone (optionnel) */}
-            <input type="tel" placeholder="Téléphone (optionnel)"
+            <input type="tel" placeholder={t.auth_inscription_phone}
               value={form.telephone} onChange={e => set("telephone", e.target.value)}
               style={inputStyle}
               onFocus={e => (e.target as HTMLInputElement).style.borderColor = "var(--accent)"}
               onBlur={e => (e.target as HTMLInputElement).style.borderColor = "var(--border)"} />
 
-            {/* Séparateur localisation */}
             <p style={{ fontSize: 12, color: "var(--fg-tertiary)", paddingTop: 2, paddingLeft: 2 }}>Localisation</p>
 
-            {/* Pays */}
             <select value={form.pays} onChange={e => { set("pays", e.target.value); set("ville", ""); }}
               style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
               {Object.keys(VILLES).map(p => <option key={p} value={p}>{p}</option>)}
             </select>
 
-            {/* Ville */}
             <select required value={form.ville} onChange={e => set("ville", e.target.value)}
               style={{ ...inputStyle, appearance: "none", cursor: "pointer", color: form.ville ? "var(--fg)" : "var(--fg-tertiary)" }}>
-              <option value="" disabled>Sélectionner une ville</option>
+              <option value="" disabled>{t.auth_inscription_select_city}</option>
               {villes.map(v => <option key={v} value={v}>{v}</option>)}
             </select>
 
@@ -160,15 +153,15 @@ export default function InscriptionPage() {
             <button type="submit" disabled={loading}
               className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all duration-200 mt-1"
               style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.3)" }}>
-              {loading ? "Création…" : "Créer mon compte"}
+              {loading ? t.auth_inscription_creating : t.auth_inscription_submit}
             </button>
           </form>
         </div>
 
         <p className="text-center text-[13px] mt-6" style={{ color: "var(--fg-tertiary)" }}>
-          Déjà un compte ?{" "}
+          {t.auth_already_account}{" "}
           <Link href="/auth/connexion" style={{ color: "var(--accent)" }} className="font-medium">
-            Se connecter
+            {t.auth_login_link}
           </Link>
         </p>
       </div>

@@ -6,12 +6,14 @@ import { auth } from "@/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
+import { useLang } from "@/lib/lang-context";
 
 function ConnexionInner() {
+  const { t } = useLang();
   const searchParams = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState(
-    searchParams.get("inactive") ? "Votre compte est en attente d'activation par l'équipe Wallio." : ""
+    searchParams.get("inactive") ? t.auth_inactive : ""
   );
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -19,14 +21,14 @@ function ConnexionInner() {
   const router = useRouter();
 
   async function handleReset() {
-    if (!form.email) { setError("Entre ton email d'abord."); return; }
+    if (!form.email) { setError(t.auth_error_email); return; }
     setResetLoading(true);
     try {
       await sendPasswordResetEmail(auth, form.email);
       setResetSent(true);
       setError("");
     } catch {
-      setError("Email introuvable.");
+      setError(t.auth_error_not_found);
     } finally {
       setResetLoading(false);
     }
@@ -46,13 +48,12 @@ function ConnexionInner() {
       ]);
       router.push("/dashboard");
     } catch (e: unknown) {
-      // Fire-and-forget — si IndexedDB est corrompue, await signOut() hang aussi
       signOut(auth).catch(() => {});
       const msg = e instanceof Error ? e.message : "";
       if (msg === "timeout" || msg.includes("network") || msg.includes("unavailable")) {
-        setError("Connexion lente — réessaie dans quelques secondes.");
+        setError(t.auth_error_slow);
       } else {
-        setError("Email ou mot de passe incorrect.");
+        setError(t.auth_error_wrong);
       }
     } finally {
       setLoading(false);
@@ -62,7 +63,6 @@ function ConnexionInner() {
   return (
     <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
 
-      {/* Halo lumineux */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[800px] h-[600px] rounded-full opacity-30"
           style={{ background: "radial-gradient(circle, rgba(0,122,255,0.15) 0%, transparent 70%)" }} />
@@ -70,15 +70,13 @@ function ConnexionInner() {
 
       <div className="w-full max-w-[380px] relative">
 
-        {/* Logo */}
         <div className="text-center mb-12">
           <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 88, height: 88, borderRadius: 22, margin: "0 auto 16px", display: "block" }} />
           <p className="text-[15px] mt-1" style={{ color: "var(--fg-secondary)" }}>
-            Espace marchand
+            {t.auth_title_connexion}
           </p>
         </div>
 
-        {/* Card */}
         <div className="rounded-[28px] p-8"
           style={{
             background: "var(--glass-bg)",
@@ -92,38 +90,28 @@ function ConnexionInner() {
               <input
                 type="email"
                 required
-                placeholder="Email"
+                placeholder={t.auth_email}
                 value={form.email}
                 onChange={e => setForm({ ...form, email: e.target.value })}
                 className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all duration-200"
-                style={{
-                  background: "var(--bg)",
-                  border: "1px solid var(--border)",
-                  color: "var(--fg)",
-                }}
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
                 onFocus={e => e.target.style.borderColor = "var(--accent)"}
                 onBlur={e => e.target.style.borderColor = "var(--border)"}
               />
               <input
                 type="password"
                 required
-                placeholder="Mot de passe"
+                placeholder={t.auth_password}
                 value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
                 className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all duration-200"
-                style={{
-                  background: "var(--bg)",
-                  border: "1px solid var(--border)",
-                  color: "var(--fg)",
-                }}
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
                 onFocus={e => e.target.style.borderColor = "var(--accent)"}
                 onBlur={e => e.target.style.borderColor = "var(--border)"}
               />
             </div>
 
-            {error && (
-              <p className="text-[13px] text-red-500 px-1">{error}</p>
-            )}
+            {error && <p className="text-[13px] text-red-500 px-1">{error}</p>}
 
             <button
               type="submit"
@@ -133,24 +121,24 @@ function ConnexionInner() {
               onMouseEnter={e => { (e.target as HTMLElement).style.background = "var(--accent-hover)"; (e.target as HTMLElement).style.transform = "translateY(-1px)"; }}
               onMouseLeave={e => { (e.target as HTMLElement).style.background = "var(--accent)"; (e.target as HTMLElement).style.transform = "translateY(0)"; }}
             >
-              {loading ? "Connexion…" : "Se connecter"}
+              {loading ? t.auth_logging_in : t.auth_login}
             </button>
           </form>
         </div>
 
         {resetSent && (
           <p className="text-center text-[13px] mt-4" style={{ color: "#34C759" }}>
-            ✅ Email de réinitialisation envoyé.
+            ✅ {t.auth_reset_sent}
           </p>
         )}
 
         <div className="flex items-center justify-between mt-5">
           <button onClick={handleReset} disabled={resetLoading}
             className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>
-            {resetLoading ? "Envoi…" : "Mot de passe oublié ?"}
+            {resetLoading ? "…" : t.auth_forgot}
           </button>
           <Link href="/auth/inscription" className="text-[13px] font-medium" style={{ color: "var(--accent)" }}>
-            Créer un compte
+            {t.auth_create_account}
           </Link>
         </div>
       </div>
