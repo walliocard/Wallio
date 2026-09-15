@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
 import { drawPrintCard, drawPrintCardQROnly } from "@/lib/print-card-draw";
@@ -120,6 +120,8 @@ export default function AdminPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [tab, setTab] = useState<"marchands" | "comptabilite">("marchands");
+  const [drawerClientCount, setDrawerClientCount] = useState<number | null>(null);
+  const [clientCounts, setClientCounts] = useState<Record<string, number>>({});
   const [showPaiement, setShowPaiement] = useState<Marchand | null>(null);
   const [paiementType, setPaiementType] = useState<AboType>("mensuel");
   const [paiementDebut, setPaiementDebut] = useState("");
@@ -144,6 +146,12 @@ export default function AdminPage() {
         all.sort((a, b) => (b.date_inscription?.seconds ?? 0) - (a.date_inscription?.seconds ?? 0));
         setMarchands(all);
         setLoading(false);
+        Promise.all(all.map(async m => {
+          try {
+            const snap2 = await getCountFromServer(query(collection(db, "clients"), where("marchand_id", "==", m.id)));
+            return [m.id, snap2.data().count] as const;
+          } catch { return [m.id, 0] as const; }
+        })).then(results => setClientCounts(Object.fromEntries(results)));
       });
     }
     init();
@@ -187,11 +195,16 @@ export default function AdminPage() {
     catch { setMarchands(prev => prev.map(x => x.id === m.id ? m : x)); setSelected(m); }
     setGeneratingNfc(false);
   }
-  function openDrawer(m: Marchand) {
+  async function openDrawer(m: Marchand) {
     setSelected(m);
     setLocPays(m.pays || "Maroc");
     setLocVille(m.ville || "");
     setLocTel(m.telephone || "");
+    setDrawerClientCount(null);
+    try {
+      const snap = await getCountFromServer(query(collection(db, "clients"), where("marchand_id", "==", m.id)));
+      setDrawerClientCount(snap.data().count);
+    } catch { /* silent */ }
   }
   async function saveLocalisation() {
     if (!selected || !locVille) return;
@@ -491,6 +504,7 @@ export default function AdminPage() {
               <div style={{ background: T.surfCard, borderRadius: 14, padding: "0 16px", border: `1px solid ${T.border}` }}>
                 <Row label="Inscription" value={formatDate(selected.date_inscription)} />
                 <Row label="Compte" value={selected.actif ? "Activé" : "Désactivé"} valueColor={selected.actif ? T.actifFg : WARNING} />
+                <Row label="Clients" value={drawerClientCount === null ? "…" : String(drawerClientCount)} valueColor={drawerClientCount ? T.actifFg : T.sec} />
                 <Row label="ID Firebase" value={selected.id.slice(0, 16) + "…"} />
               </div>
 
@@ -721,7 +735,7 @@ export default function AdminPage() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${T.sep}` }}>
-                    {["Établissement", "Email", "NFC", "Inscription", "Abonnement", "Compte", "Carte", ""].map(h => (
+                    {["Établissement", "Email", "Clients", "NFC", "Inscription", "Abonnement", "Compte", "Carte", ""].map(h => (
                       <th key={h} style={{ textAlign: "left", fontSize: 11, fontWeight: 600, color: T.tert, padding: "12px 20px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                     ))}
                   </tr>
@@ -744,6 +758,9 @@ export default function AdminPage() {
                       </td>
                       <td style={{ padding: "13px 20px", maxWidth: 180 }}>
                         <span style={{ fontSize: 13, color: T.sec, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{m.email || "—"}</span>
+                      </td>
+                      <td style={{ padding: "13px 20px", fontSize: 13, fontWeight: 600, color: T.label }}>
+                        {clientCounts[m.id] !== undefined ? clientCounts[m.id] : <span style={{ color: T.tert }}>…</span>}
                       </td>
                       <td style={{ padding: "13px 20px" }}>
                         {m.nfc_id

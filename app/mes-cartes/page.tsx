@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { creerClient } from "@/lib/loyalty";
+import { creerClient, getClientByTelephone } from "@/lib/loyalty";
 import { useLang } from "@/lib/lang-context";
 
 interface CardData {
@@ -203,11 +203,21 @@ export default function MesCartesPage() {
     if (!phone || !prenom) return;
     setJoining(prev => new Set(prev).add(marchand.id));
     try {
-      const { clientId, walletId } = await creerClient({
-        prenom, nom, telephone: phone,
-        date_naissance: dob || "",
-        marchand_id: marchand.id,
-      });
+      const existing = await getClientByTelephone(phone, marchand.id);
+      let clientId: string;
+      let walletId: string;
+      if (existing) {
+        clientId = existing.id;
+        walletId = existing.wallet_id;
+      } else {
+        const result = await creerClient({
+          prenom, nom, telephone: phone,
+          date_naissance: dob || "",
+          marchand_id: marchand.id,
+        });
+        clientId = result.clientId;
+        walletId = result.walletId;
+      }
       void clientId;
       localStorage.setItem(`wallio_${marchand.id}`, walletId);
       const marchandSnap = await getDoc(doc(db, "marchands", marchand.id));
@@ -215,7 +225,7 @@ export default function MesCartesPage() {
       setCards(prev => [...prev, {
         clientId, walletId, marchandId: marchand.id,
         marchandNom: marchand.nom, logoUrl: marchand.logoUrl, couleur: marchand.couleur,
-        stampsCurrent: 0, stampsObjective: (m.objectif_tampons as number) || 10,
+        stampsCurrent: existing?.tampons ?? 0, stampsObjective: (m.objectif_tampons as number) || 10,
         rewardName: (m.nom_recompense as string) || "Récompense", hasPushToken: false, hasFcmToken: false,
       }]);
       setMerchants(prev => prev.filter(m => m.id !== marchand.id));
@@ -409,7 +419,9 @@ export default function MesCartesPage() {
             return sortedVilles.map(ville => (
               <div key={ville}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: "#8E9BB5", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 8, marginTop: 4, paddingLeft: 2 }}>{ville}</p>
-                {grouped[ville].map(card => <CardItem key={card.walletId} card={card} delay={(idx++) * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} isAndroid={isAndroid} />)}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {grouped[ville].map(card => <CardItem key={card.walletId} card={card} delay={(idx++) * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} isAndroid={isAndroid} />)}
+                </div>
               </div>
             ));
           })()

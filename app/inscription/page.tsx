@@ -92,7 +92,7 @@ export default function InscriptionClientPage() {
               <input
                 type="date" placeholder="Date de naissance" value={form.dob}
                 onChange={e => setForm(f => ({ ...f, dob: e.target.value }))}
-                style={{ ...input }}
+                style={{ ...input, WebkitAppearance: "none", appearance: "none", minWidth: 0, maxWidth: "100%" } as React.CSSProperties}
                 onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
                 onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
               />
