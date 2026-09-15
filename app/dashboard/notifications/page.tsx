@@ -27,9 +27,9 @@ export default function NotificationsPage() {
   ];
 
   const TEMPLATES = [
-    { label: "★", title: t.notif_tpl_offer_title, body: t.notif_tpl_offer_body },
-    { label: "×2", title: t.notif_tpl_double_title, body: t.notif_tpl_double_body },
-    { label: "♟", title: t.notif_tpl_event_title, body: t.notif_tpl_event_body },
+    { label: "Offre", title: t.notif_tpl_offer_title, body: t.notif_tpl_offer_body },
+    { label: "x2", title: t.notif_tpl_double_title, body: t.notif_tpl_double_body },
+    { label: "Évèn.", title: t.notif_tpl_event_title, body: t.notif_tpl_event_body },
     { label: "!", title: t.notif_tpl_reward_title, body: t.notif_tpl_reward_body },
   ];
 
