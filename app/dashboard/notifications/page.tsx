@@ -30,7 +30,7 @@ export default function NotificationsPage() {
     { label: "★", title: t.notif_tpl_offer_title, body: t.notif_tpl_offer_body },
     { label: "×2", title: t.notif_tpl_double_title, body: t.notif_tpl_double_body },
     { label: "♟", title: t.notif_tpl_event_title, body: t.notif_tpl_event_body },
-    { label: "🏆", title: t.notif_tpl_reward_title, body: t.notif_tpl_reward_body },
+    { label: "!", title: t.notif_tpl_reward_title, body: t.notif_tpl_reward_body },
   ];
 
   const charTitle = title.length;
@@ -171,9 +171,9 @@ export default function NotificationsPage() {
         {sendState === "success" && result && (
           <div className="rounded-2xl p-4 flex items-center gap-3"
             style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.2)" }}>
-            <span className="text-2xl">✅</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <p className="text-[14px] font-semibold" style={{ color: "#34C759" }}>
-              {result.sent} {t.notif_send} ✓
+              {result.sent} {t.notif_send}
             </p>
           </div>
         )}
