@@ -37,6 +37,13 @@ export async function GET(
   const cid = classId(client.marchand_id);
   const oid = objectId(walletId);
 
+  const langDefaults: Record<string, { stamps: string; reward: string; locale: string; country: string }> = {
+    fr: { stamps: "Tampons",  reward: "Récompense", locale: "fr-FR", country: "FR" },
+    ro: { stamps: "Ștampile", reward: "Recompensă", locale: "ro-RO", country: "RO" },
+    es: { stamps: "Sellos",   reward: "Recompensa", locale: "es-ES", country: "ES" },
+  };
+  const ld = langDefaults[(m.langue as string) || "fr"] ?? langDefaults.fr;
+
   await clientRef.update({ wallet_type: "google" });
 
   // Créer ou vérifier la classe de fidélité
@@ -70,7 +77,7 @@ export async function GET(
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
   const validLinks = links.filter(l => l.uri && l.description);
   const classTextModules = [
-    { header: "Récompense", body: (m.nom_recompense as string) || "Récompense", id: "recompense" },
+    { header: ld.reward, body: (m.nom_recompense as string) || ld.reward, id: "recompense" },
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
@@ -87,12 +94,12 @@ export async function GET(
     programName: m.nom,
     programLogo: {
       sourceUri: { uri: logoUri },
-      contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
+      contentDescription: { defaultValue: { language: ld.locale, value: m.nom } },
     },
     hexBackgroundColor: bgColor,
-    countryCode: "MA",
+    countryCode: ld.country,
     textModulesData: classTextModules,
-    ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } } } } : {}),
+    ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: ld.locale, value: m.nom } } } } : {}),
     ...(validLinks.length > 0 ? { linksModuleData: { uris: validLinks.map(l => ({ uri: l.uri, description: l.description })) } } : {}),
     ...(googleLocations ? { locations: googleLocations } : {}),
   };
@@ -133,7 +140,7 @@ export async function GET(
     state: "ACTIVE",
     loyaltyPoints: {
       balance: { string: `${client.tampons || 0} / ${m.objectif_tampons || 10}` },
-      label: (m.google_primary_label as string) || "Tampons",
+      label: (m.google_primary_label as string) || ld.stamps,
     },
     barcode: {
       type: "QR_CODE",

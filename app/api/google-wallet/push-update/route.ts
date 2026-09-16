@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb, initAdmin, adminMessaging } from "@/lib/admin";
 import { getGoogleAccessToken } from "@/lib/google-wallet/auth";
+import { getWalletLang } from "@/lib/wallet-lang";
 
 const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID!;
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
@@ -30,10 +31,11 @@ export async function POST(req: Request) {
 
   const marchandSnap = await db.collection("marchands").doc(client.marchand_id).get();
   const m = marchandSnap.exists ? marchandSnap.data()! : {};
+  const ld = getWalletLang((m as Record<string,unknown>).langue as string | undefined);
 
   const tampons = client.tampons || 0;
   const objectif = (m.objectif_tampons as number) || 10;
-  const recompense = (m.nom_recompense as string) || "Récompense";
+  const recompense = (m.nom_recompense as string) || ld.reward;
   const marchandNom = (m.nom as string) || "Wallio";
   const logoUrl = `${BASE_URL}/api/logo/${client.marchand_id}`;
   const isRecompense = tampons >= objectif;
@@ -49,7 +51,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           loyaltyPoints: {
             balance: { string: `${tampons} / ${objectif}` },
-            label: (m.google_primary_label as string) || "Tampons",
+            label: (m.google_primary_label as string) || ld.stamps,
           },
         }),
       }

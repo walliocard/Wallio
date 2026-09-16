@@ -29,6 +29,13 @@ export async function GET(
   }
   const m = marchandDoc.data()!;
 
+  const langDefaults: Record<string, { stamps: string; reward: string; member: string }> = {
+    fr: { stamps: "Tampons",  reward: "Récompense", member: "Membre"  },
+    ro: { stamps: "Ștampile", reward: "Recompensă", member: "Membru"  },
+    es: { stamps: "Sellos",   reward: "Recompensa", member: "Miembro" },
+  };
+  const ld = langDefaults[(m.langue as string) || "fr"] ?? langDefaults.fr;
+
   let authToken: string = client.apns_auth_token;
   if (!authToken) {
     authToken = crypto.randomBytes(20).toString("hex");
@@ -48,12 +55,12 @@ export async function GET(
     labelColorHex: m.apple_label_color || undefined,
     stampsCurrent: client.tampons || 0,
     stampsObjective: m.objectif_tampons || 10,
-    rewardName: m.nom_recompense || "Récompense",
+    rewardName: m.nom_recompense || ld.reward,
     clientPrenom: client.prenom || "",
     clientNom: client.nom || "",
-    primaryLabel: m.apple_primary_label || "Tampons",
-    rewardLabel: m.apple_reward_label || "Récompense",
-    memberLabel: m.apple_member_label || "Membre",
+    primaryLabel: m.apple_primary_label || ld.stamps,
+    rewardLabel: m.apple_reward_label || ld.reward,
+    memberLabel: m.apple_member_label || ld.member,
     auxiliaryFields: [
       m.apple_aux1_value ? { label: m.apple_aux1_label || "INFO", value: m.apple_aux1_value } : null,
       m.apple_aux2_value ? { label: m.apple_aux2_label || "INFO", value: m.apple_aux2_value } : null,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { getGoogleAccessToken } from "@/lib/google-wallet/auth";
+import { getWalletLang } from "@/lib/wallet-lang";
 
 const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID;
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
@@ -12,6 +13,7 @@ async function patchGoogleWalletClass(uid: string) {
   const snap = await adminDb().collection("marchands").doc(uid).get();
   if (!snap.exists) return;
   const m = snap.data()!;
+  const ld = getWalletLang(m.langue as string | undefined);
 
   const cid = `${ISSUER_ID}.wallio_${uid.replace(/[^a-zA-Z0-9_]/g, "_")}`;
   const token = await getGoogleAccessToken();
@@ -25,7 +27,7 @@ async function patchGoogleWalletClass(uid: string) {
 
   // Modules texte au niveau classe (identiques pour tous les clients)
   const classTextModules = [
-    { header: "Récompense", body: (m.nom_recompense as string) || "Récompense", id: "recompense" },
+    { header: ld.reward, body: (m.nom_recompense as string) || ld.reward, id: "recompense" },
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
@@ -37,12 +39,12 @@ async function patchGoogleWalletClass(uid: string) {
     programName: m.nom,
     programLogo: {
       sourceUri: { uri: logoUri },
-      contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } },
+      contentDescription: { defaultValue: { language: ld.locale, value: m.nom } },
     },
     hexBackgroundColor: bgColor,
-    countryCode: "MA",
+    countryCode: ld.country,
     textModulesData: classTextModules,
-    ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: "fr-FR", value: m.nom } } } } : {}),
+    ...(heroUrl ? { heroImage: { sourceUri: { uri: heroUrl }, contentDescription: { defaultValue: { language: ld.locale, value: m.nom } } } } : {}),
     ...(validLinks.length > 0 ? { linksModuleData: { uris: validLinks.map(l => ({ uri: l.uri, description: l.description })) } } : {}),
   };
 
