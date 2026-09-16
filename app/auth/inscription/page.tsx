@@ -16,6 +16,7 @@ const VILLES: Record<string, string[]> = {
   ],
   Roumanie: ["Cluj-Napoca","București","Brașov","Timișoara","Iași","Constanța","Craiova","Galați","Ploiești","Sibiu"],
   France: ["Paris","Lyon","Marseille","Bordeaux","Lille","Nantes","Toulouse","Strasbourg","Nice","Montpellier"],
+  Espagne: ["Madrid","Barcelona","Valencia","Sevilla","Zaragoza","Málaga","Murcia","Palma","Bilbao","Alicante","Córdoba","Valladolid","Vigo","Gijón","Granada"],
 };
 
 const inputStyle: React.CSSProperties = {
@@ -47,7 +48,7 @@ export default function InscriptionPage() {
         telephone: form.telephone || null,
         ville: form.ville,
         pays: form.pays,
-        langue: form.pays === "Roumanie" ? "ro" : "fr",
+        langue: form.pays === "Roumanie" ? "ro" : form.pays === "Espagne" ? "es" : "fr",
         objectif_tampons: 10,
         nom_recompense: "Récompense offerte",
         icone_tampons: "⭐",

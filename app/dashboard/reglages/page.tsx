@@ -8,6 +8,7 @@ import { useLang } from "@/lib/lang-context";
 
 const FUSEAUX = [
   "Africa/Casablanca",
+  "Europe/Madrid",
   "Europe/Paris",
   "Europe/London",
   "America/New_York",
@@ -59,8 +60,8 @@ export default function ReglagesPage() {
   const [parrainageActif, setParrainageActif] = useState<boolean>(
     !!((marchand as Record<string, unknown>)?.parrainage_actif)
   );
-  const [langue, setLangue] = useState<"fr" | "ro">(
-    ((marchand as Record<string, unknown>)?.langue as "fr" | "ro") || "fr"
+  const [langue, setLangue] = useState<"fr" | "ro" | "es">(
+    ((marchand as Record<string, unknown>)?.langue as "fr" | "ro" | "es") || "fr"
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -407,7 +408,7 @@ export default function ReglagesPage() {
           <div className="flex items-center justify-between">
             <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_language}</p>
             <div className="flex gap-2">
-              {(["fr", "ro"] as const).map(l => (
+              {(["fr", "ro", "es"] as const).map(l => (
                 <button key={l} onClick={() => setLangue(l)}
                   className="px-4 py-1.5 rounded-xl text-[13px] font-semibold transition-all"
                   style={{
@@ -415,7 +416,7 @@ export default function ReglagesPage() {
                     color: langue === l ? "white" : "var(--fg-secondary)",
                     border: `1px solid ${langue === l ? "var(--accent)" : "var(--border)"}`,
                   }}>
-                  {l === "fr" ? "FR" : "RO"}
+                  {l === "fr" ? "FR" : l === "ro" ? "RO" : "ES"}
                 </button>
               ))}
             </div>

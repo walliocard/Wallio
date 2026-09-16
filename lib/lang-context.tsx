@@ -31,12 +31,13 @@ export function LangProvider({
   useEffect(() => {
     // Merchant dashboard: check saved lang preference
     const saved = localStorage.getItem("wallio_lang") as Lang | null;
-    if (saved === "fr" || saved === "ro") {
+    if (saved === "fr" || saved === "ro" || saved === "es") {
       setLangState(saved);
     } else {
       // Client pages: auto-detect from browser
       const browser = navigator.language.toLowerCase();
       if (browser.startsWith("ro")) setLangState("ro");
+      else if (browser.startsWith("es")) setLangState("es");
       else setLangState(defaultLang);
     }
   }, [defaultLang]);
