@@ -10,6 +10,7 @@ const WA_MSGS: Record<string, string> = {
   fr: "Bonjour, je souhaite découvrir Wallio pour mon commerce.",
   en: "Hello, I'd like to discover Wallio for my business.",
   ro: "Bună ziua, doresc să descopăr Wallio pentru afacerea mea.",
+  es: "Hola, me gustaría descubrir Wallio para mi negocio.",
 };
 
 function useReveal() {
@@ -233,7 +234,7 @@ function WalletCardMock({
   );
 }
 
-type Lang = "fr" | "en" | "ro";
+type Lang = "fr" | "en" | "ro" | "es";
 
 const T = {
   fr: {
@@ -716,6 +717,166 @@ const T = {
       {href:"/legal", label:"Mențiuni legale"},{href:"mailto:wallio.card@gmail.com", label:"wallio.card@gmail.com"},
     ],
   },
+  es: {
+    navLogin:"Iniciar sesión", navContact:"Contáctenos",
+    anchors:[
+      {id:"acces",label:"Acceso"},{id:"comment",label:"Cómo funciona"},
+      {id:"personnalisation",label:"Personalización"},{id:"notifications",label:"Notificaciones"},
+      {id:"dashboard",label:"Dashboard"},{id:"presence",label:"Presencia"},
+      {id:"tarifs",label:"Precios"},{id:"faq",label:"FAQ"},
+    ],
+    heroTitle1:"La fidelización de clientes,", heroTitle2:"reinventada.",
+    heroSub:"Un tap NFC o un escaneo QR es suficiente. Tus clientes acumulan sellos, tú conservas su fidelidad, sin ninguna app que instalar.",
+    heroCta1:"Empezar ahora", heroCta2:"Iniciar sesión",
+    heroStamps:"Sellos", heroReward:"Recompensa", heroNotif:"Notificación",
+    heroRewardVal:"Café gratis", heroSent:"✓ Enviada",
+    walletAvailable:"Disponible de forma nativa en", walletNote:"iOS · Android · sin app",
+    accesTag:"Soporte & acceso", accesH2a:"La tarjeta de mostrador,", accesH2b:"el hub de tu fidelidad",
+    accesSub:"Un único soporte físico en tu mostrador. Incluye las dos tecnologías de acceso: código QR y NFC.",
+    accesCardTag:"Tarjeta Mostrador", accesCardBadge:"Soporte principal",
+    accesCardH3:"Tu soporte físico universal",
+    accesCardDesc:"Soporte universal Wallio colocado en tu mostrador. Contiene tu código QR único y puede integrar un tag NFC. Tus clientes lo escanean o acercan su teléfono para recibir sus sellos, sin ninguna instalación.",
+    accesCardTags:["Código QR integrado","Tag NFC opcional","Diseño Wallio estándar","Sin app necesaria"],
+    accesConnector:"dos tecnologías integradas",
+    accesNfcTag:"Tag NFC", accesNfcH3:"Tap, listo.",
+    accesNfcDesc:"El cliente acerca su teléfono a 4 cm del tag. Sello acreditado en menos de un segundo, sin abrir ninguna app.",
+    accesNfcFeats:["El gesto más rápido que existe","iPhone 7+ y todos los Android NFC","Opcional en la tarjeta de mostrador"],
+    accesQrTag:"Código QR", accesQrH3:"Escaneo, listo.",
+    accesQrDesc:"El cliente abre su cámara y escanea el código QR de la tarjeta de mostrador. Funciona con todos los teléfonos, sin ninguna app.",
+    accesQrFeats:["Compatible con el 100% de los smartphones","Cámara nativa, sin app","Siempre en la tarjeta de mostrador"],
+    flowTag:"Recorrido del cliente", flowH2a:"Dos escenarios.", flowH2b:"Cero fricción.",
+    flowSub:"Cliente nuevo o habitual, el flujo está pensado para cada uno.",
+    flowNewTitle:"Cliente nuevo", flowNewSub:"Primera visita",
+    flowNewSteps:[
+      {title:"Ve la tarjeta de mostrador",body:"Colocada en el mostrador, bien visible. Código QR o tag NFC."},
+      {title:"Tap NFC o escaneo QR",body:"Su teléfono reconoce la acción al instante."},
+      {title:"Nombre + teléfono",body:"30 segundos. Es todo lo que pedimos."},
+      {title:"Tarjeta creada, sello acreditado",body:"Su tarjeta de fidelidad se crea automáticamente con el 1er sello."},
+      {title:"Añadir a Apple / Google Wallet",body:"Opcional, para encontrar su tarjeta con un tap."},
+    ],
+    flowRegTitle:"Cliente habitual", flowRegSub:"Vuelta al establecimiento",
+    flowRegSteps:[
+      {title:"Tap NFC o escaneo QR",body:"El mismo gesto que en su primera visita."},
+      {title:"Reconocido en menos de un segundo",body:"Wallio encuentra su tarjeta mediante el número de teléfono registrado."},
+      {title:"Sello acreditado automáticamente",body:"Sin acción adicional. Su progreso está actualizado."},
+      {title:"Notificación Apple Wallet",body:"Su tarjeta Wallet se actualiza y le envía una notificación."},
+      {title:"Objetivo alcanzado, ¡recompensa!",body:"La validas con un clic desde tu dashboard."},
+    ],
+    customTag:"Personalización", customH2:"Tu tarjeta, a tu imagen",
+    customSub:"Cada elemento es configurable desde tu dashboard, en tiempo real.",
+    customMocks:[
+      {name:"Mori Matcha",reward:"Matcha gratis",label:"Café Matcha"},
+      {name:"Barba Italiana",reward:"Corte gratis",label:"Barbería"},
+      {name:"Hammam Royal",reward:"Tratamiento gratis",label:"Hammam & Spa"},
+    ],
+    customFeats:[
+      {title:"Colores & Logo",body:"Color de fondo, texto, sellos, y tu logo en la cabecera de la tarjeta."},
+      {title:"Número de sellos",body:"Elige entre 5 y 50 sellos por ciclo, con una o varias recompensas."},
+      {title:"Estilo de los sellos",body:"Elige entre 8 estilos: punto, anillo, check, corazón, estrella, texto o tu logo."},
+      {title:"Banner personalizado",body:"Sube una foto de tu local como banner en la tarjeta, con los sellos dibujados encima."},
+      {title:"Campos informativos",body:"Añade tu horario, tu número, tus enlaces, directamente visibles en la tarjeta."},
+      {title:"Anti-duplicado inteligente",body:"Configura un tiempo mínimo entre dos sellos (15 min, 1h, 4h, 1 día) para evitar abusos."},
+    ],
+    notifTag:"Notificaciones", notifH2a:"Mantente presente", notifH2b:"en el momento justo",
+    notifSub:"Wallet, push segmentado, automatizaciones, geolocalización, cuatro formas de llegar a tus clientes en el momento oportuno.",
+    notifDate:"Domingo 7 septiembre", notifNow:"ahora", notifAgo:"hace 2h", notifNear:"cerca",
+    notifWalletTitle:"Nomade Café, ¡Nuevo sello!", notifWalletBody:"Ahora tienes 8/20 sellos. ¡Solo 12 más para tu café gratis!",
+    notifFcmTitle:"¡Feliz cumpleaños!", notifFcmBody:"Te regalamos un sello doble hoy. ¡Hasta pronto!",
+    notifGeoTitle:"¿Pasas por aquí?", notifGeoBody:"Te faltan 2 sellos para tu café gratis. ¡Te esperamos!",
+    notifTypes:[
+      {title:"Actualización Apple Wallet",desc:"Con cada nuevo sello, la tarjeta se actualiza automáticamente en el Wallet del cliente con una notificación. Sin ninguna acción de tu parte.",tags:["Automático","Tiempo real"]},
+      {title:"Push segmentado (FCM)",desc:"Envía un mensaje a todos tus clientes, o dirige solo a los activos (visitas recientes) o inactivos (+30 días) desde tu dashboard.",tags:["Todos","Activos","Inactivos"]},
+      {title:"Automatizaciones",desc:"Wallio envía automáticamente un mensaje el día del cumpleaños de tu cliente, o un recordatorio si un cliente no ha vuelto en X días.",tags:["Cumpleaños","Re-enganche auto"]},
+      {title:"Geolocalización",desc:"Activa una notificación push automática cuando un cliente esté cerca de tu local, el incentivo perfecto para que entre.",tags:["Proximidad","Automático"]},
+    ],
+    dashTag:"Dashboard", dashH2a:"Los datos que lo cambian todo", dashH2b:"para tu negocio",
+    dashSub:"Por primera vez, sabes exactamente quiénes son tus clientes, quién vuelve y a quién estás perdiendo.",
+    dashDate:"7 sept. 2026", dashMerchant:"Nomade Café",
+    dashStats:[
+      {label:"Clientes",value:"247",sub:"+12 este mes",color:"#4472F5"},
+      {label:"Sellos",value:"312",sub:"este mes",color:"#6A5AF9"},
+      {label:"Retorno",value:"78%",sub:"activos",color:"#34C759"},
+      {label:"En riesgo",value:"14",sub:"¡a re-enganchar!",color:"#FF9500"},
+    ],
+    dashActivity:"Actividad, últimos 7 días",
+    dashDays:[{v:38,d:"L"},{v:52,d:"M"},{v:31,d:"X"},{v:67,d:"J"},{v:44,d:"V"},{v:58,d:"S"},{v:29,d:"D"}],
+    dashSegTitle:"Segmentación de clientes",
+    dashSegs:[{label:"Activos (≤30d)",count:193,pct:78,color:"#34C759"},{label:"Inactivos (+30d)",count:54,pct:22,color:"#FF9500"}],
+    dashInsightTitle:"14 clientes ausentes desde hace +30 días", dashInsightBody:"Envía un re-enganche dirigido, todavía son recuperables.",
+    dashTopTitle:"Mejores clientes este mes",
+    dashTopClients:[
+      {initials:"FB",name:"Fatima B.",visits:12,stamps:10,total:10,bc:"#FF9500",badge:"Recompensa"},
+      {initials:"AM",name:"Ahmed M.",visits:9,stamps:8,total:10,bc:"#34C759",badge:"Activo"},
+      {initials:"KL",name:"Karim L.",visits:7,stamps:3,total:10,bc:"#34C759",badge:"Activo"},
+    ],
+    dashVisits:"visitas este mes",
+    dashRightH3:"Lo que por fin sabes.",
+    dashRightP:"Antes de Wallio, tus clientes eran anónimos. No sabías quién volvía, quién te dejaba, ni quién merecía atención especial. Ahora lo sabes.",
+    dashRightPoints:[
+      {color:"#4472F5",title:"Quién vuelve y quién te deja",body:"Cada cliente se segmenta automáticamente. Ves de un vistazo tus activos e inactivos, sin ninguna manipulación."},
+      {color:"#FF9500",title:"Tus clientes en riesgo, identificados",body:"¿14 clientes ausentes desde hace +30 días? Wallio te lo indica y te permite re-engancharlos con un clic."},
+      {color:"#6A5AF9",title:"Tu actividad, día a día",body:"Sellos distribuidos, nuevas inscripciones, recompensas validadas, visualizados en 7 o 30 días."},
+      {color:"#34C759",title:"Tus mejores clientes recompensados",body:"Identifica los que vienen más, ajusta sus sellos, ofréceles algo excepcional directamente desde su ficha."},
+      {color:"#8A5CF6",title:"Todo en un clic, sin informes que leer",body:"Cada dato es accionable. Re-engancha, corrige, recompensa, notifica, todo desde el dashboard."},
+    ],
+    presenceTag:"Presencia digital", presenceH2a:"Visible.", presenceH2b:"Incluso sin presupuesto publicitario.",
+    presenceSub:"Wallio es una aplicación web progresiva (PWA), tus clientes la instalan con un tap en su pantalla de inicio, sin pasar por el App Store. Y tu local está listado en el directorio Wallio, visible para todos los usuarios de la plataforma.",
+    presenceBenefits:[
+      {title:"Listing por categoría y ciudad",body:"Tu local aparece en el directorio Wallio, clasificado por sector. Nuevos clientes te descubren sin haberte buscado."},
+      {title:"Instalable en la pantalla de inicio",body:"La experiencia de una app nativa, sin App Store. Tus clientes la añaden con un tap, acceso instantáneo a su tarjeta."},
+      {title:"Página dedicada compartible",body:"Cada local recibe un enlace Wallio único, para poner en la bio de Instagram, en flyers, en tu escaparate. Un clic para acceder a la tarjeta de fidelidad."},
+      {title:"Push sin instalación",body:"Tus notificaciones llegan al teléfono de tus clientes incluso sin app instalada. Web moderno, cero fricción."},
+    ],
+    presenceDiscover:"Descubrir", presenceSearch:"Buscar un negocio…",
+    presenceCats:["Todo","Café","Barbería","Restaurante","Belleza"],
+    presenceMerchants:[
+      {name:"Nomade Café",cat:"Café · Madrid",rating:"4.9",clients:"247 clientes",color:"#4472F5",initial:"N"},
+      {name:"Barba Italiana",cat:"Barbería · Madrid",rating:"4.8",clients:"183 clientes",color:"#C8956C",initial:"B"},
+      {name:"Mori Matcha",cat:"Té · Madrid",rating:"4.7",clients:"134 clientes",color:"#A8D5A2",initial:"M"},
+      {name:"Hammam Royal",cat:"Spa · Madrid",rating:"4.6",clients:"98 clientes",color:"#C9A96E",initial:"H"},
+    ],
+    presenceJoin:"Tu negocio aquí", presenceJoinSub:"Únete a Wallio",
+    secteursTag:"Sectores", secteursH2a:"Para todos los negocios", secteursH2b:"de proximidad",
+    secteursSub:"Una sola solución, adaptada a cada tipo de establecimiento.",
+    secteurs:["Café & Salón de té","Restaurante","Barbería","Salón de belleza","Boutique & Moda","Gimnasio","Panadería","Instituto & Spa"],
+    parrainageTag:"Referidos", parrainageH2a:"Tus clientes,", parrainageH2b:"tus mejores comerciales.",
+    parrainageSub:"Un cliente satisfecho comparte su enlace. Su amigo se registra, los dos son recompensados. Cero presupuesto publicitario, cero fricción.",
+    parrainageSteps:[
+      {title:"El cliente comparte su enlace",body:"Desde «Mis tarjetas», con un tap. El enlace es único y vinculado a su establecimiento."},
+      {title:"El amigo escanea y se registra",body:"Hace clic en el enlace, pasa por el registro rápido, recibe su 1er sello al instante."},
+      {title:"El que refiere es recompensado",body:"Su tarjeta Wallet se actualiza automáticamente con +1 sello. Notificación push incluida."},
+    ],
+    parrainageStats:[
+      {value:"x3",label:"más clientes nuevos",sub:"vs boca a boca clásico"},
+      {value:"+1",label:"sello para el que refiere",sub:"acreditado automáticamente"},
+      {value:"0 €",label:"coste de adquisición",sub:"100% orgánico"},
+    ],
+    tarifsTag:"Precios", tarifsH2:"Simple y transparente.",
+    tarifsSub:"Cuanto más te comprometes, más ahorras, sin costes ocultos, sin compromiso forzado.",
+    tarifsIncludedLabel:"Incluido en tu acceso",
+    tarifsIncluded:["Tarjeta de fidelidad Apple & Google Wallet","Tarjeta mostrador 4K (QR + NFC opcional)","Dashboard en tiempo real","Notificaciones push ilimitadas","Automatizaciones cumpleaños & re-enganche","Listing en el directorio Wallio","Soporte dedicado por WhatsApp"],
+    tarifsPriceLabel:"Tarifa adaptada a tu negocio", tarifsPrice:"A medida", tarifsResponseTime:"Respuesta en 24h",
+    tarifsCtaWa:"Contáctanos en WhatsApp",
+    tarifsNote:"Sin compromiso, tarifa según\ntu tipo de establecimiento",
+    faqTag:"FAQ", faqH2:"Preguntas frecuentes", faqOther:"¿Otra pregunta?", faqCta:"Hablemos en WhatsApp",
+    faqs:[
+      {q:"¿Hay que descargar una aplicación?",a:"No, ni tú ni tus clientes. Tus clientes acceden a su tarjeta mediante un enlace web después del primer escaneo. La tarjeta se puede añadir luego con un clic en Apple Wallet o Google Wallet, directamente desde el navegador."},
+      {q:"¿Cómo obtienen los clientes su primer sello?",a:"En el momento del pago, acercan su teléfono al tag NFC (o escanean el código QR de tu tarjeta de mostrador). Es instantáneo, su tarjeta se crea automáticamente y el primer sello se añade sin ninguna acción adicional."},
+      {q:"¿Qué es la tarjeta de mostrador?",a:"Es un archivo de impresión de alta resolución (4K) que Wallio genera para ti. Lo imprimes y lo colocas en tu mostrador. Contiene un código QR único de tu local, los clientes lo escanean para acceder a su tarjeta de fidelidad."},
+      {q:"¿Mis clientes necesitan una cuenta Apple o Google?",a:"Para añadir la tarjeta a Apple Wallet, un iPhone con iOS 6+ es suficiente. Para Google Wallet, un Android con la app Google Wallet. No se necesita ninguna cuenta Wallio."},
+      {q:"¿Cómo personalizo mi tarjeta de fidelidad?",a:"Desde tu dashboard, eliges los colores (fondo, texto, sellos), subes tu logo, defines el número de sellos y la recompensa. Cada cambio se refleja inmediatamente en la vista previa de Apple Wallet y Google Wallet. Las tarjetas de tus clientes se actualizan automáticamente."},
+      {q:"¿Cuál es la diferencia entre el modo cíclico y progresivo?",a:"En el modo cíclico, una vez alcanzado el objetivo (ej. 10 sellos → 1 café gratis), el contador se reinicia. En el modo progresivo, defines varios niveles de recompensas, por ejemplo 5 sellos = 10% de descuento, 10 sellos = artículo gratis, 20 sellos = estatus VIP."},
+      {q:"¿Las notificaciones son automáticas?",a:"Sí para las actualizaciones de tarjeta (Apple Wallet envía una notificación con cada nuevo sello). Para las notificaciones de marketing, las configuras en el dashboard: Wallio envía automáticamente el mensaje adecuado en el momento oportuno."},
+      {q:"¿Cómo funciona el sistema anti-duplicado?",a:"Wallio detecta si un cliente ya ha recibido un sello recientemente y bloquea los abusos. Configuras el tiempo mínimo entre dos sellos válidos (15 min, 1h, 4h, 8h, 1 día) en tus ajustes."},
+      {q:"¿Puedo modificar manualmente los sellos de un cliente?",a:"Sí. Desde la ficha del cliente en tu dashboard, puedes ajustar el número de sellos directamente. Útil para corregir un error o recompensar a un cliente excepcional."},
+      {q:"¿Funciona Wallio sin internet para los clientes?",a:"El escaneo NFC y QR requieren conexión para registrar el sello. Sin embargo, la tarjeta Apple Wallet / Google Wallet permanece visible sin conexión una vez añadida al teléfono."},
+    ],
+    ctaH2:"¿Listo para fidelizar a tus clientes?", ctaSub:"Empieza en pocos minutos. Sin instalación, sin fricción.", ctaBtn:"Empezar en WhatsApp",
+    footerLinks:[
+      {href:"/privacy",label:"Privacidad"},{href:"/terms",label:"CGU"},
+      {href:"/legal",label:"Aviso legal"},{href:"mailto:wallio.card@gmail.com",label:"wallio.card@gmail.com"},
+    ],
+  },
 } satisfies Record<Lang, object>;
 
 function PhoneMock({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -938,12 +1099,12 @@ export default function LandingPage() {
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
             <button
-              onClick={() => setLang(l => l === "fr" ? "en" : l === "en" ? "ro" : "fr")}
+              onClick={() => setLang(l => l === "fr" ? "en" : l === "en" ? "ro" : l === "ro" ? "es" : "fr")}
               style={{ background:"none", border:"0.5px solid rgba(0,0,0,0.18)", borderRadius:20, padding:"5px 13px", cursor:"pointer", fontSize:12, fontWeight:700, color:"#1D1D1F", letterSpacing:"0.08em", transition:"background 0.15s" }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background="rgba(0,0,0,0.06)"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background="none"; }}
             >
-              {lang === "fr" ? "EN" : lang === "en" ? "RO" : "FR"}
+              {lang === "fr" ? "EN" : lang === "en" ? "RO" : lang === "ro" ? "ES" : "FR"}
             </button>
             <Link href="/choisir" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>{t.navLogin}</Link>
             <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary nav-contact" style={{ padding:"7px 18px", fontSize:13, borderRadius:20 }}>
