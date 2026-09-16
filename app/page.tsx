@@ -1058,7 +1058,9 @@ export default function LandingPage() {
           .lp-nav .nav-contact { display:none; }
           .lp-nav .nav-login { display:none; }
           .lp-nav .lang-pill { padding:3px 7px !important; font-size:10px !important; }
-          .anchor-nav-bar { display:none !important; }
+          .lp-nav-logo { display:none !important; }
+          .lp-nav-wallio { display:block !important; }
+          .lp-nav-right { display:none !important; }
           .btn-primary, .btn-ghost { padding:12px 22px; font-size:14px; border-radius:12px; }
           .feature-tag { font-size:11px; padding:6px 14px; }
           .features-grid { grid-template-columns:1fr !important; }
@@ -1097,10 +1099,16 @@ export default function LandingPage() {
 
         {/* ── Nav ── */}
         <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:20, height:58, display:"flex", alignItems:"center", justifyContent:"space-between", background: scrolled ? "rgba(242,242,247,0.85)" : "transparent", backdropFilter: scrolled ? "blur(24px)" : "none", borderBottom: scrolled ? "0.5px solid rgba(0,0,0,0.09)" : "none", transition:"all 0.3s" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          {/* Logo — caché sur mobile */}
+          <div className="lp-nav-logo" style={{ display:"flex", alignItems:"center", gap:8 }}>
             <Image src="/wallio-instagram-profil.png" alt="Wallio" width={36} height={36} unoptimized style={{ borderRadius:8 }} />
           </div>
-          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          {/* WALLIO centré — visible uniquement sur mobile */}
+          <div className="lp-nav-wallio" style={{ display:"none", position:"absolute", left:0, right:0, textAlign:"center", pointerEvents:"none" }}>
+            <span style={{ fontSize:17, fontWeight:700, letterSpacing:"0.12em", color:"#1D1D1F" }}>WALLIO</span>
+          </div>
+          {/* Droite — cachée sur mobile */}
+          <div className="lp-nav-right" style={{ display:"flex", gap:8, alignItems:"center" }}>
             <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,0.06)", borderRadius:20, padding:"2px" }}>
               {(["fr","en","ro","es"] as const).map(l => (
                 <button key={l} onClick={() => setLang(l)}
@@ -1118,7 +1126,7 @@ export default function LandingPage() {
         </nav>
 
         {/* ── Anchor nav ── */}
-        <div className="anchor-nav-bar" style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+        <div style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
           <div className="anchor-nav" style={{ maxWidth:1040, margin:"0 auto", padding:"0 32px" }}>
             <div style={{ display:"flex", gap:2, height:42, alignItems:"center", justifyContent:"center" }}>
               {t.anchors.map(a => (
