@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLang } from "@/lib/lang-context";
 
 const PHONE_KEY  = "wallio_client_phone";
 const PRENOM_KEY = "wallio_client_prenom";
@@ -24,6 +25,7 @@ const PAYS = [
 
 export default function InscriptionClientPage() {
   const router = useRouter();
+  const { t } = useLang();
   const [form, setForm] = useState({ prenom: "", nom: "", phone: "", dob: "" });
   const [countryCode, setCountryCode] = useState("+212");
 
@@ -52,22 +54,22 @@ export default function InscriptionClientPage() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 24px 48px" }}>
         <div style={{ maxWidth: 390, width: "100%", margin: "0 auto" }}>
           <div style={{ ...glass, padding: "32px 28px", borderRadius: 28, marginBottom: 16 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: "#1C2333", marginBottom: 8 }}>Créer mon compte</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: "#1C2333", marginBottom: 8 }}>{t.client_signup_title}</h1>
             <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 28, lineHeight: 1.55 }}>
-              Rejoignez Wallio et découvrez les établissements près de chez vous.
+              {t.client_signup_subtitle}
             </p>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "flex", gap: 10 }}>
                 <input
-                  type="text" placeholder="Prénom *" required value={form.prenom}
+                  type="text" placeholder={t.client_signup_prenom} required value={form.prenom}
                   onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))}
                   style={{ ...input, flex: 1 }}
                   onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
                   onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
                 />
                 <input
-                  type="text" placeholder="Nom" value={form.nom}
+                  type="text" placeholder={t.client_signup_nom} value={form.nom}
                   onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
                   style={{ ...input, flex: 1 }}
                   onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
@@ -81,7 +83,7 @@ export default function InscriptionClientPage() {
                   {PAYS.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
                 </select>
                 <input
-                  type="tel" inputMode="tel" placeholder="6 12 34 56 78 *" required value={form.phone}
+                  type="tel" inputMode="tel" placeholder={t.client_signup_phone} required value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                   style={{ ...input, flex: 1 }}
                   onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
@@ -106,15 +108,15 @@ export default function InscriptionClientPage() {
                 boxShadow: ready ? "0 8px 24px rgba(91,124,250,0.35)" : "none",
                 transition: "all 0.2s",
               }}>
-                Créer mon compte
+                {t.client_signup_submit}
               </button>
             </form>
           </div>
 
           <div style={{ textAlign: "center" }}>
             <p style={{ fontSize: 13, color: "#8E9BB5" }}>
-              Déjà un compte ?{" "}
-              <a href="/mes-cartes" style={{ color: "#5B7CFA", fontWeight: 600, textDecoration: "none" }}>Voir mes cartes</a>
+              {t.client_signup_already}{" "}
+              <a href="/mes-cartes" style={{ color: "#5B7CFA", fontWeight: 600, textDecoration: "none" }}>{t.client_signup_see_cards}</a>
             </p>
           </div>
         </div>
