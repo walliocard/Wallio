@@ -1061,6 +1061,9 @@ export default function LandingPage() {
           .lp-nav-logo { display:none !important; }
           .lp-nav-wallio { display:block !important; }
           .lp-nav-right { display:none !important; }
+          .lp-nav-lang-mobile { display:flex !important; }
+          .anchor-nav-desktop { display:none !important; }
+          .anchor-nav-mobile { display:flex !important; }
           .btn-primary, .btn-ghost { padding:12px 22px; font-size:14px; border-radius:12px; }
           .feature-tag { font-size:11px; padding:6px 14px; }
           .features-grid { grid-template-columns:1fr !important; }
@@ -1107,6 +1110,13 @@ export default function LandingPage() {
           <div className="lp-nav-wallio" style={{ display:"none", position:"absolute", left:0, right:0, textAlign:"center", pointerEvents:"none" }}>
             <span style={{ fontSize:17, fontWeight:700, letterSpacing:"0.12em", color:"#1D1D1F" }}>WALLIO</span>
           </div>
+          {/* Toggle langue mobile — visible uniquement sur mobile */}
+          <button
+            className="lp-nav-lang-mobile"
+            onClick={() => setLang(l => l === "fr" ? "en" : l === "en" ? "ro" : l === "ro" ? "es" : "fr")}
+            style={{ display:"none", alignItems:"center", justifyContent:"center", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,0.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color:"#1D1D1F" }}>
+            {lang.toUpperCase()}
+          </button>
           {/* Droite — cachée sur mobile */}
           <div className="lp-nav-right" style={{ display:"flex", gap:8, alignItems:"center" }}>
             <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,0.06)", borderRadius:20, padding:"2px" }}>
@@ -1127,12 +1137,19 @@ export default function LandingPage() {
 
         {/* ── Anchor nav ── */}
         <div style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
-          <div className="anchor-nav" style={{ maxWidth:1040, margin:"0 auto", padding:"0 32px" }}>
+          {/* Desktop : toutes les ancres */}
+          <div className="anchor-nav anchor-nav-desktop" style={{ maxWidth:1040, margin:"0 auto", padding:"0 32px" }}>
             <div style={{ display:"flex", gap:2, height:42, alignItems:"center", justifyContent:"center" }}>
               {t.anchors.map(a => (
                 <a key={a.id} href={`#${a.id}`} className="anchor-link" style={{ fontSize:13, fontWeight: activeAnchor === a.id ? 600 : 400, color: activeAnchor === a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none", padding:"4px 12px", borderRadius:20, background: activeAnchor === a.id ? "rgba(0,0,0,0.08)" : "transparent" }}>{a.label}</a>
               ))}
             </div>
+          </div>
+          {/* Mobile : ancre courante uniquement */}
+          <div className="anchor-nav-mobile" style={{ display:"none", height:42, alignItems:"center", justifyContent:"center", padding:"0 20px" }}>
+            <span style={{ fontSize:13, fontWeight:600, color:"#1D1D1F" }}>
+              {t.anchors.find(a => a.id === activeAnchor)?.label ?? t.anchors[0]?.label}
+            </span>
           </div>
         </div>
 
