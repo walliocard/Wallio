@@ -904,7 +904,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { region } = useLang();
   const [lang, setLang] = useState<Lang>("fr");
-  const [langOpen, setLangOpen] = useState(false);
+  const [anchorOpen, setAnchorOpen] = useState(false);
   const t = T[lang];
   const WA = `${WA_BASE}?text=${encodeURIComponent(WA_MSGS[lang] || WA_MSGS.fr)}`;
   const pricing = REGIONS[region];
@@ -1111,24 +1111,13 @@ export default function LandingPage() {
           <div className="lp-nav-wallio" style={{ display:"none", position:"absolute", left:0, right:0, textAlign:"center", pointerEvents:"none" }}>
             <span style={{ fontSize:17, fontWeight:700, letterSpacing:"0.12em", color:"#1D1D1F" }}>WALLIO</span>
           </div>
-          {/* Toggle langue mobile — visible uniquement sur mobile */}
-          <div className="lp-nav-lang-mobile" style={{ display:"none", position:"relative" }}>
-            <button
-              onClick={() => setLangOpen(o => !o)}
-              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,0.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color:"#1D1D1F" }}>
-              {lang.toUpperCase()}
-            </button>
-            {langOpen && (
-              <div style={{ position:"absolute", top:44, right:0, background:"#FFFFFF", borderRadius:14, boxShadow:"0 8px 32px rgba(0,0,0,0.12)", border:"0.5px solid rgba(0,0,0,0.08)", overflow:"hidden", zIndex:100 }}>
-                {(["fr","en","ro","es"] as const).filter(l => l !== lang).map(l => (
-                  <button key={l} onClick={() => { setLang(l); setLangOpen(false); }}
-                    style={{ display:"block", width:"100%", padding:"12px 20px", background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:"#1D1D1F", textAlign:"left", letterSpacing:"0.06em" }}>
-                    {l.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Toggle langue mobile — cycle simple */}
+          <button
+            className="lp-nav-lang-mobile"
+            onClick={() => setLang(l => l === "fr" ? "en" : l === "en" ? "ro" : l === "ro" ? "es" : "fr")}
+            style={{ display:"none", alignItems:"center", justifyContent:"center", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,0.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color:"#1D1D1F" }}>
+            {lang.toUpperCase()}
+          </button>
           {/* Droite — cachée sur mobile */}
           <div className="lp-nav-right" style={{ display:"flex", gap:8, alignItems:"center" }}>
             <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,0.06)", borderRadius:20, padding:"2px" }}>
@@ -1157,11 +1146,29 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-          {/* Mobile : ancre courante uniquement */}
-          <div className="anchor-nav-mobile" style={{ display:"none", height:42, alignItems:"center", justifyContent:"center", padding:"0 20px" }}>
-            <span style={{ fontSize:13, fontWeight:600, color:"#1D1D1F" }}>
-              {t.anchors.find(a => a.id === activeAnchor)?.label ?? t.anchors[0]?.label}
-            </span>
+          {/* Mobile : ancre courante + dropdown */}
+          <div className="anchor-nav-mobile" style={{ display:"none", position:"relative", width:"100%" }}>
+            <button
+              onClick={() => setAnchorOpen(o => !o)}
+              style={{ width:"100%", height:42, display:"flex", alignItems:"center", justifyContent:"center", gap:6, background:"none", border:"none", cursor:"pointer" }}>
+              <span style={{ fontSize:13, fontWeight:600, color:"#1D1D1F" }}>
+                {t.anchors.find(a => a.id === activeAnchor)?.label ?? t.anchors[0]?.label}
+              </span>
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transition:"transform 0.2s", transform: anchorOpen ? "rotate(180deg)" : "none" }}>
+                <path d="M1 1l4 4 4-4" stroke="#6E6E73" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+            {anchorOpen && (
+              <div style={{ position:"absolute", top:42, left:0, right:0, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", zIndex:18 }}>
+                {t.anchors.map(a => (
+                  <a key={a.id} href={`#${a.id}`}
+                    onClick={() => setAnchorOpen(false)}
+                    style={{ display:"block", padding:"13px 24px", fontSize:14, fontWeight: activeAnchor === a.id ? 600 : 400, color: activeAnchor === a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none", borderBottom:"0.5px solid rgba(0,0,0,0.06)" }}>
+                    {a.label}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
