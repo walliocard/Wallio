@@ -1058,6 +1058,7 @@ export default function LandingPage() {
           .lp-nav .nav-contact { display:none; }
           .lp-nav .nav-login { display:none; }
           .lp-nav .lang-pill { padding:3px 7px !important; font-size:10px !important; }
+          .anchor-nav-bar { display:none !important; }
           .btn-primary, .btn-ghost { padding:12px 22px; font-size:14px; border-radius:12px; }
           .feature-tag { font-size:11px; padding:6px 14px; }
           .features-grid { grid-template-columns:1fr !important; }
@@ -1117,9 +1118,9 @@ export default function LandingPage() {
         </nav>
 
         {/* ── Anchor nav ── */}
-        <div style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+        <div className="anchor-nav-bar" style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
           <div className="anchor-nav" style={{ maxWidth:1040, margin:"0 auto", padding:"0 32px" }}>
-            <div style={{ display:"flex", gap:2, height:42, alignItems:"center" }}>
+            <div style={{ display:"flex", gap:2, height:42, alignItems:"center", justifyContent:"center" }}>
               {t.anchors.map(a => (
                 <a key={a.id} href={`#${a.id}`} className="anchor-link" style={{ fontSize:13, fontWeight: activeAnchor === a.id ? 600 : 400, color: activeAnchor === a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none", padding:"4px 12px", borderRadius:20, background: activeAnchor === a.id ? "rgba(0,0,0,0.08)" : "transparent" }}>{a.label}</a>
               ))}
