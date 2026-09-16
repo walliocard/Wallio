@@ -742,7 +742,7 @@ export default function LandingPage() {
   const [activeAnchor, setActiveAnchor] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { region } = useLang();
-  const [lang, setLang] = useState<Lang>(region === "ro" ? "ro" : "fr");
+  const [lang, setLang] = useState<Lang>("fr");
   const t = T[lang];
   const WA = `${WA_BASE}?text=${encodeURIComponent(WA_MSGS[lang] || WA_MSGS.fr)}`;
   const pricing = REGIONS[region];
@@ -1021,7 +1021,7 @@ export default function LandingPage() {
           <div style={{ background:"#F7F7FA", borderTop:"0.5px solid rgba(0,0,0,0.06)", borderBottom:"0.5px solid rgba(0,0,0,0.06)", padding:"20px 32px" }}>
             <div style={{ maxWidth:1040, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }}>
               <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#AEAEB2" }}>
-                {lang === "fr" ? "Ils nous font confiance" : lang === "ro" ? "Parteneri de încredere" : "Trusted by"}
+                {lang === "fr" ? "Ils nous font confiance" : "Trusted by"}
               </span>
               <div style={{ display:"flex", alignItems:"center", gap:24 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>

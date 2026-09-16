@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRegionFromHost } from "./lib/regions";
+import { getRegionFromHost } from "@/lib/regions";
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
