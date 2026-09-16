@@ -13,6 +13,7 @@ import { db } from "@/lib/firebase";
 import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
+import { getWalletLang } from "@/lib/wallet-lang";
 
 // Lazy-load composants lourds — pas besoin au premier rendu
 const AppleWalletCard = lazy(() => import("@/components/AppleWalletCard"));
@@ -892,6 +893,7 @@ function LienParrainage({ marchand }: { marchand: Marchand }) {
 function CarteCreee({ client, marchand, recuperation = false, parraine = false }: { client: Client; marchand: Marchand; recuperation?: boolean; parraine?: boolean }) {
   const [isAndroid, setIsAndroid] = useState(false);
   useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
+  const ld = getWalletLang((marchand as unknown as Record<string, unknown>).langue as string | undefined);
 
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">(() => {
     if (typeof window === "undefined") return "idle";
@@ -977,9 +979,9 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
               heroUrl={(m.google_hero_url as string) || (m.strip_url as string) || undefined}
               stampsCurrent={client.tampons ?? 0}
               stampsObjective={marchand.objectif_tampons}
-              rewardName={(m.nom_recompense as string) || "Récompense"}
+              rewardName={(m.nom_recompense as string) || ld.reward}
               previewUid={client.wallet_id}
-              primaryLabel={(m.google_primary_label as string) || "Tampons"}
+              primaryLabel={(m.google_primary_label as string) || ld.stamps}
               secondaryLabel={(m.google_secondary_label as string) || "Objectif"}
               textModules={((m.google_text_modules as { header: string; body: string; id: string }[]) || [])}
               links={((m.google_links as { uri: string; description: string }[]) || [])}
@@ -994,13 +996,13 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
               labelColor={(m.apple_label_color as string) || undefined}
               stampsCurrent={client.tampons ?? 0}
               stampsObjective={marchand.objectif_tampons}
-              rewardName={(m.nom_recompense as string) || "Récompense"}
+              rewardName={(m.nom_recompense as string) || ld.reward}
               previewUid={client.wallet_id}
               clientPrenom={client.prenom}
               clientNom={client.nom}
-              primaryLabel={(m.apple_primary_label as string) || "Tampons"}
-              rewardLabel={(m.apple_reward_label as string) || "Récompense"}
-              memberLabel={(m.apple_member_label as string) || "Membre"}
+              primaryLabel={(m.apple_primary_label as string) || ld.stamps}
+              rewardLabel={(m.apple_reward_label as string) || ld.reward}
+              memberLabel={(m.apple_member_label as string) || ld.member}
               auxiliaryFields={[
                 { label: (m.apple_aux1_label as string) || "INFO", value: (m.apple_aux1_value as string) || "" },
                 { label: (m.apple_aux2_label as string) || "INFO", value: (m.apple_aux2_value as string) || "" },

@@ -13,8 +13,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
 
   useEffect(() => {
-    const saved = (marchand as Record<string, unknown>)?.langue as "fr" | "ro" | undefined;
-    if (saved === "fr" || saved === "ro") setLang(saved);
+    const saved = (marchand as Record<string, unknown>)?.langue as "fr" | "ro" | "es" | undefined;
+    if (saved === "fr" || saved === "ro" || saved === "es") setLang(saved);
   }, [marchand, setLang]);
 
   useEffect(() => {
