@@ -39,7 +39,7 @@ export const REGIONS: Record<Region, {
 };
 
 export function getRegionFromHost(host: string): Region {
-  if (host.startsWith("fr.") || host.startsWith("ro.") || host.startsWith("eu.")) return "fr";
+  if (host.startsWith("eu.")) return "fr";
   return "ma";
 }
 
