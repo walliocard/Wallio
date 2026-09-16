@@ -904,6 +904,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { region } = useLang();
   const [lang, setLang] = useState<Lang>("fr");
+  const [langOpen, setLangOpen] = useState(false);
   const t = T[lang];
   const WA = `${WA_BASE}?text=${encodeURIComponent(WA_MSGS[lang] || WA_MSGS.fr)}`;
   const pricing = REGIONS[region];
@@ -1111,12 +1112,23 @@ export default function LandingPage() {
             <span style={{ fontSize:17, fontWeight:700, letterSpacing:"0.12em", color:"#1D1D1F" }}>WALLIO</span>
           </div>
           {/* Toggle langue mobile — visible uniquement sur mobile */}
-          <button
-            className="lp-nav-lang-mobile"
-            onClick={() => setLang(l => l === "fr" ? "en" : l === "en" ? "ro" : l === "ro" ? "es" : "fr")}
-            style={{ display:"none", alignItems:"center", justifyContent:"center", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,0.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color:"#1D1D1F" }}>
-            {lang.toUpperCase()}
-          </button>
+          <div className="lp-nav-lang-mobile" style={{ display:"none", position:"relative" }}>
+            <button
+              onClick={() => setLangOpen(o => !o)}
+              style={{ display:"flex", alignItems:"center", justifyContent:"center", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,0.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color:"#1D1D1F" }}>
+              {lang.toUpperCase()}
+            </button>
+            {langOpen && (
+              <div style={{ position:"absolute", top:44, right:0, background:"#FFFFFF", borderRadius:14, boxShadow:"0 8px 32px rgba(0,0,0,0.12)", border:"0.5px solid rgba(0,0,0,0.08)", overflow:"hidden", zIndex:100 }}>
+                {(["fr","en","ro","es"] as const).filter(l => l !== lang).map(l => (
+                  <button key={l} onClick={() => { setLang(l); setLangOpen(false); }}
+                    style={{ display:"block", width:"100%", padding:"12px 20px", background:"none", border:"none", cursor:"pointer", fontSize:13, fontWeight:600, color:"#1D1D1F", textAlign:"left", letterSpacing:"0.06em" }}>
+                    {l.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {/* Droite — cachée sur mobile */}
           <div className="lp-nav-right" style={{ display:"flex", gap:8, alignItems:"center" }}>
             <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,0.06)", borderRadius:20, padding:"2px" }}>
