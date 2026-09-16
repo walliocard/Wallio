@@ -1056,6 +1056,8 @@ export default function LandingPage() {
         @media (max-width: 480px) {
           .lp-nav { padding:0 16px; }
           .lp-nav .nav-contact { display:none; }
+          .lp-nav .nav-login { display:none; }
+          .lp-nav .lang-pill { padding:3px 7px !important; font-size:10px !important; }
           .btn-primary, .btn-ghost { padding:12px 22px; font-size:14px; border-radius:12px; }
           .feature-tag { font-size:11px; padding:6px 14px; }
           .features-grid { grid-template-columns:1fr !important; }
@@ -1101,12 +1103,13 @@ export default function LandingPage() {
             <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,0.06)", borderRadius:20, padding:"2px" }}>
               {(["fr","en","ro","es"] as const).map(l => (
                 <button key={l} onClick={() => setLang(l)}
+                  className="lang-pill"
                   style={{ padding:"4px 10px", borderRadius:18, border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", background: lang === l ? "#1D1D1F" : "transparent", color: lang === l ? "white" : "#6E6E73", transition:"all 0.15s" }}>
                   {l.toUpperCase()}
                 </button>
               ))}
             </div>
-            <Link href="/choisir" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px", minWidth:120, textAlign:"center", display:"inline-block" }}>{t.navLogin}</Link>
+            <Link href="/choisir" className="nav-login" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px", minWidth:120, textAlign:"center", display:"inline-block" }}>{t.navLogin}</Link>
             <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary nav-contact" style={{ padding:"7px 18px", fontSize:13, borderRadius:20 }}>
               {t.navContact}
             </a>
@@ -1309,7 +1312,7 @@ export default function LandingPage() {
               <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="feature-tag">{t.flowTag}</span>
                 <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.flowH2a}<br />{t.flowH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>{t.flowSub}</p>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto", textAlign:"center" }}>{t.flowSub}</p>
               </div>
 
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:24 }} className="steps-grid">
