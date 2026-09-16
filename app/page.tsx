@@ -1098,15 +1098,15 @@ export default function LandingPage() {
             <Image src="/wallio-instagram-profil.png" alt="Wallio" width={36} height={36} unoptimized style={{ borderRadius:8 }} />
           </div>
           <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-            <button
-              onClick={() => setLang(l => l === "fr" ? "en" : l === "en" ? "ro" : l === "ro" ? "es" : "fr")}
-              style={{ background:"none", border:"0.5px solid rgba(0,0,0,0.18)", borderRadius:20, padding:"5px 13px", cursor:"pointer", fontSize:12, fontWeight:700, color:"#1D1D1F", letterSpacing:"0.08em", transition:"background 0.15s" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background="rgba(0,0,0,0.06)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background="none"; }}
-            >
-              {lang === "fr" ? "EN" : lang === "en" ? "RO" : lang === "ro" ? "ES" : "FR"}
-            </button>
-            <Link href="/choisir" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>{t.navLogin}</Link>
+            <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,0.06)", borderRadius:20, padding:"2px" }}>
+              {(["fr","en","ro","es"] as const).map(l => (
+                <button key={l} onClick={() => setLang(l)}
+                  style={{ padding:"4px 10px", borderRadius:18, border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", background: lang === l ? "#1D1D1F" : "transparent", color: lang === l ? "white" : "#6E6E73", transition:"all 0.15s" }}>
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <Link href="/choisir" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px", minWidth:120, textAlign:"center", display:"inline-block" }}>{t.navLogin}</Link>
             <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary nav-contact" style={{ padding:"7px 18px", fontSize:13, borderRadius:20 }}>
               {t.navContact}
             </a>
