@@ -259,7 +259,8 @@ export default function AdminPage() {
     if (!m.nfc_id) return;
     setDownloadingCard(true);
     const canvas = document.createElement("canvas");
-    await drawPrintCard(canvas, `https://app.walliocard.com/nfc/${m.nfc_id}`, 3);
+    const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
+    await drawPrintCard(canvas, `https://app.walliocard.com/nfc/${m.nfc_id}`, 3, lang);
     const a = document.createElement("a");
     a.download = `wallio-carte-${slugify(m.nom || m.id)}.png`;
     a.href = canvas.toDataURL("image/png"); a.click();
@@ -268,8 +269,9 @@ export default function AdminPage() {
   async function telechargerCarteQR(m: Marchand) {
     setDownloadingQR(true);
     const canvas = document.createElement("canvas");
+    const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
     const url = m.nfc_id ? `https://app.walliocard.com/nfc/${m.nfc_id}` : "https://app.walliocard.com";
-    await drawPrintCardQROnly(canvas, url, 3);
+    await drawPrintCardQROnly(canvas, url, 3, lang);
     const a = document.createElement("a");
     a.download = `wallio-qr-${slugify(m.nom || m.id)}.png`;
     a.href = canvas.toDataURL("image/png"); a.click();
