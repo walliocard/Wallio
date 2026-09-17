@@ -153,7 +153,7 @@ export default function AdminPage() {
     async function init() {
       const res = await fetch("/api/admin/check");
       if (!res.ok) { router.push("/admin/login"); return; }
-      timeout = setTimeout(() => setLoadError(true), 8000);
+      timeout = setTimeout(() => setLoadError(true), 15000);
       unsub = onSnapshot(collection(db, "marchands"), snap => {
         clearTimeout(timeout);
         const all = snap.docs.map(d => ({ id: d.id, nom: "", email: "", actif: false, ...d.data() } as Marchand));
@@ -166,6 +166,10 @@ export default function AdminPage() {
             return [m.id, snap2.data().count] as const;
           } catch { return [m.id, 0] as const; }
         })).then(results => setClientCounts(Object.fromEntries(results)));
+      }, err => {
+        clearTimeout(timeout);
+        console.error("[Admin] Firestore error:", err.code, err.message);
+        setLoadError(true);
       });
     }
     init();
