@@ -22,6 +22,7 @@ interface CardData {
   nfcId?: string;
   parrainageActif?: boolean;
   ville?: string;
+  mapsUrl?: string;
 }
 
 interface ClientNotif {
@@ -162,6 +163,7 @@ export default function MesCartesPage() {
             nfcId: (m.nfc_id as string) || undefined,
             parrainageActif: !!(m.parrainage_actif as boolean),
             ville: (m.ville as string) || undefined,
+            mapsUrl: (m.maps_url as string) || undefined,
           });
         } catch { /* skip */ }
       }));
@@ -575,6 +577,7 @@ export default function MesCartesPage() {
 }
 
 function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { card: CardData; delay: number; onEnableNotif: () => void; enablingNotif: boolean; isAndroid: boolean }) {
+  const mapsHref = card.mapsUrl || (card.ville ? `https://maps.google.com/?q=${encodeURIComponent(`${card.marchandNom} ${card.ville}`)}` : null);
   const { t } = useLang();
   const pct = Math.min(100, Math.round((card.stampsCurrent / card.stampsObjective) * 100));
   const restants = card.stampsObjective - card.stampsCurrent;
@@ -665,6 +668,23 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
               </svg>
               {copied ? t.mes_cartes_link_copied : t.mes_cartes_invite}
             </button>
+          )}
+
+          {/* Y aller */}
+          {mapsHref && (
+            <a href={mapsHref} target="_blank" rel="noopener noreferrer"
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "10px 16px", borderRadius: 12,
+                border: "1.5px solid rgba(0,122,255,0.25)",
+                background: "rgba(0,122,255,0.06)",
+                textDecoration: "none",
+              }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#007AFF" }}>Y aller</span>
+            </a>
           )}
 
           {/* Activer les notifications si pas encore fait */}

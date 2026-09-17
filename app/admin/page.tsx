@@ -143,6 +143,7 @@ export default function AdminPage() {
   const [locPays, setLocPays] = useState("Maroc");
   const [locVille, setLocVille] = useState("");
   const [locTel, setLocTel] = useState("");
+  const [locMaps, setLocMaps] = useState("");
   const [savingLoc, setSavingLoc] = useState(false);
   const router = useRouter();
 
@@ -213,6 +214,7 @@ export default function AdminPage() {
     setLocPays(m.pays || "Maroc");
     setLocVille(m.ville || "");
     setLocTel(m.telephone || "");
+    setLocMaps((m as Record<string, unknown>).maps_url as string || "");
     setDrawerClientCount(null);
     try {
       const snap = await getCountFromServer(query(collection(db, "clients"), where("marchand_id", "==", m.id)));
@@ -225,7 +227,7 @@ export default function AdminPage() {
     const updated = { ...selected, pays: locPays, ville: locVille, telephone: locTel || undefined };
     setMarchands(prev => prev.map(x => x.id === selected.id ? updated : x));
     setSelected(updated);
-    try { await adminPatch(selected.id, { pays: locPays, ville: locVille, telephone: locTel || null }); }
+    try { await adminPatch(selected.id, { pays: locPays, ville: locVille, telephone: locTel || null, maps_url: locMaps || null }); }
     catch { setMarchands(prev => prev.map(x => x.id === selected.id ? selected : x)); setSelected(selected); }
     setSavingLoc(false);
   }
@@ -730,6 +732,8 @@ export default function AdminPage() {
                   {(VILLES_ADMIN[locPays] ?? []).map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
                 <input type="tel" placeholder="Téléphone" value={locTel} onChange={e => setLocTel(e.target.value)}
+                  style={{ ...inputStyle }} />
+                <input type="url" placeholder="Lien Google Maps (optionnel)" value={locMaps} onChange={e => setLocMaps(e.target.value)}
                   style={{ ...inputStyle }} />
                 <button onClick={saveLocalisation} disabled={savingLoc || !locVille}
                   style={{ padding: "11px 0", borderRadius: 10, background: T.btnBg, color: T.btnFg, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", opacity: !locVille ? 0.45 : 1 }}>
