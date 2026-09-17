@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -12,8 +12,14 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const isNew = getApps().length === 0;
+const app = isNew ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const db = getFirestore(app);
+// Auto-détection long polling : si WebSocket échoue (Safari, réseau restrictif),
+// bascule automatiquement sur HTTP pour garantir la connexion
+export const db = isNew
+  ? initializeFirestore(app, { experimentalAutoDetectLongPolling: true })
+  : getFirestore(app);
+
 export const auth = getAuth(app);
 export const storage = getStorage(app);
