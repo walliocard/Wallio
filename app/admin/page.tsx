@@ -484,11 +484,15 @@ export default function AdminPage() {
     <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       {loadError ? (
-        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
           <p style={{ fontSize: 15, color: T.sec }}>Connexion lente ou indisponible.</p>
           <button onClick={() => window.location.reload()}
             style={{ padding: "11px 28px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
             Recharger la page
+          </button>
+          <button onClick={async () => { await fetch("/api/admin/logout", { method: "POST" }); router.push("/admin/login"); }}
+            style={{ padding: "9px 22px", borderRadius: 12, background: "transparent", color: T.sec, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: "pointer" }}>
+            Se reconnecter
           </button>
         </div>
       ) : (
