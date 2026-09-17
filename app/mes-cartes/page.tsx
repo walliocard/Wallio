@@ -676,18 +676,17 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                alignSelf: "center",
-                display: "inline-flex", alignItems: "center", gap: 5,
-                padding: "7px 14px", borderRadius: 20,
-                border: "1px solid rgba(142,155,181,0.22)",
-                background: "rgba(142,155,181,0.07)",
-                textDecoration: "none",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "10px 16px", borderRadius: 12,
+                border: "1.5px solid rgba(142,155,181,0.25)",
+                background: "rgba(142,155,181,0.08)",
+                textDecoration: "none", width: "100%",
               }}
             >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8E9BB5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6E7A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
               </svg>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#8E9BB5" }}>Y aller</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#6E7A8A" }}>Y aller</span>
             </a>
           )}
 
