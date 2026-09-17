@@ -118,6 +118,10 @@ export default function InscriptionClientPage() {
               {t.client_signup_already}{" "}
               <a href="/mes-cartes" style={{ color: "#5B7CFA", fontWeight: 600, textDecoration: "none" }}>{t.client_signup_see_cards}</a>
             </p>
+            <p style={{ fontSize: 11, color: "#B0BAD0", marginTop: 16, display: "flex", justifyContent: "center", gap: 16 }}>
+              <a href="/privacy" style={{ color: "#B0BAD0", textDecoration: "none" }}>Confidentialité</a>
+              <a href="/terms" style={{ color: "#B0BAD0", textDecoration: "none" }}>CGU</a>
+            </p>
           </div>
         </div>
       </div>

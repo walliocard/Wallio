@@ -564,7 +564,12 @@ export default function MesCartesPage() {
         </div>
       )}
 
-      <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 16 }}>{t.mes_cartes_footer}</p>
+      <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 8 }}>{t.mes_cartes_footer}</p>
+      <p style={{ textAlign: "center", fontSize: 11, color: "#C7C7CC", paddingBottom: 24, display: "flex", justifyContent: "center", gap: 16 }}>
+        <a href="/privacy" style={{ color: "#C7C7CC", textDecoration: "none" }}>Confidentialité</a>
+        <a href="/terms" style={{ color: "#C7C7CC", textDecoration: "none" }}>CGU</a>
+        <a href="/legal" style={{ color: "#C7C7CC", textDecoration: "none" }}>Mentions légales</a>
+      </p>
     </main>
   );
 }
