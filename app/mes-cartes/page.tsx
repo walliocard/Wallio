@@ -622,9 +622,27 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
         <div style={{ height: 5, background: "rgba(255,255,255,0.2)", borderRadius: 10, overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${pct}%`, borderRadius: 10, background: dark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.45)", transition: "width 0.8s cubic-bezier(.16,1,.3,1)" }} />
         </div>
-        <p style={{ fontSize: 12, color: dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)", marginTop: 8 }}>
-          {restants > 0 ? `${restants} ${restants > 1 ? t.mes_cartes_stamps_before_pl : t.mes_cartes_stamps_before} → ${card.rewardName}` : `${t.mes_cartes_reward_available} ${card.rewardName}`}
-        </p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+          <p style={{ fontSize: 12, color: dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)" }}>
+            {restants > 0 ? `${restants} ${restants > 1 ? t.mes_cartes_stamps_before_pl : t.mes_cartes_stamps_before} → ${card.rewardName}` : `${t.mes_cartes_reward_available} ${card.rewardName}`}
+          </p>
+          {mapsHref && card.ville && (
+            <a href={mapsHref} target="_blank" rel="noopener noreferrer"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "3px 9px", borderRadius: 20, textDecoration: "none",
+                background: dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.10)",
+                flexShrink: 0, marginLeft: 8,
+              }}>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={dark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.55)"} strokeWidth="2.5" strokeLinecap="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span style={{ fontSize: 11, fontWeight: 600, color: dark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.55)", letterSpacing: "0.01em" }}>
+                {card.ville}
+              </span>
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Card bottom — glass */}
@@ -668,23 +686,6 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
               </svg>
               {copied ? t.mes_cartes_link_copied : t.mes_cartes_invite}
             </button>
-          )}
-
-          {/* Y aller */}
-          {mapsHref && (
-            <a href={mapsHref} target="_blank" rel="noopener noreferrer"
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "10px 16px", borderRadius: 12,
-                border: "1.5px solid rgba(0,122,255,0.25)",
-                background: "rgba(0,122,255,0.06)",
-                textDecoration: "none",
-              }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#007AFF" }}>Y aller</span>
-            </a>
           )}
 
           {/* Activer les notifications si pas encore fait */}
