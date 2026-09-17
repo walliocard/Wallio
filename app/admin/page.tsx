@@ -120,7 +120,19 @@ export default function AdminPage() {
   const [createVille, setCreateVille] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [tab, setTab] = useState<"marchands" | "comptabilite">("marchands");
+  const [tab, setTab] = useState<"marchands" | "comptabilite" | "contrat">("marchands");
+  // ── Contrat ──
+  const [ctMarchandId, setCtMarchandId] = useState("");
+  const [ctRef,    setCtRef]    = useState(() => `WAL-${new Date().getFullYear()}-${Math.floor(1000+Math.random()*9000)}`);
+  const [ctDate,   setCtDate]   = useState(() => new Date().toISOString().slice(0,10));
+  const [ctDebut,  setCtDebut]  = useState(() => new Date().toISOString().slice(0,10));
+  const [ctType,   setCtType]   = useState<AboType>("mensuel");
+  const [ctPrix,   setCtPrix]   = useState("349");
+  const [ctDevise, setCtDevise] = useState("DH");
+  const [ctNom,    setCtNom]    = useState("");
+  const [ctEmail,  setCtEmail]  = useState("");
+  const [ctAdresse,setCtAdresse]= useState("");
+  const [ctPays,   setCtPays]   = useState("Maroc");
   const [drawerClientCount, setDrawerClientCount] = useState<number | null>(null);
   const [clientCounts, setClientCounts] = useState<Record<string, number>>({});
   const [showPaiement, setShowPaiement] = useState<Marchand | null>(null);
@@ -293,6 +305,149 @@ export default function AdminPage() {
     setCopied(true); setTimeout(() => setCopied(false), 2000);
   }
   async function logout() { await fetch("/api/admin/logout", { method: "POST" }); router.push("/admin/login"); }
+
+  function chargerMarchandContrat(id: string) {
+    const m = marchands.find(x => x.id === id);
+    if (!m) return;
+    setCtMarchandId(id);
+    setCtNom(m.nom || "");
+    setCtEmail(m.email || "");
+    setCtAdresse(`${m.ville || ""}${m.pays ? `, ${m.pays}` : ""}`);
+    setCtPays(m.pays || "Maroc");
+    setCtType(m.abonnement_type || "mensuel");
+    const devise = m.pays === "Maroc" ? "DH" : "€";
+    setCtDevise(devise);
+    const prix = m.pays === "Maroc"
+      ? (m.abonnement_type === "6mois" ? "1 799" : m.abonnement_type === "annuel" ? "2 999" : "349")
+      : (m.abonnement_type === "6mois" ? "259" : m.abonnement_type === "annuel" ? "399" : "54");
+    setCtPrix(prix);
+  }
+
+  function telechargerContrat() {
+    const dureeLabel = ctType === "6mois" ? "6 mois" : ctType === "annuel" ? "1 an" : "1 mois";
+    const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Contrat Wallio — ${ctNom}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1D1D1F; line-height: 1.75; font-size: 13px; padding: 60px 80px; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.3px; }
+  h2 { font-size: 14px; font-weight: 700; margin: 28px 0 8px; border-bottom: 1px solid #E5E5EA; padding-bottom: 4px; }
+  p { margin-bottom: 8px; }
+  ul { padding-left: 20px; margin-bottom: 8px; }
+  li { margin-bottom: 4px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #1D1D1F; padding-bottom: 20px; }
+  .ref { font-size: 11px; color: #6E6E73; text-align: right; }
+  .parties { background: #F2F2F7; border-radius: 8px; padding: 16px 20px; margin-bottom: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .partie h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6E6E73; margin-bottom: 6px; }
+  .tarif-box { background: #F2F2F7; border-radius: 8px; padding: 14px 18px; margin: 10px 0; }
+  .signatures { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .sig-block { border-top: 1px solid #1D1D1F; padding-top: 10px; }
+  .sig-block p { font-size: 11px; color: #6E6E73; }
+  strong { font-weight: 600; }
+  @media print { body { padding: 40px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>Contrat de service marchand</h1>
+    <p style="color:#6E6E73;font-size:12px;">Wallio · Mohamed Karim Mejbar</p>
+  </div>
+  <div class="ref">
+    <p><strong>Réf :</strong> ${ctRef}</p>
+    <p><strong>Date :</strong> ${new Date(ctDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+  </div>
+</div>
+
+<div class="parties">
+  <div class="partie">
+    <h3>Le Prestataire</h3>
+    <p><strong>Mohamed Karim Mejbar</strong></p>
+    <p>Auto-entrepreneur</p>
+    <p>ICE : 003655578000095</p>
+    <p>IF : 42798171</p>
+    <p>Quartier Founty, Secteur R, N°266<br>Agadir, Maroc</p>
+    <p>walliocard@gmail.com</p>
+  </div>
+  <div class="partie">
+    <h3>Le Marchand (Client)</h3>
+    <p><strong>${ctNom || "—"}</strong></p>
+    <p>${ctEmail || "—"}</p>
+    <p>${ctAdresse || "—"}</p>
+    <p>${ctPays}</p>
+  </div>
+</div>
+
+<h2>Article 1 — Objet</h2>
+<p>Le présent contrat a pour objet de définir les conditions dans lesquelles Wallio met à disposition du Marchand sa plateforme SaaS de fidélisation numérique, comprenant la création et gestion de cartes de fidélité Apple Wallet et Google Wallet, l'enregistrement des visites client par NFC et QR code, le dashboard marchand et le support technique.</p>
+
+<h2>Article 2 — Durée</h2>
+<p>Le contrat prend effet le <strong>${new Date(ctDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong> et est conclu pour une durée de <strong>${dureeLabel}</strong>, renouvelable automatiquement jusqu'à résiliation par l'une des parties avec un préavis de 30 jours.</p>
+
+<h2>Article 3 — Tarifs et paiement</h2>
+<div class="tarif-box">
+  <p><strong>Formule :</strong> ${ABO_LABELS[ctType]}</p>
+  <p><strong>Montant :</strong> ${ctPrix} ${ctDevise} par période</p>
+  <p><strong>Paiement :</strong> Par virement bancaire, en avance de chaque période</p>
+</div>
+<p>Toute période entamée est due dans son intégralité. Aucun remboursement ne sera accordé en cas de résiliation anticipée. En cas de non-paiement, Wallio se réserve le droit de suspendre l'accès immédiatement, avec pénalités de retard de 10 % par mois.</p>
+
+<h2>Article 4 — Obligations de Wallio</h2>
+<p>Wallio s'engage à mettre à disposition la plateforme avec soin et professionnalisme, à assurer la sécurité des données et à fournir un support réactif. Wallio est tenu à une obligation de moyens et non de résultat. La responsabilité de Wallio est limitée au montant de l'abonnement mensuel du mois concerné.</p>
+
+<h2>Article 5 — Obligations du Marchand</h2>
+<ul>
+  <li>Fournir des informations exactes et à jour</li>
+  <li>Utiliser le service conformément aux CGU et aux lois applicables</li>
+  <li>Informer ses clients de la collecte de leurs données via Wallio</li>
+  <li>Régler l'abonnement à l'échéance convenue</li>
+  <li>Ne pas céder l'accès au service à un tiers sans accord écrit</li>
+</ul>
+
+<h2>Article 6 — Propriété intellectuelle et données</h2>
+<p>La marque Wallio, le logo et le code source sont la propriété exclusive de Mohamed Karim Mejbar. Les données des clients finaux collectées via la plateforme restent la propriété du Marchand ; Wallio agit en qualité de sous-traitant au sens du RGPD.</p>
+
+<h2>Article 7 — Résiliation</h2>
+<p><strong>Par le Marchand :</strong> préavis de 30 jours par email à walliocard@gmail.com. Aucun remboursement pour la période en cours.</p>
+<p><strong>Par Wallio :</strong> résiliation immédiate sans préavis ni indemnité en cas de non-paiement, violation des CGU, usage frauduleux ou atteinte aux intérêts de Wallio.</p>
+
+<h2>Article 8 — Droit applicable et juridiction</h2>
+<p>Le présent contrat est soumis au droit marocain. En cas de litige non résolu à l'amiable, le Tribunal de Commerce d'Agadir (Maroc) est seul compétent.</p>
+
+<h2>Article 9 — Documents contractuels</h2>
+<p>Le présent contrat doit être lu conjointement avec les <strong>Conditions Générales d'Utilisation</strong> et la <strong>Politique de confidentialité</strong> disponibles sur app.walliocard.com. En cas de contradiction, le présent contrat prévaut.</p>
+
+<div class="signatures">
+  <div class="sig-block">
+    <p><strong>Pour Wallio</strong></p>
+    <p>Mohamed Karim Mejbar</p>
+    <br><br><br>
+    <p>Signature :</p>
+    <p style="margin-top:4px">Date : _______________</p>
+  </div>
+  <div class="sig-block">
+    <p><strong>Pour le Marchand</strong></p>
+    <p>${ctNom || "_______________"}</p>
+    <br><br><br>
+    <p>Signature :</p>
+    <p style="margin-top:4px">Date : _______________</p>
+  </div>
+</div>
+
+<p style="margin-top:48px;font-size:11px;color:#AEAEB2;text-align:center;">Wallio · Mohamed Karim Mejbar · ICE 003655578000095 · Agadir, Maroc · walliocard@gmail.com</p>
+</body>
+</html>`;
+
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 500);
+  }
 
   // ── Palette active ──────────────────────────────────────────────────────────
 
@@ -673,7 +828,7 @@ export default function AdminPage() {
 
         {/* Onglets */}
         <div style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, width: "fit-content" }}>
-          {([["marchands", "Marchands"], ["comptabilite", "Comptabilité"]] as const).map(([key, label]) => (
+          {([["marchands", "Marchands"], ["comptabilite", "Comptabilité"], ["contrat", "Contrat"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               style={{ padding: "7px 18px", borderRadius: 8, fontSize: 14, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s" }}>
               {label}
@@ -940,6 +1095,83 @@ export default function AdminPage() {
           );
         })()}
 
+
+        {/* ── Contrat ── */}
+        {tab === "contrat" && (
+          <div style={{ maxWidth: 680 }}>
+            <div style={{ ...G, borderRadius: 18, padding: "24px 28px", marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: T.tert, marginBottom: 16 }}>Générer un contrat</p>
+
+              {/* Sélecteur marchand */}
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Marchand</p>
+                <select value={ctMarchandId} onChange={e => chargerMarchandContrat(e.target.value)} style={{ ...inputStyle, width: "100%" }}>
+                  <option value="">Sélectionner un marchand…</option>
+                  {marchands.map(m => <option key={m.id} value={m.id}>{m.nom || m.email}</option>)}
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Référence contrat</p>
+                  <input value={ctRef} onChange={e => setCtRef(e.target.value)} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date du contrat</p>
+                  <input type="date" value={ctDate} onChange={e => setCtDate(e.target.value)} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date de début</p>
+                  <input type="date" value={ctDebut} onChange={e => setCtDebut(e.target.value)} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Formule</p>
+                  <select value={ctType} onChange={e => setCtType(e.target.value as AboType)} style={{ ...inputStyle }}>
+                    <option value="mensuel">Mensuel</option>
+                    <option value="6mois">6 mois</option>
+                    <option value="annuel">Annuel</option>
+                  </select>
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Montant</p>
+                  <input value={ctPrix} onChange={e => setCtPrix(e.target.value)} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Devise</p>
+                  <select value={ctDevise} onChange={e => setCtDevise(e.target.value)} style={{ ...inputStyle }}>
+                    <option value="DH">DH (Maroc)</option>
+                    <option value="€">€ (Europe)</option>
+                    <option value="RON">RON (Roumanie)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Nom du marchand</p>
+                  <input value={ctNom} onChange={e => setCtNom(e.target.value)} placeholder="Nom de l'établissement" style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Email</p>
+                  <input value={ctEmail} onChange={e => setCtEmail(e.target.value)} placeholder="email@etablissement.com" style={{ ...inputStyle }} />
+                </div>
+                <div style={{ gridColumn: "1/-1" }}>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Adresse</p>
+                  <input value={ctAdresse} onChange={e => setCtAdresse(e.target.value)} placeholder="Adresse, ville, pays" style={{ ...inputStyle }} />
+                </div>
+              </div>
+
+              <button onClick={telechargerContrat}
+                style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                Télécharger le contrat (PDF)
+              </button>
+            </div>
+
+            <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>
+              Le contrat s&apos;ouvre dans un nouvel onglet · Ctrl+P ou Cmd+P pour sauvegarder en PDF
+            </p>
+          </div>
+        )}
 
       </div>
     </main>
