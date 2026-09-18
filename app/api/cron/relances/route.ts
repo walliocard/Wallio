@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { Timestamp } from "firebase-admin/firestore";
+import { Timestamp, FieldValue } from "firebase-admin/firestore";
+import { randomUUID } from "crypto";
 import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
 
 export async function GET(req: Request) {
@@ -34,7 +35,19 @@ export async function GET(req: Request) {
       const client = clientDoc.data();
       if (client.relance_pending) continue;
 
-      await clientDoc.ref.update({ relance_pending: true });
+      const notifRecord = {
+        id: randomUUID(),
+        title: `${marchand.nom} vous attend !`,
+        body: message || "",
+        marchandNom: (marchand.nom as string) || "",
+        marchandId: marchandDoc.id,
+        sentAt: new Date().toISOString(),
+        read: false,
+      };
+      await clientDoc.ref.update({
+        relance_pending: true,
+        notifs: FieldValue.arrayUnion(notifRecord),
+      });
 
       if (client.fcm_token) tokens.push(client.fcm_token);
       traites++;

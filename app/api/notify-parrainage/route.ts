@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { FieldValue } from "firebase-admin/firestore";
+import { randomUUID } from "crypto";
 import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
@@ -8,12 +10,14 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
 // Envoie une notif FCM spécifique au parrain quand quelqu'un utilise son lien
 export async function POST(req: Request) {
   try {
-    const { parrainWalletId, filleulPrenom, filleulNom, type, recompense } = await req.json() as {
+    const { parrainWalletId, filleulPrenom, filleulNom, type, recompense, marchandId, marchandNom } = await req.json() as {
       parrainWalletId?: string;
       filleulPrenom?: string;
       filleulNom?: string;
       type?: "rejoint" | "visite";
       recompense?: boolean;
+      marchandId?: string;
+      marchandNom?: string;
     };
 
     if (!parrainWalletId) {
@@ -34,8 +38,6 @@ export async function POST(req: Request) {
     const parrain = snap.docs[0].data();
     const fcmToken: string | undefined = parrain.fcm_token;
 
-    if (!fcmToken) return NextResponse.json({ ok: false, reason: "no_fcm_token" });
-
     const prenom = filleulPrenom?.trim() || "Votre ami(e)";
     const nom    = filleulNom?.trim()    || "";
     const nomComplet = [prenom, nom].filter(Boolean).join(" ");
@@ -50,6 +52,20 @@ export async function POST(req: Request) {
           : `${nomComplet} a visité le restaurant — vous recevez 1 tampon bonus !`)
       : `${nomComplet} a rejoint via votre lien — il/elle doit venir au restaurant pour que vous receviez votre tampon.`;
 
+    // Toujours stocker dans l'onglet Messages, même sans FCM token
+    const notifRecord = {
+      id: randomUUID(),
+      title,
+      body,
+      marchandNom: marchandNom || "",
+      marchandId: marchandId || parrain.marchand_id || "",
+      sentAt: new Date().toISOString(),
+      read: false,
+    };
+    await snap.docs[0].ref.update({ notifs: FieldValue.arrayUnion(notifRecord) });
+
+    if (!fcmToken) return NextResponse.json({ ok: true, fcm: false });
+
     const messaging = adminMessaging();
     try {
       await messaging.send({
@@ -60,7 +76,7 @@ export async function POST(req: Request) {
           notification: { title, body, icon: `${APP_URL}/icon-192.png` },
         },
       });
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, fcm: true });
     } catch (err: unknown) {
       const code = (err as { errorInfo?: { code?: string } })?.errorInfo?.code ?? "";
       if (
@@ -69,7 +85,7 @@ export async function POST(req: Request) {
       ) {
         await snap.docs[0].ref.update({ fcm_token: null });
       }
-      return NextResponse.json({ ok: false, reason: "fcm_error" });
+      return NextResponse.json({ ok: true, fcm: false, reason: "fcm_error" });
     }
   } catch {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

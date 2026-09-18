@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { FieldValue } from "firebase-admin/firestore";
+import { randomUUID } from "crypto";
 import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
 
 export async function GET(req: Request) {
@@ -42,7 +44,20 @@ export async function GET(req: Request) {
       const dnSuffix = client.date_naissance.slice(5, 10);
       if (dnSuffix !== suffixRef) continue;
 
-      await clientDoc.ref.update({ birthday_bonus: true, birthday_bonus_used: true });
+      const notifRecord = {
+        id: randomUUID(),
+        title: "Joyeux anniversaire !",
+        body: message || "",
+        marchandNom: (marchand.nom as string) || "",
+        marchandId: marchandDoc.id,
+        sentAt: new Date().toISOString(),
+        read: false,
+      };
+      await clientDoc.ref.update({
+        birthday_bonus: true,
+        birthday_bonus_used: true,
+        notifs: FieldValue.arrayUnion(notifRecord),
+      });
 
       if (client.fcm_token) {
         tokens.push(client.fcm_token);

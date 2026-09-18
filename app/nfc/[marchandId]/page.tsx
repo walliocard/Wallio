@@ -51,7 +51,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         fetch("/api/google-wallet/push-update", o).catch(() => {});
         fetch("/api/notify-parrainage", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ parrainWalletId: res.walletId, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite", recompense: res.recompense }),
+          body: JSON.stringify({ parrainWalletId: res.walletId, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite", recompense: res.recompense, marchandId: marchand.id, marchandNom: marchand.nom }),
         }).catch(() => {});
       }).catch(() => {});
     }
@@ -151,7 +151,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             // Notif "rejoint" au parrain — son tampon viendra à la 1ère vraie visite de B
             fetch("/api/notify-parrainage", {
               method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ parrainWalletId: parrainId, filleulPrenom: cachedPrenom, filleulNom: cachedNom, type: "rejoint" }),
+              body: JSON.stringify({ parrainWalletId: parrainId, filleulPrenom: cachedPrenom, filleulNom: cachedNom, type: "rejoint", marchandId: marchand.id, marchandNom: marchand.nom }),
             }).catch(() => {});
             setScreen({ type: "carte", client: { ...newClient, tampons: 1 }, marchand, parraine: true });
           } else {
@@ -202,7 +202,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           // Notif "rejoint" au parrain — tampon différé à la 1ère vraie visite
           fetch("/api/notify-parrainage", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ parrainWalletId: screen.refParam, filleulPrenom: client.prenom, filleulNom: client.nom, type: "rejoint" }),
+            body: JSON.stringify({ parrainWalletId: screen.refParam, filleulPrenom: client.prenom, filleulNom: client.nom, type: "rejoint", marchandId: screen.marchand.id, marchandNom: screen.marchand.nom }),
           }).catch(() => {});
           setScreen({ type: "carte", client: { ...client, tampons: 1 }, marchand: screen.marchand, parraine: true });
         } else {

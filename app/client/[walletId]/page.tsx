@@ -66,7 +66,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           fetch("/api/google-wallet/push-update", o).catch(() => {});
           fetch("/api/notify-parrainage", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ parrainWalletId: res.walletId, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite", recompense: res.recompense }),
+            body: JSON.stringify({ parrainWalletId: res.walletId, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite", recompense: res.recompense, marchandId: marchand.id, marchandNom: marchand.nom }),
           }).catch(() => {});
         }).catch(() => {});
       }
