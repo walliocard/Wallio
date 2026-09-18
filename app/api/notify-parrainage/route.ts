@@ -42,12 +42,12 @@ export async function POST(req: Request) {
 
     const isVisite = type === "visite";
     const title = isVisite
-      ? (recompense ? "! Recompense + parrainage !" : "! Tampon parrainage recu !")
+      ? (recompense ? "! Récompense + parrainage !" : "! Tampon parrainage reçu !")
       : "! Ami(e) inscrit(e)";
     const body  = isVisite
       ? (recompense
-          ? `${nomComplet} a visite le restaurant — vous recevez 1 tampon et debloquez votre recompense !`
-          : `${nomComplet} a visite le restaurant — vous recevez 1 tampon bonus !`)
+          ? `${nomComplet} a visité le restaurant — vous recevez 1 tampon et déverrouillez votre récompense !`
+          : `${nomComplet} a visité le restaurant — vous recevez 1 tampon bonus !`)
       : `${nomComplet} a rejoint via votre lien — il/elle doit venir au restaurant pour que vous receviez votre tampon.`;
 
     const messaging = adminMessaging();

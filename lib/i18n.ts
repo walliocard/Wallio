@@ -69,7 +69,7 @@ const translations = {
     mes_cartes_nfc_required: "Scannez d'abord le NFC d'un établissement pour créer votre profil.",
     mes_cartes_apple_wallet: "Ajouter à Apple Wallet",
     mes_cartes_google_wallet: "Ajouter à Google Wallet",
-    mes_cartes_redownload: "Re-téléchargez pour activer les mises à jour auto",
+    mes_cartes_redownload: "Téléchargez à nouveau pour activer les mises à jour auto",
     mes_cartes_invite: "Inviter un ami (+1 tampon)",
     mes_cartes_link_copied: "Lien copié !",
     mes_cartes_enable_notif: "Activer les notifications",
