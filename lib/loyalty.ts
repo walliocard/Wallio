@@ -141,9 +141,10 @@ export async function creerClient(data: {
     // derniere_visite intentionnellement absent : posé par ajouterTampon() au 1er vrai scan
   };
   if (parrain_wallet_id) {
-    docData.tampons = 0;
+    docData.tampons = 1;          // tampon de bienvenue pour le filleul
     docData.parrain_id = parrain_wallet_id;
     docData.parrain_recompense = false;
+    // derniere_visite absent intentionnellement : 1er vrai scan pas bloqué par anti-doublon
   } else {
     docData.tampons = 0;
   }

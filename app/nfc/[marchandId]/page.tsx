@@ -148,12 +148,12 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             tampons: parrainId ? 1 : 0,
           };
           if (parrainId) {
-            // Notif "rejoint" au parrain — le tampon sera donné à la 1ère vraie visite
+            // Notif "rejoint" au parrain — son tampon viendra à la 1ère vraie visite de B
             fetch("/api/notify-parrainage", {
               method: "POST", headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ parrainWalletId: parrainId, filleulPrenom: cachedPrenom, filleulNom: cachedNom, type: "rejoint" }),
             }).catch(() => {});
-            setScreen({ type: "carte", client: newClient, marchand, parraine: true });
+            setScreen({ type: "carte", client: { ...newClient, tampons: 1 }, marchand, parraine: true });
           } else {
             const result = await ajouterTampon(newClient, marchand);
             if (result.type === "ok" || result.type === "recompense") {
@@ -204,7 +204,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ parrainWalletId: screen.refParam, filleulPrenom: client.prenom, filleulNom: client.nom, type: "rejoint" }),
           }).catch(() => {});
-          setScreen({ type: "carte", client: { ...client, tampons: 0 }, marchand: screen.marchand, parraine: true });
+          setScreen({ type: "carte", client: { ...client, tampons: 1 }, marchand: screen.marchand, parraine: true });
         } else {
           const result = await ajouterTampon(client, screen.marchand);
           if (result.type === "ok" || result.type === "recompense") {
