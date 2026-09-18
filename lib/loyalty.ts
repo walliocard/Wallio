@@ -231,7 +231,7 @@ export const WALLET_KEY = (marchandId: string) => `wallio_${marchandId}`;
 export async function traiterParrainage(
   parrainWalletId: string,
   marchandId: string,
-): Promise<string | null> {
+): Promise<{ walletId: string; recompense: boolean } | null> {
   const q = query(
     collection(db, "clients"),
     where("wallet_id", "==", parrainWalletId),
@@ -251,8 +251,9 @@ export async function traiterParrainage(
   // +1 fixe : jamais doublé par promo double_tampons, bypass anti-doublon
   // Ne met PAS à jour derniere_visite — c'est un bonus, pas une vraie visite
   const nouveaux = parrain.tampons + 1;
+  const recompense = nouveaux >= marchand.objectif_tampons;
 
-  if (nouveaux >= marchand.objectif_tampons) {
+  if (recompense) {
     await updateDoc(doc(db, "clients", parrain.id), {
       tampons: 0,
       recompense_en_attente: true,
@@ -263,7 +264,7 @@ export async function traiterParrainage(
     });
   }
 
-  return parrainWalletId;
+  return { walletId: parrainWalletId, recompense };
 }
 
 // Vérifie si le filleul a un parrain non encore récompensé et le récompense.
@@ -271,7 +272,7 @@ export async function traiterParrainage(
 export async function checkEtRecompenseParrain(
   client: Client,
   marchandId: string,
-): Promise<string | null> {
+): Promise<{ walletId: string; recompense: boolean } | null> {
   if (!client.parrain_id || client.parrain_recompense) return null;
   // Marquer immédiatement pour éviter un double-reward en cas de race condition
   await updateDoc(doc(db, "clients", client.id), { parrain_recompense: true });

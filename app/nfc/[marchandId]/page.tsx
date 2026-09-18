@@ -43,15 +43,15 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       fetch("/api/apple-wallet/push-update", opts).catch(() => {});
       fetch("/api/google-wallet/push-update", opts).catch(() => {});
       // Vérifie si ce tampon déclenche la récompense parrain (1ère vraie visite du filleul)
-      checkEtRecompenseParrain(client, marchand.id).then(parrainWid => {
-        if (!parrainWid) return;
-        const b = JSON.stringify({ walletId: parrainWid });
+      checkEtRecompenseParrain(client, marchand.id).then(res => {
+        if (!res) return;
+        const b = JSON.stringify({ walletId: res.walletId });
         const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
         fetch("/api/apple-wallet/push-update", o).catch(() => {});
         fetch("/api/google-wallet/push-update", o).catch(() => {});
         fetch("/api/notify-parrainage", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ parrainWalletId: parrainWid, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite" }),
+          body: JSON.stringify({ parrainWalletId: res.walletId, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite", recompense: res.recompense }),
         }).catch(() => {});
       }).catch(() => {});
     }

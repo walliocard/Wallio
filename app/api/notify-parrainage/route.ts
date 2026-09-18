@@ -8,11 +8,12 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
 // Envoie une notif FCM spécifique au parrain quand quelqu'un utilise son lien
 export async function POST(req: Request) {
   try {
-    const { parrainWalletId, filleulPrenom, filleulNom, type } = await req.json() as {
+    const { parrainWalletId, filleulPrenom, filleulNom, type, recompense } = await req.json() as {
       parrainWalletId?: string;
       filleulPrenom?: string;
       filleulNom?: string;
       type?: "rejoint" | "visite";
+      recompense?: boolean;
     };
 
     if (!parrainWalletId) {
@@ -40,9 +41,13 @@ export async function POST(req: Request) {
     const nomComplet = [prenom, nom].filter(Boolean).join(" ");
 
     const isVisite = type === "visite";
-    const title = isVisite ? "! Tampon parrainage recu !" : "! Ami(e) inscrit(e)";
+    const title = isVisite
+      ? (recompense ? "! Recompense + parrainage !" : "! Tampon parrainage recu !")
+      : "! Ami(e) inscrit(e)";
     const body  = isVisite
-      ? `${nomComplet} a visite le restaurant — vous recevez 1 tampon bonus !`
+      ? (recompense
+          ? `${nomComplet} a visite le restaurant — vous recevez 1 tampon et debloquez votre recompense !`
+          : `${nomComplet} a visite le restaurant — vous recevez 1 tampon bonus !`)
       : `${nomComplet} a rejoint via votre lien — il/elle doit venir au restaurant pour que vous receviez votre tampon.`;
 
     const messaging = adminMessaging();
