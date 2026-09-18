@@ -588,7 +588,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
     const base = card.nfcId
       ? `${window.location.origin}/nfc/${card.nfcId}?ref=${card.walletId}`
       : `${window.location.origin}/ref/${card.walletId}`;
-    const message = `Salut ! Je suis client chez ${card.marchandNom} et je t'invite a rejoindre leur programme de fidelite. Cree ta carte gratuitement et on gagne tous les deux un tampon bonus :\n${base}`;
+    const message = `Salut ! Je suis client chez ${card.marchandNom} et je t'invite a rejoindre leur programme de fidelite. Cree ta carte gratuitement, viens au restaurant, et on gagne tous les deux un tampon bonus :\n${base}`;
     if (navigator.share) {
       navigator.share({ text: message }).catch(() => {});
     } else {

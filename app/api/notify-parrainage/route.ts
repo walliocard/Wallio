@@ -8,10 +8,11 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
 // Envoie une notif FCM spécifique au parrain quand quelqu'un utilise son lien
 export async function POST(req: Request) {
   try {
-    const { parrainWalletId, filleulPrenom, filleulNom } = await req.json() as {
+    const { parrainWalletId, filleulPrenom, filleulNom, type } = await req.json() as {
       parrainWalletId?: string;
       filleulPrenom?: string;
       filleulNom?: string;
+      type?: "rejoint" | "visite";
     };
 
     if (!parrainWalletId) {
@@ -34,26 +35,24 @@ export async function POST(req: Request) {
 
     if (!fcmToken) return NextResponse.json({ ok: false, reason: "no_fcm_token" });
 
-    const prenom = filleulPrenom?.trim() || "Quelqu'un";
+    const prenom = filleulPrenom?.trim() || "Votre ami(e)";
     const nom    = filleulNom?.trim()    || "";
     const nomComplet = [prenom, nom].filter(Boolean).join(" ");
+
+    const isVisite = type === "visite";
+    const title = isVisite ? "! Tampon parrainage recu !" : "! Ami(e) inscrit(e)";
+    const body  = isVisite
+      ? `${nomComplet} a visite le restaurant — vous recevez 1 tampon bonus !`
+      : `${nomComplet} a rejoint via votre lien — il/elle doit venir au restaurant pour que vous receviez votre tampon.`;
 
     const messaging = adminMessaging();
     try {
       await messaging.send({
         token: fcmToken,
-        data: {
-          title: "! Parrainage réussi",
-          body: `${nomComplet} a rejoint grâce à votre lien — vous recevez 1 tampon bonus !`,
-          link: `${APP_URL}/mes-cartes`,
-        },
+        data: { title, body, url: `${APP_URL}/mes-cartes`, link: `${APP_URL}/mes-cartes` },
         webpush: {
           fcmOptions: { link: `${APP_URL}/mes-cartes` },
-          notification: {
-            title: "! Parrainage réussi",
-            body: `${nomComplet} a rejoint grâce à votre lien — vous recevez 1 tampon bonus !`,
-            icon: `${APP_URL}/icon-192.png`,
-          },
+          notification: { title, body, icon: `${APP_URL}/icon-192.png` },
         },
       });
       return NextResponse.json({ ok: true });

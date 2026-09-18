@@ -6,7 +6,7 @@ import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   getClientByWalletId, getMarchandById,
-  ajouterTampon, validerRecompense, setTampons,
+  ajouterTampon, validerRecompense, setTampons, checkEtRecompenseParrain,
   formatTemps, formatTempsDepuis,
   type Client, type Marchand, type TamponResult,
 } from "@/lib/loyalty";
@@ -56,6 +56,20 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       fetch("/api/apple-wallet/push-update", opts).catch(() => {});
       fetch("/api/google-wallet/push-update", opts).catch(() => {});
+      // Vérifie si ce tampon déclenche la récompense parrain (1ère vraie visite du filleul)
+      if (marchand) {
+        checkEtRecompenseParrain(client, marchand.id).then(parrainWid => {
+          if (!parrainWid) return;
+          const b = JSON.stringify({ walletId: parrainWid });
+          const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
+          fetch("/api/apple-wallet/push-update", o).catch(() => {});
+          fetch("/api/google-wallet/push-update", o).catch(() => {});
+          fetch("/api/notify-parrainage", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ parrainWalletId: parrainWid, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite" }),
+          }).catch(() => {});
+        }).catch(() => {});
+      }
     }
     setAjoutEnCours(false);
   }

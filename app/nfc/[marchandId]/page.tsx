@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, use, lazy, Suspense } from "react";
 import Link from "next/link";
 import {
   getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
-  creerClient, ajouterTampon, validerRecompense, traiterParrainage,
+  creerClient, ajouterTampon, validerRecompense, checkEtRecompenseParrain,
   formatTemps, WALLET_KEY,
   type Marchand, type Client, type TamponResult,
 } from "@/lib/loyalty";
@@ -37,12 +37,23 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
     setScreen({ type: "result", result, client, marchand });
-    // Signal Wallet pour mettre à jour la carte (fire-and-forget)
     if (result.type === "ok" || result.type === "recompense") {
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       fetch("/api/apple-wallet/push-update", opts).catch(() => {});
       fetch("/api/google-wallet/push-update", opts).catch(() => {});
+      // Vérifie si ce tampon déclenche la récompense parrain (1ère vraie visite du filleul)
+      checkEtRecompenseParrain(client, marchand.id).then(parrainWid => {
+        if (!parrainWid) return;
+        const b = JSON.stringify({ walletId: parrainWid });
+        const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
+        fetch("/api/apple-wallet/push-update", o).catch(() => {});
+        fetch("/api/google-wallet/push-update", o).catch(() => {});
+        fetch("/api/notify-parrainage", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ parrainWalletId: parrainWid, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite" }),
+        }).catch(() => {});
+      }).catch(() => {});
     }
   }, []);
 
@@ -137,20 +148,10 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             tampons: parrainId ? 1 : 0,
           };
           if (parrainId) {
-            // Tampon déjà posé dans creerClient, on traite le parrain en fire-and-forget
-            traiterParrainage(parrainId, marchand.id).then(wid => {
-              if (wid) {
-                const b = JSON.stringify({ walletId: wid });
-                const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
-                fetch("/api/apple-wallet/push-update", o).catch(() => {});
-                fetch("/api/google-wallet/push-update", o).catch(() => {});
-                // Notif FCM spécifique au parrain
-                fetch("/api/notify-parrainage", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ parrainWalletId: wid, filleulPrenom: cachedPrenom, filleulNom: cachedNom }),
-                }).catch(() => {});
-              }
+            // Notif "rejoint" au parrain — le tampon sera donné à la 1ère vraie visite
+            fetch("/api/notify-parrainage", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ parrainWalletId: parrainId, filleulPrenom: cachedPrenom, filleulNom: cachedNom, type: "rejoint" }),
             }).catch(() => {});
             setScreen({ type: "carte", client: newClient, marchand, parraine: true });
           } else {
@@ -198,22 +199,12 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         if (client.nom)            localStorage.setItem("wallio_client_nom", client.nom);
         if (client.date_naissance) localStorage.setItem("wallio_client_dob", client.date_naissance);
         if (isNew && screen.refParam) {
-          // Tampon déjà posé dans creerClient, on traite le parrain
-          traiterParrainage(screen.refParam, screen.marchand.id).then(wid => {
-            if (wid) {
-              const b = JSON.stringify({ walletId: wid });
-              const o = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
-              fetch("/api/apple-wallet/push-update", o).catch(() => {});
-              fetch("/api/google-wallet/push-update", o).catch(() => {});
-              // Notif FCM spécifique au parrain
-              fetch("/api/notify-parrainage", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ parrainWalletId: wid, filleulPrenom: client.prenom, filleulNom: client.nom }),
-              }).catch(() => {});
-            }
+          // Notif "rejoint" au parrain — tampon différé à la 1ère vraie visite
+          fetch("/api/notify-parrainage", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ parrainWalletId: screen.refParam, filleulPrenom: client.prenom, filleulNom: client.nom, type: "rejoint" }),
           }).catch(() => {});
-          setScreen({ type: "carte", client: { ...client, tampons: 1 }, marchand: screen.marchand, parraine: true });
+          setScreen({ type: "carte", client: { ...client, tampons: 0 }, marchand: screen.marchand, parraine: true });
         } else {
           const result = await ajouterTampon(client, screen.marchand);
           if (result.type === "ok" || result.type === "recompense") {

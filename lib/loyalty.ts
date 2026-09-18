@@ -41,6 +41,7 @@ export type Client = {
   wallet_type?: "apple" | "google";
   fcm_token?: string;
   parrain_id?: string;
+  parrain_recompense?: boolean;
 };
 
 export type TamponResult =
@@ -140,10 +141,9 @@ export async function creerClient(data: {
     // derniere_visite intentionnellement absent : posé par ajouterTampon() au 1er vrai scan
   };
   if (parrain_wallet_id) {
-    // Parrainage : 1er tampon crédité directement, pas de derniere_visite
-    // → le filleul peut scanner immédiatement après sans anti-doublon
-    docData.tampons = 1;
+    docData.tampons = 0;
     docData.parrain_id = parrain_wallet_id;
+    docData.parrain_recompense = false;
   } else {
     docData.tampons = 0;
   }
@@ -248,20 +248,31 @@ export async function traiterParrainage(
   const marchand = { id: marchandSnap.id, ...marchandSnap.data() } as Marchand;
 
   // +1 fixe : jamais doublé par promo double_tampons, bypass anti-doublon
+  // Ne met PAS à jour derniere_visite — c'est un bonus, pas une vraie visite
   const nouveaux = parrain.tampons + 1;
 
   if (nouveaux >= marchand.objectif_tampons) {
     await updateDoc(doc(db, "clients", parrain.id), {
       tampons: 0,
       recompense_en_attente: true,
-      derniere_visite: serverTimestamp(),
     });
   } else {
     await updateDoc(doc(db, "clients", parrain.id), {
       tampons: nouveaux,
-      derniere_visite: serverTimestamp(),
     });
   }
 
   return parrainWalletId;
+}
+
+// Vérifie si le filleul a un parrain non encore récompensé et le récompense.
+// Appelé après chaque tampon ajouté (NFC + QR). Bypass anti-doublon par design.
+export async function checkEtRecompenseParrain(
+  client: Client,
+  marchandId: string,
+): Promise<string | null> {
+  if (!client.parrain_id || client.parrain_recompense) return null;
+  // Marquer immédiatement pour éviter un double-reward en cas de race condition
+  await updateDoc(doc(db, "clients", client.id), { parrain_recompense: true });
+  return traiterParrainage(client.parrain_id, marchandId);
 }
