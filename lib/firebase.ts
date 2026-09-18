@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, initializeFirestore, memoryLocalCache } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -24,4 +24,7 @@ export const db = isNew
   : getFirestore(app);
 
 export const auth = getAuth(app);
+// Bascule Firebase Auth sur localStorage (pas IndexedDB) — même fix que Firestore.
+// IndexedDB Auth se corrompt entre sessions → timeout de connexion en navigation normale.
+if (isNew) setPersistence(auth, browserLocalPersistence).catch(() => {});
 export const storage = getStorage(app);

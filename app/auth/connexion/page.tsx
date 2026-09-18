@@ -39,6 +39,8 @@ function ConnexionInner() {
     setError("");
     setLoading(true);
     try {
+      // Purge tout état auth résiduel/corrompu avant de tenter la connexion
+      await signOut(auth).catch(() => {});
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("timeout")), 10000)
       );
