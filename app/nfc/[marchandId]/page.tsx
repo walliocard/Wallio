@@ -209,6 +209,10 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
               client: { ...screen.client, paliers_valides: nouveauxPV, recompense_en_attente: false },
               marchand: screen.marchand,
             });
+          } else {
+            // Récompense cyclique en attente au moment du passage en progressif — on la solde
+            await validerRecompense(screen.client.id);
+            setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
           }
         } else {
           await validerRecompense(screen.client.id);

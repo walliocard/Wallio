@@ -91,6 +91,10 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         const nouveauxPV = [...paliersValides];
         nouveauxPV[palierIndex] = true;
         setClient(prev => prev ? { ...prev, recompense_en_attente: false, paliers_valides: nouveauxPV } : prev);
+      } else {
+        // Récompense cyclique en attente au moment du passage en progressif — on la solde
+        await validerRecompense(client.id);
+        setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
       }
     } else {
       await validerRecompense(client.id);
