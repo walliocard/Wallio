@@ -344,7 +344,14 @@ export default function AccueilPage() {
             {stats.proches_recompense}
           </p>
           <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
-            {t.dash_stamps} →  {marchand?.nom_recompense || t.dash_rewards}
+            {t.dash_stamps} → {(() => {
+              const mn = marchand as Record<string, unknown>;
+              const paliers = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
+              if (mn?.mode_recompense === "progressif" && paliers.length > 0) {
+                return paliers[0].recompense || t.dash_rewards;
+              }
+              return marchand?.nom_recompense || t.dash_rewards;
+            })()}
           </p>
         </Link>
       </div>
