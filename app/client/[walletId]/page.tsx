@@ -269,6 +269,13 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
               />
             ))}
           </div>
+
+          {/* Indicateur mid-cycle */}
+          {modeRecompense === "progressif" && paliersDef.length > 0 && client.paliers_valides === undefined && client.tampons > 0 && (
+            <div className="mt-3 px-3 py-2 rounded-xl text-[11px]" style={{ background: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.2)", color: "#FF9F0A" }}>
+              Ce client finit son cycle en cours — il rejoindra le programme progressif à son prochain scan à 0 tampon.
+            </div>
+          )}
         </div>
 
         {/* Résultat */}
