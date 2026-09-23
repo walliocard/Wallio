@@ -116,7 +116,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
   async function handleAjuster(delta: number) {
     if (!client || !marchand || adjusting) return;
-    const maxTampons = modeRecompense === "progressif" && paliersDef.length > 0
+    const maxTampons = modeRecompense === "progressif" && paliersDef.length > 0 && (client.paliers_valides !== undefined || client.tampons === 0)
       ? paliersDef[paliersDef.length - 1].tampons
       : marchand.objectif_tampons;
     const next = Math.max(0, Math.min(client.tampons + delta, maxTampons));
@@ -142,7 +142,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
   let objectif: number;
   let nomRecompense: string;
-  if (modeRecompense === "progressif" && paliersDef.length > 0) {
+  if (modeRecompense === "progressif" && paliersDef.length > 0 && (client.paliers_valides !== undefined || client.tampons === 0)) {
     const prochain = paliersDef.find((p, i) => !paliersValides[i]) ?? paliersDef[paliersDef.length - 1];
     objectif = prochain.tampons;
     nomRecompense = prochain.recompense;
