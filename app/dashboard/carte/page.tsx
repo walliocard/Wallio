@@ -32,8 +32,11 @@ export default function CartePage() {
   const nom = (marchand?.nom as string) || "";
   const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
   const [stripUrl, setStripUrl] = useState<string>((marchand?.strip_url as string) || "");
-  const recompense = (marchand?.nom_recompense as string) || "";
-  const objectif = (marchand?.objectif_tampons as number) || 10;
+  const mn = marchand as Record<string, unknown>;
+  const paliersDef = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
+  const isProgressif = mn?.mode_recompense === "progressif" && paliersDef.length > 0;
+  const recompense = isProgressif ? (paliersDef[0]?.recompense || "") : ((mn?.nom_recompense as string) || "");
+  const objectif = isProgressif ? (paliersDef[0]?.tampons || 10) : ((mn?.objectif_tampons as number) || 10);
   const couleurPrincipale = (marchand as Record<string, unknown>).couleur_principale as string || "#007AFF";
 
   // Couleurs Apple Wallet — 3 champs officiels

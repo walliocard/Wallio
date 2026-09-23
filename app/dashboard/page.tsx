@@ -35,9 +35,16 @@ export default function AccueilPage() {
     taux_fidelite: 0, nouvelles_semaine: 0, proches_recompense: 0,
   });
 
-  // Ref pour avoir objectif_tampons toujours à jour dans le callback onSnapshot
+  // Refs pour avoir les données marchand toujours à jour dans le callback onSnapshot
   const objectifRef = useRef<number>(marchand?.objectif_tampons || 10);
-  useEffect(() => { objectifRef.current = marchand?.objectif_tampons || 10; }, [marchand?.objectif_tampons]);
+  const marchandModeRef = useRef<string>("cyclique");
+  const marchandPaliersRef = useRef<{ tampons: number; recompense: string }[]>([]);
+  useEffect(() => {
+    const m = marchand as Record<string, unknown>;
+    objectifRef.current = marchand?.objectif_tampons || 10;
+    marchandModeRef.current = (m?.mode_recompense as string) || "cyclique";
+    marchandPaliersRef.current = (m?.paliers as { tampons: number; recompense: string }[]) || [];
+  }, [marchand]);
 
   useEffect(() => {
     if (!user) return;
@@ -61,7 +68,13 @@ export default function AccueilPage() {
         tampons_total += t;
         if (data.recompense_en_attente) recompenses++;
         if (t >= 2) fideles++;
-        if (t >= objectif - 2 && t < objectif) proches_recompense++;
+        const pv = data.paliers_valides as boolean[] | undefined;
+        const paliersDef = marchandPaliersRef.current;
+        const clientEnProgressif = marchandModeRef.current === "progressif" && paliersDef.length > 0 && pv !== undefined;
+        const prochainObjectif = clientEnProgressif
+          ? (paliersDef.find((p, i) => !pv![i]) ?? paliersDef[paliersDef.length - 1]).tampons
+          : objectif;
+        if (t >= prochainObjectif - 2 && t < prochainObjectif) proches_recompense++;
         if (!top_client || t > top_client.tampons) {
           top_client = { prenom: data.prenom || "", nom: data.nom || "", tampons: t, id: d.id };
         }

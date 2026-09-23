@@ -188,10 +188,9 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         const paliers = (mn.paliers as { tampons: number; recompense: string }[]) || [];
         const paliersValides = screen.client.paliers_valides || [];
 
-        // Récompense progressive : palier_index défini ET client inscrit (paliers_valides défini)
+        // Récompense progressive : palier_index défini (mid-cycle retourne toujours sans palier_index)
         const isProgressiveReward = mode === "progressif" && paliers.length > 0
-          && screen.result.type === "recompense" && screen.result.palier_index !== undefined
-          && screen.client.paliers_valides !== undefined;
+          && screen.result.type === "recompense" && screen.result.palier_index !== undefined;
 
         if (isProgressiveReward && screen.result.type === "recompense") {
           const palierIndex = screen.result.palier_index!;
