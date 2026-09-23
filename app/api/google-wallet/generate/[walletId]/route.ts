@@ -6,6 +6,16 @@ const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID!;
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
 const API = "https://walletobjects.googleapis.com/walletobjects/v1";
 
+function prochainPalierInfo(m: Record<string, unknown>, client: Record<string, unknown>) {
+  const paliers = (m.paliers as { tampons: number; recompense: string }[] | undefined) || [];
+  const paliersValides = (client.paliers_valides as boolean[] | undefined) || [];
+  if (m.mode_recompense === "progressif" && paliers.length > 0) {
+    const p = paliers.find((x, i) => !paliersValides[i]) ?? paliers[paliers.length - 1];
+    return { objectif: p.tampons, recompense: p.recompense };
+  }
+  return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
+}
+
 function classId(marchandId: string) {
   return `${ISSUER_ID}.wallio_${marchandId.replace(/[^a-zA-Z0-9_]/g, "_")}`;
 }
@@ -76,8 +86,9 @@ export async function GET(
   const textModules = (m.google_text_modules as { header: string; body: string; id: string }[] | undefined) || [];
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
   const validLinks = links.filter(l => l.uri && l.description);
+  const palierInfo = prochainPalierInfo(m as Record<string, unknown>, client as Record<string, unknown>);
   const classTextModules = [
-    { header: ld.reward, body: (m.nom_recompense as string) || ld.reward, id: "recompense" },
+    { header: ld.reward, body: palierInfo.recompense || ld.reward, id: "recompense" },
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
@@ -139,7 +150,7 @@ export async function GET(
     classId: cid,
     state: "ACTIVE",
     loyaltyPoints: {
-      balance: { string: `${client.tampons || 0} / ${m.objectif_tampons || 10}` },
+      balance: { string: `${client.tampons || 0} / ${palierInfo.objectif}` },
       label: (m.google_primary_label as string) || ld.stamps,
     },
     barcode: {

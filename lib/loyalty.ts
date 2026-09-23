@@ -22,6 +22,8 @@ export type Marchand = {
   template_id?: string;
   palette_id?: string;
   parrainage_actif?: boolean;
+  mode_recompense?: "cyclique" | "progressif";
+  paliers?: { tampons: number; recompense: string }[];
 };
 
 export type Client = {
@@ -42,11 +44,12 @@ export type Client = {
   fcm_token?: string;
   parrain_id?: string;
   parrain_recompense?: boolean;
+  paliers_valides?: boolean[];
 };
 
 export type TamponResult =
-  | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean }
-  | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number }
+  | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean; prochainRecompense?: string }
+  | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number }
   | { type: "anti_doublon"; prenom: string; secondes_restantes: number }
   | { type: "not_found" };
 
@@ -179,6 +182,45 @@ export async function ajouterTampon(
   const increment = doubleActif ? 2 : 1;
   const nouveauxTampons = client.tampons + increment;
 
+  // ── Mode progressif ────────────────────────────────────────────────────────
+  if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {
+    const paliers = marchand.paliers;
+    const paliersValides = client.paliers_valides || [];
+
+    // Premier palier non validé dont le seuil est atteint
+    const palierIndex = paliers.findIndex((p, i) => !paliersValides[i] && nouveauxTampons >= p.tampons);
+
+    if (palierIndex !== -1) {
+      await updateDoc(doc(db, "clients", client.id), {
+        tampons: nouveauxTampons,
+        recompense_en_attente: true,
+        derniere_visite: serverTimestamp(),
+      });
+      return {
+        type: "recompense",
+        prenom: client.prenom,
+        nom_recompense: paliers[palierIndex].recompense,
+        tampons: nouveauxTampons,
+        palier_index: palierIndex,
+      };
+    }
+
+    // Aucun palier atteint — trouver le prochain
+    const prochainPalier = paliers.find((p, i) => !paliersValides[i] && p.tampons > nouveauxTampons)
+      ?? paliers[paliers.length - 1];
+
+    await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp() });
+    return {
+      type: "ok",
+      tampons: nouveauxTampons,
+      objectif: prochainPalier.tampons,
+      prenom: client.prenom,
+      double: doubleActif,
+      prochainRecompense: prochainPalier.recompense,
+    };
+  }
+
+  // ── Mode cyclique (défaut) ─────────────────────────────────────────────────
   const objectif = marchand.objectif_tampons;
   if (nouveauxTampons >= objectif) {
     await updateDoc(doc(db, "clients", client.id), {
@@ -193,8 +235,22 @@ export async function ajouterTampon(
   return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif };
 }
 
-export async function validerRecompense(clientId: string) {
-  await updateDoc(doc(db, "clients", clientId), { recompense_en_attente: false, tampons: 0 });
+export async function validerRecompense(
+  clientId: string,
+  mode?: "cyclique" | "progressif",
+  palierIndex?: number,
+  paliersValides?: boolean[],
+) {
+  if (mode === "progressif" && palierIndex !== undefined) {
+    const nouveauxPV = [...(paliersValides || [])];
+    nouveauxPV[palierIndex] = true;
+    await updateDoc(doc(db, "clients", clientId), {
+      recompense_en_attente: false,
+      paliers_valides: nouveauxPV,
+    });
+  } else {
+    await updateDoc(doc(db, "clients", clientId), { recompense_en_attente: false, tampons: 0 });
+  }
 }
 
 // ─── Utils ────────────────────────────────────────────────────────────────────

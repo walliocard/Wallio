@@ -3,6 +3,16 @@ import { adminDb } from "@/lib/admin";
 import { buildPkpass } from "@/lib/apple-wallet/buildPass";
 import crypto from "crypto";
 
+function prochainPalierInfo(m: Record<string, unknown>, client: Record<string, unknown>) {
+  const paliers = (m.paliers as { tampons: number; recompense: string }[] | undefined) || [];
+  const paliersValides = (client.paliers_valides as boolean[] | undefined) || [];
+  if (m.mode_recompense === "progressif" && paliers.length > 0) {
+    const p = paliers.find((x, i) => !paliersValides[i]) ?? paliers[paliers.length - 1];
+    return { objectif: p.tampons, recompense: p.recompense };
+  }
+  return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ walletId: string }> }
@@ -42,6 +52,8 @@ export async function GET(
     await clientDoc.ref.update({ apns_auth_token: authToken });
   }
 
+  const palierInfo = prochainPalierInfo(m as Record<string, unknown>, client as Record<string, unknown>);
+
   let pkpass: Buffer;
   try {
     pkpass = await buildPkpass({
@@ -54,8 +66,8 @@ export async function GET(
     foregroundColor: m.apple_fg_color || undefined,
     labelColorHex: m.apple_label_color || undefined,
     stampsCurrent: client.tampons || 0,
-    stampsObjective: m.objectif_tampons || 10,
-    rewardName: m.nom_recompense || ld.reward,
+    stampsObjective: palierInfo.objectif,
+    rewardName: palierInfo.recompense || ld.reward,
     clientPrenom: client.prenom || "",
     clientNom: client.nom || "",
     primaryLabel: m.apple_primary_label || ld.stamps,

@@ -183,8 +183,37 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       marchand={screen.marchand}
       walletId={screen.client.wallet_id}
       onValiderRecompense={async () => {
-        await validerRecompense(screen.client.id);
-        setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
+        const mn = screen.marchand as Record<string, unknown>;
+        const mode = (mn.mode_recompense as string) || "cyclique";
+        const paliers = (mn.paliers as { tampons: number; recompense: string }[]) || [];
+        const paliersValides = screen.client.paliers_valides || [];
+
+        if (mode === "progressif" && paliers.length > 0) {
+          const palierIndex = screen.result.type === "recompense" && screen.result.palier_index !== undefined
+            ? screen.result.palier_index
+            : paliers.findIndex((p, i) => !paliersValides[i] && screen.client.tampons >= p.tampons);
+          if (palierIndex !== -1) {
+            await validerRecompense(screen.client.id, "progressif", palierIndex, paliersValides);
+            const nouveauxPV = [...paliersValides];
+            nouveauxPV[palierIndex] = true;
+            const prochainPalier = paliers.find((p, i) => !nouveauxPV[i]);
+            setScreen({
+              type: "result",
+              result: {
+                type: "ok",
+                tampons: screen.client.tampons,
+                objectif: prochainPalier?.tampons ?? paliers[paliers.length - 1].tampons,
+                prenom: screen.client.prenom,
+                prochainRecompense: prochainPalier?.recompense,
+              },
+              client: { ...screen.client, paliers_valides: nouveauxPV, recompense_en_attente: false },
+              marchand: screen.marchand,
+            });
+          }
+        } else {
+          await validerRecompense(screen.client.id);
+          setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
+        }
       }}
     />
   );
@@ -341,7 +370,7 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
             </div>
             {result.tampons < result.objectif && (
               <p className="text-[12px] mt-2" style={{ color: "#AEAEB2" }}>
-                {result.objectif - result.tampons} avant {marchand.nom_recompense}
+                {result.objectif - result.tampons} avant {result.prochainRecompense || marchand.nom_recompense}
               </p>
             )}
           </div>
@@ -886,6 +915,15 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
   useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
   const ld = getWalletLang((marchand as unknown as Record<string, unknown>).langue as string | undefined);
 
+  const mn = marchand as Record<string, unknown>;
+  const paliersDef = (mn.paliers as { tampons: number; recompense: string }[] | undefined) || [];
+  const paliersValides = (client.paliers_valides || []) as boolean[];
+  const prochainPalier = mn.mode_recompense === "progressif" && paliersDef.length > 0
+    ? (paliersDef.find((p, i) => !paliersValides[i]) ?? paliersDef[paliersDef.length - 1])
+    : null;
+  const displayObjectif = prochainPalier ? prochainPalier.tampons : marchand.objectif_tampons;
+  const displayReward = prochainPalier ? prochainPalier.recompense : ((mn.nom_recompense as string) || ld.reward);
+
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">(() => {
     if (typeof window === "undefined") return "idle";
     if (!("Notification" in window)) return "denied";
@@ -969,8 +1007,8 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
               backgroundColor={(m.google_bg_color as string) || (m.apple_bg_color as string) || couleur}
               heroUrl={(m.google_hero_url as string) || (m.strip_url as string) || undefined}
               stampsCurrent={client.tampons ?? 0}
-              stampsObjective={marchand.objectif_tampons}
-              rewardName={(m.nom_recompense as string) || ld.reward}
+              stampsObjective={displayObjectif}
+              rewardName={displayReward}
               previewUid={client.wallet_id}
               primaryLabel={(m.google_primary_label as string) || ld.stamps}
               secondaryLabel={(m.google_secondary_label as string) || "Objectif"}
@@ -986,8 +1024,8 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
               foregroundColor={(m.apple_fg_color as string) || undefined}
               labelColor={(m.apple_label_color as string) || undefined}
               stampsCurrent={client.tampons ?? 0}
-              stampsObjective={marchand.objectif_tampons}
-              rewardName={(m.nom_recompense as string) || ld.reward}
+              stampsObjective={displayObjectif}
+              rewardName={displayReward}
               previewUid={client.wallet_id}
               clientPrenom={client.prenom}
               clientNom={client.nom}

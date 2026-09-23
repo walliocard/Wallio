@@ -23,6 +23,9 @@ interface CardData {
   parrainageActif?: boolean;
   ville?: string;
   mapsUrl?: string;
+  modeRecompense?: "cyclique" | "progressif";
+  paliers?: { tampons: number; recompense: string }[];
+  paliersValides?: boolean[];
 }
 
 interface ClientNotif {
@@ -164,6 +167,9 @@ export default function MesCartesPage() {
             parrainageActif: !!(m.parrainage_actif as boolean),
             ville: (m.ville as string) || undefined,
             mapsUrl: (m.maps_url as string) || undefined,
+            modeRecompense: (m.mode_recompense as "cyclique" | "progressif") || undefined,
+            paliers: (m.paliers as { tampons: number; recompense: string }[]) || undefined,
+            paliersValides: (client.paliers_valides as boolean[]) || undefined,
           });
         } catch { /* skip */ }
       }));
@@ -579,8 +585,17 @@ export default function MesCartesPage() {
 function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { card: CardData; delay: number; onEnableNotif: () => void; enablingNotif: boolean; isAndroid: boolean }) {
   const mapsHref = card.mapsUrl || (card.ville ? `https://maps.google.com/?q=${encodeURIComponent(`${card.marchandNom} ${card.ville}`)}` : null);
   const { t } = useLang();
-  const pct = Math.min(100, Math.round((card.stampsCurrent / card.stampsObjective) * 100));
-  const restants = card.stampsObjective - card.stampsCurrent;
+
+  let displayObjectif = card.stampsObjective;
+  let displayReward = card.rewardName;
+  if (card.modeRecompense === "progressif" && card.paliers?.length) {
+    const pv = card.paliersValides || [];
+    const prochain = card.paliers.find((p, i) => !pv[i]) ?? card.paliers[card.paliers.length - 1];
+    displayObjectif = prochain.tampons;
+    displayReward = prochain.recompense;
+  }
+  const pct = Math.min(100, Math.round((card.stampsCurrent / displayObjectif) * 100));
+  const restants = displayObjectif - card.stampsCurrent;
   const dark = isColorDark(card.couleur);
   const [copied, setCopied] = useState(false);
 
@@ -623,7 +638,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
           <div style={{ height: "100%", width: `${pct}%`, borderRadius: 10, background: dark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.45)", transition: "width 0.8s cubic-bezier(.16,1,.3,1)" }} />
         </div>
         <p style={{ fontSize: 12, color: dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)", marginTop: 8 }}>
-          {restants > 0 ? `${restants} ${restants > 1 ? t.mes_cartes_stamps_before_pl : t.mes_cartes_stamps_before} → ${card.rewardName}` : `${t.mes_cartes_reward_available} ${card.rewardName}`}
+          {restants > 0 ? `${restants} ${restants > 1 ? t.mes_cartes_stamps_before_pl : t.mes_cartes_stamps_before} → ${displayReward}` : `${t.mes_cartes_reward_available} ${displayReward}`}
         </p>
       </div>
 

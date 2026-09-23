@@ -77,15 +77,35 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   async function handleValiderRecompense() {
     if (!client || !marchand || validationEnCours) return;
     setValidationEnCours(true);
-    await validerRecompense(client.id);
+    const m = marchand as Record<string, unknown>;
+    const mode = (m.mode_recompense as string) || "cyclique";
+    const paliers = (m.paliers as { tampons: number; recompense: string }[]) || [];
+    const paliersValides = client.paliers_valides || [];
+
+    if (mode === "progressif" && paliers.length > 0) {
+      const palierIndex = result?.type === "recompense" && result.palier_index !== undefined
+        ? result.palier_index
+        : paliers.findIndex((p, i) => !paliersValides[i] && client.tampons >= p.tampons);
+      if (palierIndex !== -1) {
+        await validerRecompense(client.id, "progressif", palierIndex, paliersValides);
+        const nouveauxPV = [...paliersValides];
+        nouveauxPV[palierIndex] = true;
+        setClient(prev => prev ? { ...prev, recompense_en_attente: false, paliers_valides: nouveauxPV } : prev);
+      }
+    } else {
+      await validerRecompense(client.id);
+      setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
+    }
     setResult(null);
-    setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
     setValidationEnCours(false);
   }
 
   async function handleAjuster(delta: number) {
     if (!client || !marchand || adjusting) return;
-    const next = Math.max(0, Math.min(client.tampons + delta, marchand.objectif_tampons));
+    const maxTampons = modeRecompense === "progressif" && paliersDef.length > 0
+      ? paliersDef[paliersDef.length - 1].tampons
+      : marchand.objectif_tampons;
+    const next = Math.max(0, Math.min(client.tampons + delta, maxTampons));
     setAdjusting(true);
     await setTampons(client.id, next);
     setClient(prev => prev ? { ...prev, tampons: next } : prev);
@@ -101,8 +121,21 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   if (!user || !marchandAuth?.actif) return <Erreur message="Connectez-vous pour accéder à cette page." />;
   if (!client) return <Erreur message="Client introuvable pour cet établissement." />;
 
-  const objectif = marchand?.objectif_tampons || 10;
-  const nomRecompense = marchand?.nom_recompense || "";
+  const m = marchand as Record<string, unknown> | null;
+  const modeRecompense = (m?.mode_recompense as string) || "cyclique";
+  const paliersDef = (m?.paliers as { tampons: number; recompense: string }[]) || [];
+  const paliersValides = client.paliers_valides || [];
+
+  let objectif: number;
+  let nomRecompense: string;
+  if (modeRecompense === "progressif" && paliersDef.length > 0) {
+    const prochain = paliersDef.find((p, i) => !paliersValides[i]) ?? paliersDef[paliersDef.length - 1];
+    objectif = prochain.tampons;
+    nomRecompense = prochain.recompense;
+  } else {
+    objectif = marchand?.objectif_tampons || 10;
+    nomRecompense = marchand?.nom_recompense || "";
+  }
   const pct = Math.min((client.tampons / objectif) * 100, 100);
   const restants = objectif - client.tampons;
 

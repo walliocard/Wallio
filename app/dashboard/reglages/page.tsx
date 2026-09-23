@@ -32,6 +32,13 @@ export default function ReglagesPage() {
   const [nomEtablissement, setNomEtablissement] = useState<string>(marchand?.nom || "");
   const [objectif, setObjectif] = useState<number>(marchand?.objectif_tampons || 10);
   const [nomRecompense, setNomRecompense] = useState<string>(marchand?.nom_recompense || "");
+  const [modeRecompense, setModeRecompense] = useState<"cyclique" | "progressif">(
+    ((marchand as Record<string, unknown>)?.mode_recompense as "cyclique" | "progressif") || "cyclique"
+  );
+  const [paliers, setPaliers] = useState<{ tampons: number; recompense: string }[]>(
+    ((marchand as Record<string, unknown>)?.paliers as { tampons: number; recompense: string }[]) ||
+    [{ tampons: 5, recompense: "" }, { tampons: 10, recompense: "" }]
+  );
   const [config, setConfig] = useState({
     anti_doublon_delai: marchand?.anti_doublon_delai ?? 86400,
     fuseau_horaire:   marchand?.fuseau_horaire || Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -78,6 +85,8 @@ export default function ReglagesPage() {
         nom: nomEtablissement,
         objectif_tampons: objectif,
         nom_recompense: nomRecompense,
+        mode_recompense: modeRecompense,
+        paliers: modeRecompense === "progressif" ? paliers.filter(p => p.recompense.trim()) : [],
         ...config,
         automatisations: {
           anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant, message: auto.anniversaire_message },
@@ -165,6 +174,80 @@ export default function ReglagesPage() {
               </div>
             </div>
           </div>
+
+          {/* Toggle mode récompense */}
+          <div className="md:col-span-2 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+            <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
+              Mode récompense
+            </p>
+            <div className="flex gap-2 mb-4">
+              {(["cyclique", "progressif"] as const).map(mode => (
+                <button key={mode} onClick={() => setModeRecompense(mode)}
+                  className="px-4 py-2 rounded-2xl text-[13px] font-medium transition-all"
+                  style={{
+                    background: modeRecompense === mode ? "var(--accent)" : "var(--bg)",
+                    color: modeRecompense === mode ? "white" : "var(--fg-secondary)",
+                    border: `1px solid ${modeRecompense === mode ? "var(--accent)" : "var(--border)"}`,
+                  }}>
+                  {mode === "cyclique" ? "Cyclique" : "Progressif"}
+                </button>
+              ))}
+            </div>
+
+            {modeRecompense === "cyclique" && (
+              <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
+                Le compteur repart à zéro après chaque récompense.
+              </p>
+            )}
+
+            {modeRecompense === "progressif" && (
+              <div className="space-y-3">
+                <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
+                  Les tampons s&apos;accumulent. Chaque palier débloque une récompense différente.
+                </p>
+                {paliers.map((palier, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => setPaliers(prev => prev.map((p, j) => j === i ? { ...p, tampons: Math.max(i + 1, p.tampons - 1) } : p))}
+                        className="w-7 h-7 rounded-lg text-[15px] font-bold flex items-center justify-center"
+                        style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>−</button>
+                      <span className="w-8 text-center text-[14px] font-semibold" style={{ color: "var(--accent)" }}>{palier.tampons}</span>
+                      <button
+                        onClick={() => setPaliers(prev => prev.map((p, j) => j === i ? { ...p, tampons: p.tampons + 1 } : p))}
+                        className="w-7 h-7 rounded-lg text-[15px] font-bold flex items-center justify-center"
+                        style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>+</button>
+                    </div>
+                    <input
+                      type="text"
+                      value={palier.recompense}
+                      onChange={e => setPaliers(prev => prev.map((p, j) => j === i ? { ...p, recompense: e.target.value } : p))}
+                      placeholder={t.settings_reward_placeholder}
+                      className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                      onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                      onBlur={e => (e.target.style.borderColor = "var(--border)")}
+                    />
+                    {paliers.length > 1 && (
+                      <button
+                        onClick={() => setPaliers(prev => prev.filter((_, j) => j !== i))}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30", border: "1px solid rgba(255,59,48,0.15)" }}>
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => setPaliers(prev => [...prev, { tampons: (prev.at(-1)?.tampons ?? 0) + 3, recompense: "" }])}
+                  className="w-full py-2 rounded-xl text-[13px] font-medium"
+                  style={{ background: "var(--bg)", border: "1px dashed var(--border)", color: "var(--fg-secondary)" }}>
+                  + Ajouter un palier
+                </button>
+              </div>
+            )}
+          </div>
+
         </Card>
 
         {/* Anti-doublon */}
