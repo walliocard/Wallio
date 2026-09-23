@@ -5,6 +5,8 @@ import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { saveMarchandFields } from "@/lib/save-marchand";
 import { useLang } from "@/lib/lang-context";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 const FUSEAUX = [
   "Africa/Casablanca",
@@ -110,6 +112,19 @@ export default function ReglagesPage() {
       setLang(langue);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
+      // Sync cartes Wallet — fire-and-forget après chaque save
+      getDocs(query(collection(db, "clients"), where("marchand_id", "==", user!.uid)))
+        .then(snap => {
+          snap.docs.forEach(d => {
+            const wt = d.data().wallet_type;
+            if (wt !== "apple" && wt !== "google") return;
+            const wid = d.data().wallet_id as string;
+            const body = JSON.stringify({ walletId: wid });
+            const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+            fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+            fetch("/api/google-wallet/push-update", opts).catch(() => {});
+          });
+        }).catch(() => {});
     } catch (err) {
       alert(`Erreur : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
