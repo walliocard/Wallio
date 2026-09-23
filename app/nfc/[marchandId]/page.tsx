@@ -194,20 +194,23 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
 
         if (isProgressiveReward && screen.result.type === "recompense") {
           const palierIndex = screen.result.palier_index!;
-          await validerRecompense(screen.client.id, "progressif", palierIndex, paliersValides);
+          await validerRecompense(screen.client.id, "progressif", palierIndex, paliersValides, paliers.length);
           const nouveauxPV = [...paliersValides];
           nouveauxPV[palierIndex] = true;
-          const prochainPalier = paliers.find((p, i) => !nouveauxPV[i]);
+          const cycleTermine = nouveauxPV.filter(Boolean).length >= paliers.length;
+          const nvPV = cycleTermine ? [] : nouveauxPV;
+          const nvTampons = cycleTermine ? 0 : screen.result.tampons;
+          const prochainPalier = paliers.find((p, i) => !nvPV[i]);
           setScreen({
             type: "result",
             result: {
               type: "ok",
-              tampons: screen.result.tampons,
+              tampons: nvTampons,
               objectif: prochainPalier?.tampons ?? paliers[paliers.length - 1].tampons,
               prenom: screen.client.prenom,
               prochainRecompense: prochainPalier?.recompense,
             },
-            client: { ...screen.client, paliers_valides: nouveauxPV, recompense_en_attente: false },
+            client: { ...screen.client, paliers_valides: nvPV, recompense_en_attente: false, tampons: nvTampons },
             marchand: screen.marchand,
           });
         } else {

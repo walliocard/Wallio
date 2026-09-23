@@ -263,13 +263,17 @@ export async function validerRecompense(
   mode?: "cyclique" | "progressif",
   palierIndex?: number,
   paliersValides?: boolean[],
+  totalPaliers?: number,
 ) {
   if (mode === "progressif" && palierIndex !== undefined) {
     const nouveauxPV = [...(paliersValides || [])];
     nouveauxPV[palierIndex] = true;
+    // Dernier palier validé → repart à zéro (nouveau cycle)
+    const cycleTermine = totalPaliers !== undefined && nouveauxPV.filter(Boolean).length >= totalPaliers;
     await updateDoc(doc(db, "clients", clientId), {
       recompense_en_attente: false,
-      paliers_valides: nouveauxPV,
+      paliers_valides: cycleTermine ? [] : nouveauxPV,
+      ...(cycleTermine ? { tampons: 0 } : {}),
     });
   } else {
     await updateDoc(doc(db, "clients", clientId), { recompense_en_attente: false, tampons: 0 });

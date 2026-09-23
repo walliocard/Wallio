@@ -98,10 +98,16 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         ? result.palier_index
         : paliers.findIndex((p, i) => !paliersValides[i] && client.tampons >= p.tampons);
       if (palierIndex !== -1) {
-        await validerRecompense(client.id, "progressif", palierIndex, paliersValides);
+        await validerRecompense(client.id, "progressif", palierIndex, paliersValides, paliers.length);
         const nouveauxPV = [...paliersValides];
         nouveauxPV[palierIndex] = true;
-        setClient(prev => prev ? { ...prev, recompense_en_attente: false, paliers_valides: nouveauxPV } : prev);
+        const cycleTermine = nouveauxPV.filter(Boolean).length >= paliers.length;
+        setClient(prev => prev ? {
+          ...prev,
+          recompense_en_attente: false,
+          paliers_valides: cycleTermine ? [] : nouveauxPV,
+          ...(cycleTermine ? { tampons: 0 } : {}),
+        } : prev);
       } else {
         await validerRecompense(client.id);
         setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
