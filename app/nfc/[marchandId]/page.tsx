@@ -217,6 +217,12 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           await validerRecompense(screen.client.id);
           setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
         }
+        // Push Wallet après validation
+        const wid = screen.client.wallet_id;
+        const pb = JSON.stringify({ walletId: wid });
+        const po = { method: "POST", headers: { "Content-Type": "application/json" }, body: pb };
+        fetch("/api/apple-wallet/push-update", po).catch(() => {});
+        fetch("/api/google-wallet/push-update", po).catch(() => {});
       }}
     />
   );

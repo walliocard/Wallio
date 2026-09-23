@@ -116,6 +116,11 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
       await validerRecompense(client.id);
       setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
     }
+    // Push Wallet après validation — met à jour le pass avec le nouveau palier ou le reset
+    const body = JSON.stringify({ walletId: client.wallet_id });
+    const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+    fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+    fetch("/api/google-wallet/push-update", opts).catch(() => {});
     setResult(null);
     setValidationEnCours(false);
   }

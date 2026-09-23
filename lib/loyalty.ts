@@ -334,19 +334,46 @@ export async function traiterParrainage(
   // +1 fixe : jamais doublé par promo double_tampons, bypass anti-doublon
   // Ne met PAS à jour derniere_visite — c'est un bonus, pas une vraie visite
   const nouveaux = parrain.tampons + 1;
-  const recompense = nouveaux >= marchand.objectif_tampons;
 
-  if (recompense) {
-    await updateDoc(doc(db, "clients", parrain.id), {
-      tampons: 0,
-      recompense_en_attente: true,
-    });
-  } else {
+  // ── Mode progressif ──────────────────────────────────────────────────────────
+  if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {
+    const paliers = marchand.paliers;
+    const paliersValides = parrain.paliers_valides;
+
+    // Mid-cycle : finit le tour cyclique d'abord
+    if (paliersValides === undefined && parrain.tampons > 0) {
+      const recompense = nouveaux >= marchand.objectif_tampons;
+      await updateDoc(doc(db, "clients", parrain.id), recompense
+        ? { tampons: 0, recompense_en_attente: true }
+        : { tampons: nouveaux });
+      return { walletId: parrainWalletId, recompense };
+    }
+
+    const pv = paliersValides ?? [];
+    const enrolling = paliersValides === undefined;
+    const palierIndex = paliers.findIndex((p, i) => !pv[i] && nouveaux >= p.tampons);
+
+    if (palierIndex !== -1) {
+      await updateDoc(doc(db, "clients", parrain.id), {
+        tampons: nouveaux,
+        recompense_en_attente: true,
+        ...(enrolling ? { paliers_valides: pv } : {}),
+      });
+      return { walletId: parrainWalletId, recompense: true };
+    }
+
     await updateDoc(doc(db, "clients", parrain.id), {
       tampons: nouveaux,
+      ...(enrolling ? { paliers_valides: pv } : {}),
     });
+    return { walletId: parrainWalletId, recompense: false };
   }
 
+  // ── Mode cyclique (défaut) ───────────────────────────────────────────────────
+  const recompense = nouveaux >= marchand.objectif_tampons;
+  await updateDoc(doc(db, "clients", parrain.id), recompense
+    ? { tampons: 0, recompense_en_attente: true }
+    : { tampons: nouveaux });
   return { walletId: parrainWalletId, recompense };
 }
 

@@ -11,6 +11,19 @@ function objectId(walletId: string) {
   return `${ISSUER_ID}.${walletId.replace(/[^a-zA-Z0-9_]/g, "_")}`;
 }
 
+function prochainPalierInfo(m: Record<string, unknown>, client: Record<string, unknown>) {
+  const paliers = (m.paliers as { tampons: number; recompense: string }[] | undefined) || [];
+  const pv = client.paliers_valides as boolean[] | undefined;
+  if (m.mode_recompense === "progressif" && paliers.length > 0) {
+    if (pv === undefined && ((client.tampons as number) || 0) > 0) {
+      return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
+    }
+    const p = paliers.find((x, i) => !(pv ?? [])[i]) ?? paliers[paliers.length - 1];
+    return { objectif: p.tampons, recompense: p.recompense };
+  }
+  return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
+}
+
 export async function POST(req: Request) {
   const { walletId } = await req.json().catch(() => ({})) as { walletId?: string };
   if (!walletId || !ISSUER_ID || !process.env.GOOGLE_WALLET_KEY_JSON) {
@@ -31,29 +44,36 @@ export async function POST(req: Request) {
 
   const marchandSnap = await db.collection("marchands").doc(client.marchand_id).get();
   const m = marchandSnap.exists ? marchandSnap.data()! : {};
-  const ld = getWalletLang((m as Record<string,unknown>).langue as string | undefined);
+  const ld = getWalletLang((m as Record<string, unknown>).langue as string | undefined);
 
   const tampons = client.tampons || 0;
-  const objectif = (m.objectif_tampons as number) || 10;
-  const recompense = (m.nom_recompense as string) || ld.reward;
+  const palierInfo = prochainPalierInfo(m as Record<string, unknown>, client as Record<string, unknown>);
+  const { objectif, recompense } = palierInfo;
+  const isProgressif = (m as Record<string, unknown>).mode_recompense === "progressif"
+    && !!((m as Record<string, unknown>).paliers as unknown[] | undefined)?.length;
   const marchandNom = (m.nom as string) || "Wallio";
   const logoUrl = `${BASE_URL}/api/logo/${client.marchand_id}`;
-  const isRecompense = tampons >= objectif;
+  const isRecompense = client.recompense_en_attente === true;
 
-  // 1 — PATCH loyaltyObject sur Google
+  // 1 — PATCH loyaltyObject : tampons + nom récompense per-client en progressif
   try {
     const token = await getGoogleAccessToken();
+    const patchBody: Record<string, unknown> = {
+      loyaltyPoints: {
+        balance: { string: `${tampons} / ${objectif}` },
+        label: (m.google_primary_label as string) || ld.stamps,
+      },
+    };
+    if (isProgressif) {
+      patchBody.textModulesData = [{ header: ld.reward, body: recompense || ld.reward, id: "recompense_client" }];
+    }
+    const updateMask = isProgressif ? "loyaltyPoints,textModulesData" : "loyaltyPoints";
     const res = await fetch(
-      `${API}/loyaltyObject/${encodeURIComponent(objectId(walletId))}?updateMask=loyaltyPoints`,
+      `${API}/loyaltyObject/${encodeURIComponent(objectId(walletId))}?updateMask=${updateMask}`,
       {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          loyaltyPoints: {
-            balance: { string: `${tampons} / ${objectif}` },
-            label: (m.google_primary_label as string) || ld.stamps,
-          },
-        }),
+        body: JSON.stringify(patchBody),
       }
     );
     if (!res.ok) {
@@ -63,7 +83,7 @@ export async function POST(req: Request) {
     console.error("[GW push-update] PATCH error:", e);
   }
 
-  // 2 — Notif FCM (équivalent notif Apple Wallet automatique)
+  // 2 — Notif FCM
   const fcmToken = client.fcm_token as string | undefined;
   if (fcmToken) {
     try {
@@ -86,7 +106,6 @@ export async function POST(req: Request) {
       });
     } catch (e) {
       console.error("[GW push-update] FCM error:", e);
-      // Token expiré → nettoyage
       if (String(e).includes("registration-token-not-registered") || String(e).includes("invalid-registration-token")) {
         await snap.docs[0].ref.update({ fcm_token: null });
       }
