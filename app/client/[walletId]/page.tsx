@@ -48,7 +48,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     if (r.type === "ok" || r.type === "recompense") {
       setClient(prev => prev ? {
         ...prev,
-        tampons: r.type === "ok" ? r.tampons : 0,
+        tampons: r.type === "ok" || marchand?.mode_recompense === "progressif" ? r.tampons : 0,
         recompense_en_attente: r.type === "recompense" ? true : prev.recompense_en_attente,
         derniere_visite: { seconds: Date.now() / 1000 } as never,
       } : prev);

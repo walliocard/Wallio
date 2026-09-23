@@ -201,7 +201,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
               type: "result",
               result: {
                 type: "ok",
-                tampons: screen.client.tampons,
+                tampons: screen.result.type === "recompense" ? screen.result.tampons : screen.client.tampons,
                 objectif: prochainPalier?.tampons ?? paliers[paliers.length - 1].tampons,
                 prenom: screen.client.prenom,
                 prochainRecompense: prochainPalier?.recompense,
