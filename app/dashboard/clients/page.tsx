@@ -237,7 +237,13 @@ export default function ClientsPage() {
         <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {filtered.map(client => {
             const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
-            const objectifActuel = marchand?.objectif_tampons ?? 10;
+            const mn = marchand as Record<string, unknown> | undefined;
+            const paliersDef = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
+            const pv = client.paliers_valides || [];
+            // Mode progressif inscrit uniquement si paliers_valides est défini (mid-cycle = cyclique)
+            const enProgressif = mn?.mode_recompense === "progressif" && paliersDef.length > 0 && client.paliers_valides !== undefined;
+            const prochainPalier = enProgressif ? (paliersDef.find((p, i) => !pv[i]) ?? paliersDef[paliersDef.length - 1]) : null;
+            const objectifActuel = prochainPalier ? prochainPalier.tampons : (marchand?.objectif_tampons ?? 10);
             const pct = Math.min(100, Math.round((client.tampons / objectifActuel) * 100));
             return (
               <Link
@@ -281,7 +287,7 @@ export default function ClientsPage() {
                   <p className="text-[16px] font-bold" style={{ color: client.recompense_en_attente ? "#34C759" : "var(--accent)" }}>
                     {client.tampons}
                     <span className="text-[11px] font-normal" style={{ color: "var(--fg-tertiary)" }}>
-                      /{marchand?.objectif_tampons}
+                      /{objectifActuel}
                     </span>
                   </p>
                 </div>

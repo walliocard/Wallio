@@ -289,7 +289,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
               {result.type === "recompense"   && `${result.nom_recompense} débloqué !`}
             </p>
             <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
-              {result.type === "ok" && result.objectif > result.tampons && `${result.objectif - result.tampons} tampon${result.objectif - result.tampons > 1 ? "s" : ""} restant avant la récompense`}
+              {result.type === "ok" && result.objectif > result.tampons && `${result.objectif - result.tampons} tampon${result.objectif - result.tampons > 1 ? "s" : ""} restant avant ${result.prochainRecompense || nomRecompense || "la récompense"}`}
               {result.type === "anti_doublon" && `Scanné il y a ${formatTemps(marchand!.anti_doublon_delai - result.secondes_restantes)} — prochain dans ${formatTemps(result.secondes_restantes)}`}
               {result.type === "recompense" && "Validez la récompense pour continuer"}
             </p>
