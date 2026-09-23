@@ -93,7 +93,9 @@ export default function ReglagesPage() {
         objectif_tampons: objectif,
         nom_recompense: nomRecompense,
         mode_recompense: modeRecompense,
-        paliers: modeRecompense === "progressif" ? paliers.filter(p => p.recompense.trim()) : [],
+        paliers: modeRecompense === "progressif"
+          ? paliers.filter(p => p.recompense.trim()).map(p => ({ ...p, tampons: Math.min(p.tampons, objectif) }))
+          : [],
         ...config,
         automatisations: {
           anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant, message: auto.anniversaire_message },
@@ -212,18 +214,23 @@ export default function ReglagesPage() {
                 <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
                   Les tampons s&apos;accumulent. Chaque palier débloque une récompense différente.
                 </p>
-                {paliers.map((palier, i) => (
+                {paliers.map((palier, i) => {
+                  const minVal = i > 0 ? paliers[i - 1].tampons + 1 : 1;
+                  const maxVal = i < paliers.length - 1 ? paliers[i + 1].tampons - 1 : objectif;
+                  return (
                   <div key={i} className="flex items-center gap-2">
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
-                        onClick={() => setPaliers(prev => prev.map((p, j) => j === i ? { ...p, tampons: Math.max(i + 1, p.tampons - 1) } : p))}
+                        onClick={() => setPaliers(prev => prev.map((p, j) => j === i ? { ...p, tampons: Math.max(minVal, p.tampons - 1) } : p))}
+                        disabled={palier.tampons <= minVal}
                         className="w-7 h-7 rounded-lg text-[15px] font-bold flex items-center justify-center"
-                        style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>−</button>
+                        style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)", opacity: palier.tampons <= minVal ? 0.3 : 1 }}>−</button>
                       <span className="w-8 text-center text-[14px] font-semibold" style={{ color: "var(--accent)" }}>{palier.tampons}</span>
                       <button
-                        onClick={() => setPaliers(prev => prev.map((p, j) => j === i ? { ...p, tampons: p.tampons + 1 } : p))}
+                        onClick={() => setPaliers(prev => prev.map((p, j) => j === i ? { ...p, tampons: Math.min(maxVal, p.tampons + 1) } : p))}
+                        disabled={palier.tampons >= maxVal}
                         className="w-7 h-7 rounded-lg text-[15px] font-bold flex items-center justify-center"
-                        style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>+</button>
+                        style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)", opacity: palier.tampons >= maxVal ? 0.3 : 1 }}>+</button>
                     </div>
                     <input
                       type="text"
@@ -244,11 +251,17 @@ export default function ReglagesPage() {
                       </button>
                     )}
                   </div>
-                ))}
+                  );
+                })}
                 <button
-                  onClick={() => setPaliers(prev => [...prev, { tampons: (prev.at(-1)?.tampons ?? 0) + 3, recompense: "" }])}
+                  onClick={() => {
+                    const dernier = paliers.at(-1)?.tampons ?? 0;
+                    const nouveau = Math.min(objectif, dernier + 3);
+                    if (nouveau > dernier) setPaliers(prev => [...prev, { tampons: nouveau, recompense: "" }]);
+                  }}
+                  disabled={(paliers.at(-1)?.tampons ?? 0) >= objectif}
                   className="w-full py-2 rounded-xl text-[13px] font-medium"
-                  style={{ background: "var(--bg)", border: "1px dashed var(--border)", color: "var(--fg-secondary)" }}>
+                  style={{ background: "var(--bg)", border: "1px dashed var(--border)", color: "var(--fg-secondary)", opacity: (paliers.at(-1)?.tampons ?? 0) >= objectif ? 0.4 : 1 }}>
                   + Ajouter un palier
                 </button>
               </div>
