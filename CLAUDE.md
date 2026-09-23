@@ -112,10 +112,15 @@ creerClient({ prenom, nom, telephone, date_naissance, marchand_id }): Promise<{ 
   // crée avec tampons=0, niveau=0, date_inscription=now
 
 // Tampons
-ajouterTampon(client, marchand): Promise<TamponResult>
-  // Gère anti-doublon, double_tampons_fin, détecte récompense
-  // Met à jour derniere_visite
-validerRecompense(clientId, marchand, niveau, paliers_valides): Promise<void>
+ajouterTampon(client, marchand, forceOverride?): Promise<TamponResult>
+  // Gère anti-doublon, double_tampons_fin
+  // Mode progressif : mid-cycle (paliers_valides undefined + tampons > 0) → cyclique
+  //                   nouveau client (tampons=0) ou inscrit → palier progressif
+  // Met à jour derniere_visite, écrit paliers_valides:[] au 1er scan progressif
+validerRecompense(clientId, mode?, palierIndex?, paliersValides?, totalPaliers?): Promise<void>
+  // Progressif : marque paliers_valides[palierIndex]=true, garde tampons
+  //              si dernier palier (totalPaliers atteints) → reset tampons:0 + paliers_valides:[]
+  // Cyclique : remet tampons:0
 setTampons(clientId, tampons): Promise<void>  ← modification manuelle
 
 // Utilitaires
@@ -126,10 +131,12 @@ WALLET_KEY(marchandId: string): string         // clé localStorage: "wallio_{ma
 
 ### Type TamponResult
 ```typescript
-| { type: "ok"; tampons: number; objectif: number; prenom: string }
-| { type: "recompense"; prenom: string; nom_recompense: string; tampons: number }
+| { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean; prochainRecompense?: string }
+| { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number }
 | { type: "anti_doublon"; prenom: string; secondes_restantes: number }
 | { type: "not_found" }
+// prochainRecompense : nom du prochain palier (progressif "ok" uniquement)
+// palier_index : index du palier atteint (progressif "recompense" uniquement)
 ```
 
 ---
@@ -293,7 +300,7 @@ ANTHROPIC_API_KEY
 | 1. Config Firebase | ✅ |
 | 2. Auth marchand | ✅ |
 | 3. Admin dashboard | ✅ |
-| 4. Apple Wallet | ⏳ En attente cert Apple Developer ($99) |
+| 4. Apple Wallet | ✅ Cert Apple Developer actif, PassKit opérationnel |
 | 5. NFC ID | ✅ |
 | 6. Flux nouveau client NFC | ✅ |
 | 7. Flux client existant NFC | ✅ |
@@ -319,8 +326,9 @@ ANTHROPIC_API_KEY
 6. **double_tampons** : si `double_tampons_fin` > now, `ajouterTampon` crédite 2 tampons
 7. **Segments notify** : actifs = `derniere_visite` ≤ 30j, inactifs = > 30j
 8. Un client peut avoir plusieurs comptes chez plusieurs marchands (wallet_id différents)
-9. **Mode progressif** : les paliers ne se réinitialisent jamais — `paliers_valides[]` accumule
-10. **Apple Wallet push** : fire-and-forget après chaque tampon NFC et QR — ne bloque pas le flux
+9. **Mode progressif** : `paliers_valides[]` accumule les paliers validés. Dernier palier → reset tampons:0 + paliers_valides:[]. Mid-cycle (paliers_valides undefined + tampons > 0) → logique cyclique jusqu'au reset.
+10. **Apple Wallet push** : fire-and-forget après chaque tampon ET après chaque validation récompense — ne bloque pas le flux
+11. **Sync Wallet depuis réglages** : après chaque save dans `/dashboard/reglages`, push envoyé à tous les clients wallet_type=apple|google automatiquement
 
 ---
 
@@ -331,4 +339,5 @@ ANTHROPIC_API_KEY
 - Crons en UTC → décalage potentiel pour anniversaires/relances hors fuseau Maroc (UTC+1)
 - `fcm_token` non nettoyé si expiré → peut gonfler les compteurs `failed` dans `/api/notify`
 - `apns_push_token` : si l'utilisateur supprime sa carte Apple Wallet, le token n'est pas toujours invalidé côté Firestore
-- Google Wallet push-update non implémenté (retourne toujours `pushed: false`)
+- Google Wallet push-update : PATCH loyaltyObject + FCM implémentés. Pas de notification lock screen native (limitation Google API).
+- Modifier les paliers progressifs après inscription clients → décalage d'index paliers_valides (acceptable, cas rare)
