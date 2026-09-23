@@ -79,6 +79,13 @@ export default function ReglagesPage() {
   const setA = (k: string, v: boolean | number | string) => setAuto(a => ({ ...a, [k]: v }));
 
   async function sauvegarder() {
+    if (modeRecompense === "progressif") {
+      const paliersValides = paliers.filter(p => p.recompense.trim());
+      if (paliersValides.length === 0) {
+        alert("Ajoutez au moins un palier avec une récompense pour activer le mode progressif.");
+        return;
+      }
+    }
     setSaving(true);
     try {
       await saveMarchandFields(user!, {
