@@ -282,6 +282,14 @@ const T = {
       {title:"Notif Apple Wallet", body:"Sa carte Wallet se met à jour et lui envoie une notification."},
       {title:"Objectif atteint, récompense !", body:"Vous la validez d'un clic depuis votre dashboard."},
     ],
+    rewardTag:"Récompenses", rewardH2a:"Cyclique ou progressif.", rewardH2b:"Vous choisissez.",
+    rewardSub:"Adaptez le programme de fidélité à votre établissement, en un clic.",
+    rewardCyclicTitle:"Cyclique", rewardCyclicSub:"Un objectif, une récompense",
+    rewardCyclicDesc:"Le compteur repart à zéro après chaque récompense obtenue.",
+    rewardCyclicBullets:["Simple à configurer","Idéal pour les produits récurrents","Un seul objectif à définir"],
+    rewardProgressTitle:"Progressif", rewardProgressSub:"Paliers cumulatifs, tampons permanents",
+    rewardProgressDesc:"Les tampons s'accumulent à vie. Chaque palier débloque une récompense différente.",
+    rewardProgressBullets:["Engagement sur le long terme","Paliers entièrement configurables","Les tampons ne remettent jamais à zéro"],
     customTag:"Personnalisation", customH2:"Votre carte, à votre image",
     customSub:"Chaque élément est configurable depuis votre dashboard, en temps réel.",
     customMocks:[
@@ -442,6 +450,14 @@ const T = {
       {title:"Apple Wallet notification", body:"Their Wallet card updates and sends them a notification."},
       {title:"Goal reached, reward!", body:"You validate it with one click from your dashboard."},
     ],
+    rewardTag:"Rewards", rewardH2a:"Cyclic or progressive.", rewardH2b:"You choose.",
+    rewardSub:"Adapt your loyalty program to your business in one click.",
+    rewardCyclicTitle:"Cyclic", rewardCyclicSub:"One goal, one reward",
+    rewardCyclicDesc:"The counter resets to zero after each reward.",
+    rewardCyclicBullets:["Simple to configure","Perfect for recurring products","Just one goal to set"],
+    rewardProgressTitle:"Progressive", rewardProgressSub:"Multiple tiers, permanent stamps",
+    rewardProgressDesc:"Stamps accumulate permanently. Each tier unlocks a different reward.",
+    rewardProgressBullets:["Long-term customer engagement","Fully configurable tiers","Stamps never reset"],
     customTag:"Customization", customH2:"Your card, your style",
     customSub:"Every element is configurable from your dashboard, in real time.",
     customMocks:[
@@ -602,6 +618,14 @@ const T = {
       {title:"Notificare Apple Wallet", body:"Cardul Wallet se actualizează și trimite o notificare."},
       {title:"Obiectiv atins, recompensă!", body:"O validați cu un clic din dashboard-ul dvs."},
     ],
+    rewardTag:"Recompense", rewardH2a:"Ciclic sau progresiv.", rewardH2b:"Dumneavoastră alegeți.",
+    rewardSub:"Adaptați programul de fidelitate la afacerea dvs. cu un singur clic.",
+    rewardCyclicTitle:"Ciclic", rewardCyclicSub:"Un obiectiv, o recompensă",
+    rewardCyclicDesc:"Contorul se resetează la zero după fiecare recompensă obținută.",
+    rewardCyclicBullets:["Simplu de configurat","Ideal pentru produse recurente","Un singur obiectiv de setat"],
+    rewardProgressTitle:"Progresiv", rewardProgressSub:"Niveluri cumulative, ștampile permanente",
+    rewardProgressDesc:"Ștampilele se acumulează permanent. Fiecare nivel deblochează o recompensă diferită.",
+    rewardProgressBullets:["Angajament pe termen lung","Niveluri complet configurabile","Ștampilele nu se resetează niciodată"],
     customTag:"Personalizare", customH2:"Cardul dvs., imaginea dvs.",
     customSub:"Fiecare element este configurabil din dashboard, în timp real.",
     customMocks:[
@@ -762,6 +786,14 @@ const T = {
       {title:"Notificación Apple Wallet",body:"Su tarjeta Wallet se actualiza y le envía una notificación."},
       {title:"Objetivo alcanzado, ¡recompensa!",body:"La validas con un clic desde tu dashboard."},
     ],
+    rewardTag:"Recompensas", rewardH2a:"Cíclico o progresivo.", rewardH2b:"Tú decides.",
+    rewardSub:"Adapta tu programa de fidelidad a tu negocio con un solo clic.",
+    rewardCyclicTitle:"Cíclico", rewardCyclicSub:"Un objetivo, una recompensa",
+    rewardCyclicDesc:"El contador se reinicia a cero después de cada recompensa obtenida.",
+    rewardCyclicBullets:["Simple de configurar","Ideal para productos recurrentes","Solo un objetivo que definir"],
+    rewardProgressTitle:"Progresivo", rewardProgressSub:"Niveles acumulativos, sellos permanentes",
+    rewardProgressDesc:"Los sellos se acumulan para siempre. Cada nivel desbloquea una recompensa diferente.",
+    rewardProgressBullets:["Compromiso a largo plazo","Niveles totalmente configurables","Los sellos nunca se reinician"],
     customTag:"Personalización", customH2:"Tu tarjeta, a tu imagen",
     customSub:"Cada elemento es configurable desde tu dashboard, en tiempo real.",
     customMocks:[
@@ -1190,7 +1222,7 @@ export default function LandingPage() {
             </p>
             <div className="hero-cta" style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
               <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary">{t.heroCta1}</a>
-              <Link href="/auth/connexion" className="btn-ghost">{t.heroCta2}</Link>
+              <Link href="/choisir" className="btn-ghost">{t.heroCta2}</Link>
             </div>
 
             <div className="hero-card hero-float" style={{ marginTop:72 }}>
@@ -1410,6 +1442,138 @@ export default function LandingPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* ── RÉCOMPENSES ── */}
+          <section id="recompenses" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
+            <div style={{ maxWidth:1040, margin:"0 auto" }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
+                <span className="feature-tag">{t.rewardTag}</span>
+                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.rewardH2a}<br />{t.rewardH2b}</h2>
+                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>{t.rewardSub}</p>
+              </div>
+
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:24 }} className="steps-grid">
+
+                {/* Cyclique */}
+                <div data-reveal="left" style={{ background:"white", borderRadius:28, padding:"36px 32px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 24px rgba(0,0,0,0.05)" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:28 }}>
+                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize:17, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.3 }}>{t.rewardCyclicTitle}</h3>
+                      <span style={{ fontSize:12, color:"#8E8E93" }}>{t.rewardCyclicSub}</span>
+                    </div>
+                  </div>
+
+                  {/* Visuel cyclique */}
+                  <div style={{ background:"#F5F5F7", borderRadius:20, padding:"20px 20px 16px", marginBottom:24 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                      <span style={{ fontSize:12, color:"#8E8E93", fontWeight:600 }}>Café Volta</span>
+                      <span style={{ fontSize:13, fontWeight:700, color:"#1D1D1F" }}>6/10</span>
+                    </div>
+                    <div style={{ height:6, background:"rgba(0,0,0,0.08)", borderRadius:99, overflow:"hidden", marginBottom:12 }}>
+                      <div style={{ height:"100%", width:"60%", borderRadius:99, background:"linear-gradient(90deg,#4472F5,#8A5CF6)" }} />
+                    </div>
+                    <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                      {Array.from({length:10}).map((_,i) => (
+                        <div key={i} style={{ width:24, height:24, borderRadius:"50%", background: i < 6 ? "linear-gradient(135deg,#4472F5,#8A5CF6)" : "rgba(0,0,0,0.08)" }} />
+                      ))}
+                    </div>
+                    <div style={{ marginTop:12, display:"flex", alignItems:"center", gap:6 }}>
+                      <div style={{ height:"1px", flex:1, background:"rgba(0,0,0,0.08)" }} />
+                      <span style={{ fontSize:11, color:"#8E8E93", fontWeight:500 }}>→ Café offert</span>
+                      <div style={{ height:"1px", flex:1, background:"rgba(0,0,0,0.08)" }} />
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize:14, color:"#8E8E93", lineHeight:1.6, marginBottom:20 }}>{t.rewardCyclicDesc}</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {t.rewardCyclicBullets.map((b,i) => (
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#4472F5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                        <span style={{ fontSize:13, color:"#3C3C43" }}>{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Progressif */}
+                <div data-reveal="right" style={{ background:"white", borderRadius:28, padding:"36px 32px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 24px rgba(0,0,0,0.05)" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:28 }}>
+                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize:17, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.3 }}>{t.rewardProgressTitle}</h3>
+                      <span style={{ fontSize:12, color:"#8E8E93" }}>{t.rewardProgressSub}</span>
+                    </div>
+                  </div>
+
+                  {/* Visuel progressif — paliers */}
+                  <div style={{ background:"#F5F5F7", borderRadius:20, padding:"20px", marginBottom:24 }}>
+                    {[
+                      { seuil:4,  reward:"Boisson",  done:true  },
+                      { seuil:7,  reward:"Dessert",   done:true  },
+                      { seuil:10, reward:"Plat",      done:false },
+                    ].map((palier, i, arr) => (
+                      <div key={i}>
+                        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                          <div style={{
+                            width:30, height:30, borderRadius:"50%", flexShrink:0,
+                            background: palier.done ? "linear-gradient(135deg,#34C759,#30D158)" : "rgba(138,92,246,0.12)",
+                            border: palier.done ? "none" : "1.5px solid rgba(138,92,246,0.35)",
+                            display:"flex", alignItems:"center", justifyContent:"center",
+                          }}>
+                            {palier.done
+                              ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3L11.5 3.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              : <span style={{ fontSize:10, fontWeight:700, color:"#8A5CF6" }}>{palier.seuil}</span>
+                            }
+                          </div>
+                          <div style={{ flex:1 }}>
+                            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                              <span style={{ fontSize:13, fontWeight:600, color:"#1D1D1F" }}>{palier.reward}</span>
+                              <span style={{ fontSize:11, color: palier.done ? "#34C759" : "#8E8E93", fontWeight:500 }}>
+                                {palier.done ? "✓ Validé" : `${palier.seuil} tampons`}
+                              </span>
+                            </div>
+                            {!palier.done && (
+                              <div style={{ height:4, background:"rgba(0,0,0,0.07)", borderRadius:99, overflow:"hidden", marginTop:5 }}>
+                                <div style={{ height:"100%", width:"70%", borderRadius:99, background:"linear-gradient(90deg,#8A5CF6,#4472F5)" }} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {i < arr.length - 1 && (
+                          <div style={{ width:1, height:14, background:"rgba(0,0,0,0.08)", margin:"4px 0 4px 14px" }} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <p style={{ fontSize:14, color:"#8E8E93", lineHeight:1.6, marginBottom:20 }}>{t.rewardProgressDesc}</p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {t.rewardProgressBullets.map((b,i) => (
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#8A5CF6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                        <span style={{ fontSize:13, color:"#3C3C43" }}>{b}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
               </div>
