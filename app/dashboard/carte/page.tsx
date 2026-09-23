@@ -2091,13 +2091,6 @@ export default function CartePage() {
             </>
           )}
 
-          {/* Note */}
-          <div style={{ padding: "12px 14px", borderRadius: 12, background: "rgba(0,122,255,0.06)", border: "1px solid rgba(0,122,255,0.15)" }}>
-            <p style={{ fontSize: 11, color: "var(--fg-secondary)", margin: 0, lineHeight: 1.6 }}>
-              <strong style={{ color: "var(--accent)" }}>Génération .pkpass</strong><br/>
-              Structure prête · En attente du certificat Apple Developer.
-            </p>
-          </div>
 
         </div>
       </div>
