@@ -48,9 +48,17 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     if (r.type === "ok" || r.type === "recompense") {
       setClient(prev => prev ? {
         ...prev,
-        tampons: r.type === "ok" || marchand?.mode_recompense === "progressif" ? r.tampons : 0,
+        // Progressif avec palier atteint → garde les tampons. Tout autre cas → remet à 0.
+        tampons: r.type === "ok" ? r.tampons
+          : r.type === "recompense" && r.palier_index !== undefined ? r.tampons
+          : 0,
         recompense_en_attente: r.type === "recompense" ? true : prev.recompense_en_attente,
         derniere_visite: { seconds: Date.now() / 1000 } as never,
+        // Inscription progressive au premier scan (prochainRecompense = indicateur progressif "ok")
+        ...(!prev.paliers_valides && (
+          (r.type === "ok" && r.prochainRecompense !== undefined) ||
+          (r.type === "recompense" && r.palier_index !== undefined)
+        ) ? { paliers_valides: [] as boolean[] } : {}),
       } : prev);
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
@@ -82,7 +90,10 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     const paliers = (m.paliers as { tampons: number; recompense: string }[]) || [];
     const paliersValides = client.paliers_valides || [];
 
-    if (mode === "progressif" && paliers.length > 0) {
+    // Récompense progressive uniquement si le client est inscrit (paliers_valides défini)
+    const isProgressiveReward = mode === "progressif" && paliers.length > 0 && client.paliers_valides !== undefined;
+
+    if (isProgressiveReward) {
       const palierIndex = result?.type === "recompense" && result.palier_index !== undefined
         ? result.palier_index
         : paliers.findIndex((p, i) => !paliersValides[i] && client.tampons >= p.tampons);
@@ -92,7 +103,6 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         nouveauxPV[palierIndex] = true;
         setClient(prev => prev ? { ...prev, recompense_en_attente: false, paliers_valides: nouveauxPV } : prev);
       } else {
-        // Récompense cyclique en attente au moment du passage en progressif — on la solde
         await validerRecompense(client.id);
         setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
       }

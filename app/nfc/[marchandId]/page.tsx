@@ -188,32 +188,29 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         const paliers = (mn.paliers as { tampons: number; recompense: string }[]) || [];
         const paliersValides = screen.client.paliers_valides || [];
 
-        if (mode === "progressif" && paliers.length > 0) {
-          const palierIndex = screen.result.type === "recompense" && screen.result.palier_index !== undefined
-            ? screen.result.palier_index
-            : paliers.findIndex((p, i) => !paliersValides[i] && screen.client.tampons >= p.tampons);
-          if (palierIndex !== -1) {
-            await validerRecompense(screen.client.id, "progressif", palierIndex, paliersValides);
-            const nouveauxPV = [...paliersValides];
-            nouveauxPV[palierIndex] = true;
-            const prochainPalier = paliers.find((p, i) => !nouveauxPV[i]);
-            setScreen({
-              type: "result",
-              result: {
-                type: "ok",
-                tampons: screen.result.type === "recompense" ? screen.result.tampons : screen.client.tampons,
-                objectif: prochainPalier?.tampons ?? paliers[paliers.length - 1].tampons,
-                prenom: screen.client.prenom,
-                prochainRecompense: prochainPalier?.recompense,
-              },
-              client: { ...screen.client, paliers_valides: nouveauxPV, recompense_en_attente: false },
-              marchand: screen.marchand,
-            });
-          } else {
-            // Récompense cyclique en attente au moment du passage en progressif — on la solde
-            await validerRecompense(screen.client.id);
-            setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
-          }
+        // Récompense progressive : palier_index défini ET client inscrit (paliers_valides défini)
+        const isProgressiveReward = mode === "progressif" && paliers.length > 0
+          && screen.result.type === "recompense" && screen.result.palier_index !== undefined
+          && screen.client.paliers_valides !== undefined;
+
+        if (isProgressiveReward && screen.result.type === "recompense") {
+          const palierIndex = screen.result.palier_index!;
+          await validerRecompense(screen.client.id, "progressif", palierIndex, paliersValides);
+          const nouveauxPV = [...paliersValides];
+          nouveauxPV[palierIndex] = true;
+          const prochainPalier = paliers.find((p, i) => !nouveauxPV[i]);
+          setScreen({
+            type: "result",
+            result: {
+              type: "ok",
+              tampons: screen.result.tampons,
+              objectif: prochainPalier?.tampons ?? paliers[paliers.length - 1].tampons,
+              prenom: screen.client.prenom,
+              prochainRecompense: prochainPalier?.recompense,
+            },
+            client: { ...screen.client, paliers_valides: nouveauxPV, recompense_en_attente: false },
+            marchand: screen.marchand,
+          });
         } else {
           await validerRecompense(screen.client.id);
           setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
