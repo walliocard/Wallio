@@ -5,9 +5,13 @@ import crypto from "crypto";
 
 function prochainPalierInfo(m: Record<string, unknown>, client: Record<string, unknown>) {
   const paliers = (m.paliers as { tampons: number; recompense: string }[] | undefined) || [];
-  const paliersValides = (client.paliers_valides as boolean[] | undefined) || [];
+  const pv = client.paliers_valides as boolean[] | undefined;
   if (m.mode_recompense === "progressif" && paliers.length > 0) {
-    const p = paliers.find((x, i) => !paliersValides[i]) ?? paliers[paliers.length - 1];
+    // Mid-cycle : client avait des tampons cycliques au moment du switch → on garde les valeurs cycliques
+    if (pv === undefined && ((client.tampons as number) || 0) > 0) {
+      return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
+    }
+    const p = paliers.find((x, i) => !(pv ?? [])[i]) ?? paliers[paliers.length - 1];
     return { objectif: p.tampons, recompense: p.recompense };
   }
   return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };

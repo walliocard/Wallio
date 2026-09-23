@@ -8,9 +8,12 @@ const API = "https://walletobjects.googleapis.com/walletobjects/v1";
 
 function prochainPalierInfo(m: Record<string, unknown>, client: Record<string, unknown>) {
   const paliers = (m.paliers as { tampons: number; recompense: string }[] | undefined) || [];
-  const paliersValides = (client.paliers_valides as boolean[] | undefined) || [];
+  const pv = client.paliers_valides as boolean[] | undefined;
   if (m.mode_recompense === "progressif" && paliers.length > 0) {
-    const p = paliers.find((x, i) => !paliersValides[i]) ?? paliers[paliers.length - 1];
+    if (pv === undefined && ((client.tampons as number) || 0) > 0) {
+      return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
+    }
+    const p = paliers.find((x, i) => !(pv ?? [])[i]) ?? paliers[paliers.length - 1];
     return { objectif: p.tampons, recompense: p.recompense };
   }
   return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
@@ -87,8 +90,10 @@ export async function GET(
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
   const validLinks = links.filter(l => l.uri && l.description);
   const palierInfo = prochainPalierInfo(m as Record<string, unknown>, client as Record<string, unknown>);
+  const isProgressif = m.mode_recompense === "progressif" && !!(m.paliers as unknown[])?.length;
+  // En progressif : reward dans l'objet per-client (pas dans la classe partagée)
   const classTextModules = [
-    { header: ld.reward, body: palierInfo.recompense || ld.reward, id: "recompense" },
+    ...(!isProgressif ? [{ header: ld.reward, body: (m.nom_recompense as string) || ld.reward, id: "recompense" }] : []),
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
@@ -159,6 +164,10 @@ export async function GET(
       alternateText: " ",
     },
     accountName: `${client.prenom} ${client.nom}`,
+    // En progressif : reward per-client dans l'objet (la classe est partagée)
+    ...(isProgressif ? {
+      textModulesData: [{ header: ld.reward, body: palierInfo.recompense || ld.reward, id: "recompense_client" }],
+    } : {}),
   };
 
   const jwt = buildSaveToWalletJwt([loyaltyObject]);
