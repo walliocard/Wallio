@@ -165,10 +165,10 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         return canvas.encode("png");
       };
 
-      // 60pt @1x/2x/3x — taille standard icône app dans les notifs iOS
-      files["icon.png"]    = await mkIcon(60);
-      files["icon@2x.png"] = await mkIcon(120);
-      files["icon@3x.png"] = await mkIcon(180);
+      // 87pt @1x/2x/3x — surdimensionné pour forcer le remplissage de la case notif
+      files["icon.png"]    = await mkIcon(87);
+      files["icon@2x.png"] = await mkIcon(174);
+      files["icon@3x.png"] = await mkIcon(261);
     } catch (e) { console.error("[icon] canvas failed:", e); }
   }
 
