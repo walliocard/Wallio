@@ -270,6 +270,55 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
             ))}
           </div>
 
+          {/* Paliers progressifs */}
+          {modeRecompense === "progressif" && paliersDef.length > 0 && (
+            <div className="mt-4 pt-4 space-y-2" style={{ borderTop: "1px solid var(--border)" }}>
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
+                Programme progressif
+              </p>
+              {paliersDef.map((palier, i) => {
+                const valide = !!(paliersValides[i]);
+                const atteint = !valide && client.tampons >= palier.tampons;
+                const enCours = !valide && !atteint && paliersDef.findIndex((p, j) => !paliersValides[j]) === i;
+                const restants = palier.tampons - client.tampons;
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    {/* Icône statut */}
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: valide ? "rgba(52,199,89,0.15)" : atteint ? "rgba(255,159,10,0.15)" : enCours ? "rgba(0,122,255,0.12)" : "var(--border)",
+                      }}>
+                      {valide && (
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-5" stroke="#34C759" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                      {atteint && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#FF9F0A" }} />}
+                      {!valide && !atteint && <div style={{ width: 5, height: 5, borderRadius: "50%", background: enCours ? "var(--accent)" : "var(--fg-tertiary)", opacity: enCours ? 1 : 0.4 }} />}
+                    </div>
+                    {/* Seuil + nom */}
+                    <div className="flex-1 flex items-center justify-between min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-semibold flex-shrink-0"
+                          style={{ color: valide ? "#34C759" : atteint ? "#FF9F0A" : enCours ? "var(--accent)" : "var(--fg-tertiary)" }}>
+                          {palier.tampons}
+                        </span>
+                        <span className="text-[13px] font-medium truncate"
+                          style={{ color: valide || atteint || enCours ? "var(--fg)" : "var(--fg-tertiary)" }}>
+                          {palier.recompense}
+                        </span>
+                      </div>
+                      <span className="text-[11px] flex-shrink-0 ml-2"
+                        style={{ color: valide ? "#34C759" : atteint ? "#FF9F0A" : "var(--fg-tertiary)" }}>
+                        {valide ? "Validé" : atteint ? "À valider" : enCours ? `${restants} restant${restants > 1 ? "s" : ""}` : `${restants} restant${restants > 1 ? "s" : ""}`}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
         </div>
 
         {/* Résultat */}
