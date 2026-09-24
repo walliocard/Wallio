@@ -21,7 +21,8 @@ export async function GET(req: Request) {
     const marchand = marchandDoc.data();
     const delaiJours = marchand.automatisations?.relance?.delai_jours ?? 30;
     const message = marchand.automatisations?.relance?.message as string | undefined;
-    const logoUrl = marchand.logo_url as string | undefined;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
+    const iconUrl = `${appUrl}/api/logo/${marchandDoc.id}?notif=1`;
     const seuil = Timestamp.fromMillis(Date.now() - delaiJours * 86400 * 1000);
 
     const clientsSnap = await db.collection("clients")
@@ -58,7 +59,7 @@ export async function GET(req: Request) {
         tokens,
         notification: { title: `${marchand.nom} vous attend !`, body: message },
         webpush: {
-          notification: { icon: logoUrl || "/icon-192.png", badge: "/favicon-32.png" },
+          notification: { icon: iconUrl, badge: "/favicon-32.png" },
           fcmOptions: { link: "https://app.walliocard.com" },
         },
       });
