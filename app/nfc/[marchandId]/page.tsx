@@ -182,6 +182,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       result={screen.result}
       marchand={screen.marchand}
       walletId={screen.client.wallet_id}
+      paliersValides={screen.client.paliers_valides || []}
       onValiderRecompense={async () => {
         const mn = screen.marchand as Record<string, unknown>;
         const mode = (mn.mode_recompense as string) || "cyclique";
@@ -307,12 +308,17 @@ function Erreur({ message }: { message: string }) {
 
 // ─── Résultat tampon ──────────────────────────────────────────────────────────
 
-function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
+function ResultScreen({ result, marchand, walletId, paliersValides, onValiderRecompense }: {
   result: TamponResult;
   marchand: Marchand;
   walletId: string;
+  paliersValides: boolean[];
   onValiderRecompense: () => void;
 }) {
+  const mn = marchand as Record<string, unknown>;
+  const paliersDef = (mn.paliers as { tampons: number; recompense: string }[]) || [];
+  const isProgressif = mn.mode_recompense === "progressif" && paliersDef.length > 0;
+  const tamponsPostScan = result.type === "ok" || result.type === "recompense" ? result.tampons : 0;
   const [isAndroid, setIsAndroid] = useState(false);
   useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
 
@@ -382,6 +388,50 @@ function ResultScreen({ result, marchand, walletId, onValiderRecompense }: {
                 {result.objectif - result.tampons} avant {result.prochainRecompense || marchand.nom_recompense}
               </p>
             )}
+          </div>
+        )}
+
+        {/* Paliers progressifs */}
+        {isProgressif && (result.type === "ok" || result.type === "recompense") && (
+          <div className="rounded-2xl p-4 mb-5 text-left" style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(0,0,0,0.06)" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#AEAEB2" }}>
+              Programme progressif
+            </p>
+            <div className="space-y-2">
+              {paliersDef.map((palier, i) => {
+                const valide = !!(paliersValides[i]);
+                const atteint = !valide && tamponsPostScan >= palier.tampons;
+                const enCours = !valide && !atteint && paliersDef.findIndex((_, j) => !paliersValides[j] && paliersDef[j].tampons > tamponsPostScan) === i;
+                const restants = palier.tampons - tamponsPostScan;
+                return (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: valide ? "rgba(52,199,89,0.15)" : atteint ? "rgba(255,159,10,0.15)" : enCours ? "rgba(0,122,255,0.1)" : "rgba(0,0,0,0.05)" }}>
+                      {valide
+                        ? <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34C759" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        : <div style={{ width: 5, height: 5, borderRadius: "50%", background: atteint ? "#FF9F0A" : enCours ? "#007AFF" : "#C7C7CC" }} />
+                      }
+                    </div>
+                    <div className="flex-1 flex items-center justify-between min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-bold flex-shrink-0"
+                          style={{ color: valide ? "#34C759" : atteint ? "#FF9F0A" : enCours ? "#007AFF" : "#C7C7CC" }}>
+                          {palier.tampons}
+                        </span>
+                        <span className="text-[13px] font-medium"
+                          style={{ color: valide || atteint || enCours ? "#1D1D1F" : "#AEAEB2" }}>
+                          {palier.recompense}
+                        </span>
+                      </div>
+                      <span className="text-[11px] ml-2 flex-shrink-0"
+                        style={{ color: valide ? "#34C759" : atteint ? "#FF9F0A" : "#AEAEB2" }}>
+                        {valide ? "Validé" : atteint ? "À valider" : restants > 0 ? `${restants} restant${restants > 1 ? "s" : ""}` : ""}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
