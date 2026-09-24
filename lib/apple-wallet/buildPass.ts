@@ -100,6 +100,7 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
 
       // Pas de contrainte de hauteur — Apple adapte le header à la taille naturelle du logo.
       // On contraint uniquement la largeur max pour éviter les logos trop larges.
+      const cardBg = /^#[0-9a-f]{6}$/i.test(input.backgroundColor) ? input.backgroundColor : "#000000";
       const mkLogo = async (maxW: number) => {
         const natW = logo.width || maxW;
         const natH = logo.height || maxW;
@@ -108,7 +109,9 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         const logoH = Math.round(natH * ratio);
         const canvas = createCanvas(logoW, logoH);
         const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, logoW, logoH);
+        // Fond solide = couleur de la carte → invisible sur la carte, plein dans la notif
+        ctx.fillStyle = cardBg;
+        ctx.fillRect(0, 0, logoW, logoH);
         // Coins arrondis ~20% du plus petit côté
         const r = Math.round(Math.min(logoW, logoH) * 0.20);
         ctx.beginPath();
