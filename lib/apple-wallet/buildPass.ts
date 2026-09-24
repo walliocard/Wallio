@@ -147,8 +147,8 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       } catch (e2) { console.error("[logo] fetch failed:", e2); }
     }
 
-    // icon.png — fond transparent, logo remplit l'espace au maximum (contain)
-    // Tailles exactes Apple : 29×29 / 58×58 / 87×87 px
+    // icon.png — taille 40pt (vs spec Apple 29pt) pour remplir la case notif iOS
+    // fond transparent, logo contain bord à bord
     try {
       const { createCanvas, loadImage } = await import("@napi-rs/canvas");
       const logo = await loadImage(input.logoUrl);
@@ -158,7 +158,6 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         const natH = logo.height || size;
         const canvas = createCanvas(size, size);
         const ctx    = canvas.getContext("2d");
-        // fond transparent — le logo occupe tout l'espace, iOS gère le rendu
         const ratio = Math.min(size / natW, size / natH);
         const w = natW * ratio;
         const h = natH * ratio;
@@ -166,9 +165,10 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         return canvas.encode("png");
       };
 
-      files["icon.png"]    = await mkIcon(29);
-      files["icon@2x.png"] = await mkIcon(58);
-      files["icon@3x.png"] = await mkIcon(87);
+      // 40pt @1x/2x/3x — remplit mieux la zone d'icône dans la notification
+      files["icon.png"]    = await mkIcon(40);
+      files["icon@2x.png"] = await mkIcon(80);
+      files["icon@3x.png"] = await mkIcon(120);
     } catch (e) { console.error("[icon] canvas failed:", e); }
   }
 
