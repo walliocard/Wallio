@@ -185,8 +185,12 @@ export async function ajouterTampon(
   // ── Mode progressif ────────────────────────────────────────────────────────
   if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {
     const paliers = marchand.paliers;
-    const pv = client.paliers_valides ?? [];
-    const enrolling = client.paliers_valides === undefined; // premier scan → inscrire
+    const enrolling = client.paliers_valides === undefined;
+    // Option C : tampons gagnés en cyclique avant le switch → paliers déjà dépassés
+    // pré-marqués comme validés, sans les déclencher rétroactivement
+    const pv: boolean[] = enrolling && client.tampons > 0
+      ? paliers.map(p => client.tampons >= p.tampons)
+      : (client.paliers_valides ?? []);
 
     const palierIndex = paliers.findIndex((p, i) => !pv[i] && nouveauxTampons >= p.tampons);
 
@@ -195,7 +199,7 @@ export async function ajouterTampon(
         tampons: nouveauxTampons,
         recompense_en_attente: true,
         derniere_visite: serverTimestamp(),
-        ...(enrolling ? { paliers_valides: pv } : {}),
+        paliers_valides: pv,
       });
       return {
         type: "recompense",
@@ -212,7 +216,7 @@ export async function ajouterTampon(
     await updateDoc(doc(db, "clients", client.id), {
       tampons: nouveauxTampons,
       derniere_visite: serverTimestamp(),
-      ...(enrolling ? { paliers_valides: pv } : {}),
+      paliers_valides: pv,
     });
     return {
       type: "ok",
@@ -319,22 +323,24 @@ export async function traiterParrainage(
   // ── Mode progressif ──────────────────────────────────────────────────────────
   if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {
     const paliers = marchand.paliers;
-    const pv = parrain.paliers_valides ?? [];
     const enrolling = parrain.paliers_valides === undefined;
+    const pv: boolean[] = enrolling && parrain.tampons > 0
+      ? paliers.map(p => parrain.tampons >= p.tampons)
+      : (parrain.paliers_valides ?? []);
     const palierIndex = paliers.findIndex((p, i) => !pv[i] && nouveaux >= p.tampons);
 
     if (palierIndex !== -1) {
       await updateDoc(doc(db, "clients", parrain.id), {
         tampons: nouveaux,
         recompense_en_attente: true,
-        ...(enrolling ? { paliers_valides: pv } : {}),
+        paliers_valides: pv,
       });
       return { walletId: parrainWalletId, recompense: true };
     }
 
     await updateDoc(doc(db, "clients", parrain.id), {
       tampons: nouveaux,
-      ...(enrolling ? { paliers_valides: pv } : {}),
+      paliers_valides: pv,
     });
     return { walletId: parrainWalletId, recompense: false };
   }

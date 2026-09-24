@@ -114,9 +114,10 @@ creerClient({ prenom, nom, telephone, date_naissance, marchand_id }): Promise<{ 
 // Tampons
 ajouterTampon(client, marchand, forceOverride?): Promise<TamponResult>
   // Gère anti-doublon, double_tampons_fin
-  // Mode progressif : mid-cycle (paliers_valides undefined + tampons > 0) → cyclique
-  //                   nouveau client (tampons=0) ou inscrit → palier progressif
-  // Met à jour derniere_visite, écrit paliers_valides:[] au 1er scan progressif
+  // Mode progressif : mid-cycle (paliers_valides undefined + tampons > 0) → Option C :
+  //                   paliers déjà dépassés pré-marqués true, ne se déclenchent pas rétroactivement
+  //                   nouveau client (tampons=0) ou déjà inscrit → palier progressif normal
+  // Met à jour derniere_visite, écrit paliers_valides au 1er scan progressif
 validerRecompense(clientId, mode?, palierIndex?, paliersValides?, totalPaliers?): Promise<void>
   // Progressif : marque paliers_valides[palierIndex]=true, garde tampons
   //              si dernier palier (totalPaliers atteints) → reset tampons:0 + paliers_valides:[]
@@ -326,7 +327,7 @@ ANTHROPIC_API_KEY
 6. **double_tampons** : si `double_tampons_fin` > now, `ajouterTampon` crédite 2 tampons
 7. **Segments notify** : actifs = `derniere_visite` ≤ 30j, inactifs = > 30j
 8. Un client peut avoir plusieurs comptes chez plusieurs marchands (wallet_id différents)
-9. **Mode progressif** : `paliers_valides[]` accumule les paliers validés. Dernier palier → reset tampons:0 + paliers_valides:[]. Mid-cycle (paliers_valides undefined + tampons > 0) → logique cyclique jusqu'au reset.
+9. **Mode progressif** : `paliers_valides[]` accumule les paliers validés. Dernier palier → reset tampons:0 + paliers_valides:[]. Mid-cycle switch cyclique→progressif (paliers_valides undefined + tampons > 0) → Option C : paliers déjà dépassés pré-marqués true au 1er scan, sans récompense rétroactive.
 10. **Apple Wallet push** : fire-and-forget après chaque tampon ET après chaque validation récompense — ne bloque pas le flux
 11. **Sync Wallet depuis réglages** : après chaque save dans `/dashboard/reglages`, push envoyé à tous les clients wallet_type=apple|google automatiquement
 
