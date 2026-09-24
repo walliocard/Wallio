@@ -185,27 +185,8 @@ export async function ajouterTampon(
   // ── Mode progressif ────────────────────────────────────────────────────────
   if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {
     const paliers = marchand.paliers;
-    const paliersValides = client.paliers_valides; // undefined = pas encore inscrit
-
-    // Mid-cycle : client avait des tampons en cours en mode cyclique au moment du switch
-    // → il finit son tour cyclique, puis basculera automatiquement au prochain scan à 0
-    if (paliersValides === undefined && client.tampons > 0) {
-      const objectif = marchand.objectif_tampons;
-      if (nouveauxTampons >= objectif) {
-        await updateDoc(doc(db, "clients", client.id), {
-          tampons: 0,
-          recompense_en_attente: true,
-          derniere_visite: serverTimestamp(),
-        });
-        return { type: "recompense", prenom: client.prenom, nom_recompense: marchand.nom_recompense, tampons: nouveauxTampons };
-      }
-      await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp() });
-      return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif };
-    }
-
-    // Progressif : client inscrit (paliers_valides défini) ou nouveau client (tampons = 0)
-    const pv = paliersValides ?? [];
-    const enrolling = paliersValides === undefined; // premier scan progressif → inscrire
+    const pv = client.paliers_valides ?? [];
+    const enrolling = client.paliers_valides === undefined; // premier scan → inscrire
 
     const palierIndex = paliers.findIndex((p, i) => !pv[i] && nouveauxTampons >= p.tampons);
 
@@ -338,19 +319,8 @@ export async function traiterParrainage(
   // ── Mode progressif ──────────────────────────────────────────────────────────
   if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {
     const paliers = marchand.paliers;
-    const paliersValides = parrain.paliers_valides;
-
-    // Mid-cycle : finit le tour cyclique d'abord
-    if (paliersValides === undefined && parrain.tampons > 0) {
-      const recompense = nouveaux >= marchand.objectif_tampons;
-      await updateDoc(doc(db, "clients", parrain.id), recompense
-        ? { tampons: 0, recompense_en_attente: true }
-        : { tampons: nouveaux });
-      return { walletId: parrainWalletId, recompense };
-    }
-
-    const pv = paliersValides ?? [];
-    const enrolling = paliersValides === undefined;
+    const pv = parrain.paliers_valides ?? [];
+    const enrolling = parrain.paliers_valides === undefined;
     const palierIndex = paliers.findIndex((p, i) => !pv[i] && nouveaux >= p.tampons);
 
     if (palierIndex !== -1) {

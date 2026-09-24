@@ -127,7 +127,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
   async function handleAjuster(delta: number) {
     if (!client || !marchand || adjusting) return;
-    const maxTampons = modeRecompense === "progressif" && paliersDef.length > 0 && (client.paliers_valides !== undefined || client.tampons === 0)
+    const maxTampons = modeRecompense === "progressif" && paliersDef.length > 0
       ? paliersDef[paliersDef.length - 1].tampons
       : marchand.objectif_tampons;
     const next = Math.max(0, Math.min(client.tampons + delta, maxTampons));
@@ -153,7 +153,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
   let objectif: number;
   let nomRecompense: string;
-  if (modeRecompense === "progressif" && paliersDef.length > 0 && (client.paliers_valides !== undefined || client.tampons === 0)) {
+  if (modeRecompense === "progressif" && paliersDef.length > 0) {
     const prochain = paliersDef.find((p, i) => !paliersValides[i]) ?? paliersDef[paliersDef.length - 1];
     objectif = prochain.tampons;
     nomRecompense = prochain.recompense;
@@ -270,12 +270,6 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
             ))}
           </div>
 
-          {/* Indicateur mid-cycle */}
-          {modeRecompense === "progressif" && paliersDef.length > 0 && client.paliers_valides === undefined && client.tampons > 0 && (
-            <div className="mt-3 px-3 py-2 rounded-xl text-[11px]" style={{ background: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.2)", color: "#FF9F0A" }}>
-              Ce client finit son cycle en cours — il rejoindra le programme progressif à son prochain scan à 0 tampon.
-            </div>
-          )}
         </div>
 
         {/* Résultat */}

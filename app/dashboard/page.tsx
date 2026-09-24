@@ -70,7 +70,7 @@ export default function AccueilPage() {
         if (t >= 2) fideles++;
         const pv = data.paliers_valides as boolean[] | undefined;
         const paliersDef = marchandPaliersRef.current;
-        const clientEnProgressif = marchandModeRef.current === "progressif" && paliersDef.length > 0 && pv !== undefined;
+        const clientEnProgressif = marchandModeRef.current === "progressif" && paliersDef.length > 0;
         const prochainObjectif = clientEnProgressif
           ? (paliersDef.find((p, i) => !pv![i]) ?? paliersDef[paliersDef.length - 1]).tampons
           : objectif;

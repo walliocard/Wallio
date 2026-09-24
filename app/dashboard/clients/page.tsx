@@ -241,7 +241,7 @@ export default function ClientsPage() {
             const paliersDef = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
             const pv = client.paliers_valides || [];
             // Mode progressif inscrit uniquement si paliers_valides est défini (mid-cycle = cyclique)
-            const enProgressif = mn?.mode_recompense === "progressif" && paliersDef.length > 0 && client.paliers_valides !== undefined;
+            const enProgressif = mn?.mode_recompense === "progressif" && paliersDef.length > 0;
             const prochainPalier = enProgressif ? (paliersDef.find((p, i) => !pv[i]) ?? paliersDef[paliersDef.length - 1]) : null;
             const objectifActuel = prochainPalier ? prochainPalier.tampons : (marchand?.objectif_tampons ?? 10);
             const pct = Math.min(100, Math.round((client.tampons / objectifActuel) * 100));

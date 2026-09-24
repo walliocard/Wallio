@@ -588,7 +588,7 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
 
   let displayObjectif = card.stampsObjective;
   let displayReward = card.rewardName;
-  if (card.modeRecompense === "progressif" && card.paliers?.length && (card.paliersValides !== undefined || card.stampsCurrent === 0)) {
+  if (card.modeRecompense === "progressif" && card.paliers?.length) {
     const pv = card.paliersValides || [];
     const prochain = card.paliers.find((p, i) => !pv[i]) ?? card.paliers[card.paliers.length - 1];
     displayObjectif = prochain.tampons;

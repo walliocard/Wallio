@@ -927,7 +927,7 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
   const mn = marchand as Record<string, unknown>;
   const paliersDef = (mn.paliers as { tampons: number; recompense: string }[] | undefined) || [];
   const paliersValides = (client.paliers_valides || []) as boolean[];
-  const prochainPalier = mn.mode_recompense === "progressif" && paliersDef.length > 0 && (client.paliers_valides !== undefined || client.tampons === 0)
+  const prochainPalier = mn.mode_recompense === "progressif" && paliersDef.length > 0
     ? (paliersDef.find((p, i) => !paliersValides[i]) ?? paliersDef[paliersDef.length - 1])
     : null;
   const displayObjectif = prochainPalier ? prochainPalier.tampons : marchand.objectif_tampons;
