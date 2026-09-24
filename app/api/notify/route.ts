@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const notifBody = `${title} · ${body}`;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
-    const iconUrl = `${appUrl}/api/logo/${marchandId}?notif=1`;
+    const iconUrl = `${appUrl}/api/logo/${marchandId}`;
 
     // Récupère les clients
     let query = db.collection("clients").where("marchand_id", "==", marchandId);

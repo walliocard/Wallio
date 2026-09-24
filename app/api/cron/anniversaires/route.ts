@@ -22,8 +22,7 @@ export async function GET(req: Request) {
     const marchand = marchandDoc.data();
     const joursAvant = marchand.automatisations?.anniversaire?.jours_avant ?? 0;
     const message = marchand.automatisations?.anniversaire?.message as string | undefined;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
-    const iconUrl = `${appUrl}/api/logo/${marchandDoc.id}?notif=1`;
+    const logoUrl = marchand.logo_url as string | undefined;
     const fuseau = (marchand.fuseau_horaire as string) || "Africa/Casablanca";
 
     // "Aujourd'hui" dans le fuseau du marchand
@@ -72,7 +71,7 @@ export async function GET(req: Request) {
         tokens,
         notification: { title: `Joyeux anniversaire !`, body: message },
         webpush: {
-          notification: { icon: iconUrl, badge: "/favicon-32.png" },
+          notification: { icon: logoUrl || "/icon-192.png", badge: "/favicon-32.png" },
           fcmOptions: { link: "https://app.walliocard.com" },
         },
       });
