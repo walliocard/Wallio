@@ -165,10 +165,10 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         return canvas.encode("png");
       };
 
-      // 87pt @1x/2x/3x — surdimensionné pour forcer le remplissage de la case notif
-      files["icon.png"]    = await mkIcon(87);
-      files["icon@2x.png"] = await mkIcon(174);
-      files["icon@3x.png"] = await mkIcon(261);
+      // Dimensions officielles Apple Wallet pour notifs : 38×38 / 76×76 / 114×114 px
+      files["icon.png"]    = await mkIcon(38);
+      files["icon@2x.png"] = await mkIcon(76);
+      files["icon@3x.png"] = await mkIcon(114);
     } catch (e) { console.error("[icon] canvas failed:", e); }
   }
 
