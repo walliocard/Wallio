@@ -91,9 +91,7 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
     "icon@3x.png":  ICON_29,
   };
 
-  // Logo marchand = coin supérieur gauche + icône de notification
-  // iOS applique lui-même les coins arrondis — pas besoin de clipper dans le PNG.
-  // Sans clip : zéro pixel transparent → pas de fond frosted glass dans la notif.
+  // Logo marchand = coin supérieur gauche de la carte (Apple + Google Wallet)
   if (input.logoUrl) {
     try {
       const { createCanvas, loadImage } = await import("@napi-rs/canvas");
@@ -107,6 +105,20 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         const logoH = Math.round(natH * ratio);
         const canvas = createCanvas(logoW, logoH);
         const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, logoW, logoH);
+        const r = Math.round(Math.min(logoW, logoH) * 0.20);
+        ctx.beginPath();
+        ctx.moveTo(r, 0);
+        ctx.lineTo(logoW - r, 0);
+        ctx.quadraticCurveTo(logoW, 0, logoW, r);
+        ctx.lineTo(logoW, logoH - r);
+        ctx.quadraticCurveTo(logoW, logoH, logoW - r, logoH);
+        ctx.lineTo(r, logoH);
+        ctx.quadraticCurveTo(0, logoH, 0, logoH - r);
+        ctx.lineTo(0, r);
+        ctx.quadraticCurveTo(0, 0, r, 0);
+        ctx.closePath();
+        ctx.clip();
         ctx.drawImage(logo, 0, 0, logoW, logoH);
         return canvas.encode("png");
       };
