@@ -81,7 +81,7 @@ const ICON_29 = Buffer.from(
   "base64"
 );
 
-export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string } & StampOverlayInput): Promise<Buffer> {
+export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string; notifIconUrl?: string } & StampOverlayInput): Promise<Buffer> {
   const passJson = JSON.stringify(generatePassJson(input), null, 2);
 
   const files: Record<string, Buffer> = {
@@ -131,30 +131,31 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       } catch (e2) { console.error("[logo] fetch failed:", e2); }
     }
 
-    // icon.png — 38/76/114px (spec Apple notif), fond solide couleur principale, logo 100%
-    try {
-      const { createCanvas, loadImage } = await import("@napi-rs/canvas");
-      const logo = await loadImage(input.logoUrl);
-      const bg = /^#[0-9a-f]{6}$/i.test(input.backgroundColor) ? input.backgroundColor : "#007AFF";
+    // icon.png — utilise notifIconUrl si uploadé par le marchand, sinon logoUrl
+    // Carré 38/76/114px, fond transparent, logo centré contain
+    const iconSrc = input.notifIconUrl || input.logoUrl;
+    if (iconSrc) {
+      try {
+        const { createCanvas, loadImage } = await import("@napi-rs/canvas");
+        const iconImg = await loadImage(iconSrc);
 
-      const mkIcon = async (size: number) => {
-        const natW = logo.width  || size;
-        const natH = logo.height || size;
-        const canvas = createCanvas(size, size);
-        const ctx    = canvas.getContext("2d");
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, size, size);
-        const ratio = Math.min(size / natW, size / natH);
-        const w = natW * ratio;
-        const h = natH * ratio;
-        ctx.drawImage(logo, (size - w) / 2, (size - h) / 2, w, h);
-        return canvas.encode("png");
-      };
+        const mkIcon = async (size: number) => {
+          const natW = iconImg.width  || size;
+          const natH = iconImg.height || size;
+          const canvas = createCanvas(size, size);
+          const ctx    = canvas.getContext("2d");
+          const ratio = Math.min(size / natW, size / natH);
+          const w = natW * ratio;
+          const h = natH * ratio;
+          ctx.drawImage(iconImg, (size - w) / 2, (size - h) / 2, w, h);
+          return canvas.encode("png");
+        };
 
-      files["icon.png"]    = await mkIcon(38);
-      files["icon@2x.png"] = await mkIcon(76);
-      files["icon@3x.png"] = await mkIcon(114);
-    } catch (e) { console.error("[icon] canvas failed:", e); }
+        files["icon.png"]    = await mkIcon(38);
+        files["icon@2x.png"] = await mkIcon(76);
+        files["icon@3x.png"] = await mkIcon(114);
+      } catch (e) { console.error("[icon] canvas failed:", e); }
+    }
   }
 
   // Bannière strip (avec tampons dessinés si activé)

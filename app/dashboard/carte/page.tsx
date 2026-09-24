@@ -1676,7 +1676,7 @@ export default function CartePage() {
           {walletType === "apple" && (
             <Section label={tr.carte_icon_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-                29×29px — affichée dans les pushs Apple Wallet.
+                38×38px idéal — affichée dans les pushs Apple Wallet. Uploadez une image carrée avec votre logo sans fond.
               </p>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <div style={{
