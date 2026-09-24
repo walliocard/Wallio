@@ -147,28 +147,19 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       } catch (e2) { console.error("[logo] fetch failed:", e2); }
     }
 
-    // icon.png — iOS 18 exige fond solide (transparent = blanc sur blanc)
+    // icon.png — fond transparent, logo remplit l'espace au maximum (contain)
     // Tailles exactes Apple : 29×29 / 58×58 / 87×87 px
     try {
       const { createCanvas, loadImage } = await import("@napi-rs/canvas");
       const logo = await loadImage(input.logoUrl);
 
-      // Couleur de fond : couleur principale du marchand, sinon bleu Wallio
-      const bg = /^#[0-9a-f]{6}$/i.test(input.backgroundColor)
-        ? input.backgroundColor
-        : "#007AFF";
-
-      console.log("[icon] logo dimensions:", logo.width, "x", logo.height);
-
       const mkIcon = async (size: number) => {
-        // Si SVG ou format sans dimensions → utilise size comme fallback
         const natW = logo.width  || size;
         const natH = logo.height || size;
         const canvas = createCanvas(size, size);
         const ctx    = canvas.getContext("2d");
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, size, size);
-        const ratio = Math.min((size * 0.76) / natW, (size * 0.76) / natH);
+        // fond transparent — le logo occupe tout l'espace, iOS gère le rendu
+        const ratio = Math.min(size / natW, size / natH);
         const w = natW * ratio;
         const h = natH * ratio;
         ctx.drawImage(logo, (size - w) / 2, (size - h) / 2, w, h);
