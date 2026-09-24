@@ -187,16 +187,26 @@ export async function ajouterTampon(
     const paliers = marchand.paliers;
     const enrolling = client.paliers_valides === undefined;
     // Option C : tampons gagnés en cyclique avant le switch → paliers déjà dépassés
-    // pré-marqués comme validés, sans les déclencher rétroactivement
-    const pv: boolean[] = enrolling && client.tampons > 0
-      ? paliers.map(p => client.tampons >= p.tampons)
-      : (client.paliers_valides ?? []);
+    // pré-marqués comme validés, sans les déclencher rétroactivement.
+    // Si tous les paliers sont dépassés (objectif cyclique > dernier palier progressif),
+    // on repart d'un cycle propre avec seulement le scan actuel.
+    let pv: boolean[] = client.paliers_valides ?? [];
+    let tamponsAEcrire = nouveauxTampons;
+    if (enrolling && client.tampons > 0) {
+      const pvCandidat = paliers.map(p => client.tampons >= p.tampons);
+      if (pvCandidat.every(Boolean)) {
+        pv = [];
+        tamponsAEcrire = increment;
+      } else {
+        pv = pvCandidat;
+      }
+    }
 
-    const palierIndex = paliers.findIndex((p, i) => !pv[i] && nouveauxTampons >= p.tampons);
+    const palierIndex = paliers.findIndex((p, i) => !pv[i] && tamponsAEcrire >= p.tampons);
 
     if (palierIndex !== -1) {
       await updateDoc(doc(db, "clients", client.id), {
-        tampons: nouveauxTampons,
+        tampons: tamponsAEcrire,
         recompense_en_attente: true,
         derniere_visite: serverTimestamp(),
         paliers_valides: pv,
@@ -205,22 +215,22 @@ export async function ajouterTampon(
         type: "recompense",
         prenom: client.prenom,
         nom_recompense: paliers[palierIndex].recompense,
-        tampons: nouveauxTampons,
+        tampons: tamponsAEcrire,
         palier_index: palierIndex,
       };
     }
 
-    const prochainPalier = paliers.find((p, i) => !pv[i] && p.tampons > nouveauxTampons)
+    const prochainPalier = paliers.find((p, i) => !pv[i] && p.tampons > tamponsAEcrire)
       ?? paliers[paliers.length - 1];
 
     await updateDoc(doc(db, "clients", client.id), {
-      tampons: nouveauxTampons,
+      tampons: tamponsAEcrire,
       derniere_visite: serverTimestamp(),
       paliers_valides: pv,
     });
     return {
       type: "ok",
-      tampons: nouveauxTampons,
+      tampons: tamponsAEcrire,
       objectif: prochainPalier.tampons,
       prenom: client.prenom,
       double: doubleActif,
