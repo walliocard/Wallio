@@ -92,15 +92,13 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
   };
 
   // Logo marchand = coin supérieur gauche + icône de notification
+  // iOS applique lui-même les coins arrondis — pas besoin de clipper dans le PNG.
+  // Sans clip : zéro pixel transparent → pas de fond frosted glass dans la notif.
   if (input.logoUrl) {
-    // Logo avec coins arrondis (Apple Wallet n'arrondit pas nativement)
     try {
       const { createCanvas, loadImage } = await import("@napi-rs/canvas");
       const logo = await loadImage(input.logoUrl);
 
-      // Pas de contrainte de hauteur — Apple adapte le header à la taille naturelle du logo.
-      // On contraint uniquement la largeur max pour éviter les logos trop larges.
-      const cardBg = /^#[0-9a-f]{6}$/i.test(input.backgroundColor) ? input.backgroundColor : "#000000";
       const mkLogo = async (maxW: number) => {
         const natW = logo.width || maxW;
         const natH = logo.height || maxW;
@@ -109,24 +107,6 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         const logoH = Math.round(natH * ratio);
         const canvas = createCanvas(logoW, logoH);
         const ctx = canvas.getContext("2d");
-        // Fond = couleur de la carte → invisible sur la carte (même couleur),
-        // élimine le fond frosted glass iOS dans la notification
-        ctx.fillStyle = cardBg;
-        ctx.fillRect(0, 0, logoW, logoH);
-        // Coins arrondis ~20% du plus petit côté
-        const r = Math.round(Math.min(logoW, logoH) * 0.20);
-        ctx.beginPath();
-        ctx.moveTo(r, 0);
-        ctx.lineTo(logoW - r, 0);
-        ctx.quadraticCurveTo(logoW, 0, logoW, r);
-        ctx.lineTo(logoW, logoH - r);
-        ctx.quadraticCurveTo(logoW, logoH, logoW - r, logoH);
-        ctx.lineTo(r, logoH);
-        ctx.quadraticCurveTo(0, logoH, 0, logoH - r);
-        ctx.lineTo(0, r);
-        ctx.quadraticCurveTo(0, 0, r, 0);
-        ctx.closePath();
-        ctx.clip();
         ctx.drawImage(logo, 0, 0, logoW, logoH);
         return canvas.encode("png");
       };
