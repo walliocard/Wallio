@@ -147,17 +147,19 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       } catch (e2) { console.error("[logo] fetch failed:", e2); }
     }
 
-    // icon.png — taille 40pt (vs spec Apple 29pt) pour remplir la case notif iOS
-    // fond transparent, logo contain bord à bord
+    // icon.png — 38/76/114px (spec Apple notif), fond solide couleur principale, logo 100%
     try {
       const { createCanvas, loadImage } = await import("@napi-rs/canvas");
       const logo = await loadImage(input.logoUrl);
+      const bg = /^#[0-9a-f]{6}$/i.test(input.backgroundColor) ? input.backgroundColor : "#007AFF";
 
       const mkIcon = async (size: number) => {
         const natW = logo.width  || size;
         const natH = logo.height || size;
         const canvas = createCanvas(size, size);
         const ctx    = canvas.getContext("2d");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, size, size);
         const ratio = Math.min(size / natW, size / natH);
         const w = natW * ratio;
         const h = natH * ratio;
@@ -165,7 +167,6 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         return canvas.encode("png");
       };
 
-      // Dimensions officielles Apple Wallet pour notifs : 38×38 / 76×76 / 114×114 px
       files["icon.png"]    = await mkIcon(38);
       files["icon@2x.png"] = await mkIcon(76);
       files["icon@3x.png"] = await mkIcon(114);
