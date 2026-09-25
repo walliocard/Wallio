@@ -156,7 +156,11 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
           const natH = iconImg.height || size;
           const canvas = createCanvas(size, size);
           const ctx    = canvas.getContext("2d");
-          const ratio = Math.min(size / natW, size / natH);
+          // Fond = couleur de carte (évite le fond système iOS en mode sombre)
+          ctx.fillStyle = input.backgroundColor || "#FFFFFF";
+          ctx.fillRect(0, 0, size, size);
+          // Cover : remplit tout le carré, pas de zone transparente
+          const ratio = Math.max(size / natW, size / natH);
           const w = natW * ratio;
           const h = natH * ratio;
           ctx.drawImage(iconImg, (size - w) / 2, (size - h) / 2, w, h);
