@@ -178,9 +178,9 @@ export default function ReglagesPage() {
                 onBlur={e => (e.target.style.borderColor = "var(--border)")}
               />
             </div>
-            <div style={{ opacity: modeRecompense === "progressif" ? 0.35 : 1, pointerEvents: modeRecompense === "progressif" ? "none" : "auto", transition: "opacity 0.2s" }}>
+            <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                {t.settings_stamps_needed} — <span style={{ color: "var(--accent)" }}>{objectif}</span> <span className="normal-case font-normal" style={{ color: "var(--fg-tertiary)" }}>(mode cyclique)</span>
+                {modeRecompense === "progressif" ? "Tampons total — cycle" : t.settings_stamps_needed} — <span style={{ color: "var(--accent)" }}>{objectif}</span>
               </p>
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                 {[5, 6, 8, 10, 12, 15, 20].map(n => (
@@ -196,6 +196,11 @@ export default function ReglagesPage() {
                   </button>
                 ))}
               </div>
+              {modeRecompense === "progressif" && (
+                <p className="text-[11px] mt-1" style={{ color: "var(--fg-tertiary)" }}>
+                  Le cycle repart à 0 après {objectif} tampons. Les paliers doivent rester en dessous.
+                </p>
+              )}
             </div>
           </div>
 
