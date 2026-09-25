@@ -73,7 +73,7 @@ export default function AccueilPage() {
         const paliersDef = marchandPaliersRef.current;
         const clientEnProgressif = marchandModeRef.current === "progressif" && paliersDef.length > 0;
         const prochainObjectif = clientEnProgressif
-          ? (paliersDef.find((p, i) => !pv![i]) ?? paliersDef[paliersDef.length - 1]).tampons
+          ? (paliersDef.find((p, i) => !(pv?.[i])) ?? paliersDef[paliersDef.length - 1]).tampons
           : objectif;
         if (t >= prochainObjectif - 2 && t < prochainObjectif) proches_recompense++;
         if (!top_client || t > top_client.tampons) {
