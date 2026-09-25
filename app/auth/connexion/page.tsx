@@ -39,8 +39,8 @@ function ConnexionInner() {
     setError("");
     setLoading(true);
     try {
-      // Purge tout état auth résiduel/corrompu avant de tenter la connexion
-      await signOut(auth).catch(() => {});
+      // Purge état auth résiduel — avec timeout pour ne pas bloquer si Firebase est lent
+      await Promise.race([signOut(auth), new Promise(r => setTimeout(r, 2000))]).catch(() => {});
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("timeout")), 10000)
       );
