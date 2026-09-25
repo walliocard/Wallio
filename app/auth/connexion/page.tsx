@@ -44,8 +44,15 @@ function ConnexionInner() {
     setError("");
     setLoading(true);
     try {
-      // Purge l'état Firebase Auth de localStorage avant login
-      // (évite la vérification lente d'un vieux token en Safari normal)
+      // Désenregistre le Service Worker Firebase avant login
+      // En Safari normal, le SW bloque l'init de Firebase Auth via postMessage
+      try {
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+      } catch {}
+      // Purge le token Firebase périmé en localStorage
       try {
         Object.keys(localStorage).forEach(k => {
           if (k.startsWith("firebase:authUser:")) localStorage.removeItem(k);
