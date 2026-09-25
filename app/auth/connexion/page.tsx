@@ -44,10 +44,12 @@ function ConnexionInner() {
     setError("");
     setLoading(true);
     try {
-      // Purge état auth résiduel — avec timeout pour ne pas bloquer si Firebase est lent
-      await Promise.race([signOut(auth), new Promise(r => setTimeout(r, 2000))]).catch(() => {});
+      // Purge état auth résiduel uniquement si une session est active
+      if (auth.currentUser) {
+        await Promise.race([signOut(auth), new Promise(r => setTimeout(r, 2000))]).catch(() => {});
+      }
       const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), 10000)
+        setTimeout(() => reject(new Error("timeout")), 15000)
       );
       await Promise.race([
         signInWithEmailAndPassword(auth, form.email, form.password),
