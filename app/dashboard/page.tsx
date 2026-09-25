@@ -50,6 +50,7 @@ export default function AccueilPage() {
     if (!user) return;
     const q = query(collection(db, "clients"), where("marchand_id", "==", user.uid));
     const unsub = onSnapshot(q, snap => {
+      console.log("[dashboard] onSnapshot: uid=", user.uid, "docs=", snap.size);
       const now = new Date();
       const today = new Date(now); today.setHours(0, 0, 0, 0);
       const moisDebut = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -98,6 +99,8 @@ export default function AccueilPage() {
       const total = snap.size;
       const taux_fidelite = total > 0 ? Math.round((fideles / total) * 100) : 0;
       setStats({ total, aujourd_hui, tampons_total, ce_mois, semaine, semaine_precedente, recompenses, top_client, taux_fidelite, nouvelles_semaine, proches_recompense });
+    }, (err) => {
+      console.error("[dashboard] Firestore error:", err.code, err.message);
     });
     return unsub;
   }, [user]);
