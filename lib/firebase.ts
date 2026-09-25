@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, initializeFirestore, memoryLocalCache } from "firebase/firestore";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence, inMemoryPersistence } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -12,19 +12,32 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Détecte le mode privé Safari (localStorage bloqué ou quota 0)
+function isPrivateMode(): boolean {
+  try {
+    const key = "__wallio_test__";
+    localStorage.setItem(key, "1");
+    localStorage.removeItem(key);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 const isNew = getApps().length === 0;
 const app = isNew ? initializeApp(firebaseConfig) : getApps()[0];
 
-// memoryLocalCache : désactive IndexedDB complètement.
-// Cause du bug : le cache IndexedDB se corrompt entre sessions → Firestore
-// se bloque en essayant de le réconcilier (visible : marche en navigation privée,
-// pas en normale). Avec la mémoire seule : toujours propre, jamais de corruption.
+// memoryLocalCache : Firestore sans IndexedDB — propre dans tous les contextes
 export const db = isNew
   ? initializeFirestore(app, { localCache: memoryLocalCache() })
   : getFirestore(app);
 
 export const auth = getAuth(app);
-// Bascule Firebase Auth sur localStorage (pas IndexedDB) — même fix que Firestore.
-// IndexedDB Auth se corrompt entre sessions → timeout de connexion en navigation normale.
-if (isNew) setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+// Auth persistence : localStorage si possible, inMemory en mode privé Safari
+if (isNew) {
+  const persistence = isPrivateMode() ? inMemoryPersistence : browserLocalPersistence;
+  setPersistence(auth, persistence).catch(() => {});
+}
+
 export const storage = getStorage(app);

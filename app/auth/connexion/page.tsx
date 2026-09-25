@@ -8,6 +8,10 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
 
+function isPrivateMode(): boolean {
+  try { const k = "__w__"; localStorage.setItem(k, "1"); localStorage.removeItem(k); return false; } catch { return true; }
+}
+
 function ConnexionInner() {
   const { t } = useLang();
   const searchParams = useSearchParams();
@@ -16,6 +20,7 @@ function ConnexionInner() {
     searchParams.get("inactive") ? t.auth_inactive : ""
   );
   const [loading, setLoading] = useState(false);
+  const [privateMode] = useState(() => typeof window !== "undefined" && isPrivateMode());
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const router = useRouter();
@@ -113,6 +118,11 @@ function ConnexionInner() {
               />
             </div>
 
+            {privateMode && (
+              <p className="text-[12px] px-1 py-2 rounded-xl text-center" style={{ background: "rgba(255,159,10,0.1)", color: "#FF9F0A" }}>
+                Navigation privée détectée — la session ne sera pas mémorisée après fermeture.
+              </p>
+            )}
             {error && <p className="text-[13px] text-red-500 px-1">{error}</p>}
 
             <button
