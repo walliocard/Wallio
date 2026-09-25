@@ -163,9 +163,9 @@ export default function ReglagesPage() {
                 onBlur={e => (e.target.style.borderColor = "var(--border)")}
               />
             </div>
-            <div>
+            <div style={{ opacity: modeRecompense === "progressif" ? 0.35 : 1, pointerEvents: modeRecompense === "progressif" ? "none" : "auto", transition: "opacity 0.2s" }}>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                {t.settings_reward}
+                {t.settings_reward} <span className="normal-case font-normal" style={{ color: "var(--fg-tertiary)" }}>(mode cyclique)</span>
               </p>
               <input
                 type="text"
@@ -178,9 +178,9 @@ export default function ReglagesPage() {
                 onBlur={e => (e.target.style.borderColor = "var(--border)")}
               />
             </div>
-            <div>
+            <div style={{ opacity: modeRecompense === "progressif" ? 0.35 : 1, pointerEvents: modeRecompense === "progressif" ? "none" : "auto", transition: "opacity 0.2s" }}>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                {t.settings_stamps_needed} — <span style={{ color: "var(--accent)" }}>{objectif}</span>
+                {t.settings_stamps_needed} — <span style={{ color: "var(--accent)" }}>{objectif}</span> <span className="normal-case font-normal" style={{ color: "var(--fg-tertiary)" }}>(mode cyclique)</span>
               </p>
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                 {[5, 6, 8, 10, 12, 15, 20].map(n => (
