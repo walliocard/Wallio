@@ -79,7 +79,7 @@
 
 html {
   overflow-x: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
   touch-action: pan-y;
   /* Couleur solide pour les zones overscroll iOS (fixed gradient cassé sur Safari) */
   background-color: #EEF2F7;
@@ -94,7 +94,7 @@ body {
   font-family: var(--font-geist), Inter, system-ui, sans-serif;
   transition: background 0.3s ease;
   overflow-x: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
   touch-action: pan-y;
   min-height: 100dvh;
 }
