@@ -44,10 +44,13 @@ function ConnexionInner() {
     setError("");
     setLoading(true);
     try {
-      // Purge état auth résiduel uniquement si une session est active
-      if (auth.currentUser) {
-        await Promise.race([signOut(auth), new Promise(r => setTimeout(r, 2000))]).catch(() => {});
-      }
+      // Purge l'état Firebase Auth de localStorage avant login
+      // (évite la vérification lente d'un vieux token en Safari normal)
+      try {
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith("firebase:authUser:")) localStorage.removeItem(k);
+        });
+      } catch {}
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("timeout")), 15000)
       );
