@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -25,6 +25,17 @@ function ConnexionInner() {
   const [resetLoading, setResetLoading] = useState(false);
   const router = useRouter();
 
+  // Safari bloque Firebase Auth init via postMessage vers le SW.
+  // On désenregistre tous les SW dès le montage et on recharge pour que
+  // Firebase Auth se ré-initialise proprement sans SW context.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      if (regs.length === 0) return;
+      Promise.all(regs.map(r => r.unregister())).then(() => window.location.reload());
+    }).catch(() => {});
+  }, []);
+
   async function handleReset() {
     if (!form.email) { setError(t.auth_error_email); return; }
     setResetLoading(true);
@@ -44,14 +55,6 @@ function ConnexionInner() {
     setError("");
     setLoading(true);
     try {
-      // Désenregistre le Service Worker Firebase avant login
-      // En Safari normal, le SW bloque l'init de Firebase Auth via postMessage
-      try {
-        if ("serviceWorker" in navigator) {
-          const regs = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(regs.map(r => r.unregister()));
-        }
-      } catch {}
       // Purge le token Firebase périmé en localStorage
       try {
         Object.keys(localStorage).forEach(k => {
