@@ -55,7 +55,7 @@ export async function GET(
       || "#FFFFFF";
 
     const png = await buildIcon(logoUrl, bgColor);
-    return new Response(png, {
+    return new Response(new Uint8Array(png), {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=3600",
