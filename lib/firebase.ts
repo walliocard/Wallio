@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, initializeFirestore, memoryLocalCache } from "firebase/firestore";
-import { getAuth, setPersistence, browserLocalPersistence, inMemoryPersistence } from "firebase/auth";
+import { getAuth, initializeAuth, browserLocalPersistence, inMemoryPersistence } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -32,12 +32,14 @@ export const db = isNew
   ? initializeFirestore(app, { localCache: memoryLocalCache() })
   : getFirestore(app);
 
-export const auth = getAuth(app);
+// initializeAuth sans popupRedirectResolver évite l'iframe __/auth/iframe
+// qui n'existe pas sur Vercel et bloque Firebase Auth init en Safari
+const _persistence = typeof window !== "undefined" && isPrivateMode()
+  ? inMemoryPersistence
+  : browserLocalPersistence;
 
-// Auth persistence : localStorage si possible, inMemory en mode privé Safari
-if (isNew) {
-  const persistence = isPrivateMode() ? inMemoryPersistence : browserLocalPersistence;
-  setPersistence(auth, persistence).catch(() => {});
-}
+export const auth = isNew
+  ? initializeAuth(app, { persistence: _persistence })
+  : getAuth(app);
 
 export const storage = getStorage(app);
