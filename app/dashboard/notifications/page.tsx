@@ -17,7 +17,6 @@ export default function NotificationsPage() {
   const [body, setBody] = useState("");
   const [sendState, setSendState] = useState<SendState>("idle");
   const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
-  const [hasExpiry, setHasExpiry] = useState(false);
   const [expiresAt, setExpiresAt] = useState("");
 
   if (!user || !marchand) return null;
@@ -37,7 +36,7 @@ export default function NotificationsPage() {
 
   const charTitle = title.length;
   const charBody = body.length;
-  const canSend = title.trim().length > 0 && body.trim().length > 0 && (!hasExpiry || !!expiresAt);
+  const canSend = title.trim().length > 0 && body.trim().length > 0;
 
   async function envoyer() {
     if (!canSend || sendState === "sending") return;
@@ -48,7 +47,7 @@ export default function NotificationsPage() {
       const res = await fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body, segment, marchandId: user!.uid, idToken, logoUrl: (marchand as Record<string,unknown>).logo_url || null, expiresAt: hasExpiry && expiresAt ? new Date(expiresAt).toISOString() : null }),
+        body: JSON.stringify({ title, body, segment, marchandId: user!.uid, idToken, logoUrl: (marchand as Record<string,unknown>).logo_url || null, expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -167,36 +166,28 @@ export default function NotificationsPage() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Expiration — Apple Wallet sans PWA */}
-        <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-          <div className="flex items-center justify-between mb-1">
-            <div>
-              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Message temporaire</p>
-              <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Affiche le message au dos de la carte Apple Wallet — même sans l&apos;app installée</p>
-            </div>
-            <button onClick={() => setHasExpiry(v => !v)}
-              style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: hasExpiry ? "var(--accent)" : "var(--border)", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-              <span style={{ position: "absolute", top: 2, left: hasExpiry ? 22 : 2, width: 20, height: 20, borderRadius: "50%", background: "white", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-            </button>
-          </div>
-          {hasExpiry && (
-            <div className="mt-3">
-              <label className="text-[12px] block mb-1.5" style={{ color: "var(--fg-secondary)" }}>Visible jusqu&apos;au</label>
+            {/* Expiration optionnelle */}
+            <div className="flex items-center gap-3 pt-1">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-tertiary)", flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <input
                 type="datetime-local"
                 value={expiresAt}
                 onChange={e => setExpiresAt(e.target.value)}
                 min={new Date().toISOString().slice(0, 16)}
-                className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: expiresAt ? "var(--fg)" : "var(--fg-tertiary)" }}
                 onFocus={e => (e.target.style.borderColor = "var(--accent)")}
                 onBlur={e => (e.target.style.borderColor = "var(--border)")}
               />
+              {expiresAt && (
+                <button onClick={() => setExpiresAt("")} style={{ color: "var(--fg-tertiary)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>×</button>
+              )}
             </div>
-          )}
+            <p className="text-[11px] px-1" style={{ color: "var(--fg-tertiary)" }}>
+              {expiresAt ? `Visible sur Apple Wallet jusqu'au ${new Date(expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : "Expiration optionnelle — s'affiche aussi au dos de la carte Apple Wallet"}
+            </p>
+          </div>
         </div>
 
         {sendState === "success" && result && (
