@@ -113,13 +113,12 @@ export async function POST(req: Request) {
       const result = await messaging.sendEachForMulticast({
         tokens: batch.map(d => d.token),
         webpush: {
-          notification: {
+          data: {
             title: notifTitle,
             body: notifBody,
             icon: iconUrl,
-            badge: `${appUrl}/favicon-32.png`,
+            url: `${appUrl}/mes-cartes`,
           },
-          data: { url: `${appUrl}/mes-cartes` },
           headers: { TTL: "86400" },
           fcmOptions: { link: `${appUrl}/mes-cartes` },
         },
