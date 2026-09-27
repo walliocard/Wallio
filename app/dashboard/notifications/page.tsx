@@ -38,7 +38,7 @@ export default function NotificationsPage() {
 
   const charTitle = title.length;
   const charBody = body.length;
-  const canSend = title.trim().length > 0 && body.trim().length > 0;
+  const canSend = title.trim().length > 0 && body.trim().length > 0 && expiresDate.length > 0;
 
   async function envoyer() {
     if (!canSend || sendState === "sending") return;
