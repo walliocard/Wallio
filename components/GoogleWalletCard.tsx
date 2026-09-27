@@ -86,13 +86,13 @@ export default function GoogleWalletCard({
     }}>
 
       {/* ── Logo + texte logo + issuer + nom programme ── */}
-      <div style={{ padding: "12px 20px 8px", textAlign: "center" }}>
+      <div style={{ padding: "10px 20px 6px", textAlign: "center" }}>
 
-        {/* Logo — 40px */}
+        {/* Logo — 36px */}
         <div style={{
-          width: 40, height: 40, borderRadius: "50%",
+          width: 36, height: 36, borderRadius: "50%",
           background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.06)",
-          overflow: "hidden", margin: "0 auto 5px",
+          overflow: "hidden", margin: "0 auto 4px",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           {logoUrl
@@ -109,19 +109,19 @@ export default function GoogleWalletCard({
       </div>
 
       {/* ── QR code + tampons dans la même box blanche ── */}
-      <div style={{ padding: "0 12px 12px" }}>
+      <div style={{ padding: "0 12px 10px" }}>
         <div style={{
           background: "#FFFFFF",
           borderRadius: 14,
-          padding: 10,
+          padding: 8,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           boxShadow: dark ? "0 4px 20px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.10)",
         }}>
           {qr
-            ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 175, height: "auto", display: "block" }} />
-            : <div style={{ width: 175, height: 175, background: "#f0f0f0", borderRadius: 4 }} />
+            ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 155, height: "auto", display: "block" }} />
+            : <div style={{ width: 155, height: 155, background: "#f0f0f0", borderRadius: 4 }} />
           }
           {/* Tampons — directement sous le QR dans la box */}
           <div style={{ marginTop: 8, textAlign: "center" }}>
@@ -187,28 +187,28 @@ export default function GoogleWalletCard({
       <div style={{
         background: bg,
         borderRadius: "0 0 16px 16px",
-        padding: "12px 16px 16px",
+        padding: "8px 14px 12px",
         display: "flex",
         flexDirection: "column",
         gap: 2,
       }}>
         <div style={{
           background: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
-          borderRadius: 12,
-          padding: "10px 14px",
-          marginBottom: 6,
+          borderRadius: 10,
+          padding: "7px 12px",
+          marginBottom: 4,
         }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: text, margin: "0 0 1px" }}>Nom de membre</p>
-          <p style={{ fontSize: 13, color: textSec, margin: 0 }}>Prénom N.</p>
+          <p style={{ fontSize: 11, fontWeight: 700, color: text, margin: "0 0 1px" }}>Nom de membre</p>
+          <p style={{ fontSize: 12, color: textSec, margin: 0 }}>Prénom N.</p>
         </div>
         {rewardName && (
           <div style={{
             background: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
-            borderRadius: 12,
-            padding: "10px 14px",
+            borderRadius: 10,
+            padding: "7px 12px",
           }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: text, margin: "0 0 1px" }}>Récompense</p>
-            <p style={{ fontSize: 13, color: textSec, margin: 0 }}>{rewardName}</p>
+            <p style={{ fontSize: 11, fontWeight: 700, color: text, margin: "0 0 1px" }}>Récompense</p>
+            <p style={{ fontSize: 12, color: textSec, margin: 0 }}>{rewardName}</p>
           </div>
         )}
       </div>
