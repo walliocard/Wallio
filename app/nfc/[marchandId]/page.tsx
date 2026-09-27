@@ -568,6 +568,7 @@ const PAYS = [
   { code: "+32",  flag: "🇧🇪", label: "Belgique",     digits: 9  },
   { code: "+34",  flag: "🇪🇸", label: "Espagne",      digits: 9  },
   { code: "+39",  flag: "🇮🇹", label: "Italie",       digits: 10 },
+  { code: "+40",  flag: "🇷🇴", label: "Roumanie",     digits: 9  },
   { code: "+41",  flag: "🇨🇭", label: "Suisse",       digits: 9  },
   { code: "+44",  flag: "🇬🇧", label: "Royaume-Uni",  digits: 10 },
   { code: "+49",  flag: "🇩🇪", label: "Allemagne",    digits: 10 },

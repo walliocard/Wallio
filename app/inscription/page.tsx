@@ -15,6 +15,7 @@ const PAYS = [
   { code: "+33",  flag: "🇫🇷", label: "France" },
   { code: "+32",  flag: "🇧🇪", label: "Belgique" },
   { code: "+34",  flag: "🇪🇸", label: "Espagne" },
+  { code: "+40",  flag: "🇷🇴", label: "Roumanie" },
   { code: "+41",  flag: "🇨🇭", label: "Suisse" },
   { code: "+44",  flag: "🇬🇧", label: "Royaume-Uni" },
   { code: "+49",  flag: "🇩🇪", label: "Allemagne" },
