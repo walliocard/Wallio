@@ -84,23 +84,24 @@ export async function POST(req: Request) {
     }
     await firestoreBatch.commit();
 
-    // Push APNS fire-and-forget — met à jour le backField message sur la carte Apple Wallet
-    // (atteint les clients sans PWA installée)
+    // Push APNS — awaité pour ne pas être tué par Vercel avant complétion
+    let apnsSent = 0;
     if (apnsDocs.length > 0) {
       const now = new Date().toISOString();
-      Promise.all(
+      await Promise.all(
         apnsDocs.map(async ({ token, ref }) => {
           try {
             await ref.update({ apns_last_updated: now });
             await pushPassUpdate(token);
-          } catch { /* fire-and-forget */ }
+            apnsSent++;
+          } catch { /* push individuel échoué — on continue */ }
         })
-      ).catch(() => {});
+      );
     }
 
     // Envoi FCM — data-only pour contrôle total de l'affichage
     if (tokenDocs.length === 0) {
-      return NextResponse.json({ sent: 0, failed: 0, total: 0 });
+      return NextResponse.json({ sent: apnsSent, failed: 0, total: apnsSent });
     }
 
     const messaging = adminMessaging();
@@ -137,7 +138,7 @@ export async function POST(req: Request) {
       if (cleanups.length > 0) await Promise.all(cleanups);
     }
 
-    return NextResponse.json({ sent, failed, total: tokenDocs.length });
+    return NextResponse.json({ sent: sent + apnsSent, failed, total: tokenDocs.length + apnsSent });
   } catch (err) {
     console.error("Notify error:", err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
