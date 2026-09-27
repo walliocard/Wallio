@@ -33,9 +33,9 @@ export async function POST(req: Request) {
     const marchandUpdate: Record<string, unknown> = {
       current_message: notifBody,
       current_message_title: title,
-      message_expires_at: expiresAt || null,
+      message_expires_at: expiresAt || FieldValue.delete(),
     };
-    await db.collection("marchands").doc(marchandId).update(marchandUpdate);
+    await db.collection("marchands").doc(marchandId).set(marchandUpdate, { merge: true });
 
     // Récupère les clients
     let query = db.collection("clients").where("marchand_id", "==", marchandId);
