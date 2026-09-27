@@ -17,7 +17,9 @@ export default function NotificationsPage() {
   const [body, setBody] = useState("");
   const [sendState, setSendState] = useState<SendState>("idle");
   const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
-  const [expiresAt, setExpiresAt] = useState("");
+  const [expiresDate, setExpiresDate] = useState("");
+  const [expiresTime, setExpiresTime] = useState("23:59");
+  const expiresAt = expiresDate ? `${expiresDate}T${expiresTime || "23:59"}` : "";
 
   if (!user || !marchand) return null;
 
@@ -172,33 +174,43 @@ export default function NotificationsPage() {
 
         {/* Expiration */}
         <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-tertiary)" }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Expiration du message</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="datetime-local"
-              value={expiresAt}
-              onChange={e => setExpiresAt(e.target.value)}
-              min={new Date().toISOString().slice(0, 16)}
-              className="flex-1 px-4 py-3 rounded-2xl text-[14px] outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-              onBlur={e => (e.target.style.borderColor = "var(--border)")}
-            />
-            {expiresAt && (
-              <button onClick={() => setExpiresAt("")}
-                className="px-3 py-3 rounded-2xl text-[13px]"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-tertiary)", cursor: "pointer" }}>
-                ×
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-tertiary)" }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Expiration du message</p>
+            </div>
+            {expiresDate && (
+              <button onClick={() => { setExpiresDate(""); setExpiresTime("23:59"); }}
+                style={{ fontSize: 12, color: "var(--fg-tertiary)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>
+                Effacer
               </button>
             )}
           </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={expiresDate}
+              onChange={e => setExpiresDate(e.target.value)}
+              min={new Date().toISOString().slice(0, 10)}
+              className="flex-1 px-4 py-3 rounded-2xl text-[14px] outline-none"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: expiresDate ? "var(--fg)" : "var(--fg-tertiary)" }}
+              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+              onBlur={e => (e.target.style.borderColor = "var(--border)")}
+            />
+            <input
+              type="time"
+              value={expiresTime}
+              onChange={e => setExpiresTime(e.target.value)}
+              className="px-4 py-3 rounded-2xl text-[14px] outline-none"
+              style={{ width: 110, background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", opacity: expiresDate ? 1 : 0.4 }}
+              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+              onBlur={e => (e.target.style.borderColor = "var(--border)")}
+            />
+          </div>
           <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
-            {expiresAt
-              ? `Message visible au dos de la carte Apple Wallet jusqu'au ${new Date(expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
-              : "Optionnel — le message s'efface automatiquement de la carte Apple Wallet à cette date"}
+            {expiresDate
+              ? `S'efface du wallet le ${new Date(expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
+              : "Optionnel — s'efface automatiquement du wallet Apple à cette date"}
           </p>
         </div>
 
