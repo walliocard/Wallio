@@ -487,10 +487,34 @@ export default function CartePage() {
         apple_stamp_logo_opacity: stampLogoOpacity,
         apple_strip_text_y: stripTextY,
         apple_strip_crop_y: cropY,
+        apple_strip_from: stripFrom || null,
+        apple_strip_to: stripTo || null,
+        apple_strip_angle: stripAngle,
+        apple_strip_glass: stripGlass,
+        apple_strip_text: stripText || null,
+        apple_strip_text_size: stripTextSize,
+        apple_strip_text_color: stripTextColor,
+        apple_strip_text_pos: stripTextPos,
+        apple_strip_text_font: stripTextFont,
+        apple_strip_text2: stripText2 || null,
+        apple_strip_text2_size: stripText2Size,
+        apple_strip_include_logo: stripIncludeLogo,
         google_primary_label: googlePrimaryLabel,
         google_secondary_label: googleSecondaryLabel,
         google_bg_color: googleBgColor,
         google_hero_url: finalGoogleHeroUrl,
+        google_strip_from: googleStripFrom || null,
+        google_strip_to: googleStripTo || null,
+        google_strip_angle: googleStripAngle,
+        google_strip_glass: googleStripGlass,
+        google_strip_text: googleStripText || null,
+        google_strip_text_color: googleStripTextColor,
+        google_strip_text_size: googleStripTextSize,
+        google_strip_text_pos: googleStripTextPos,
+        google_strip_font: googleStripFont,
+        google_strip_text2: googleStripText2 || null,
+        google_strip_text2_size: googleStripText2Size,
+        google_strip_include_logo: googleStripIncludeLogo,
         google_text_modules: googleTextModules,
         google_links: googleLinks,
         apple_location: storeLocation || null,
@@ -702,11 +726,19 @@ export default function CartePage() {
     setFgColor((m.apple_fg_color as string) || "#FFFFFF");
     setLabelAuto(!(m.apple_label_color));
     setLabelColor((m.apple_label_color as string) || "rgba(255,255,255,0.55)");
-    setStripFrom(""); setStripTo(""); setStripAngle(135); setStripGlass(false);
-    setStripText(""); setStripTextSize("m"); setStripTextColor("#FFFFFF");
-    setStripTextPos("bl"); setStripTextFont("sans"); setStripText2(""); setStripText2Size("s");
+    setStripFrom((m.apple_strip_from as string) || "");
+    setStripTo((m.apple_strip_to as string) || "");
+    setStripAngle((m.apple_strip_angle as number) ?? 135);
+    setStripGlass(m.apple_strip_glass === true);
+    setStripText((m.apple_strip_text as string) || "");
+    setStripTextSize((m.apple_strip_text_size as "s"|"m"|"l") || "m");
+    setStripTextColor((m.apple_strip_text_color as string) || "#FFFFFF");
+    setStripTextPos((m.apple_strip_text_pos as "bl"|"bc"|"br"|"c") || "bl");
+    setStripTextFont((m.apple_strip_text_font as "sans"|"serif"|"mono") || "sans");
+    setStripText2((m.apple_strip_text2 as string) || "");
+    setStripText2Size((m.apple_strip_text2_size as "s"|"m"|"l") || "s");
     setStripTextY((m.apple_strip_text_y as number) ?? 88);
-    setStripIncludeLogo(false);
+    setStripIncludeLogo(m.apple_strip_include_logo === true);
     setStampsOnStrip(m.apple_stamps_on_strip === true);
     setStripStampStyle((m.apple_strip_stamp_style as StampStyle) || "dot");
     setStampText((m.apple_stamp_text as string) || "");
@@ -735,6 +767,18 @@ export default function CartePage() {
     setStoreLocation((m.apple_location as { latitude: number; longitude: number; relevantText: string } | null) ?? null);
     setGoogleBgColor((m.google_bg_color as string) || couleurPrincipale || "#007AFF");
     setGoogleHeroUrl((m.google_hero_url as string) || "");
+    setGoogleStripFrom((m.google_strip_from as string) || "");
+    setGoogleStripTo((m.google_strip_to as string) || "");
+    setGoogleStripAngle((m.google_strip_angle as number) ?? 135);
+    setGoogleStripGlass(m.google_strip_glass === true);
+    setGoogleStripText((m.google_strip_text as string) || "");
+    setGoogleStripTextColor((m.google_strip_text_color as string) || "#FFFFFF");
+    setGoogleStripTextSize((m.google_strip_text_size as "xs"|"s"|"m"|"l"|"xl") || "m");
+    setGoogleStripTextPos((m.google_strip_text_pos as "tl"|"tc"|"tr"|"ml"|"mc"|"mr"|"bl"|"bc"|"br") || "bl");
+    setGoogleStripFont((m.google_strip_font as "sans"|"serif"|"mono") || "sans");
+    setGoogleStripText2((m.google_strip_text2 as string) || "");
+    setGoogleStripText2Size((m.google_strip_text2_size as "xs"|"s"|"m"|"l"|"xl") || "s");
+    setGoogleStripIncludeLogo(m.google_strip_include_logo === true);
     setGooglePrimaryLabel((m.google_primary_label as string) || tr.carte_stamps_default);
     setGoogleSecondaryLabel((m.google_secondary_label as string) || tr.carte_objective_default);
     setGoogleTextModules((m.google_text_modules as {header: string; body: string; id: string}[]) || []);

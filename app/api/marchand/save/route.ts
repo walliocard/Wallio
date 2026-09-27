@@ -106,8 +106,16 @@ export async function POST(req: Request) {
     "apple_stamp_text_size", "apple_stamp_color", "apple_stamp_position",
     "apple_stamp_size", "apple_stamp_thickness", "apple_stamp_logo_opacity",
     "apple_strip_text_y", "apple_strip_crop_y", "apple_location",
+    "apple_strip_from", "apple_strip_to", "apple_strip_angle", "apple_strip_glass",
+    "apple_strip_text", "apple_strip_text_size", "apple_strip_text_color",
+    "apple_strip_text_pos", "apple_strip_text_font", "apple_strip_text2",
+    "apple_strip_text2_size", "apple_strip_include_logo",
     // Carte Google Wallet
     "google_bg_color", "google_hero_url",
+    "google_strip_from", "google_strip_to", "google_strip_angle", "google_strip_glass",
+    "google_strip_text", "google_strip_text_color", "google_strip_text_size",
+    "google_strip_text_pos", "google_strip_font", "google_strip_text2",
+    "google_strip_text2_size", "google_strip_include_logo",
     "google_primary_label", "google_secondary_label",
     "google_text_modules", "google_links",
     // Carte comptoir
