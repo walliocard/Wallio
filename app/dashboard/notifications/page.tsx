@@ -167,27 +167,39 @@ export default function NotificationsPage() {
               </div>
             )}
 
-            {/* Expiration optionnelle */}
-            <div className="flex items-center gap-3 pt-1">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-tertiary)", flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <input
-                type="datetime-local"
-                value={expiresAt}
-                onChange={e => setExpiresAt(e.target.value)}
-                min={new Date().toISOString().slice(0, 16)}
-                className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: expiresAt ? "var(--fg)" : "var(--fg-tertiary)" }}
-                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-                onBlur={e => (e.target.style.borderColor = "var(--border)")}
-              />
-              {expiresAt && (
-                <button onClick={() => setExpiresAt("")} style={{ color: "var(--fg-tertiary)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>×</button>
-              )}
-            </div>
-            <p className="text-[11px] px-1" style={{ color: "var(--fg-tertiary)" }}>
-              {expiresAt ? `Visible sur Apple Wallet jusqu'au ${new Date(expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : "Expiration optionnelle — s'affiche aussi au dos de la carte Apple Wallet"}
-            </p>
           </div>
+        </div>
+
+        {/* Expiration */}
+        <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-tertiary)" }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Expiration du message</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="datetime-local"
+              value={expiresAt}
+              onChange={e => setExpiresAt(e.target.value)}
+              min={new Date().toISOString().slice(0, 16)}
+              className="flex-1 px-4 py-3 rounded-2xl text-[14px] outline-none"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+              onBlur={e => (e.target.style.borderColor = "var(--border)")}
+            />
+            {expiresAt && (
+              <button onClick={() => setExpiresAt("")}
+                className="px-3 py-3 rounded-2xl text-[13px]"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-tertiary)", cursor: "pointer" }}>
+                ×
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
+            {expiresAt
+              ? `Message visible au dos de la carte Apple Wallet jusqu'au ${new Date(expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
+              : "Optionnel — le message s'efface automatiquement de la carte Apple Wallet à cette date"}
+          </p>
         </div>
 
         {sendState === "success" && result && (
