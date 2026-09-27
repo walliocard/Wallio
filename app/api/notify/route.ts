@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb, adminMessaging } from "@/lib/admin";
+import { pushPassUpdate } from "@/lib/apple-wallet/apns";
 import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const { title, body, segment, marchandId, idToken } = await req.json();
+    const { title, body, segment, marchandId, idToken, logoUrl, expiresAt } = await req.json();
 
     if (!title || !body || !marchandId || !idToken) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
@@ -26,7 +27,15 @@ export async function POST(req: Request) {
     const notifBody = `${title} · ${body}`;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
-    const iconUrl = `${appUrl}/api/logo/${marchandId}`;
+    const iconUrl = logoUrl || `${appUrl}/api/logo/${marchandId}`;
+
+    // Sauvegarde le message actif sur le marchand (pour le backField Apple Wallet)
+    const marchandUpdate: Record<string, unknown> = {
+      current_message: notifBody,
+      current_message_title: title,
+      message_expires_at: expiresAt || null,
+    };
+    await db.collection("marchands").doc(marchandId).update(marchandUpdate);
 
     // Récupère les clients
     let query = db.collection("clients").where("marchand_id", "==", marchandId);
@@ -40,17 +49,21 @@ export async function POST(req: Request) {
 
     const snap = await query.get();
 
-    // Déduplique par token FCM
     const seen = new Set<string>();
     const tokenDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
     const allRefs: FirebaseFirestore.DocumentReference[] = [];
+    const apnsDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
 
     snap.forEach(doc => {
       allRefs.push(doc.ref);
-      const token = doc.data().fcm_token;
-      if (token && !seen.has(token)) {
-        seen.add(token);
-        tokenDocs.push({ token, ref: doc.ref });
+      const data = doc.data();
+      const fcmToken = data.fcm_token;
+      if (fcmToken && !seen.has(fcmToken)) {
+        seen.add(fcmToken);
+        tokenDocs.push({ token: fcmToken, ref: doc.ref });
+      }
+      if (data.apns_push_token) {
+        apnsDocs.push({ token: data.apns_push_token, ref: doc.ref });
       }
     });
 
@@ -63,6 +76,7 @@ export async function POST(req: Request) {
       marchandId,
       sentAt: new Date().toISOString(),
       read: false,
+      ...(expiresAt ? { expires_at: expiresAt } : {}),
     };
     const firestoreBatch = db.batch();
     for (const ref of allRefs) {
@@ -70,11 +84,25 @@ export async function POST(req: Request) {
     }
     await firestoreBatch.commit();
 
+    // Push APNS fire-and-forget — met à jour le backField message sur la carte Apple Wallet
+    // (atteint les clients sans PWA installée)
+    if (apnsDocs.length > 0) {
+      const now = new Date().toISOString();
+      Promise.all(
+        apnsDocs.map(async ({ token, ref }) => {
+          try {
+            await ref.update({ apns_last_updated: now });
+            await pushPassUpdate(token);
+          } catch { /* fire-and-forget */ }
+        })
+      ).catch(() => {});
+    }
+
+    // Envoi FCM — data-only pour contrôle total de l'affichage
     if (tokenDocs.length === 0) {
       return NextResponse.json({ sent: 0, failed: 0, total: 0 });
     }
 
-    // Envoi FCM — data-only pour contrôle total de l'affichage (icone marchand)
     const messaging = adminMessaging();
     let sent = 0;
     let failed = 0;

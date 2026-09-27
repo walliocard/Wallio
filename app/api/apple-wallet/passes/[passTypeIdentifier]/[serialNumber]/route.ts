@@ -76,6 +76,13 @@ export async function GET(
     ].filter(Boolean) as { label: string; value: string }[],
     backInfo: m.apple_back_info || undefined,
     description: m.apple_description || undefined,
+    messagePush: (() => {
+      const msg = m.current_message as string | undefined;
+      const exp = m.message_expires_at as string | undefined;
+      if (!msg) return undefined;
+      if (exp && new Date(exp) < new Date()) return undefined;
+      return msg;
+    })(),
     stampsOnStrip:    m.apple_stamps_on_strip === true,
     stripStampStyle:  m.apple_strip_stamp_style || "dot",
     stampColor:       m.apple_stamp_color       || "#FFFFFF",

@@ -47,6 +47,7 @@ export interface PassInput {
   auxiliaryFields?: PassField[];
   backInfo?: string;
   description?: string;
+  messagePush?: string;
   locations?: PassLocation[];
 }
 
@@ -98,6 +99,7 @@ export function generatePassJson(input: PassInput): object {
       ],
       auxiliaryFields,
       backFields: [
+        ...(input.messagePush ? [{ key: "message_push", label: "MESSAGE", value: input.messagePush, changeMessage: "%@" }] : []),
         ...(input.backInfo ? [{ key: "info", label: "À PROPOS", value: input.backInfo }] : []),
         ...backAux,
         { key: "rgpd", label: "VOS DONNÉES", value: "Vos données sont gérées conformément au RGPD. Suppression disponible depuis l'application." },
