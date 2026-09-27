@@ -183,32 +183,32 @@ export default function GoogleWalletCard({
         </div>
       )}
 
-      {/* ── Bloc coloré bas — Nom de membre + Récompense (comme dans la vraie Google Wallet) ── */}
+      {/* ── Bloc coloré bas — Nom de membre + Récompense côte à côte ── */}
       <div style={{
         background: bg,
         borderRadius: "0 0 16px 16px",
-        padding: "8px 14px 12px",
+        padding: "8px 12px 12px",
         display: "flex",
-        flexDirection: "column",
-        gap: 2,
+        gap: 6,
       }}>
         <div style={{
+          flex: 1,
           background: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
           borderRadius: 10,
-          padding: "7px 12px",
-          marginBottom: 4,
+          padding: "7px 10px",
         }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: text, margin: "0 0 1px" }}>Nom de membre</p>
-          <p style={{ fontSize: 12, color: textSec, margin: 0 }}>Prénom N.</p>
+          <p style={{ fontSize: 10, fontWeight: 700, color: text, margin: "0 0 1px" }}>Nom de membre</p>
+          <p style={{ fontSize: 11, color: textSec, margin: 0 }}>Prénom N.</p>
         </div>
         {rewardName && (
           <div style={{
+            flex: 1,
             background: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
             borderRadius: 10,
-            padding: "7px 12px",
+            padding: "7px 10px",
           }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: text, margin: "0 0 1px" }}>Récompense</p>
-            <p style={{ fontSize: 12, color: textSec, margin: 0 }}>{rewardName}</p>
+            <p style={{ fontSize: 10, fontWeight: 700, color: text, margin: "0 0 1px" }}>Récompense</p>
+            <p style={{ fontSize: 11, color: textSec, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rewardName}</p>
           </div>
         )}
       </div>
