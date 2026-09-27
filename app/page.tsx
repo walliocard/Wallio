@@ -2279,6 +2279,13 @@ export default function LandingPage() {
                   <Link key={l.href} href={l.href} style={{ fontSize:13, color:"#8E8E93", textDecoration:"none" }}>{l.label}</Link>
                 ))}
               </div>
+              <a href="https://www.instagram.com/wallio.card" target="_blank" rel="noopener noreferrer" aria-label="Instagram Wallio"
+                style={{ display:"flex", alignItems:"center", gap:6, color:"#8E8E93", textDecoration:"none", fontSize:13 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                </svg>
+                @wallio.card
+              </a>
               <span style={{ fontSize:12, color:"#C7C7CC" }}>© 2026 Wallio</span>
             </div>
           </footer>
