@@ -6,7 +6,6 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
-import WallioIcon from "@/components/WallioIcon";
 import { useLang } from "@/lib/lang-context";
 
 type TopClient = { prenom: string; nom: string; tampons: number; id: string };
@@ -121,7 +120,7 @@ export default function AccueilPage() {
 
   const STAT_CARDS = [
     { label: t.dash_today,         value: stats.aujourd_hui,  gradient: true },
-    { label: t.dash_this_month,    value: stats.ce_mois,      color: "#34C759" },
+    { label: t.dash_this_month,    value: stats.ce_mois,      color: "var(--fg)" },
     { label: t.dash_total_clients, value: stats.total,        color: "var(--fg)" },
     { label: t.dash_stamps,        value: stats.tampons_total, color: "var(--fg)" },
     { label: t.dash_rewards,       value: stats.recompenses,  color: stats.recompenses > 0 ? "#FF9F0A" : "var(--fg-tertiary)" },
@@ -133,7 +132,7 @@ export default function AccueilPage() {
       {/* Header */}
       <div className="mb-8 flex items-center gap-4">
         <div className="w-14 h-14 rounded-[18px] flex-shrink-0 overflow-hidden flex items-center justify-center"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", boxShadow: "0 4px 16px rgba(0,0,0,0.07)" }}>
+          style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
           {m.logo_url
             ? <img src={m.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             : <span className="text-[24px] font-bold" style={{ color: "var(--accent)" }}>
@@ -142,15 +141,12 @@ export default function AccueilPage() {
           }
         </div>
         <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <WallioIcon size={14} />
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: "var(--fg-tertiary)" }}>
-              Wallio
-            </p>
-          </div>
-          <h1 className="text-[22px] lg:text-[34px] font-bold tracking-[-0.8px] leading-none" style={{ color: "var(--fg)" }}>
+          <h1 className="text-[22px] lg:text-[28px] font-bold tracking-[-0.8px] leading-none" style={{ color: "var(--fg)" }}>
             {marchand.nom}
           </h1>
+          <p className="text-[13px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+            {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          </p>
         </div>
       </div>
 
@@ -203,9 +199,7 @@ export default function AccueilPage() {
             className={`rounded-[20px] p-4 lg:p-5${i === STAT_CARDS.length - 1 && STAT_CARDS.length % 2 !== 0 ? " col-span-2 lg:col-span-1" : ""}`}
             style={{
               background: s.gradient ? "var(--wallio-gradient)" : "var(--glass-bg)",
-              border: s.gradient ? "none" : "1px solid var(--border)",
-              backdropFilter: "blur(20px)",
-              boxShadow: s.gradient ? "0 4px 20px rgba(139,92,246,0.25)" : "none",
+              boxShadow: s.gradient ? "0 4px 20px rgba(0,122,255,0.22)" : "var(--shadow-sm)",
             }}>
             <p className="text-[26px] lg:text-[38px] font-bold tracking-tight leading-none mb-1.5"
               style={{ color: s.gradient ? "white" : s.color }}>
@@ -224,16 +218,16 @@ export default function AccueilPage() {
 
         {/* Graphique semaine */}
         <div className="lg:col-span-2 rounded-2xl p-5"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
+          style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
           <div className="flex items-center justify-between mb-5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>
+            <p className="text-[12px] font-semibold" style={{ color: "var(--fg-secondary)" }}>
               {t.dash_activity}
             </p>
             {tendance !== null && (
               <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full"
                 style={{
-                  background: tendance >= 0 ? "rgba(52,199,89,0.12)" : "rgba(255,59,48,0.10)",
-                  color: tendance >= 0 ? "#34C759" : "#FF3B30",
+                  background: tendance >= 0 ? "rgba(0,122,255,0.10)" : "rgba(255,59,48,0.10)",
+                  color: tendance >= 0 ? "var(--accent)" : "#FF3B30",
                 }}>
                 {tendance >= 0 ? "+" : ""}{tendance}% {t.dash_vs_prev}
               </span>
@@ -278,7 +272,7 @@ export default function AccueilPage() {
 
           <Link href="/dashboard/notifications"
             className="rounded-2xl p-3 lg:p-4 flex flex-col justify-between transition-all hover:opacity-90"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)", minHeight: 80 }}>
+            style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", minHeight: 80 }}>
             <span style={{ color: "#FF9F0A" }}><Icons.Bell size={16} /></span>
             <div className="mt-2">
               <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>Notifs</p>
@@ -291,24 +285,18 @@ export default function AccueilPage() {
       {/* ── Widgets analytiques ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
 
-        {/* Taux de fidélité */}
-        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
+        {/* Taux de retour */}
+        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>{t.dash_stamps}</p>
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-              style={{
-                background: stats.taux_fidelite >= 50 ? "rgba(52,199,89,0.12)" : stats.taux_fidelite >= 25 ? "rgba(255,159,10,0.12)" : "rgba(142,142,147,0.12)",
-                color: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--fg-tertiary)",
-              }}>
-              {stats.taux_fidelite >= 50 ? "✓" : stats.taux_fidelite >= 25 ? "~" : "↓"}
-            </span>
+            <p className="text-[12px] font-semibold" style={{ color: "var(--fg-secondary)" }}>Taux de retour</p>
           </div>
-          <p className="text-[32px] font-bold tracking-tight leading-none mb-1" style={{ color: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--fg-tertiary)" }}>
+          <p className="text-[32px] font-bold tracking-tight leading-none mb-1"
+            style={{ color: stats.taux_fidelite > 0 ? "var(--accent)" : "var(--fg-tertiary)" }}>
             {stats.taux_fidelite}<span className="text-[18px] font-normal">%</span>
           </p>
           <div className="h-1.5 rounded-full overflow-hidden mt-2" style={{ background: "var(--border)" }}>
             <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${stats.taux_fidelite}%`, background: stats.taux_fidelite >= 50 ? "#34C759" : stats.taux_fidelite >= 25 ? "#FF9F0A" : "var(--border)" }} />
+              style={{ width: `${stats.taux_fidelite}%`, background: "var(--accent)" }} />
           </div>
           <p className="text-[11px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>
             {t.dash_returned}
@@ -316,9 +304,9 @@ export default function AccueilPage() {
         </div>
 
         {/* Nouvelles inscriptions */}
-        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
+        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>{t.dash_new_label}</p>
+            <p className="text-[12px] font-semibold" style={{ color: "var(--fg-secondary)" }}>{t.dash_new_label}</p>
             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
               style={{ background: "rgba(0,122,255,0.10)", color: "var(--accent)" }}>
               7j
@@ -335,9 +323,9 @@ export default function AccueilPage() {
         {/* Proches de la récompense */}
         <Link href="/dashboard/clients"
           className="rounded-2xl p-4 transition-all hover:opacity-90 active:scale-[0.98] block"
-          style={{ background: stats.proches_recompense > 0 ? "rgba(255,159,10,0.06)" : "var(--glass-bg)", border: `1px solid ${stats.proches_recompense > 0 ? "rgba(255,159,10,0.25)" : "var(--border)"}`, backdropFilter: "blur(20px)" }}>
+          style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", border: stats.proches_recompense > 0 ? "1px solid rgba(255,159,10,0.20)" : "none" }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>{t.dash_almost}</p>
+            <p className="text-[12px] font-semibold" style={{ color: "var(--fg-secondary)" }}>{t.dash_almost}</p>
             {stats.proches_recompense > 0 && (
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#FF9F0A"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
             )}
@@ -366,7 +354,7 @@ export default function AccueilPage() {
         {stats.top_client && stats.top_client.tampons > 0 ? (
           <Link href={`/dashboard/clients`}
             className="flex items-center gap-4 p-4 rounded-2xl transition-all hover:opacity-80"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
+            style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[15px] flex-shrink-0 text-white"
               style={{ background: "linear-gradient(135deg, #FFD700, #FF9F0A)" }}>
               {(stats.top_client.prenom[0] || "?").toUpperCase()}
@@ -376,7 +364,7 @@ export default function AccueilPage() {
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="#FF9F0A">
                   <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
                 </svg>
-                <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#FF9F0A" }}>
+                <p className="text-[11px] font-semibold" style={{ color: "#FF9F0A" }}>
                   {t.dash_best_clients}
                 </p>
               </div>
@@ -390,7 +378,7 @@ export default function AccueilPage() {
             <Icons.ChevronRight />
           </Link>
         ) : (
-          <div className="p-4 rounded-2xl" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+          <div className="p-4 rounded-2xl" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
             <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{t.clients_empty}</p>
           </div>
         )}
@@ -398,7 +386,7 @@ export default function AccueilPage() {
         {/* Voir tous les clients */}
         <Link href="/dashboard/clients"
           className="flex items-center justify-between p-4 rounded-2xl transition-all hover:opacity-80"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
+          style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(0,122,255,0.1)", color: "var(--accent)" }}>

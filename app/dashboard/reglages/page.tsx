@@ -5,6 +5,7 @@ import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { saveMarchandFields } from "@/lib/save-marchand";
 import { useLang } from "@/lib/lang-context";
+import CustomSelect from "@/components/CustomSelect";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
@@ -163,21 +164,23 @@ export default function ReglagesPage() {
                 onBlur={e => (e.target.style.borderColor = "var(--border)")}
               />
             </div>
-            <div style={{ opacity: modeRecompense === "progressif" ? 0.35 : 1, pointerEvents: modeRecompense === "progressif" ? "none" : "auto", transition: "opacity 0.2s" }}>
-              <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                {t.settings_reward} <span className="normal-case font-normal" style={{ color: "var(--fg-tertiary)" }}>(mode cyclique)</span>
-              </p>
-              <input
-                type="text"
-                value={nomRecompense}
-                onChange={e => setNomRecompense(e.target.value)}
-                placeholder={t.settings_reward_placeholder}
-                className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-                onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-                onBlur={e => (e.target.style.borderColor = "var(--border)")}
-              />
-            </div>
+            {modeRecompense === "cyclique" && (
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                  {t.settings_reward}
+                </p>
+                <input
+                  type="text"
+                  value={nomRecompense}
+                  onChange={e => setNomRecompense(e.target.value)}
+                  placeholder={t.settings_reward_placeholder}
+                  className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                  onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                  onBlur={e => (e.target.style.borderColor = "var(--border)")}
+                />
+              </div>
+            )}
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
                 {modeRecompense === "progressif" ? "Tampons total — cycle" : t.settings_stamps_needed} — <span style={{ color: "var(--accent)" }}>{objectif}</span>
@@ -292,14 +295,12 @@ export default function ReglagesPage() {
 
         {/* Anti-doublon */}
         <Card title={t.settings_anti_doublon}>
-          <select
+          <CustomSelect
+            className="mb-2"
             value={config.anti_doublon_delai}
-            onChange={e => set("anti_doublon_delai", Number(e.target.value))}
-            className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none mb-2"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-          >
-            {ANTI_DOUBLON.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+            onChange={v => set("anti_doublon_delai", Number(v))}
+            options={ANTI_DOUBLON.map(o => ({ label: o.label, value: o.value }))}
+          />
           <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
             {t.settings_delay_hint}
           </p>
@@ -403,14 +404,11 @@ export default function ReglagesPage() {
 
         {/* Fuseau horaire */}
         <Card title={t.settings_timezone}>
-          <select
+          <CustomSelect
             value={config.fuseau_horaire}
-            onChange={e => set("fuseau_horaire", e.target.value)}
-            className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-          >
-            {FUSEAUX.map(tz => <option key={tz} value={tz}>{tz}</option>)}
-          </select>
+            onChange={v => set("fuseau_horaire", v)}
+            options={FUSEAUX.map(tz => ({ label: tz, value: tz }))}
+          />
         </Card>
 
         {/* Parrainage */}

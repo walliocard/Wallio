@@ -8,6 +8,9 @@ import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } fro
 import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
+import CustomSelect from "@/components/CustomSelect";
+
+const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
 type Sort = "recent" | "tampons" | "alpha";
 
@@ -190,16 +193,16 @@ export default function ClientsPage() {
 
         {/* Sort + filtre récompenses */}
         <div className="flex gap-2">
-          <select
+          <CustomSelect
+            className="flex-1"
             value={sort}
-            onChange={e => setSort(e.target.value as Sort)}
-            className="flex-1 px-3 py-2.5 rounded-2xl text-[13px] outline-none"
-            style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-          >
-            <option value="recent">{t.clients_sort_recent}</option>
-            <option value="tampons">{t.clients_sort_stamps}</option>
-            <option value="alpha">{t.clients_sort_alpha_label}</option>
-          </select>
+            onChange={v => setSort(v as Sort)}
+            options={[
+              { label: t.clients_sort_recent, value: "recent" },
+              { label: t.clients_sort_stamps, value: "tampons" },
+              { label: t.clients_sort_alpha_label, value: "alpha" },
+            ]}
+          />
 
           {recompensesCount > 0 && (
             <button
@@ -264,7 +267,7 @@ export default function ClientsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <p className="text-[14px] font-semibold truncate" style={{ color: "var(--fg)" }}>
-                      {client.prenom} {client.nom}
+                      {cap(client.prenom)} {cap(client.nom)}
                     </p>
                     {client.recompense_en_attente && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"

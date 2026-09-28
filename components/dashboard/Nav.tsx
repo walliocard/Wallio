@@ -65,13 +65,17 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
 
         {/* Merchant info */}
         <div
-          className="hidden lg:block px-5 py-3.5 flex-shrink-0"
+          className="hidden lg:flex items-center gap-2.5 px-4 py-3 flex-shrink-0"
           style={{ borderBottom: "1px solid var(--border)" }}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: "var(--fg-tertiary)" }}>
-            Établissement
-          </p>
-          <p className="text-[13px] font-medium truncate" style={{ color: "var(--fg)" }}>
+          <div className="w-7 h-7 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
+            style={{ background: (marchand as Record<string,unknown>).couleur_principale as string || "var(--accent)" }}>
+            {(marchand as Record<string,unknown>).logo_url
+              ? <img src={(marchand as Record<string,unknown>).logo_url as string} className="w-full h-full object-cover" alt="" />
+              : <span className="text-white font-bold text-[11px]">{marchand.nom[0]?.toUpperCase()}</span>
+            }
+          </div>
+          <p className="text-[13px] font-semibold truncate" style={{ color: "var(--fg)" }}>
             {marchand.nom}
           </p>
         </div>
@@ -166,20 +170,29 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
       >
         {NAV.filter(n => n.mobile).map(({ href, Icon }) => {
           const isActive = active(pathname, href);
+          const isScanner = href === "/dashboard/scanner";
           return (
             <Link
               key={href}
               href={href}
-              className="flex items-center justify-center transition-all duration-150 active:scale-90"
-              style={{
-                width: 54,
-                height: 50,
-                borderRadius: 40,
+              className="flex items-center justify-center transition-all duration-150 active:scale-90 flex-shrink-0"
+              style={isScanner ? {
+                width: 50,
+                height: 42,
+                borderRadius: 14,
+                color: "white",
+                background: "var(--wallio-gradient)",
+                boxShadow: "0 4px 14px rgba(0,122,255,0.35)",
+                margin: "0 2px",
+              } : {
+                width: 46,
+                height: 46,
+                borderRadius: 38,
                 color: isActive ? "var(--accent)" : "var(--fg-tertiary)",
                 background: isActive ? "rgba(0,122,255,0.10)" : "transparent",
               }}
             >
-              <Icon size={22} />
+              <Icon size={isScanner ? 20 : 20} />
             </Link>
           );
         })}
