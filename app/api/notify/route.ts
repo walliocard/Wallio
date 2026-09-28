@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     const notifBody = `${title} · ${body}`;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
-    const iconUrl = logoUrl || `${appUrl}/api/logo/${marchandId}`;
+    const iconUrl = `${appUrl}/api/logo/${marchandId}`;
 
     // Sauvegarde le message actif sur le marchand (pour le backField Apple Wallet)
     const marchandUpdate: Record<string, unknown> = {
@@ -84,59 +84,57 @@ export async function POST(req: Request) {
     }
     await firestoreBatch.commit();
 
-    // Push APNS — awaité pour ne pas être tué par Vercel avant complétion
-    let apnsSent = 0;
-    if (apnsDocs.length > 0) {
-      const now = new Date().toISOString();
-      await Promise.all(
-        apnsDocs.map(async ({ token, ref }) => {
+    // APNS et FCM lancés EN PARALLÈLE — ni l'un ni l'autre ne bloque l'autre
+    const now = new Date().toISOString();
+
+    const apnsPromise = apnsDocs.length > 0
+      ? Promise.all(apnsDocs.map(async ({ token, ref }) => {
           try {
             await ref.update({ apns_last_updated: now });
             await pushPassUpdate(token);
-            apnsSent++;
-          } catch { /* push individuel échoué — on continue */ }
-        })
-      );
-    }
+            return 1;
+          } catch { return 0; }
+        })).then(r => r.reduce((a: number, b: number) => a + b, 0))
+      : Promise.resolve(0);
 
-    // Envoi FCM — data-only pour contrôle total de l'affichage
-    if (tokenDocs.length === 0) {
-      return NextResponse.json({ sent: apnsSent, failed: 0, total: apnsSent });
-    }
+    const fcmPromise = tokenDocs.length > 0
+      ? (async () => {
+          const messaging = adminMessaging();
+          let sent = 0;
+          let failed = 0;
+          for (let i = 0; i < tokenDocs.length; i += 500) {
+            const batch = tokenDocs.slice(i, i + 500);
+            const result = await messaging.sendEachForMulticast({
+              tokens: batch.map(d => d.token),
+              webpush: {
+                data: {
+                  title: notifTitle,
+                  body: notifBody,
+                  icon: iconUrl,
+                  url: `${appUrl}/mes-cartes`,
+                },
+                headers: { TTL: "86400" },
+                fcmOptions: { link: `${appUrl}/mes-cartes` },
+              },
+            });
+            sent += result.successCount;
+            failed += result.failureCount;
+            const cleanups: Promise<unknown>[] = [];
+            result.responses.forEach((r, idx) => {
+              if (!r.success && r.error?.code && (
+                r.error.code === "messaging/registration-token-not-registered" ||
+                r.error.code === "messaging/invalid-registration-token"
+              )) {
+                cleanups.push(batch[idx].ref.update({ fcm_token: null }));
+              }
+            });
+            if (cleanups.length > 0) await Promise.all(cleanups);
+          }
+          return { sent, failed };
+        })()
+      : Promise.resolve({ sent: 0, failed: 0 });
 
-    const messaging = adminMessaging();
-    let sent = 0;
-    let failed = 0;
-
-    for (let i = 0; i < tokenDocs.length; i += 500) {
-      const batch = tokenDocs.slice(i, i + 500);
-      const result = await messaging.sendEachForMulticast({
-        tokens: batch.map(d => d.token),
-        webpush: {
-          data: {
-            title: notifTitle,
-            body: notifBody,
-            icon: iconUrl,
-            url: `${appUrl}/mes-cartes`,
-          },
-          headers: { TTL: "86400" },
-          fcmOptions: { link: `${appUrl}/mes-cartes` },
-        },
-      });
-      sent += result.successCount;
-      failed += result.failureCount;
-
-      const cleanups: Promise<unknown>[] = [];
-      result.responses.forEach((r, idx) => {
-        if (!r.success && r.error?.code && (
-          r.error.code === "messaging/registration-token-not-registered" ||
-          r.error.code === "messaging/invalid-registration-token"
-        )) {
-          cleanups.push(batch[idx].ref.update({ fcm_token: null }));
-        }
-      });
-      if (cleanups.length > 0) await Promise.all(cleanups);
-    }
+    const [apnsSent, { sent, failed }] = await Promise.all([apnsPromise, fcmPromise]);
 
     return NextResponse.json({ sent: sent + apnsSent, failed, total: tokenDocs.length + apnsSent });
   } catch (err) {

@@ -2,39 +2,47 @@ import { NextResponse } from "next/server";
 
 // Sert le service worker FCM avec les variables d'environnement injectées
 export async function GET() {
-  const config = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
-  };
 
   const sw = `
-importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", event => event.waitUntil(clients.claim()));
 
-firebase.initializeApp(${JSON.stringify(config)});
+self.addEventListener("push", event => {
+  if (!event.data) return;
+  let payload = {};
+  try { payload = event.data.json(); } catch { return; }
 
-const messaging = firebase.messaging();
+  const n = payload.notification || {};
+  const d = payload.data || {};
+  const title = n.title || d.title || "Wallio";
+  const body  = n.body  || d.body  || "";
+  const icon  = n.icon  || d.icon  || "/icon-192.png";
+  const url   = d.url   || "/mes-cartes";
 
-// onBackgroundMessage est appelé pour les messages data-only (pas de champ notification)
-// ce qui nous donne le controle total sur l'affichage (icone marchand, click action)
-messaging.onBackgroundMessage(payload => {
-  const data = payload.data || {};
-  self.registration.showNotification(data.title || "Wallio", {
-    body: data.body || "",
-    icon: data.icon || "/icon-192.png",
-    badge: "/favicon-32.png",
-    data: { url: data.url || "/mes-cartes" },
-  });
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: "/favicon-32.png",
+      data: { url },
+    })
+  );
 });
 
 self.addEventListener("notificationclick", event => {
   event.notification.close();
   const url = event.notification.data?.url || "/mes-cartes";
-  event.waitUntil(clients.openWindow(url));
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if (client.url.includes("walliocard.com") && "focus" in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
 });
 `;
 

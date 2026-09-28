@@ -70,7 +70,7 @@ export function generatePassJson(input: PassInput): object {
     serialNumber: input.walletId,
     webServiceURL: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com"}/api/apple-wallet`,
     authenticationToken: input.authToken,
-    organizationName: "Wallio",
+    organizationName: input.merchantName,
     description: input.description || `Carte de fidélité — ${input.merchantName}`,
     logoText: input.merchantName,
     backgroundColor: hexToRgb(input.backgroundColor),

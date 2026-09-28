@@ -132,8 +132,13 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
       : marchand.objectif_tampons;
     const next = Math.max(0, Math.min(client.tampons + delta, maxTampons));
     setAdjusting(true);
-    await setTampons(client.id, next);
-    setClient(prev => prev ? { ...prev, tampons: next } : prev);
+    // En mode progressif, recalcule paliers_valides selon le nouveau nombre de tampons
+    let newPaliersValides: boolean[] | undefined = undefined;
+    if (modeRecompense === "progressif" && paliersDef.length > 0) {
+      newPaliersValides = paliersDef.map(p => next >= p.tampons);
+    }
+    await setTampons(client.id, next, newPaliersValides);
+    setClient(prev => prev ? { ...prev, tampons: next, ...(newPaliersValides !== undefined ? { paliers_valides: newPaliersValides } : {}) } : prev);
     setResult(null);
     const body = JSON.stringify({ walletId: client.wallet_id });
     const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };

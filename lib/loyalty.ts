@@ -296,8 +296,11 @@ export function formatTempsDepuis(ts?: { seconds: number } | null): string {
   return `il y a ${Math.floor(j / 365)} an(s)`;
 }
 
-export async function setTampons(clientId: string, tampons: number): Promise<void> {
-  await updateDoc(doc(db, "clients", clientId), { tampons: Math.max(0, tampons) });
+export async function setTampons(clientId: string, tampons: number, paliersValides?: boolean[]): Promise<void> {
+  await updateDoc(doc(db, "clients", clientId), {
+    tampons: Math.max(0, tampons),
+    ...(paliersValides !== undefined ? { paliers_valides: paliersValides } : {}),
+  });
 }
 
 export const WALLET_KEY = (marchandId: string) => `wallio_${marchandId}`;

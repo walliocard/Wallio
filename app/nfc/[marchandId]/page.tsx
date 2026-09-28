@@ -641,6 +641,7 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [consent, setConsent] = useState(false);
   const anneeMax = new Date().getFullYear() - 5;
   const annees = Array.from({ length: 90 }, (_, i) => anneeMax - i);
 
@@ -745,9 +746,21 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
 
             {error && <p className="text-[13px] px-1" style={{ color: "#FF453A" }}>{error}</p>}
 
-            <button type="submit" disabled={loading}
+            <label className="flex items-center gap-3 px-1 py-1 cursor-pointer select-none">
+              <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)}
+                className="shrink-0" style={{ width: 18, height: 18, accentColor: ACCENT, cursor: "pointer" }} />
+              <span className="text-[12px] leading-snug" style={{ color: FG_SEC }}>
+                J&apos;accepte la{" "}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer"
+                  style={{ color: ACCENT, textDecoration: "underline", fontWeight: 600 }}>
+                  politique de confidentialité
+                </a>
+              </span>
+            </label>
+
+            <button type="submit" disabled={loading || !consent}
               className="w-full py-4 rounded-2xl text-[16px] font-semibold transition-opacity active:opacity-80 mt-1"
-              style={{ background: BTN_BG, color: ACCENT_FG, boxShadow: "0 4px 24px rgba(99,102,241,0.30)" }}>
+              style={{ background: BTN_BG, color: ACCENT_FG, boxShadow: consent ? "0 4px 24px rgba(99,102,241,0.30)" : "none", opacity: consent ? 1 : 0.45 }}>
               {loading ? "Création…" : "Créer ma carte"}
             </button>
           </form>
@@ -903,9 +916,10 @@ function InstallBanner() {
             <p style={{ fontSize: 12, fontWeight: 600, color: "var(--fg)", marginBottom: 8 }}>Comment installer sur iPhone :</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {[
-                { n: "1", t: "Appuyez sur le bouton Partager", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> },
-                { n: "2", t: "Faites défiler vers « Sur l'écran d'accueil »", icon: null },
-                { n: "3", t: "Appuyez sur « Ajouter »", icon: null },
+                { n: "1", t: "Appuyez sur ··· en bas à droite", icon: null },
+                { n: "2", t: "Appuyez sur le bouton Partager", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> },
+                { n: "3", t: "Faites défiler vers « Sur l'écran d'accueil »", icon: null },
+                { n: "4", t: "Appuyez sur « Ajouter »", icon: null },
               ].map(s => (
                 <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 20, height: 20, borderRadius: 6, background: "linear-gradient(135deg,#5B7CFA,#7C5BFA)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
