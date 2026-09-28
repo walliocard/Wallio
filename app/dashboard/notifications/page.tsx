@@ -5,6 +5,7 @@ import { useState } from "react";
 import type React from "react";
 import { getAuth } from "firebase/auth";
 import { useLang } from "@/lib/lang-context";
+import DateTimePicker from "@/components/DateTimePicker";
 
 type Segment = "tous" | "actifs" | "inactifs";
 type SendState = "idle" | "sending" | "success" | "error";
@@ -193,44 +194,33 @@ export default function NotificationsPage() {
 
         {/* Expiration */}
         <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-tertiary)" }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Expiration du message</p>
+              <p className="text-[12px] font-semibold" style={{ color: "var(--fg-secondary)" }}>Expiration du message</p>
             </div>
             {expiresDate && (
               <button onClick={() => { setExpiresDate(""); setExpiresTime("23:59"); }}
-                style={{ fontSize: 12, color: "var(--fg-tertiary)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>
+                className="text-[12px] px-3 py-1 rounded-xl transition-all hover:opacity-70"
+                style={{ color: "var(--fg-tertiary)", background: "var(--bg)", border: "1px solid var(--border)" }}>
                 Effacer
               </button>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={expiresDate}
-              onChange={e => setExpiresDate(e.target.value)}
-              min={new Date().toISOString().slice(0, 10)}
-              className="flex-1 px-4 py-3 rounded-2xl text-[14px] outline-none"
-              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: expiresDate ? "var(--fg)" : "var(--fg-tertiary)" }}
-              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-              onBlur={e => (e.target.style.borderColor = "var(--border)")}
-            />
-            <input
-              type="time"
-              value={expiresTime}
-              onChange={e => setExpiresTime(e.target.value)}
-              className="px-4 py-3 rounded-2xl text-[14px] outline-none"
-              style={{ width: 110, background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", opacity: expiresDate ? 1 : 0.4 }}
-              onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-              onBlur={e => (e.target.style.borderColor = "var(--border)")}
-            />
-          </div>
-          <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
-            {expiresDate
-              ? `S'efface du wallet le ${new Date(expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
-              : "Optionnel — s'efface automatiquement du wallet Apple à cette date"}
-          </p>
+
+          <DateTimePicker
+            date={expiresDate}
+            time={expiresTime}
+            onDateChange={setExpiresDate}
+            onTimeChange={setExpiresTime}
+            min={new Date().toISOString().slice(0, 10)}
+          />
+
+          {expiresDate && (
+            <p className="text-[11px] mt-3" style={{ color: "var(--fg-tertiary)" }}>
+              {`S'efface du wallet le ${new Date(expiresAt).toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}`}
+            </p>
+          )}
         </div>
 
         {sendState === "success" && result && (
