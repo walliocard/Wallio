@@ -238,131 +238,127 @@ function IPhoneFrame({ mode, phase }: { mode:"tap"|"scan"; phase:number }) {
   const zoomed = phase >= 3;
   return (
     <div style={{
-      width:118, height:254,
       position:"relative",
       transform: zoomed ? "scale(1.85)" : "scale(1)",
       transformOrigin:"center center",
       transition:"transform 0.9s cubic-bezier(0.34,1.1,0.64,1)",
     }}>
-      {/* Contour SVG iPhone 15 Pro */}
-      <svg width="118" height="254" viewBox="0 0 118 254" fill="none" style={{ position:"absolute", inset:0, zIndex:2, pointerEvents:"none" }}>
-        {/* Boîtier principal */}
-        <rect x="0.75" y="0.75" width="116.5" height="252.5" rx="37.25" fill="url(#phoneGrad)" stroke="url(#rimGrad)" strokeWidth="1.5"/>
-        {/* Bouton volume + */}
-        <rect x="-2" y="58" width="3.5" height="26" rx="1.75" fill="#555"/>
-        {/* Bouton volume - */}
-        <rect x="-2" y="94" width="3.5" height="26" rx="1.75" fill="#555"/>
-        {/* Bouton power */}
-        <rect x="116.5" y="78" width="3.5" height="40" rx="1.75" fill="#555"/>
-        {/* Ecran (zone noire intérieure) */}
-        <rect x="5" y="5" width="108" height="244" rx="33" fill="#050505"/>
-        {/* Dynamic island */}
-        <rect x="39" y="13" width="40" height="11" rx="5.5" fill="#000"/>
-        <defs>
-          <linearGradient id="phoneGrad" x1="0" y1="0" x2="118" y2="254" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#525252"/>
-            <stop offset="35%" stopColor="#2E2E2E"/>
-            <stop offset="70%" stopColor="#1C1C1C"/>
-            <stop offset="100%" stopColor="#0F0F0F"/>
-          </linearGradient>
-          <linearGradient id="rimGrad" x1="0" y1="0" x2="118" y2="254" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.30)"/>
-            <stop offset="50%" stopColor="rgba(255,255,255,0.10)"/>
-            <stop offset="100%" stopColor="rgba(255,255,255,0.22)"/>
-          </linearGradient>
-        </defs>
-      </svg>
-
-      {/* Écran */}
+      {/* Boîtier extérieur — titane */}
       <div style={{
-        position:"absolute", top:5, left:5, right:5, bottom:5,
-        borderRadius:33, overflow:"hidden", zIndex:1,
+        width:118, height:254,
+        borderRadius:44,
+        background:"linear-gradient(145deg,#606060 0%,#3A3A3A 25%,#242424 55%,#161616 100%)",
+        padding:5,
+        position:"relative",
+        boxShadow:[
+          "inset 0 1px 0 rgba(255,255,255,0.22)",
+          "inset 0 -1px 0 rgba(255,255,255,0.06)",
+          "inset 1px 0 0 rgba(255,255,255,0.10)",
+          "inset -1px 0 0 rgba(255,255,255,0.06)",
+          "0 0 0 1px rgba(0,0,0,0.7)",
+          "0 50px 120px rgba(0,0,0,0.60)",
+          "0 16px 40px rgba(0,0,0,0.35)",
+        ].join(","),
       }}>
-        {/* Fond écran */}
+        {/* Bouton volume + */}
+        <div style={{ position:"absolute",left:-3.5,top:54,width:4,height:26,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#686868,#484848)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.15)" }} />
+        {/* Bouton volume - */}
+        <div style={{ position:"absolute",left:-3.5,top:90,width:4,height:26,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#686868,#484848)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.15)" }} />
+        {/* Bouton power */}
+        <div style={{ position:"absolute",right:-3.5,top:76,width:4,height:40,borderRadius:"0 3px 3px 0",background:"linear-gradient(270deg,#686868,#484848)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.15)" }} />
+
+        {/* Écran */}
         <div style={{
           width:"100%", height:"100%",
+          borderRadius:40,
+          overflow:"hidden",
           background: phase>=3 ? "#1C1C1E"
             : mode==="scan" ? "#000"
             : "linear-gradient(155deg,#1a1a3a 0%,#0a0a1e 60%,#000 100%)",
-          transition:"background 0.4s ease",
-          display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-          paddingTop:14,
+          transition:"background 0.5s ease",
           position:"relative",
+          display:"flex", flexDirection:"column",
+          alignItems:"center", justifyContent:"center",
         }}>
+          {/* Dynamic island */}
+          <div style={{
+            position:"absolute", top:10, left:"50%",
+            transform:"translateX(-50%)",
+            width:40, height:11,
+            background:"#000",
+            borderRadius:6, zIndex:5,
+            boxShadow:"0 0 0 1px rgba(255,255,255,0.06)",
+          }} />
 
-          {/* Contenu phase 0-2 */}
+          {/* Phase 0-2 : écran veille ou caméra */}
           {phase < 3 && (
             mode==="scan" ? (
-              <div style={{ position:"relative", width:"72%", height:"58%", opacity:phase>=1?1:0, transition:"opacity 0.5s" }}>
+              <div style={{ position:"relative",width:"72%",height:"58%",opacity:phase>=1?1:0,transition:"opacity 0.5s",marginTop:8 }}>
                 {([
-                  {top:0,left:0,borderTop:"2.5px solid rgba(255,255,255,0.9)",borderLeft:"2.5px solid rgba(255,255,255,0.9)"},
-                  {top:0,right:0,borderTop:"2.5px solid rgba(255,255,255,0.9)",borderRight:"2.5px solid rgba(255,255,255,0.9)"},
-                  {bottom:0,left:0,borderBottom:"2.5px solid rgba(255,255,255,0.9)",borderLeft:"2.5px solid rgba(255,255,255,0.9)"},
-                  {bottom:0,right:0,borderBottom:"2.5px solid rgba(255,255,255,0.9)",borderRight:"2.5px solid rgba(255,255,255,0.9)"},
+                  {top:0,left:0,borderTop:"2.5px solid rgba(255,255,255,0.85)",borderLeft:"2.5px solid rgba(255,255,255,0.85)"},
+                  {top:0,right:0,borderTop:"2.5px solid rgba(255,255,255,0.85)",borderRight:"2.5px solid rgba(255,255,255,0.85)"},
+                  {bottom:0,left:0,borderBottom:"2.5px solid rgba(255,255,255,0.85)",borderLeft:"2.5px solid rgba(255,255,255,0.85)"},
+                  {bottom:0,right:0,borderBottom:"2.5px solid rgba(255,255,255,0.85)",borderRight:"2.5px solid rgba(255,255,255,0.85)"},
                 ] as React.CSSProperties[]).map((s,i)=>(
-                  <div key={i} style={{ position:"absolute", width:12, height:12, ...s }} />
+                  <div key={i} style={{ position:"absolute",width:12,height:12,...s }} />
                 ))}
-                <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:16, height:1, background:"rgba(255,255,255,0.2)" }} />
-                <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:1, height:16, background:"rgba(255,255,255,0.2)" }} />
+                <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:16,height:1,background:"rgba(255,255,255,0.18)" }} />
+                <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:1,height:16,background:"rgba(255,255,255,0.18)" }} />
               </div>
             ) : (
-              <div style={{ textAlign:"center" }}>
-                <div style={{ width:34,height:34,borderRadius:10,background:"linear-gradient(135deg,#007AFF,#8B5CF6)",margin:"0 auto 7px",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 6px 18px rgba(0,122,255,0.4)" }}>
-                  <span style={{ fontSize:15,fontWeight:800,color:"white" }}>W</span>
+              <div style={{ textAlign:"center",marginTop:8 }}>
+                <div style={{ width:36,height:36,borderRadius:11,background:"linear-gradient(135deg,#007AFF,#8B5CF6)",margin:"0 auto 8px",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 6px 20px rgba(0,122,255,0.45)" }}>
+                  <span style={{ fontSize:16,fontWeight:800,color:"white" }}>W</span>
                 </div>
-                <div style={{ fontSize:7,fontWeight:700,color:"rgba(255,255,255,0.88)",letterSpacing:2 }}>WALLIO</div>
-                {phase>=1 && <div style={{ marginTop:10,fontSize:6.5,color:"rgba(255,255,255,0.4)",animation:"sceneFadeIn 0.4s ease both" }}>Lecture NFC…</div>}
+                <div style={{ fontSize:7.5,fontWeight:700,color:"rgba(255,255,255,0.88)",letterSpacing:2 }}>WALLIO</div>
+                {phase>=1 && (
+                  <div style={{ marginTop:12,fontSize:6.5,color:"rgba(255,255,255,0.38)",animation:"sceneFadeIn 0.4s ease both" }}>
+                    Lecture NFC…
+                  </div>
+                )}
               </div>
             )
           )}
 
-          {/* Carte Wallet sur le téléphone — phase 3 */}
+          {/* Phase 3 : carte Wallet dans le téléphone */}
           {phase>=3 && (
-            <div style={{ position:"absolute", inset:0, animation:"sceneFadeIn 0.45s ease 0.15s both", opacity:0, display:"flex", flexDirection:"column" }}>
-              {/* Header */}
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"14px 12px 8px" }}>
-                <div style={{ display:"flex", gap:5, alignItems:"center" }}>
-                  <div style={{ width:16,height:16,borderRadius:4,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                    <span style={{ fontSize:5.5,fontWeight:800,color:"rgba(255,255,255,0.85)" }}>MM</span>
+            <div style={{ position:"absolute",inset:0,opacity:0,animation:"sceneFadeIn 0.5s ease 0.2s both",display:"flex",flexDirection:"column",paddingTop:28 }}>
+              {/* Header carte */}
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"0 10px 7px" }}>
+                <div style={{ display:"flex",gap:5,alignItems:"center" }}>
+                  <div style={{ width:18,height:18,borderRadius:5,background:"rgba(255,255,255,0.14)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                    <span style={{ fontSize:6,fontWeight:800,color:"rgba(255,255,255,0.8)" }}>MM</span>
                   </div>
-                  <span style={{ fontSize:7.5,fontWeight:600,color:"rgba(255,255,255,0.9)" }}>Mori Matcha</span>
+                  <span style={{ fontSize:8,fontWeight:600,color:"rgba(255,255,255,0.92)",whiteSpace:"nowrap" }}>Mori Matcha</span>
                 </div>
-                <div style={{ textAlign:"right" }}>
-                  <div style={{ fontSize:4.5,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:1 }}>TAMPONS</div>
-                  <div style={{ fontSize:9,fontWeight:700,color:"white" }}>7/10</div>
+                <div style={{ textAlign:"right",flexShrink:0 }}>
+                  <div style={{ fontSize:4.5,color:"rgba(255,255,255,0.38)",textTransform:"uppercase",letterSpacing:"0.08em" }}>TAMPONS</div>
+                  <div style={{ fontSize:10,fontWeight:700,color:"white",lineHeight:1.2 }}>7/10</div>
                 </div>
               </div>
-              {/* Strip tampons */}
-              <div style={{ background:"rgba(255,255,255,0.07)",margin:"0 8px",borderRadius:6,padding:"10px 8px",display:"flex",flexWrap:"wrap",gap:5,justifyContent:"center" }}>
+              {/* Tampons */}
+              <div style={{ background:"rgba(255,255,255,0.06)",margin:"0 6px",borderRadius:7,padding:"10px 6px",display:"flex",flexWrap:"wrap",gap:5,justifyContent:"center" }}>
                 {Array.from({length:10},(_,i)=>(
-                  <div key={i} style={{ width:12,height:12,borderRadius:"50%",background:i<7?"rgba(255,255,255,0.9)":"transparent",border:i<7?"none":"1px solid rgba(255,255,255,0.25)" }} />
+                  <div key={i} style={{ width:13,height:13,borderRadius:"50%",background:i<7?"rgba(255,255,255,0.92)":"transparent",border:i<7?"none":"1px solid rgba(255,255,255,0.22)",flexShrink:0 }} />
                 ))}
               </div>
               {/* Champs */}
-              <div style={{ display:"flex",gap:4,padding:"8px 10px 6px",borderTop:"0.5px solid rgba(255,255,255,0.08)",marginTop:6 }}>
+              <div style={{ display:"flex",gap:3,padding:"7px 8px 5px",borderTop:"0.5px solid rgba(255,255,255,0.07)",marginTop:5 }}>
                 {[["RÉCOMPENSE","Café offert"],["MEMBRE","Client fidèle"]].map(([l,v])=>(
-                  <div key={l} style={{ flex:1 }}>
-                    <div style={{ fontSize:4,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>{l}</div>
-                    <div style={{ fontSize:6,fontWeight:500,color:"rgba(255,255,255,0.80)" }}>{v}</div>
+                  <div key={l} style={{ flex:1,minWidth:0 }}>
+                    <div style={{ fontSize:4,color:"rgba(255,255,255,0.32)",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>{l}</div>
+                    <div style={{ fontSize:6.5,fontWeight:500,color:"rgba(255,255,255,0.78)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{v}</div>
                   </div>
                 ))}
               </div>
-              {/* Separateur + QR */}
-              <div style={{ borderTop:"0.5px solid rgba(255,255,255,0.08)",display:"flex",justifyContent:"center",padding:"7px 0 10px" }}>
-                <div style={{ background:"white",borderRadius:3,padding:3,width:26,height:26 }}>
-                  <svg width="20" height="20" viewBox="0 0 21 21" fill="none">
-                    <rect width="9" height="9" rx="1.5" fill="#1D1D1F"/>
-                    <rect x="1.5" y="1.5" width="6" height="6" rx="0.8" fill="white"/>
-                    <rect x="3" y="3" width="3" height="3" fill="#1D1D1F"/>
-                    <rect x="12" width="9" height="9" rx="1.5" fill="#1D1D1F"/>
-                    <rect x="13.5" y="1.5" width="6" height="6" rx="0.8" fill="white"/>
-                    <rect x="15" y="3" width="3" height="3" fill="#1D1D1F"/>
-                    <rect y="12" width="9" height="9" rx="1.5" fill="#1D1D1F"/>
-                    <rect x="1.5" y="13.5" width="6" height="6" rx="0.8" fill="white"/>
-                    <rect x="3" y="15" width="3" height="3" fill="#1D1D1F"/>
-                    <rect x="12" y="12" width="4" height="4" rx="0.5" fill="#1D1D1F"/>
-                    <rect x="17" y="12" width="4" height="4" rx="0.5" fill="#1D1D1F"/>
-                    <rect x="12" y="17" width="9" height="4" rx="0.5" fill="#1D1D1F"/>
+              {/* QR */}
+              <div style={{ borderTop:"0.5px solid rgba(255,255,255,0.07)",display:"flex",justifyContent:"center",paddingTop:8,flex:1,alignItems:"center" }}>
+                <div style={{ background:"white",borderRadius:4,padding:3 }}>
+                  <svg width="22" height="22" viewBox="0 0 21 21" fill="none">
+                    <rect width="9" height="9" rx="1.5" fill="#111"/><rect x="1.5" y="1.5" width="6" height="6" rx="0.8" fill="white"/><rect x="3" y="3" width="3" height="3" fill="#111"/>
+                    <rect x="12" width="9" height="9" rx="1.5" fill="#111"/><rect x="13.5" y="1.5" width="6" height="6" rx="0.8" fill="white"/><rect x="15" y="3" width="3" height="3" fill="#111"/>
+                    <rect y="12" width="9" height="9" rx="1.5" fill="#111"/><rect x="1.5" y="13.5" width="6" height="6" rx="0.8" fill="white"/><rect x="3" y="15" width="3" height="3" fill="#111"/>
+                    <rect x="12" y="12" width="4" height="4" rx="0.5" fill="#111"/><rect x="17" y="12" width="4" height="4" rx="0.5" fill="#111"/><rect x="12" y="17" width="9" height="4" rx="0.5" fill="#111"/>
                   </svg>
                 </div>
               </div>
@@ -370,20 +366,12 @@ function IPhoneFrame({ mode, phase }: { mode:"tap"|"scan"; phase:number }) {
           )}
 
           {/* Reflet écran */}
-          <div style={{ position:"absolute",top:0,left:0,right:0,height:50,borderRadius:"33px 33px 0 0",background:"linear-gradient(180deg,rgba(255,255,255,0.05) 0%,transparent 100%)",pointerEvents:"none" }} />
+          <div style={{ position:"absolute",top:0,left:0,right:0,height:55,borderRadius:"40px 40px 0 0",background:"linear-gradient(180deg,rgba(255,255,255,0.06) 0%,transparent 100%)",pointerEvents:"none",zIndex:4 }} />
         </div>
-      </div>
 
-      {/* Ombre portée */}
-      <div style={{
-        position:"absolute", bottom:-24, left:"50%", transform:"translateX(-50%)",
-        width:80, height:16, borderRadius:"50%",
-        background:"rgba(0,0,0,0.25)",
-        filter:"blur(10px)",
-        transition:"opacity 0.5s, width 0.9s",
-        opacity: zoomed ? 0 : 1,
-        zIndex:0,
-      }} />
+        {/* Reflet boîtier */}
+        <div style={{ position:"absolute",top:0,left:0,right:0,height:90,borderRadius:"44px 44px 0 0",background:"linear-gradient(180deg,rgba(255,255,255,0.09) 0%,transparent 100%)",pointerEvents:"none" }} />
+      </div>
     </div>
   );
 }
