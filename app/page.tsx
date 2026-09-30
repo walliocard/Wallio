@@ -234,6 +234,154 @@ function WalletCardMock({
   );
 }
 
+function AccesScene({ t }: { t: { accesSceneTitle: string; accesModeTap: string; accesModeQr: string } }) {
+  const [mode, setMode] = useState<"tap" | "scan">("tap");
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const ts: ReturnType<typeof setTimeout>[] = [];
+    setPhase(0);
+    ts.push(setTimeout(() => setPhase(1), 700));
+    ts.push(setTimeout(() => setPhase(2), 1900));
+    ts.push(setTimeout(() => setPhase(3), 2700));
+    ts.push(setTimeout(() => setMode(m => m === "tap" ? "scan" : "tap"), 5400));
+    return () => ts.forEach(clearTimeout);
+  }, [mode]);
+
+  const handleSwitch = (m: "tap" | "scan") => { if (m !== mode) setMode(m); };
+
+  const phonePos: Record<"tap"|"scan", Record<0|1|2|3, [number,number]>> = {
+    tap:  { 0:[440,94], 1:[68,94],  2:[62,94],  3:[260,80]  },
+    scan: { 0:[300,-60], 1:[300,52], 2:[300,52], 3:[300,-40] },
+  };
+  const [px, py] = phonePos[mode][Math.min(phase, 3) as 0|1|2|3];
+
+  return (
+    <div style={{ display:"flex", gap:48, alignItems:"center", flexWrap:"wrap" }}>
+      {/* Texte + boutons */}
+      <div style={{ flex:"0 0 260px", minWidth:200 }}>
+        <h2 style={{ fontSize:"clamp(24px,2.8vw,36px)", fontWeight:700, letterSpacing:-0.8, color:"#1D1D1F", lineHeight:1.22, marginBottom:32 }}>
+          {t.accesSceneTitle}
+        </h2>
+        <div style={{ display:"flex", gap:10 }}>
+          {(["tap","scan"] as const).map(m => (
+            <button key={m} onClick={() => handleSwitch(m)} style={{
+              padding:"11px 22px", borderRadius:50, fontSize:14, fontWeight:600, cursor:"pointer",
+              border: mode===m ? "none" : "1.5px solid rgba(0,0,0,0.12)",
+              background: mode===m ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "white",
+              color: mode===m ? "white" : "#6E6E73",
+              boxShadow: mode===m ? "0 4px 16px rgba(0,122,255,0.22)" : "none",
+              transition:"all 0.3s ease",
+            }}>
+              {m === "tap" ? t.accesModeTap : t.accesModeQr}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Scène animée */}
+      <div className="acces-scene-wrap" style={{ flex:1, minWidth:300, display:"flex", justifyContent:"center" }}>
+        <div className="acces-scene" style={{ width:500, height:320, position:"relative", flexShrink:0 }}>
+
+          {/* Carte comptoir 3D */}
+          <div style={{
+            position:"absolute", top:"50%", left:"50%",
+            transform:"translate(-50%,-52%) perspective(900px) rotateX(18deg) rotateY(-8deg) rotateZ(1deg)",
+            animation:"cardFloat 4s ease-in-out infinite",
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/wallio-carte-comptoir.png" alt="" style={{
+              width:350, display:"block", borderRadius:16,
+              boxShadow:"0 36px 80px rgba(0,0,0,0.28), 0 8px 20px rgba(0,0,0,0.12)",
+            }} />
+
+            {/* Ondes NFC */}
+            {mode==="tap" && phase===2 && [0,1,2].map(i => (
+              <div key={i} style={{
+                position:"absolute", top:"48%", left:"16%",
+                width:24, height:24, borderRadius:"50%",
+                border:"2px solid #007AFF",
+                transform:"translate(-50%,-50%)",
+                animation:`nfcWave 1.1s ease-out ${i*0.28}s infinite`,
+                pointerEvents:"none",
+              }} />
+            ))}
+
+            {/* Ligne de scan */}
+            {mode==="scan" && phase===2 && (
+              <div style={{
+                position:"absolute", top:"20%", right:"10%",
+                width:"35%", height:"60%",
+                overflow:"hidden", borderRadius:4,
+                pointerEvents:"none",
+              }}>
+                <div style={{
+                  height:2,
+                  background:"linear-gradient(90deg,transparent,#007AFF,#8B5CF6,transparent)",
+                  animation:"scanLine 0.85s ease-in-out infinite",
+                  boxShadow:"0 0 10px rgba(0,122,255,0.55)",
+                }} />
+              </div>
+            )}
+          </div>
+
+          {/* iPhone */}
+          <div style={{
+            position:"absolute", left:px, top:py, zIndex:10,
+            transition:"left 0.95s cubic-bezier(0.34,1.15,0.64,1), top 0.95s cubic-bezier(0.34,1.15,0.64,1)",
+          }}>
+            <div style={{
+              width:66, height:134, background:"#111", borderRadius:21,
+              padding:"5px 4px 4px",
+              boxShadow:"0 24px 56px rgba(0,0,0,0.42), inset 0 0 0 0.5px rgba(255,255,255,0.10)",
+            }}>
+              <div style={{ width:22,height:7,background:"#111",borderRadius:4,margin:"0 auto 3px",position:"relative",zIndex:2 }} />
+              <div style={{
+                height:"calc(100% - 10px)",
+                background: mode==="scan" ? "#000" : "#F0F4FF",
+                borderRadius:16,
+                display:"flex", alignItems:"center", justifyContent:"center",
+                overflow:"hidden", position:"relative",
+              }}>
+                {mode==="scan" ? (
+                  <div style={{ position:"relative", width:"74%", height:"64%", opacity:phase>=1?1:0, transition:"opacity 0.4s" }}>
+                    {([
+                      {top:0,left:0,borderTop:"2px solid #fff",borderLeft:"2px solid #fff"},
+                      {top:0,right:0,borderTop:"2px solid #fff",borderRight:"2px solid #fff"},
+                      {bottom:0,left:0,borderBottom:"2px solid #fff",borderLeft:"2px solid #fff"},
+                      {bottom:0,right:0,borderBottom:"2px solid #fff",borderRight:"2px solid #fff"},
+                    ] as React.CSSProperties[]).map((s,i) => (
+                      <div key={i} style={{ position:"absolute", width:9, height:9, ...s }} />
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ textAlign:"center" }}>
+                    <div style={{ width:22,height:22,borderRadius:7,background:"linear-gradient(135deg,#007AFF,#8B5CF6)",margin:"0 auto 5px",display:"flex",alignItems:"center",justifyContent:"center" }}>
+                      <span style={{ fontSize:10,fontWeight:700,color:"white" }}>W</span>
+                    </div>
+                    <div style={{ fontSize:6,fontWeight:700,color:"#1D1D1F",letterSpacing:1 }}>WALLIO</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Résultat Wallet */}
+          {phase>=3 && (
+            <div style={{
+              position:"absolute", bottom:0, left:"50%",
+              zIndex:20,
+              animation:"walletAppear 0.5s cubic-bezier(0.34,1.4,0.64,1) forwards",
+            }}>
+              <WalletCardMock stamps={7} total={10} bg="#1C1C1E" name="Mori Matcha" logoInitial="MM" reward="Café offert" />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type Lang = "fr" | "en" | "ro" | "es";
 
 const T = {
@@ -264,6 +412,7 @@ const T = {
     accesQrTag:"QR Code", accesQrH3:"Scan, c'est fait",
     accesQrDesc:"Le client ouvre son appareil photo et scanne le QR code imprimé sur la carte comptoir. Fonctionne avec tous les téléphones, sans aucune app.",
     accesQrFeats:["Compatible 100 % des smartphones","Appareil photo natif, aucune app","Toujours présent sur la carte comptoir"],
+    accesSceneTitle:"Posé sur votre comptoir. Rien à installer.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
     flowTag:"Parcours client", flowH2a:"Deux scénarios.", flowH2b:"Zéro friction.",
     flowSub:"Nouveau client ou habitué, le flux est pensé pour chacun.",
     flowNewTitle:"Nouveau client", flowNewSub:"Première visite",
@@ -432,6 +581,7 @@ const T = {
     accesQrTag:"QR Code", accesQrH3:"Scan, done.",
     accesQrDesc:"The customer opens their camera and scans the QR code printed on the counter card. Works on all phones, no app needed.",
     accesQrFeats:["Compatible with 100% of smartphones","Native camera, no app","Always on the counter card"],
+    accesSceneTitle:"On your counter. Nothing to install.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
     flowTag:"Customer journey", flowH2a:"Two scenarios.", flowH2b:"Zero friction.",
     flowSub:"New customer or regular, the flow is designed for each.",
     flowNewTitle:"New customer", flowNewSub:"First visit",
@@ -600,6 +750,7 @@ const T = {
     accesQrTag:"Cod QR", accesQrH3:"Scanare, gata.",
     accesQrDesc:"Clientul deschide camera și scanează codul QR de pe cardul de tejghea. Funcționează pe orice telefon, fără nicio aplicație.",
     accesQrFeats:["Compatible cu 100% dintre smartphone-uri","Camera nativă, nicio aplicație","Mereu prezent pe cardul de tejghea"],
+    accesSceneTitle:"Pe tejgheaua dvs. Fără instalare.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
     flowTag:"Parcursul clientului", flowH2a:"Două scenarii.", flowH2b:"Zero fricțiune.",
     flowSub:"Client nou sau fidel, fluxul este gândit pentru fiecare.",
     flowNewTitle:"Client nou", flowNewSub:"Prima vizită",
@@ -768,6 +919,7 @@ const T = {
     accesQrTag:"Código QR", accesQrH3:"Escaneo, listo.",
     accesQrDesc:"El cliente abre su cámara y escanea el código QR de la tarjeta de mostrador. Funciona con todos los teléfonos, sin ninguna app.",
     accesQrFeats:["Compatible con el 100% de los smartphones","Cámara nativa, sin app","Siempre en la tarjeta de mostrador"],
+    accesSceneTitle:"En tu mostrador. Nada que instalar.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
     flowTag:"Recorrido del cliente", flowH2a:"Dos escenarios.", flowH2b:"Cero fricción.",
     flowSub:"Cliente nuevo o habitual, el flujo está pensado para cada uno.",
     flowNewTitle:"Cliente nuevo", flowNewSub:"Primera visita",
@@ -1037,6 +1189,32 @@ export default function LandingPage() {
         .nfc-ring-2 { animation: nfcPulse 2s ease-in-out infinite 0.3s; }
         .nfc-ring-3 { animation: nfcPulse 2s ease-in-out infinite 0.6s; }
 
+        @keyframes cardFloat {
+          0%,100% { transform:translate(-50%,-52%) perspective(900px) rotateX(18deg) rotateY(-8deg) rotateZ(1deg) translateY(0); }
+          50%      { transform:translate(-50%,-52%) perspective(900px) rotateX(18deg) rotateY(-8deg) rotateZ(1deg) translateY(-8px); }
+        }
+        @keyframes nfcWave {
+          0%   { opacity:0.85; transform:translate(-50%,-50%) scale(1); }
+          100% { opacity:0;    transform:translate(-50%,-50%) scale(4); }
+        }
+        @keyframes scanLine {
+          0%,100% { transform:translateY(0); }
+          50%     { transform:translateY(120px); }
+        }
+        @keyframes walletAppear {
+          0%   { opacity:0; transform:translateX(-50%) translateY(28px) scale(0.93); }
+          100% { opacity:1; transform:translateX(-50%) translateY(0)    scale(1); }
+        }
+        .acces-scene-wrap { overflow:visible; }
+        @media (max-width:900px) {
+          .acces-scene { transform:scale(0.72); transform-origin:top center; }
+          .acces-scene-wrap { height:calc(320px * 0.72) !important; }
+        }
+        @media (max-width:500px) {
+          .acces-scene { transform:scale(0.54); transform-origin:top center; }
+          .acces-scene-wrap { height:calc(320px * 0.54) !important; }
+        }
+
         .faq-item { border-bottom:0.5px solid rgba(0,0,0,0.08); }
         .faq-btn { width:100%; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:20px 0; text-align:left; gap:16px; }
         .faq-btn:hover .faq-q { color:#4472F5; }
@@ -1276,110 +1454,7 @@ export default function LandingPage() {
           {/* ── ACCÈS ── */}
           <section id="acces" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
-
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
-                <span className="feature-tag">{t.accesTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.accesH2a}<br />{t.accesH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.accesSub}</p>
-              </div>
-
-              {/* Carte Comptoir,parent */}
-              <div data-reveal style={{ background:"linear-gradient(135deg,rgba(138,92,246,0.06),rgba(191,90,242,0.03))", border:"1.5px solid rgba(138,92,246,0.18)", borderRadius:28, padding:"36px 40px", display:"flex", alignItems:"center", gap:36, marginBottom:0, flexWrap:"wrap" }}>
-                <div style={{ width:88, height:88, borderRadius:24, background:"linear-gradient(135deg,#8A5CF6,#BF5AF2)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 16px 40px rgba(138,92,246,0.30)", flexShrink:0 }}>
-                  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round">
-                    <rect x="2" y="3" width="20" height="16" rx="2.5"/>
-                    <path d="M8 21h8M12 19v2"/>
-                    <path d="M6 8h12M6 12h7"/>
-                  </svg>
-                </div>
-                <div style={{ flex:1, minWidth:240 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-                    <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#8A5CF6" }}>{t.accesCardTag}</span>
-                    <span style={{ fontSize:11, fontWeight:600, color:"#8A5CF6", background:"rgba(138,92,246,0.10)", padding:"2px 10px", borderRadius:20 }}>{t.accesCardBadge}</span>
-                  </div>
-                  <h3 style={{ fontSize:24, fontWeight:700, letterSpacing:-0.5, color:"#1D1D1F", marginBottom:8 }}>{t.accesCardH3}</h3>
-                  <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73", marginBottom:16 }}>{t.accesCardDesc}</p>
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                    {t.accesCardTags.map(tag => (
-                      <span key={tag} style={{ fontSize:12, fontWeight:500, color:"#8A5CF6", background:"rgba(138,92,246,0.08)", padding:"4px 12px", borderRadius:20 }}>{tag}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Visual connector */}
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:44, position:"relative" }}>
-                <div style={{ position:"absolute", left:"25%", right:"25%", height:"0.5px", background:"rgba(0,0,0,0.10)", top:"50%" }} />
-                <div style={{ position:"absolute", left:"25%", top:0, width:"0.5px", height:"50%", background:"rgba(0,0,0,0.10)" }} />
-                <div style={{ position:"absolute", right:"25%", top:0, width:"0.5px", height:"50%", background:"rgba(0,0,0,0.10)" }} />
-                <span style={{ fontSize:11, fontWeight:600, color:"#8E8E93", background:"#F2F2F7", padding:"4px 14px", borderRadius:20, position:"relative", zIndex:1, letterSpacing:"0.04em" }}>{t.accesConnector}</span>
-              </div>
-
-              {/* NFC + QR,enfants */}
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }} className="scan-grid">
-
-                {/* NFC */}
-                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"32px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", borderTop:"2px solid #4472F5", display:"flex", flexDirection:"column", gap:24 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-                    <div style={{ position:"relative", width:64, height:64, flexShrink:0 }}>
-                      <div style={{ width:64, height:64, borderRadius:18, background:"linear-gradient(135deg,#4472F5,#6A5AF9)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px rgba(68,114,245,0.30)" }}>
-                        <Image src="/nfc-icon.svg" alt="NFC" width={36} height={36} style={{ filter:"brightness(0) invert(1)", opacity:0.95 }} />
-                      </div>
-                      <div className="nfc-ring-1" style={{ position:"absolute", inset:-8, borderRadius:26, border:"1.5px solid #4472F5" }} />
-                    </div>
-                    <div>
-                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#4472F5" }}>{t.accesNfcTag}</span>
-                      <h3 style={{ fontSize:20, fontWeight:700, letterSpacing:-0.3, color:"#1D1D1F", marginTop:2 }}>{t.accesNfcH3}</h3>
-                    </div>
-                  </div>
-                  <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73" }}>{t.accesNfcDesc}</p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                    {t.accesNfcFeats.map(feat => (
-                      <div key={feat} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-                        <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                          <div style={{ width:5, height:5, borderRadius:"50%", background:"#4472F5" }} />
-                        </div>
-                        <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* QR Code */}
-                <div className="card-hover" style={{ background:"white", borderRadius:24, padding:"32px 28px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 20px rgba(0,0,0,0.05)", borderTop:"2px solid #6A5AF9", display:"flex", flexDirection:"column", gap:24 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-                    <div style={{ width:64, height:64, borderRadius:18, background:"linear-gradient(135deg,#6A5AF9,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px rgba(106,90,249,0.30)", flexShrink:0 }}>
-                      <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-                        <rect x="1" y="1" width="13" height="13" rx="2.5" stroke="white" strokeWidth="1.8" fill="none"/>
-                        <rect x="4" y="4" width="7" height="7" rx="1" fill="white"/>
-                        <rect x="20" y="1" width="13" height="13" rx="2.5" stroke="white" strokeWidth="1.8" fill="none"/>
-                        <rect x="23" y="4" width="7" height="7" rx="1" fill="white"/>
-                        <rect x="1" y="20" width="13" height="13" rx="2.5" stroke="white" strokeWidth="1.8" fill="none"/>
-                        <rect x="4" y="23" width="7" height="7" rx="1" fill="white"/>
-                        <rect x="20" y="20" width="5" height="5" rx="0.8" fill="white"/>
-                        <rect x="27" y="20" width="6" height="5" rx="0.8" fill="white"/>
-                        <rect x="20" y="27" width="13" height="6" rx="0.8" fill="white"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#6A5AF9" }}>{t.accesQrTag}</span>
-                      <h3 style={{ fontSize:20, fontWeight:700, letterSpacing:-0.3, color:"#1D1D1F", marginTop:2 }}>{t.accesQrH3}</h3>
-                    </div>
-                  </div>
-                  <p style={{ fontSize:14, lineHeight:1.7, color:"#6E6E73" }}>{t.accesQrDesc}</p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                    {t.accesQrFeats.map(feat => (
-                      <div key={feat} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-                        <div style={{ width:16, height:16, borderRadius:"50%", background:"rgba(106,90,249,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
-                          <div style={{ width:5, height:5, borderRadius:"50%", background:"#6A5AF9" }} />
-                        </div>
-                        <span style={{ fontSize:13, color:"#6E6E73", lineHeight:1.5 }}>{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
+              <AccesScene t={t as unknown as { accesSceneTitle:string; accesModeTap:string; accesModeQr:string }} />
             </div>
           </section>
 
