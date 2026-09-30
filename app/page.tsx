@@ -244,33 +244,35 @@ function AccesScene({ t }: { t: { accesSceneTitle: string; accesModeTap: string;
     ts.push(setTimeout(() => setPhase(1), 700));
     ts.push(setTimeout(() => setPhase(2), 1900));
     ts.push(setTimeout(() => setPhase(3), 2700));
-    ts.push(setTimeout(() => setMode(m => m === "tap" ? "scan" : "tap"), 5400));
+    ts.push(setTimeout(() => setMode(m => m === "tap" ? "scan" : "tap"), 5600));
     return () => ts.forEach(clearTimeout);
   }, [mode]);
 
   const handleSwitch = (m: "tap" | "scan") => { if (m !== mode) setMode(m); };
 
-  const phonePos: Record<"tap"|"scan", Record<0|1|2|3, [number,number]>> = {
-    tap:  { 0:[440,94], 1:[68,94],  2:[62,94],  3:[260,80]  },
-    scan: { 0:[300,-60], 1:[300,52], 2:[300,52], 3:[300,-40] },
+  // [left, top, rotation]
+  const pos: Record<"tap"|"scan", Record<0|1|2|3, [number,number,number]>> = {
+    tap:  { 0:[610,118,0], 1:[72,118,-8],  2:[64,116,-8],  3:[300,100,0]  },
+    scan: { 0:[320,-110,0], 1:[320,60,-6], 2:[320,57,-6],  3:[320,-85,0]  },
   };
-  const [px, py] = phonePos[mode][Math.min(phase, 3) as 0|1|2|3];
+  const [px, py, pr] = pos[mode][Math.min(phase,3) as 0|1|2|3];
 
   return (
-    <div style={{ display:"flex", gap:48, alignItems:"center", flexWrap:"wrap" }}>
-      {/* Texte + boutons */}
-      <div style={{ flex:"0 0 260px", minWidth:200 }}>
-        <h2 style={{ fontSize:"clamp(24px,2.8vw,36px)", fontWeight:700, letterSpacing:-0.8, color:"#1D1D1F", lineHeight:1.22, marginBottom:32 }}>
+    <div style={{ display:"flex", gap:60, alignItems:"center", flexWrap:"wrap" }}>
+
+      {/* Gauche — texte */}
+      <div style={{ flex:"0 0 280px", minWidth:220 }}>
+        <h2 style={{ fontSize:"clamp(26px,3vw,42px)", fontWeight:700, letterSpacing:-1, color:"#1D1D1F", lineHeight:1.18, marginBottom:36 }}>
           {t.accesSceneTitle}
         </h2>
         <div style={{ display:"flex", gap:10 }}>
           {(["tap","scan"] as const).map(m => (
             <button key={m} onClick={() => handleSwitch(m)} style={{
-              padding:"11px 22px", borderRadius:50, fontSize:14, fontWeight:600, cursor:"pointer",
+              padding:"12px 26px", borderRadius:50, fontSize:14, fontWeight:600, cursor:"pointer",
               border: mode===m ? "none" : "1.5px solid rgba(0,0,0,0.12)",
               background: mode===m ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "white",
               color: mode===m ? "white" : "#6E6E73",
-              boxShadow: mode===m ? "0 4px 16px rgba(0,122,255,0.22)" : "none",
+              boxShadow: mode===m ? "0 4px 20px rgba(0,122,255,0.26)" : "none",
               transition:"all 0.3s ease",
             }}>
               {m === "tap" ? t.accesModeTap : t.accesModeQr}
@@ -279,103 +281,176 @@ function AccesScene({ t }: { t: { accesSceneTitle: string; accesModeTap: string;
         </div>
       </div>
 
-      {/* Scène animée */}
-      <div className="acces-scene-wrap" style={{ flex:1, minWidth:300, display:"flex", justifyContent:"center" }}>
-        <div className="acces-scene" style={{ width:500, height:320, position:"relative", flexShrink:0 }}>
+      {/* Droite — scène */}
+      <div className="acces-scene-wrap" style={{ flex:1, minWidth:360, display:"flex", justifyContent:"center" }}>
+        <div className="acces-scene" style={{ width:660, height:420, position:"relative", flexShrink:0 }}>
 
           {/* Carte comptoir 3D */}
           <div style={{
             position:"absolute", top:"50%", left:"50%",
-            transform:"translate(-50%,-52%) perspective(900px) rotateX(18deg) rotateY(-8deg) rotateZ(1deg)",
+            transform:"translate(-50%,-52%) perspective(1100px) rotateX(20deg) rotateY(-10deg) rotateZ(2deg)",
             animation:"cardFloat 4s ease-in-out infinite",
           }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/wallio-carte-comptoir.png" alt="" style={{
-              width:350, display:"block", borderRadius:16,
-              boxShadow:"0 36px 80px rgba(0,0,0,0.28), 0 8px 20px rgba(0,0,0,0.12)",
+              width:430, display:"block", borderRadius:20,
+              boxShadow:"0 48px 120px rgba(0,0,0,0.32), 0 12px 32px rgba(0,0,0,0.16)",
             }} />
 
-            {/* Ondes NFC */}
+            {/* Ondes NFC — zone gauche de la carte */}
             {mode==="tap" && phase===2 && [0,1,2].map(i => (
               <div key={i} style={{
-                position:"absolute", top:"48%", left:"16%",
-                width:24, height:24, borderRadius:"50%",
-                border:"2px solid #007AFF",
+                position:"absolute", top:"48%", left:"18%",
+                width:32, height:32, borderRadius:"50%",
+                border:"2.5px solid #007AFF",
                 transform:"translate(-50%,-50%)",
                 animation:`nfcWave 1.1s ease-out ${i*0.28}s infinite`,
                 pointerEvents:"none",
               }} />
             ))}
 
-            {/* Ligne de scan */}
+            {/* Scan line — zone QR droite */}
             {mode==="scan" && phase===2 && (
               <div style={{
-                position:"absolute", top:"20%", right:"10%",
-                width:"35%", height:"60%",
-                overflow:"hidden", borderRadius:4,
+                position:"absolute", top:"18%", right:"9%",
+                width:"35%", height:"63%",
+                overflow:"hidden", borderRadius:6,
+                border:"1px solid rgba(0,122,255,0.25)",
                 pointerEvents:"none",
               }}>
                 <div style={{
-                  height:2,
+                  height:2.5,
                   background:"linear-gradient(90deg,transparent,#007AFF,#8B5CF6,transparent)",
                   animation:"scanLine 0.85s ease-in-out infinite",
-                  boxShadow:"0 0 10px rgba(0,122,255,0.55)",
+                  boxShadow:"0 0 12px rgba(0,122,255,0.6)",
                 }} />
               </div>
             )}
           </div>
 
-          {/* iPhone */}
+          {/* iPhone réaliste */}
           <div style={{
-            position:"absolute", left:px, top:py, zIndex:10,
-            transition:"left 0.95s cubic-bezier(0.34,1.15,0.64,1), top 0.95s cubic-bezier(0.34,1.15,0.64,1)",
+            position:"absolute", left:px, top:py,
+            transform:`rotate(${pr}deg)`,
+            transition:"left 1s cubic-bezier(0.34,1.08,0.64,1), top 1s cubic-bezier(0.34,1.08,0.64,1), transform 0.8s ease",
+            zIndex:10,
           }}>
+            {/* Boîtier */}
             <div style={{
-              width:66, height:134, background:"#111", borderRadius:21,
-              padding:"5px 4px 4px",
-              boxShadow:"0 24px 56px rgba(0,0,0,0.42), inset 0 0 0 0.5px rgba(255,255,255,0.10)",
+              width:106, height:226,
+              background:"linear-gradient(155deg,#484848 0%,#2A2A2A 35%,#1A1A1A 70%,#0F0F0F 100%)",
+              borderRadius:34,
+              position:"relative",
+              boxShadow:[
+                "0 0 0 1.5px rgba(255,255,255,0.18)",
+                "inset 0 0 0 1px rgba(255,255,255,0.06)",
+                "0 40px 100px rgba(0,0,0,0.65)",
+                "0 12px 36px rgba(0,0,0,0.40)",
+              ].join(","),
             }}>
-              <div style={{ width:22,height:7,background:"#111",borderRadius:4,margin:"0 auto 3px",position:"relative",zIndex:2 }} />
+              {/* Bouton volume + */}
+              <div style={{ position:"absolute", left:-3, top:56, width:3.5, height:26, background:"linear-gradient(90deg,#555,#3A3A3A)", borderRadius:"3px 0 0 3px" }} />
+              {/* Bouton volume - */}
+              <div style={{ position:"absolute", left:-3, top:92, width:3.5, height:26, background:"linear-gradient(90deg,#555,#3A3A3A)", borderRadius:"3px 0 0 3px" }} />
+              {/* Bouton power */}
+              <div style={{ position:"absolute", right:-3, top:76, width:3.5, height:42, background:"linear-gradient(270deg,#555,#3A3A3A)", borderRadius:"0 3px 3px 0" }} />
+
+              {/* Écran */}
               <div style={{
-                height:"calc(100% - 10px)",
-                background: mode==="scan" ? "#000" : "#F0F4FF",
-                borderRadius:16,
-                display:"flex", alignItems:"center", justifyContent:"center",
-                overflow:"hidden", position:"relative",
+                position:"absolute", inset:5,
+                background:"#050505",
+                borderRadius:30,
+                overflow:"hidden",
               }}>
-                {mode==="scan" ? (
-                  <div style={{ position:"relative", width:"74%", height:"64%", opacity:phase>=1?1:0, transition:"opacity 0.4s" }}>
-                    {([
-                      {top:0,left:0,borderTop:"2px solid #fff",borderLeft:"2px solid #fff"},
-                      {top:0,right:0,borderTop:"2px solid #fff",borderRight:"2px solid #fff"},
-                      {bottom:0,left:0,borderBottom:"2px solid #fff",borderLeft:"2px solid #fff"},
-                      {bottom:0,right:0,borderBottom:"2px solid #fff",borderRight:"2px solid #fff"},
-                    ] as React.CSSProperties[]).map((s,i) => (
-                      <div key={i} style={{ position:"absolute", width:9, height:9, ...s }} />
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ textAlign:"center" }}>
-                    <div style={{ width:22,height:22,borderRadius:7,background:"linear-gradient(135deg,#007AFF,#8B5CF6)",margin:"0 auto 5px",display:"flex",alignItems:"center",justifyContent:"center" }}>
-                      <span style={{ fontSize:10,fontWeight:700,color:"white" }}>W</span>
+                {/* Dynamic Island */}
+                <div style={{
+                  position:"absolute", top:10, left:"50%",
+                  transform:"translateX(-50%)",
+                  width:38, height:10,
+                  background:"#000",
+                  borderRadius:6, zIndex:10,
+                  boxShadow:"inset 0 0 0 1px rgba(255,255,255,0.07)",
+                }} />
+
+                {/* Contenu */}
+                <div style={{
+                  width:"100%", height:"100%",
+                  background: mode==="scan"
+                    ? "radial-gradient(ellipse at 50% 30%,#0A0A0A,#000)"
+                    : "linear-gradient(155deg,#1A1A3E 0%,#0A0A1E 60%,#000 100%)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                }}>
+                  {mode==="scan" ? (
+                    // Viseur caméra
+                    <div style={{ position:"relative", width:"76%", height:"62%", opacity:phase>=1?1:0, transition:"opacity 0.5s" }}>
+                      {([
+                        {top:0,left:0,borderTop:"3px solid rgba(255,255,255,0.9)",borderLeft:"3px solid rgba(255,255,255,0.9)"},
+                        {top:0,right:0,borderTop:"3px solid rgba(255,255,255,0.9)",borderRight:"3px solid rgba(255,255,255,0.9)"},
+                        {bottom:0,left:0,borderBottom:"3px solid rgba(255,255,255,0.9)",borderLeft:"3px solid rgba(255,255,255,0.9)"},
+                        {bottom:0,right:0,borderBottom:"3px solid rgba(255,255,255,0.9)",borderRight:"3px solid rgba(255,255,255,0.9)"},
+                      ] as React.CSSProperties[]).map((s,i)=>(
+                        <div key={i} style={{ position:"absolute", width:13, height:13, ...s }} />
+                      ))}
+                      {/* Croix centrale */}
+                      <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:14, height:1, background:"rgba(255,255,255,0.25)" }} />
+                      <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:1, height:14, background:"rgba(255,255,255,0.25)" }} />
                     </div>
-                    <div style={{ fontSize:6,fontWeight:700,color:"#1D1D1F",letterSpacing:1 }}>WALLIO</div>
-                  </div>
-                )}
+                  ) : (
+                    // Écran Wallio
+                    <div style={{ textAlign:"center", paddingTop:6 }}>
+                      <div style={{
+                        width:38, height:38, borderRadius:12,
+                        background:"linear-gradient(135deg,#007AFF,#8B5CF6)",
+                        margin:"0 auto 8px",
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        boxShadow:"0 6px 20px rgba(0,122,255,0.4)",
+                      }}>
+                        <span style={{ fontSize:17, fontWeight:800, color:"white" }}>W</span>
+                      </div>
+                      <div style={{ fontSize:8, fontWeight:700, color:"rgba(255,255,255,0.9)", letterSpacing:2 }}>WALLIO</div>
+                      {phase>=1 && (
+                        <div style={{
+                          marginTop:12, fontSize:7,
+                          color:"rgba(255,255,255,0.45)",
+                          animation:"sceneFadeIn 0.4s ease forwards",
+                        }}>
+                          Lecture NFC…
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Reflet subtil */}
+                <div style={{
+                  position:"absolute", top:0, left:0, right:0, height:60,
+                  borderRadius:"30px 30px 0 0",
+                  background:"linear-gradient(180deg,rgba(255,255,255,0.05) 0%,transparent 100%)",
+                  pointerEvents:"none",
+                }} />
               </div>
+
+              {/* Reflet boîtier */}
+              <div style={{
+                position:"absolute", top:5, left:5, right:5, height:80,
+                borderRadius:"30px 30px 0 0",
+                background:"linear-gradient(180deg,rgba(255,255,255,0.08) 0%,transparent 100%)",
+                pointerEvents:"none",
+              }} />
             </div>
           </div>
 
-          {/* Résultat Wallet */}
+          {/* Carte Wallet résultat */}
           {phase>=3 && (
             <div style={{
               position:"absolute", bottom:0, left:"50%",
               zIndex:20,
-              animation:"walletAppear 0.5s cubic-bezier(0.34,1.4,0.64,1) forwards",
+              animation:"walletAppear 0.55s cubic-bezier(0.34,1.4,0.64,1) forwards",
             }}>
               <WalletCardMock stamps={7} total={10} bg="#1C1C1E" name="Mori Matcha" logoInitial="MM" reward="Café offert" />
             </div>
           )}
+
         </div>
       </div>
     </div>
@@ -1205,14 +1280,19 @@ export default function LandingPage() {
           0%   { opacity:0; transform:translateX(-50%) translateY(28px) scale(0.93); }
           100% { opacity:1; transform:translateX(-50%) translateY(0)    scale(1); }
         }
+        @keyframes sceneFadeIn { from { opacity:0; } to { opacity:1; } }
         .acces-scene-wrap { overflow:visible; }
-        @media (max-width:900px) {
-          .acces-scene { transform:scale(0.72); transform-origin:top center; }
-          .acces-scene-wrap { height:calc(320px * 0.72) !important; }
+        @media (max-width:1100px) {
+          .acces-scene { transform:scale(0.80); transform-origin:top center; }
+          .acces-scene-wrap { height:calc(420px * 0.80) !important; }
         }
-        @media (max-width:500px) {
-          .acces-scene { transform:scale(0.54); transform-origin:top center; }
-          .acces-scene-wrap { height:calc(320px * 0.54) !important; }
+        @media (max-width:900px) {
+          .acces-scene { transform:scale(0.65); transform-origin:top center; }
+          .acces-scene-wrap { height:calc(420px * 0.65) !important; }
+        }
+        @media (max-width:600px) {
+          .acces-scene { transform:scale(0.48); transform-origin:top center; }
+          .acces-scene-wrap { height:calc(420px * 0.48) !important; }
         }
 
         .faq-item { border-bottom:0.5px solid rgba(0,0,0,0.08); }
