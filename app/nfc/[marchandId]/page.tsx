@@ -37,6 +37,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
     setScreen({ type: "result", result, client, marchand });
+    try { sessionStorage.setItem(`nfc_result_${marchand.id}`, JSON.stringify({ result, client })); } catch {}
     if (result.type === "ok" || result.type === "recompense") {
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
@@ -79,6 +80,19 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         if (!marchand || !marchand.actif) {
           setScreen({ type: "erreur", message: "Ce service est temporairement indisponible." });
           return;
+        }
+
+        // Reload détecté → afficher le dernier résultat sans re-tamponner
+        const navType = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type;
+        if (navType === "reload") {
+          try {
+            const stored = sessionStorage.getItem(`nfc_result_${marchand.id}`);
+            if (stored) {
+              const { result, client } = JSON.parse(stored) as { result: TamponResult; client: Client };
+              setScreen({ type: "result", result, client, marchand });
+              return;
+            }
+          } catch {}
         }
 
         // Lire le paramètre de parrainage depuis l'URL
