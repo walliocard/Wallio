@@ -311,10 +311,10 @@ function IPhoneFrame({ mode, phase }: { mode:"tap"|"scan"; phase:number }) {
               </div>
             ) : (
               <div style={{ textAlign:"center",marginTop:16 }}>
-                <div style={{ width:46,height:46,borderRadius:14,background:"linear-gradient(135deg,#007AFF,#8B5CF6)",margin:"0 auto 10px",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 24px rgba(0,122,255,0.5)" }}>
-                  <span style={{ fontSize:20,fontWeight:800,color:"white" }}>W</span>
-                </div>
-                <div style={{ fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.88)",letterSpacing:2.5 }}>WALLIO</div>
+                {/* Vrai logo Wallio */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/icon-192.png" alt="Wallio" style={{ width:52,height:52,borderRadius:14,margin:"0 auto 10px",display:"block",boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }} />
+                <div style={{ fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.75)",letterSpacing:2.5 }}>WALLIO</div>
                 {phase>=1 && (
                   <div style={{ marginTop:14,fontSize:8,color:"rgba(255,255,255,0.35)",animation:"sceneFadeIn 0.4s ease both" }}>
                     {mode==="tap" ? "Lecture NFC…" : "Ouverture caméra…"}
@@ -324,43 +324,25 @@ function IPhoneFrame({ mode, phase }: { mode:"tap"|"scan"; phase:number }) {
             )
           )}
 
-          {/* Phase 3 — carte Wallet */}
+          {/* Phase 3 — vraie carte Mori Matcha via WalletCardMock */}
           {phase>=3 && (
-            <div style={{ position:"absolute",inset:0,opacity:0,animation:"sceneFadeIn 0.5s ease 0.25s both",display:"flex",flexDirection:"column",paddingTop:30 }}>
-              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"0 13px 9px" }}>
-                <div style={{ display:"flex",gap:7,alignItems:"center" }}>
-                  <div style={{ width:22,height:22,borderRadius:6,background:"rgba(255,255,255,0.14)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
-                    <span style={{ fontSize:7.5,fontWeight:800,color:"rgba(255,255,255,0.82)" }}>MM</span>
-                  </div>
-                  <span style={{ fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.92)" }}>Mori Matcha</span>
-                </div>
-                <div style={{ textAlign:"right",flexShrink:0 }}>
-                  <div style={{ fontSize:5.5,color:"rgba(255,255,255,0.38)",textTransform:"uppercase",letterSpacing:"0.08em" }}>TAMPONS</div>
-                  <div style={{ fontSize:13,fontWeight:700,color:"white",lineHeight:1.2 }}>7/10</div>
-                </div>
-              </div>
-              <div style={{ background:"rgba(255,255,255,0.06)",margin:"0 8px",borderRadius:9,padding:"13px 8px",display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center" }}>
-                {Array.from({length:10},(_,i)=>(
-                  <div key={i} style={{ width:17,height:17,borderRadius:"50%",background:i<7?"rgba(255,255,255,0.90)":"transparent",border:i<7?"none":"1px solid rgba(255,255,255,0.22)" }} />
-                ))}
-              </div>
-              <div style={{ display:"flex",gap:4,padding:"9px 10px 7px",borderTop:"0.5px solid rgba(255,255,255,0.07)",marginTop:7 }}>
-                {[["RÉCOMPENSE","Café offert"],["MEMBRE","Client fidèle"]].map(([l,v])=>(
-                  <div key={l} style={{ flex:1,minWidth:0 }}>
-                    <div style={{ fontSize:5,color:"rgba(255,255,255,0.32)",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:3 }}>{l}</div>
-                    <div style={{ fontSize:8,fontWeight:500,color:"rgba(255,255,255,0.78)" }}>{v}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ borderTop:"0.5px solid rgba(255,255,255,0.07)",display:"flex",justifyContent:"center",paddingTop:10,flex:1,alignItems:"center" }}>
-                <div style={{ background:"white",borderRadius:5,padding:4 }}>
-                  <svg width="28" height="28" viewBox="0 0 21 21" fill="none">
-                    <rect width="9" height="9" rx="1.5" fill="#111"/><rect x="1.5" y="1.5" width="6" height="6" rx="0.8" fill="white"/><rect x="3" y="3" width="3" height="3" fill="#111"/>
-                    <rect x="12" width="9" height="9" rx="1.5" fill="#111"/><rect x="13.5" y="1.5" width="6" height="6" rx="0.8" fill="white"/><rect x="15" y="3" width="3" height="3" fill="#111"/>
-                    <rect y="12" width="9" height="9" rx="1.5" fill="#111"/><rect x="1.5" y="13.5" width="6" height="6" rx="0.8" fill="white"/><rect x="3" y="15" width="3" height="3" fill="#111"/>
-                    <rect x="12" y="12" width="4" height="4" rx="0.5" fill="#111"/><rect x="17" y="12" width="4" height="4" rx="0.5" fill="#111"/><rect x="12" y="17" width="9" height="4" rx="0.5" fill="#111"/>
-                  </svg>
-                </div>
+            <div style={{
+              position:"absolute", inset:0,
+              opacity:0, animation:"sceneFadeIn 0.5s ease 0.2s both",
+              overflow:"hidden",
+              display:"flex", alignItems:"flex-start", justifyContent:"center",
+            }}>
+              <div style={{ transform:"scale(0.535)", transformOrigin:"top center", flexShrink:0 }}>
+                <WalletCardMock
+                  stamps={7} total={10}
+                  bg="#1A2920"
+                  name="Mori Matcha"
+                  logoInitial="MM"
+                  reward="Matcha offert"
+                  aux1="Matcha café"
+                  aux2="Casablanca"
+                  stampColor="#A8D5A2"
+                />
               </div>
             </div>
           )}
