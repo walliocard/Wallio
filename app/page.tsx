@@ -463,6 +463,86 @@ function AccesScene({ t }: { t: { accesSceneTitle: string; accesModeTap: string;
   );
 }
 
+function AccesVideoBlock({ t }: { t: Record<string, unknown> }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [activeMode, setActiveMode] = useState<"nfc"|"qr">("nfc");
+  const QR_START = 5.0;
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      v.removeAttribute("autoplay"); v.pause(); return;
+    }
+    const onTime = () => setActiveMode(v.currentTime >= QR_START ? "qr" : "nfc");
+    v.addEventListener("timeupdate", onTime);
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
+    }, { threshold: 0.25 });
+    io.observe(v);
+    return () => { v.removeEventListener("timeupdate", onTime); io.disconnect(); };
+  }, []);
+
+  const seekTo = (time: number) => {
+    const v = videoRef.current; if (!v) return;
+    v.currentTime = time; v.play().catch(() => {});
+    setActiveMode(time >= QR_START ? "qr" : "nfc");
+  };
+
+  const tt = t as Record<string, string>;
+  const btnStyle = (active: boolean): React.CSSProperties => ({
+    padding:"11px 24px", borderRadius:50, fontSize:14, fontWeight:600, cursor:"pointer",
+    border: active ? "none" : "1.5px solid rgba(0,0,0,0.12)",
+    background: active ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "white",
+    color: active ? "white" : "#6E6E73",
+    boxShadow: active ? "0 4px 18px rgba(0,122,255,0.24)" : "none",
+    transition:"all 0.3s ease",
+  });
+
+  return (
+    <div className="acces-v2-layout" style={{ display:"flex", gap:56, alignItems:"center" }}>
+      {/* Gauche */}
+      <div style={{ flex:"0 0 280px", minWidth:220 }}>
+        <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:700, letterSpacing:-0.8, color:"#1D1D1F", lineHeight:1.18, marginBottom:28 }}>
+          {tt.accesTitle1}<br />
+          <span style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+            {tt.accesTitle2}
+          </span>
+        </h2>
+        <div style={{ display:"flex", gap:10, marginBottom:40 }}>
+          <button data-mode="nfc" onClick={() => seekTo(0)} style={btnStyle(activeMode==="nfc")}>{tt.accesModeTap}</button>
+          <button data-mode="qr"  onClick={() => seekTo(QR_START)} style={btnStyle(activeMode==="qr")}>{tt.accesModeQr}</button>
+        </div>
+        {/* 3 stats */}
+        <div style={{ display:"flex", gap:28 }}>
+          {[
+            { value:"< 1 s",  label: tt.accesStatA },
+            { value:"0 app",  label: tt.accesStatB },
+            { value:"100 %",  label: tt.accesStatC },
+          ].map(s => (
+            <div key={s.value}>
+              <div style={{ fontSize:26, fontWeight:700, letterSpacing:-0.5, color:"#1D1D1F", lineHeight:1 }}>{s.value}</div>
+              <div style={{ fontSize:11, color:"#86868B", marginTop:4, lineHeight:1.4 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Droite — vidéo */}
+      <div style={{ flex:1, minWidth:300 }}>
+        <video
+          ref={videoRef} id="accessVideo"
+          autoPlay muted loop playsInline preload="metadata"
+          poster="/Wallio_Landing_v2_poster.jpg"
+          style={{ width:"100%", height:"auto", display:"block" }}
+        >
+          <source src="/Wallio_Landing_v2.webm" type="video/webm" />
+          <source src="/Wallio_Landing_v2.mp4" type="video/mp4" />
+        </video>
+      </div>
+    </div>
+  );
+}
+
 type Lang = "fr" | "en" | "ro" | "es";
 
 const T = {
@@ -494,6 +574,8 @@ const T = {
     accesQrDesc:"Le client ouvre son appareil photo et scanne le QR code imprimé sur la carte comptoir. Fonctionne avec tous les téléphones, sans aucune app.",
     accesQrFeats:["Compatible 100 % des smartphones","Appareil photo natif, aucune app","Toujours présent sur la carte comptoir"],
     accesSceneTitle:"Posé sur votre comptoir. Rien à installer.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
+    accesTitle1:"Posé sur votre comptoir.", accesTitle2:"Rien à installer.",
+    accesStatA:"pour ajouter un tampon", accesStatB:"à télécharger", accesStatC:"des smartphones",
     flowTag:"Parcours client", flowH2a:"Deux scénarios.", flowH2b:"Zéro friction.",
     flowSub:"Nouveau client ou habitué, le flux est pensé pour chacun.",
     flowNewTitle:"Nouveau client", flowNewSub:"Première visite",
@@ -663,6 +745,8 @@ const T = {
     accesQrDesc:"The customer opens their camera and scans the QR code printed on the counter card. Works on all phones, no app needed.",
     accesQrFeats:["Compatible with 100% of smartphones","Native camera, no app","Always on the counter card"],
     accesSceneTitle:"On your counter. Nothing to install.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
+    accesTitle1:"On your counter.", accesTitle2:"Nothing to install.",
+    accesStatA:"to add a stamp", accesStatB:"to download", accesStatC:"of smartphones",
     flowTag:"Customer journey", flowH2a:"Two scenarios.", flowH2b:"Zero friction.",
     flowSub:"New customer or regular, the flow is designed for each.",
     flowNewTitle:"New customer", flowNewSub:"First visit",
@@ -832,6 +916,8 @@ const T = {
     accesQrDesc:"Clientul deschide camera și scanează codul QR de pe cardul de tejghea. Funcționează pe orice telefon, fără nicio aplicație.",
     accesQrFeats:["Compatible cu 100% dintre smartphone-uri","Camera nativă, nicio aplicație","Mereu prezent pe cardul de tejghea"],
     accesSceneTitle:"Pe tejgheaua dvs. Fără instalare.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
+    accesTitle1:"Pe tejgheaua dvs.", accesTitle2:"Fără instalare.",
+    accesStatA:"pentru o ștampilă", accesStatB:"de descărcat", accesStatC:"din smartphone-uri",
     flowTag:"Parcursul clientului", flowH2a:"Două scenarii.", flowH2b:"Zero fricțiune.",
     flowSub:"Client nou sau fidel, fluxul este gândit pentru fiecare.",
     flowNewTitle:"Client nou", flowNewSub:"Prima vizită",
@@ -1001,6 +1087,8 @@ const T = {
     accesQrDesc:"El cliente abre su cámara y escanea el código QR de la tarjeta de mostrador. Funciona con todos los teléfonos, sin ninguna app.",
     accesQrFeats:["Compatible con el 100% de los smartphones","Cámara nativa, sin app","Siempre en la tarjeta de mostrador"],
     accesSceneTitle:"En tu mostrador. Nada que instalar.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
+    accesTitle1:"En tu mostrador.", accesTitle2:"Nada que instalar.",
+    accesStatA:"para añadir un sello", accesStatB:"para descargar", accesStatC:"de los smartphones",
     flowTag:"Recorrido del cliente", flowH2a:"Dos escenarios.", flowH2b:"Cero fricción.",
     flowSub:"Cliente nuevo o habitual, el flujo está pensado para cada uno.",
     flowNewTitle:"Cliente nuevo", flowNewSub:"Primera visita",
@@ -1288,6 +1376,10 @@ export default function LandingPage() {
         }
         @keyframes sceneFadeIn { from { opacity:0; } to { opacity:1; } }
         .acces-scene-wrap { overflow:visible; }
+        @media (max-width:768px) {
+          .acces-v2-layout { flex-direction:column-reverse !important; }
+          .acces-v2-layout > div:first-child { flex:unset !important; width:100%; }
+        }
         @media (max-width:1100px) {
           .acces-scene { transform:scale(0.80); transform-origin:top center; }
           .acces-scene-wrap { height:calc(420px * 0.80) !important; }
@@ -1540,19 +1632,12 @@ export default function LandingPage() {
           {/* ── ACCÈS ── */}
           <section id="acces" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
             <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
+              <div data-reveal="scale" style={{ marginBottom:56 }}>
                 <span className="feature-tag">{t.accesTag}</span>
                 <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.accesH2a}<br />{t.accesH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.accesSub}</p>
+                <p style={{ fontSize:17, color:"#8E8E93" }}>{t.accesSub}</p>
               </div>
-              <video
-                autoPlay muted loop playsInline preload="metadata"
-                poster="/Wallio_Landing_poster.jpg"
-                style={{ width:"100%", height:"auto", borderRadius:24, display:"block", boxShadow:"0 24px 80px rgba(0,0,0,0.14)" }}
-              >
-                <source src="/Wallio_Landing_Tap_Scan.webm" type="video/webm" />
-                <source src="/Wallio_Landing_Tap_Scan.mp4" type="video/mp4" />
-              </video>
+              <AccesVideoBlock t={t as unknown as Record<string,unknown>} />
             </div>
           </section>
 
