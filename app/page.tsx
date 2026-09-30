@@ -1545,7 +1545,39 @@ export default function LandingPage() {
                 <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.accesH2a}<br />{t.accesH2b}</h2>
                 <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.accesSub}</p>
               </div>
-              <AccesScene t={t as unknown as { accesSceneTitle:string; accesModeTap:string; accesModeQr:string }} />
+              <div style={{ display:"flex", gap:56, alignItems:"center", flexWrap:"wrap" }}>
+                {/* Gauche */}
+                <div style={{ flex:"0 0 260px", minWidth:200 }}>
+                  <h2 style={{ fontSize:"clamp(24px,2.8vw,36px)", fontWeight:700, letterSpacing:-0.8, color:"#1D1D1F", lineHeight:1.2, marginBottom:32 }}>
+                    {(t as unknown as Record<string,string>).accesSceneTitle}
+                  </h2>
+                  <div style={{ display:"flex", gap:10 }}>
+                    {[
+                      { label:(t as unknown as Record<string,string>).accesModeTap },
+                      { label:(t as unknown as Record<string,string>).accesModeQr },
+                    ].map((btn,i) => (
+                      <div key={i} style={{
+                        padding:"11px 22px", borderRadius:50, fontSize:14, fontWeight:600,
+                        background: i===0 ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "white",
+                        color: i===0 ? "white" : "#6E6E73",
+                        border: i===0 ? "none" : "1.5px solid rgba(0,0,0,0.12)",
+                        boxShadow: i===0 ? "0 4px 18px rgba(0,122,255,0.24)" : "none",
+                      }}>{btn.label}</div>
+                    ))}
+                  </div>
+                </div>
+                {/* Droite — vidéo */}
+                <div style={{ flex:1, minWidth:300 }}>
+                  <video
+                    autoPlay muted loop playsInline preload="metadata"
+                    poster="/Wallio_Landing_poster.jpg"
+                    style={{ width:"100%", height:"auto", borderRadius:24, display:"block", boxShadow:"0 24px 80px rgba(0,0,0,0.14)" }}
+                  >
+                    <source src="/Wallio_Landing_Tap_Scan.webm" type="video/webm" />
+                    <source src="/Wallio_Landing_Tap_Scan.mp4" type="video/mp4" />
+                  </video>
+                </div>
+              </div>
             </div>
           </section>
 
