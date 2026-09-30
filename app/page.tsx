@@ -235,126 +235,126 @@ function WalletCardMock({
 }
 
 function IPhoneFrame({ mode, phase }: { mode:"tap"|"scan"; phase:number }) {
+  // iPhone 15 : ratio ~1:2.07, coins ~14% de la largeur
+  // 150 × 311px → borderRadius 22px
+  const W = 150, H = 311, R = 22, BEZEL = 6;
   const zoomed = phase >= 3;
   return (
     <div style={{
       position:"relative",
-      transform: zoomed ? "scale(1.85)" : "scale(1)",
+      transform: zoomed ? "scale(1.55)" : "scale(1)",
       transformOrigin:"center center",
-      transition:"transform 0.9s cubic-bezier(0.34,1.1,0.64,1)",
+      transition:"transform 0.95s cubic-bezier(0.34,1.05,0.64,1)",
     }}>
-      {/* Boîtier extérieur — titane */}
+      {/* Boîtier — aluminium brossé côtés plats */}
       <div style={{
-        width:118, height:254,
-        borderRadius:44,
-        background:"linear-gradient(145deg,#606060 0%,#3A3A3A 25%,#242424 55%,#161616 100%)",
-        padding:5,
+        width:W, height:H,
+        borderRadius:R,
+        background:"linear-gradient(160deg,#636363 0%,#3D3D3D 30%,#262626 65%,#141414 100%)",
+        padding:BEZEL,
         position:"relative",
         boxShadow:[
-          "inset 0 1px 0 rgba(255,255,255,0.22)",
-          "inset 0 -1px 0 rgba(255,255,255,0.06)",
-          "inset 1px 0 0 rgba(255,255,255,0.10)",
-          "inset -1px 0 0 rgba(255,255,255,0.06)",
-          "0 0 0 1px rgba(0,0,0,0.7)",
-          "0 50px 120px rgba(0,0,0,0.60)",
-          "0 16px 40px rgba(0,0,0,0.35)",
+          `inset 0 1.5px 0 rgba(255,255,255,0.28)`,
+          `inset 0 -1.5px 0 rgba(255,255,255,0.08)`,
+          `inset 1.5px 0 0 rgba(255,255,255,0.14)`,
+          `inset -1.5px 0 0 rgba(255,255,255,0.06)`,
+          `0 0 0 1px rgba(0,0,0,0.75)`,
+          `0 60px 140px rgba(0,0,0,0.55)`,
+          `0 20px 50px rgba(0,0,0,0.30)`,
         ].join(","),
       }}>
-        {/* Bouton volume + */}
-        <div style={{ position:"absolute",left:-3.5,top:54,width:4,height:26,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#686868,#484848)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.15)" }} />
-        {/* Bouton volume - */}
-        <div style={{ position:"absolute",left:-3.5,top:90,width:4,height:26,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#686868,#484848)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.15)" }} />
+        {/* Bouton volume haut */}
+        <div style={{ position:"absolute",left:-4,top:68,width:4,height:32,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#707070,#505050)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.30)" }} />
+        {/* Bouton volume bas */}
+        <div style={{ position:"absolute",left:-4,top:112,width:4,height:32,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#707070,#505050)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.30)" }} />
+        {/* Bouton silence */}
+        <div style={{ position:"absolute",left:-4,top:44,width:4,height:20,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#707070,#505050)" }} />
         {/* Bouton power */}
-        <div style={{ position:"absolute",right:-3.5,top:76,width:4,height:40,borderRadius:"0 3px 3px 0",background:"linear-gradient(270deg,#686868,#484848)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.15)" }} />
+        <div style={{ position:"absolute",right:-4,top:92,width:4,height:52,borderRadius:"0 3px 3px 0",background:"linear-gradient(270deg,#707070,#505050)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.30)" }} />
 
         {/* Écran */}
         <div style={{
           width:"100%", height:"100%",
-          borderRadius:40,
+          borderRadius:R-BEZEL+2,
           overflow:"hidden",
-          background: phase>=3 ? "#1C1C1E"
-            : mode==="scan" ? "#000"
-            : "linear-gradient(155deg,#1a1a3a 0%,#0a0a1e 60%,#000 100%)",
-          transition:"background 0.5s ease",
           position:"relative",
+          background: phase>=3 ? "#1C1C1E"
+            : mode==="scan" ? "#050505"
+            : "linear-gradient(160deg,#141430 0%,#080818 55%,#000 100%)",
+          transition:"background 0.5s ease",
           display:"flex", flexDirection:"column",
           alignItems:"center", justifyContent:"center",
         }}>
-          {/* Dynamic island */}
+          {/* Dynamic Island */}
           <div style={{
-            position:"absolute", top:10, left:"50%",
+            position:"absolute", top:11, left:"50%",
             transform:"translateX(-50%)",
-            width:40, height:11,
-            background:"#000",
-            borderRadius:6, zIndex:5,
-            boxShadow:"0 0 0 1px rgba(255,255,255,0.06)",
+            width:52, height:13,
+            background:"#000", borderRadius:7, zIndex:5,
+            boxShadow:"0 0 0 1px rgba(80,80,80,0.4)",
           }} />
 
-          {/* Phase 0-2 : écran veille ou caméra */}
+          {/* Phase 0-2 */}
           {phase < 3 && (
             mode==="scan" ? (
-              <div style={{ position:"relative",width:"72%",height:"58%",opacity:phase>=1?1:0,transition:"opacity 0.5s",marginTop:8 }}>
+              <div style={{ position:"relative",width:"68%",height:"52%",opacity:phase>=1?1:0,transition:"opacity 0.5s",marginTop:12 }}>
                 {([
-                  {top:0,left:0,borderTop:"2.5px solid rgba(255,255,255,0.85)",borderLeft:"2.5px solid rgba(255,255,255,0.85)"},
-                  {top:0,right:0,borderTop:"2.5px solid rgba(255,255,255,0.85)",borderRight:"2.5px solid rgba(255,255,255,0.85)"},
-                  {bottom:0,left:0,borderBottom:"2.5px solid rgba(255,255,255,0.85)",borderLeft:"2.5px solid rgba(255,255,255,0.85)"},
-                  {bottom:0,right:0,borderBottom:"2.5px solid rgba(255,255,255,0.85)",borderRight:"2.5px solid rgba(255,255,255,0.85)"},
+                  {top:0,left:0,borderTop:"3px solid rgba(255,255,255,0.88)",borderLeft:"3px solid rgba(255,255,255,0.88)"},
+                  {top:0,right:0,borderTop:"3px solid rgba(255,255,255,0.88)",borderRight:"3px solid rgba(255,255,255,0.88)"},
+                  {bottom:0,left:0,borderBottom:"3px solid rgba(255,255,255,0.88)",borderLeft:"3px solid rgba(255,255,255,0.88)"},
+                  {bottom:0,right:0,borderBottom:"3px solid rgba(255,255,255,0.88)",borderRight:"3px solid rgba(255,255,255,0.88)"},
                 ] as React.CSSProperties[]).map((s,i)=>(
-                  <div key={i} style={{ position:"absolute",width:12,height:12,...s }} />
+                  <div key={i} style={{ position:"absolute",width:14,height:14,...s }} />
                 ))}
-                <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:16,height:1,background:"rgba(255,255,255,0.18)" }} />
-                <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:1,height:16,background:"rgba(255,255,255,0.18)" }} />
+                <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:18,height:1,background:"rgba(255,255,255,0.22)" }} />
+                <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:1,height:18,background:"rgba(255,255,255,0.22)" }} />
               </div>
             ) : (
-              <div style={{ textAlign:"center",marginTop:8 }}>
-                <div style={{ width:36,height:36,borderRadius:11,background:"linear-gradient(135deg,#007AFF,#8B5CF6)",margin:"0 auto 8px",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 6px 20px rgba(0,122,255,0.45)" }}>
-                  <span style={{ fontSize:16,fontWeight:800,color:"white" }}>W</span>
+              <div style={{ textAlign:"center",marginTop:16 }}>
+                <div style={{ width:46,height:46,borderRadius:14,background:"linear-gradient(135deg,#007AFF,#8B5CF6)",margin:"0 auto 10px",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 24px rgba(0,122,255,0.5)" }}>
+                  <span style={{ fontSize:20,fontWeight:800,color:"white" }}>W</span>
                 </div>
-                <div style={{ fontSize:7.5,fontWeight:700,color:"rgba(255,255,255,0.88)",letterSpacing:2 }}>WALLIO</div>
+                <div style={{ fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.88)",letterSpacing:2.5 }}>WALLIO</div>
                 {phase>=1 && (
-                  <div style={{ marginTop:12,fontSize:6.5,color:"rgba(255,255,255,0.38)",animation:"sceneFadeIn 0.4s ease both" }}>
-                    Lecture NFC…
+                  <div style={{ marginTop:14,fontSize:8,color:"rgba(255,255,255,0.35)",animation:"sceneFadeIn 0.4s ease both" }}>
+                    {mode==="tap" ? "Lecture NFC…" : "Ouverture caméra…"}
                   </div>
                 )}
               </div>
             )
           )}
 
-          {/* Phase 3 : carte Wallet dans le téléphone */}
+          {/* Phase 3 — carte Wallet */}
           {phase>=3 && (
-            <div style={{ position:"absolute",inset:0,opacity:0,animation:"sceneFadeIn 0.5s ease 0.2s both",display:"flex",flexDirection:"column",paddingTop:28 }}>
-              {/* Header carte */}
-              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"0 10px 7px" }}>
-                <div style={{ display:"flex",gap:5,alignItems:"center" }}>
-                  <div style={{ width:18,height:18,borderRadius:5,background:"rgba(255,255,255,0.14)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
-                    <span style={{ fontSize:6,fontWeight:800,color:"rgba(255,255,255,0.8)" }}>MM</span>
+            <div style={{ position:"absolute",inset:0,opacity:0,animation:"sceneFadeIn 0.5s ease 0.25s both",display:"flex",flexDirection:"column",paddingTop:30 }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"0 13px 9px" }}>
+                <div style={{ display:"flex",gap:7,alignItems:"center" }}>
+                  <div style={{ width:22,height:22,borderRadius:6,background:"rgba(255,255,255,0.14)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                    <span style={{ fontSize:7.5,fontWeight:800,color:"rgba(255,255,255,0.82)" }}>MM</span>
                   </div>
-                  <span style={{ fontSize:8,fontWeight:600,color:"rgba(255,255,255,0.92)",whiteSpace:"nowrap" }}>Mori Matcha</span>
+                  <span style={{ fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.92)" }}>Mori Matcha</span>
                 </div>
                 <div style={{ textAlign:"right",flexShrink:0 }}>
-                  <div style={{ fontSize:4.5,color:"rgba(255,255,255,0.38)",textTransform:"uppercase",letterSpacing:"0.08em" }}>TAMPONS</div>
-                  <div style={{ fontSize:10,fontWeight:700,color:"white",lineHeight:1.2 }}>7/10</div>
+                  <div style={{ fontSize:5.5,color:"rgba(255,255,255,0.38)",textTransform:"uppercase",letterSpacing:"0.08em" }}>TAMPONS</div>
+                  <div style={{ fontSize:13,fontWeight:700,color:"white",lineHeight:1.2 }}>7/10</div>
                 </div>
               </div>
-              {/* Tampons */}
-              <div style={{ background:"rgba(255,255,255,0.06)",margin:"0 6px",borderRadius:7,padding:"10px 6px",display:"flex",flexWrap:"wrap",gap:5,justifyContent:"center" }}>
+              <div style={{ background:"rgba(255,255,255,0.06)",margin:"0 8px",borderRadius:9,padding:"13px 8px",display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center" }}>
                 {Array.from({length:10},(_,i)=>(
-                  <div key={i} style={{ width:13,height:13,borderRadius:"50%",background:i<7?"rgba(255,255,255,0.92)":"transparent",border:i<7?"none":"1px solid rgba(255,255,255,0.22)",flexShrink:0 }} />
+                  <div key={i} style={{ width:17,height:17,borderRadius:"50%",background:i<7?"rgba(255,255,255,0.90)":"transparent",border:i<7?"none":"1px solid rgba(255,255,255,0.22)" }} />
                 ))}
               </div>
-              {/* Champs */}
-              <div style={{ display:"flex",gap:3,padding:"7px 8px 5px",borderTop:"0.5px solid rgba(255,255,255,0.07)",marginTop:5 }}>
+              <div style={{ display:"flex",gap:4,padding:"9px 10px 7px",borderTop:"0.5px solid rgba(255,255,255,0.07)",marginTop:7 }}>
                 {[["RÉCOMPENSE","Café offert"],["MEMBRE","Client fidèle"]].map(([l,v])=>(
                   <div key={l} style={{ flex:1,minWidth:0 }}>
-                    <div style={{ fontSize:4,color:"rgba(255,255,255,0.32)",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:2 }}>{l}</div>
-                    <div style={{ fontSize:6.5,fontWeight:500,color:"rgba(255,255,255,0.78)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{v}</div>
+                    <div style={{ fontSize:5,color:"rgba(255,255,255,0.32)",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:3 }}>{l}</div>
+                    <div style={{ fontSize:8,fontWeight:500,color:"rgba(255,255,255,0.78)" }}>{v}</div>
                   </div>
                 ))}
               </div>
-              {/* QR */}
-              <div style={{ borderTop:"0.5px solid rgba(255,255,255,0.07)",display:"flex",justifyContent:"center",paddingTop:8,flex:1,alignItems:"center" }}>
-                <div style={{ background:"white",borderRadius:4,padding:3 }}>
-                  <svg width="22" height="22" viewBox="0 0 21 21" fill="none">
+              <div style={{ borderTop:"0.5px solid rgba(255,255,255,0.07)",display:"flex",justifyContent:"center",paddingTop:10,flex:1,alignItems:"center" }}>
+                <div style={{ background:"white",borderRadius:5,padding:4 }}>
+                  <svg width="28" height="28" viewBox="0 0 21 21" fill="none">
                     <rect width="9" height="9" rx="1.5" fill="#111"/><rect x="1.5" y="1.5" width="6" height="6" rx="0.8" fill="white"/><rect x="3" y="3" width="3" height="3" fill="#111"/>
                     <rect x="12" width="9" height="9" rx="1.5" fill="#111"/><rect x="13.5" y="1.5" width="6" height="6" rx="0.8" fill="white"/><rect x="15" y="3" width="3" height="3" fill="#111"/>
                     <rect y="12" width="9" height="9" rx="1.5" fill="#111"/><rect x="1.5" y="13.5" width="6" height="6" rx="0.8" fill="white"/><rect x="3" y="15" width="3" height="3" fill="#111"/>
@@ -365,12 +365,10 @@ function IPhoneFrame({ mode, phase }: { mode:"tap"|"scan"; phase:number }) {
             </div>
           )}
 
-          {/* Reflet écran */}
-          <div style={{ position:"absolute",top:0,left:0,right:0,height:55,borderRadius:"40px 40px 0 0",background:"linear-gradient(180deg,rgba(255,255,255,0.06) 0%,transparent 100%)",pointerEvents:"none",zIndex:4 }} />
+          <div style={{ position:"absolute",top:0,left:0,right:0,height:60,borderRadius:`${R-BEZEL+2}px ${R-BEZEL+2}px 0 0`,background:"linear-gradient(180deg,rgba(255,255,255,0.07) 0%,transparent 100%)",pointerEvents:"none",zIndex:4 }} />
         </div>
 
-        {/* Reflet boîtier */}
-        <div style={{ position:"absolute",top:0,left:0,right:0,height:90,borderRadius:"44px 44px 0 0",background:"linear-gradient(180deg,rgba(255,255,255,0.09) 0%,transparent 100%)",pointerEvents:"none" }} />
+        <div style={{ position:"absolute",inset:0,borderRadius:R,background:"linear-gradient(160deg,rgba(255,255,255,0.10) 0%,transparent 40%)",pointerEvents:"none" }} />
       </div>
     </div>
   );
@@ -392,10 +390,10 @@ function AccesScene({ t }: { t: { accesSceneTitle: string; accesModeTap: string;
 
   const handleSwitch = (m: "tap" | "scan") => { if (m !== mode) setMode(m); };
 
-  // [left, top, rotation]
+  // [left, top, rotation] — phone 150×311
   const pos: Record<"tap"|"scan", Record<0|1|2|3,[number,number,number]>> = {
-    tap:  { 0:[580,110,0], 1:[68,110,-8], 2:[60,108,-8], 3:[260,90,0]  },
-    scan: { 0:[300,-105,0], 1:[300,52,-6], 2:[300,49,-6], 3:[280,68,0] },
+    tap:  { 0:[620,65,0], 1:[52,65,-7], 2:[44,63,-7], 3:[240,65,0]  },
+    scan: { 0:[280,-125,0], 1:[280,35,-5], 2:[280,32,-5], 3:[260,55,0] },
   };
   const [px, py, pr] = pos[mode][Math.min(phase,3) as 0|1|2|3];
 
