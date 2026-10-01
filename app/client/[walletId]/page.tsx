@@ -13,6 +13,15 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
 
+// Affiche le numéro avec indicatif, gère le 0 parasite après l'indicatif
+// Ex: +212612345678 → +212 612345678 / +2120612345678 → +212 612345678
+function formatPhone(raw: string | undefined): string {
+  if (!raw) return "";
+  const m = raw.match(/^(\+\d{1,4})(0?)(\d{7,11})$/);
+  if (!m) return raw;
+  return `${m[1]} ${m[3]}`;
+}
+
 export default function ClientQrPage({ params }: { params: Promise<{ walletId: string }> }) {
   const { walletId } = use(params);
   const { user, marchand: marchandAuth, loading: authLoading } = useAuth();
@@ -207,7 +216,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
             <h1 className="text-[22px] font-semibold tracking-tight leading-tight" style={{ color: "var(--fg)" }}>
               {client.prenom} {client.nom}
             </h1>
-            <p className="text-[14px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{client.telephone}</p>
+            <p className="text-[14px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{formatPhone(client.telephone)}</p>
           </div>
         </div>
 
