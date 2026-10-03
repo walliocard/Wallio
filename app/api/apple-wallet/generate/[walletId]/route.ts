@@ -85,10 +85,7 @@ export async function GET(
     ].filter(Boolean) as { label: string; value: string }[],
     backInfo: m.apple_back_info || undefined,
     description: m.apple_description || undefined,
-    locations: (() => {
-      console.log("[geo] apple_location raw:", JSON.stringify(m.apple_location));
-      return m.apple_location ? [m.apple_location as { latitude: number; longitude: number; relevantText?: string }] : undefined;
-    })(),
+    locations: m.apple_location ? [m.apple_location as { latitude: number; longitude: number; relevantText?: string }] : undefined,
     // Tampons visuels sur la bannière
     stampsOnStrip:    m.apple_stamps_on_strip === true,
     stripStampStyle:  m.apple_strip_stamp_style || "dot",

@@ -116,17 +116,13 @@ export function generatePassJson(input: PassInput): object {
       },
     ],
     // Géolocalisation — notification lock screen quand le client s'approche
-    ...((() => {
-      console.log("[generatePass] locations input:", JSON.stringify(input.locations));
-      if (!input.locations?.length) return {};
-      return {
-        locations: input.locations.map(l => ({
-          latitude: Number(l.latitude),
-          longitude: Number(l.longitude),
-          ...(l.relevantText ? { relevantText: String(l.relevantText) } : {}),
-        })),
-        maxDistance: 200,
-      };
-    })()),
+    ...(input.locations?.length ? {
+      locations: input.locations.map(l => ({
+        latitude: l.latitude,
+        longitude: l.longitude,
+        ...(l.relevantText ? { relevantText: l.relevantText } : {}),
+      })),
+      maxDistance: 200,
+    } : {}),
   };
 }

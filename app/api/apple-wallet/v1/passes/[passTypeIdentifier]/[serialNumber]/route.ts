@@ -76,6 +76,7 @@ export async function GET(
     ].filter(Boolean) as { label: string; value: string }[],
     backInfo: m.apple_back_info || undefined,
     description: m.apple_description || undefined,
+    locations: m.apple_location ? [m.apple_location as { latitude: number; longitude: number; relevantText?: string }] : undefined,
     messagePush: (() => {
       const msg = m.current_message as string | undefined;
       const exp = m.message_expires_at as string | undefined;
