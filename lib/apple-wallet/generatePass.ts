@@ -103,6 +103,7 @@ export function generatePassJson(input: PassInput): object {
         { key: "message_push", label: "OFFRE", value: input.messagePush || "", ...(input.messagePush ? { changeMessage: "%@" } : {}) },
         ...(input.backInfo ? [{ key: "info", label: "À PROPOS", value: input.backInfo }] : []),
         ...backAux,
+        { key: "mes_cartes", label: "MES CARTES WALLIO", value: "https://app.walliocard.com/mes-cartes" },
         { key: "rgpd", label: "VOS DONNÉES", value: "Vos données sont gérées conformément au RGPD. Suppression disponible depuis l'application." },
         { key: "contact", label: "CONTACT", value: "support@walliocard.com" },
       ],
