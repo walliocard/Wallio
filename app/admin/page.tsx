@@ -120,7 +120,21 @@ export default function AdminPage() {
   const [createVille, setCreateVille] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [tab, setTab] = useState<"marchands" | "comptabilite" | "contrat">("marchands");
+  const [tab, setTab] = useState<"marchands" | "comptabilite" | "contrat" | "facture">("marchands");
+  // ── Facture ──
+  const [faMarchandId, setFaMarchandId] = useState("");
+  const [faRef,    setFaRef]    = useState(() => `FAC-${new Date().getFullYear()}-${Math.floor(1000+Math.random()*9000)}`);
+  const [faDate,   setFaDate]   = useState(() => new Date().toISOString().slice(0,10));
+  const [faEcheance, setFaEcheance] = useState(() => { const d = new Date(); d.setDate(d.getDate()+30); return d.toISOString().slice(0,10); });
+  const [faType,   setFaType]   = useState<AboType>("mensuel");
+  const [faPrix,   setFaPrix]   = useState("349");
+  const [faDevise, setFaDevise] = useState("DH");
+  const [faNom,    setFaNom]    = useState("");
+  const [faEmail,  setFaEmail]  = useState("");
+  const [faAdresse,setFaAdresse]= useState("");
+  const [faPays,   setFaPays]   = useState("Maroc");
+  const [faPaiement, setFaPaiement] = useState<"virement"|"especes"|"cheque">("virement");
+  const [faStatut, setFaStatut] = useState<"emise"|"payee">("emise");
   // ── Contrat ──
   const [ctMarchandId, setCtMarchandId] = useState("");
   const [ctRef,    setCtRef]    = useState(() => `WAL-${new Date().getFullYear()}-${Math.floor(1000+Math.random()*9000)}`);
@@ -444,6 +458,164 @@ export default function AdminPage() {
 </div>
 
 <p style="margin-top:48px;font-size:11px;color:#AEAEB2;text-align:center;">Wallio · Mohamed Karim Mejbar · ICE 003655578000095 · Agadir, Maroc · walliocard@gmail.com</p>
+</body>
+</html>`;
+
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 500);
+  }
+
+  function chargerMarchandFacture(id: string) {
+    const m = marchands.find(x => x.id === id);
+    if (!m) return;
+    setFaMarchandId(id);
+    setFaNom(m.nom || "");
+    setFaEmail(m.email || "");
+    setFaAdresse(`${m.ville || ""}${m.pays ? `, ${m.pays}` : ""}`);
+    setFaPays(m.pays || "Maroc");
+    setFaType(m.abonnement_type || "mensuel");
+    const devise = m.pays === "Maroc" ? "DH" : "€";
+    setFaDevise(devise);
+    const prix = m.pays === "Maroc"
+      ? (m.abonnement_type === "6mois" ? "1 799" : m.abonnement_type === "annuel" ? "2 999" : "349")
+      : (m.abonnement_type === "6mois" ? "259"   : m.abonnement_type === "annuel" ? "399"   : "54");
+    setFaPrix(prix);
+  }
+
+  function telechargerFacture() {
+    const dureeLabel = faType === "6mois" ? "6 mois" : faType === "annuel" ? "1 an" : "1 mois";
+    const paiementLabel = faPaiement === "virement" ? "Virement bancaire" : faPaiement === "especes" ? "Espèces" : "Chèque";
+    const statutColor = faStatut === "payee" ? "#34C759" : "#FF9F0A";
+    const statutLabel = faStatut === "payee" ? "PAYÉE" : "ÉMISE";
+    const prixNum = parseFloat(faPrix.replace(/\s/g, "")) || 0;
+    const tva = faPays === "Maroc" ? 0 : 0; // TVA 0 pour auto-entrepreneur
+
+    const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Facture ${faRef} — ${faNom}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1D1D1F; font-size: 13px; padding: 60px 80px; max-width: 820px; margin: 0 auto; background: #fff; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #1D1D1F; }
+  .brand-sub { font-size: 11px; color: #6E6E73; margin-top: 2px; }
+  .facture-label { text-align: right; }
+  .facture-label h1 { font-size: 28px; font-weight: 800; letter-spacing: -1px; color: #1D1D1F; }
+  .facture-label .ref { font-size: 13px; color: #6E6E73; margin-top: 4px; }
+  .statut { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: ${statutColor}; background: ${faStatut === "payee" ? "rgba(52,199,89,0.10)" : "rgba(255,159,10,0.10)"}; margin-top: 8px; }
+  .divider { height: 2px; background: #1D1D1F; margin: 32px 0; }
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+  .partie h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #6E6E73; margin-bottom: 10px; }
+  .partie p { font-size: 13px; line-height: 1.7; color: #1D1D1F; }
+  .partie p.light { color: #6E6E73; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+  thead tr { background: #F2F2F7; }
+  thead th { padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #6E6E73; text-align: left; }
+  tbody td { padding: 14px; font-size: 13px; color: #1D1D1F; border-bottom: 1px solid #F2F2F7; }
+  tbody tr:last-child td { border-bottom: none; }
+  .totaux { display: flex; justify-content: flex-end; margin-bottom: 40px; }
+  .totaux-inner { min-width: 260px; }
+  .totaux-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 1px solid #F2F2F7; }
+  .totaux-row.total { border-bottom: none; border-top: 2px solid #1D1D1F; margin-top: 4px; padding-top: 12px; font-size: 16px; font-weight: 700; }
+  .infos-paiement { background: #F2F2F7; border-radius: 10px; padding: 18px 22px; margin-bottom: 40px; }
+  .infos-paiement h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6E6E73; margin-bottom: 12px; }
+  .infos-paiement p { font-size: 13px; line-height: 1.8; }
+  .footer { font-size: 11px; color: #AEAEB2; text-align: center; padding-top: 32px; border-top: 1px solid #F2F2F7; }
+  @media print { body { padding: 40px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div>
+      <div class="brand-name">Wallio</div>
+      <div class="brand-sub">Mohamed Karim Mejbar · Auto-entrepreneur</div>
+      <div class="brand-sub">ICE : 003655578000095 · IF : 42798171</div>
+      <div class="brand-sub">Quartier Founty, Secteur R, N°266 · Agadir, Maroc</div>
+      <div class="brand-sub">walliocard@gmail.com · app.walliocard.com</div>
+    </div>
+  </div>
+  <div class="facture-label">
+    <h1>FACTURE</h1>
+    <div class="ref">N° ${faRef}</div>
+    <div class="ref">Date : ${new Date(faDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
+    <div class="ref">Échéance : ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
+    <span class="statut">${statutLabel}</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="parties">
+  <div class="partie">
+    <h3>Émetteur</h3>
+    <p><strong>Mohamed Karim Mejbar</strong></p>
+    <p class="light">Auto-entrepreneur · Wallio</p>
+    <p class="light">ICE : 003655578000095</p>
+    <p class="light">IF : 42798171</p>
+    <p class="light">Quartier Founty, Secteur R, N°266<br>Agadir, Maroc</p>
+  </div>
+  <div class="partie">
+    <h3>Facturé à</h3>
+    <p><strong>${faNom || "—"}</strong></p>
+    <p class="light">${faEmail || "—"}</p>
+    <p class="light">${faAdresse || "—"}</p>
+    <p class="light">${faPays}</p>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="border-radius:8px 0 0 8px">Description</th>
+      <th>Période</th>
+      <th style="text-align:right">Qté</th>
+      <th style="text-align:right;border-radius:0 8px 8px 0">Montant HT</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <strong>Wallio — Abonnement ${ABO_LABELS[faType]}</strong><br>
+        <span style="color:#6E6E73;font-size:12px;">Plateforme SaaS fidélité · Apple Wallet &amp; Google Wallet · Dashboard marchand</span>
+      </td>
+      <td style="color:#6E6E73">${dureeLabel}</td>
+      <td style="text-align:right">1</td>
+      <td style="text-align:right"><strong>${faPrix} ${faDevise}</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="totaux">
+  <div class="totaux-inner">
+    <div class="totaux-row"><span>Sous-total HT</span><span>${faPrix} ${faDevise}</span></div>
+    <div class="totaux-row"><span>TVA (auto-entrepreneur exonéré)</span><span>0,00 ${faDevise}</span></div>
+    <div class="totaux-row total"><span>TOTAL TTC</span><span>${faPrix} ${faDevise}</span></div>
+  </div>
+</div>
+
+<div class="infos-paiement">
+  <h3>Informations de paiement</h3>
+  <p><strong>Mode de paiement :</strong> ${paiementLabel}</p>
+  ${faPaiement === "virement" ? `<p><strong>IBAN :</strong> À compléter selon votre banque</p>` : ""}
+  <p><strong>Référence à indiquer :</strong> ${faRef}</p>
+  <p><strong>Date d'échéance :</strong> ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+</div>
+
+<div class="footer">
+  <p>Wallio · Mohamed Karim Mejbar · Auto-entrepreneur · ICE 003655578000095 · IF 42798171</p>
+  <p style="margin-top:4px">Quartier Founty, Secteur R, N°266, Agadir, Maroc · walliocard@gmail.com · app.walliocard.com</p>
+  <p style="margin-top:8px;font-style:italic">En application de l'article relatif à la franchise en base de TVA, la TVA n'est pas applicable.</p>
+</div>
+
 </body>
 </html>`;
 
@@ -840,7 +1012,7 @@ export default function AdminPage() {
 
         {/* Onglets */}
         <div style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, width: "fit-content" }}>
-          {([["marchands", "Marchands"], ["comptabilite", "Comptabilité"], ["contrat", "Contrat"]] as const).map(([key, label]) => (
+          {([["marchands", "Marchands"], ["comptabilite", "Comptabilité"], ["contrat", "Contrat"], ["facture", "Facture"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               style={{ padding: "7px 18px", borderRadius: 8, fontSize: 14, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s" }}>
               {label}
@@ -1181,6 +1353,98 @@ export default function AdminPage() {
 
             <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>
               Le contrat s&apos;ouvre dans un nouvel onglet · Ctrl+P ou Cmd+P pour sauvegarder en PDF
+            </p>
+          </div>
+        )}
+
+        {/* ── Facture ── */}
+        {tab === "facture" && (
+          <div style={{ maxWidth: 680 }}>
+            <div style={{ ...G, borderRadius: 18, padding: "24px 28px", marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: T.tert, marginBottom: 16 }}>Générer une facture</p>
+
+              {/* Sélecteur marchand */}
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Marchand</p>
+                <select value={faMarchandId} onChange={e => chargerMarchandFacture(e.target.value)} style={{ ...inputStyle, width: "100%" }}>
+                  <option value="">Sélectionner un marchand…</option>
+                  {marchands.map(m => <option key={m.id} value={m.id}>{m.nom || m.email}</option>)}
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>N° facture</p>
+                  <input value={faRef} onChange={e => setFaRef(e.target.value)} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date de facturation</p>
+                  <input type="date" value={faDate} onChange={e => setFaDate(e.target.value)} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date d&apos;échéance</p>
+                  <input type="date" value={faEcheance} onChange={e => setFaEcheance(e.target.value)} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Formule</p>
+                  <select value={faType} onChange={e => setFaType(e.target.value as AboType)} style={{ ...inputStyle }}>
+                    <option value="mensuel">Mensuel</option>
+                    <option value="6mois">6 mois</option>
+                    <option value="annuel">Annuel</option>
+                  </select>
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Montant</p>
+                  <input value={faPrix} onChange={e => setFaPrix(e.target.value)} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Devise</p>
+                  <select value={faDevise} onChange={e => setFaDevise(e.target.value)} style={{ ...inputStyle }}>
+                    <option value="DH">DH (Maroc)</option>
+                    <option value="€">€ (Europe)</option>
+                    <option value="RON">RON (Roumanie)</option>
+                  </select>
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Mode de paiement</p>
+                  <select value={faPaiement} onChange={e => setFaPaiement(e.target.value as "virement"|"especes"|"cheque")} style={{ ...inputStyle }}>
+                    <option value="virement">Virement bancaire</option>
+                    <option value="especes">Espèces</option>
+                    <option value="cheque">Chèque</option>
+                  </select>
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Statut</p>
+                  <select value={faStatut} onChange={e => setFaStatut(e.target.value as "emise"|"payee")} style={{ ...inputStyle }}>
+                    <option value="emise">Émise (en attente)</option>
+                    <option value="payee">Payée</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Nom du marchand</p>
+                  <input value={faNom} onChange={e => setFaNom(e.target.value)} placeholder="Nom de l'établissement" style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Email</p>
+                  <input value={faEmail} onChange={e => setFaEmail(e.target.value)} placeholder="email@etablissement.com" style={{ ...inputStyle }} />
+                </div>
+                <div style={{ gridColumn: "1/-1" }}>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Adresse</p>
+                  <input value={faAdresse} onChange={e => setFaAdresse(e.target.value)} placeholder="Adresse, ville, pays" style={{ ...inputStyle }} />
+                </div>
+              </div>
+
+              <button onClick={telechargerFacture}
+                style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
+                Télécharger la facture (PDF)
+              </button>
+            </div>
+
+            <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>
+              La facture s&apos;ouvre dans un nouvel onglet · Ctrl+P ou Cmd+P pour sauvegarder en PDF
             </p>
           </div>
         )}
