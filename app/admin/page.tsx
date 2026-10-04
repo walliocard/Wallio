@@ -135,6 +135,8 @@ export default function AdminPage() {
   const [faPays,   setFaPays]   = useState("Maroc");
   const [faPaiement, setFaPaiement] = useState<"virement"|"especes"|"cheque">("virement");
   const [faStatut, setFaStatut] = useState<"emise"|"payee">("emise");
+  const [faRemise, setFaRemise] = useState("");
+  const [faRemiseLabel, setFaRemiseLabel] = useState("");
   // ── Contrat ──
   const [ctMarchandId, setCtMarchandId] = useState("");
   const [ctRef,    setCtRef]    = useState(() => `WAL-${new Date().getFullYear()}-${Math.floor(1000+Math.random()*9000)}`);
@@ -492,7 +494,9 @@ export default function AdminPage() {
     const statutColor = faStatut === "payee" ? "#34C759" : "#FF9F0A";
     const statutLabel = faStatut === "payee" ? "PAYÉE" : "ÉMISE";
     const prixNum = parseFloat(faPrix.replace(/\s/g, "")) || 0;
-    const tva = faPays === "Maroc" ? 0 : 0; // TVA 0 pour auto-entrepreneur
+    const remiseNum = parseFloat(faRemise.replace(/\s/g, "")) || 0;
+    const totalNet = Math.max(0, prixNum - remiseNum);
+    const fmt = (n: number) => n % 1 === 0 ? `${n}` : n.toFixed(2);
 
     const html = `<!DOCTYPE html>
 <html lang="fr">
@@ -597,8 +601,9 @@ export default function AdminPage() {
 <div class="totaux">
   <div class="totaux-inner">
     <div class="totaux-row"><span>Sous-total HT</span><span>${faPrix} ${faDevise}</span></div>
+    ${remiseNum > 0 ? `<div class="totaux-row" style="color:#FF3B30"><span>${faRemiseLabel || "Remise"}</span><span>− ${fmt(remiseNum)} ${faDevise}</span></div>` : ""}
     <div class="totaux-row"><span>TVA (auto-entrepreneur exonéré)</span><span>0,00 ${faDevise}</span></div>
-    <div class="totaux-row total"><span>TOTAL TTC</span><span>${faPrix} ${faDevise}</span></div>
+    <div class="totaux-row total"><span>TOTAL TTC</span><span>${fmt(totalNet)} ${faDevise}</span></div>
   </div>
 </div>
 
@@ -1436,6 +1441,25 @@ export default function AdminPage() {
                   <input value={faAdresse} onChange={e => setFaAdresse(e.target.value)} placeholder="Adresse, ville, pays" style={{ ...inputStyle }} />
                 </div>
               </div>
+
+              {/* Remise */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Remise (montant)</p>
+                  <input value={faRemise} onChange={e => setFaRemise(e.target.value)} placeholder={`0 ${faDevise}`} style={{ ...inputStyle }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Intitulé de la remise</p>
+                  <input value={faRemiseLabel} onChange={e => setFaRemiseLabel(e.target.value)} placeholder="Ex : Remise lancement, Promo…" style={{ ...inputStyle }} />
+                </div>
+              </div>
+
+              {faRemise && parseFloat(faRemise) > 0 && (
+                <div style={{ background: "rgba(255,59,48,0.06)", border: "1px solid rgba(255,59,48,0.15)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 13 }}>
+                  <span style={{ color: T.sec }}>Total après remise : </span>
+                  <strong style={{ color: T.label }}>{Math.max(0, (parseFloat(faPrix.replace(/\s/g,""))||0) - (parseFloat(faRemise.replace(/\s/g,""))||0))} {faDevise}</strong>
+                </div>
+              )}
 
               <button onClick={telechargerFacture}
                 style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
