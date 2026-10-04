@@ -1,4 +1,4 @@
-export type Region = "ma" | "fr";
+export type Region = "ma" | "fr" | "ro";
 
 export const REGIONS: Record<Region, {
   currency: string;
@@ -35,6 +35,18 @@ export const REGIONS: Record<Region, {
     monthlyEquivAnnual: 33,
     strikethrough6: 324,
     strikethroughAnnual: 648,
+  },
+  ro: {
+    currency: "RON",
+    locale: "ro-RO",
+    lang: "ro",
+    monthly: 249,
+    sixMonths: 1299,
+    annual: 1999,
+    monthlyEquiv6: 217,
+    monthlyEquivAnnual: 167,
+    strikethrough6: 1494,
+    strikethroughAnnual: 2988,
   },
 };
 
