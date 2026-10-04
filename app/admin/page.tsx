@@ -65,6 +65,11 @@ function daysLeft(fin?: number): number {
 function getMontant(type: AboType): number {
   return type === "6mois" ? 1799 : type === "annuel" ? 2999 : 349;
 }
+function prixParFormule(type: AboType, devise: string): string {
+  if (devise === "DH") return type === "6mois" ? "1 799" : type === "annuel" ? "2 999" : "349";
+  if (devise === "€")  return type === "6mois" ? "259"   : type === "annuel" ? "399"   : "54";
+  return type === "6mois" ? "1 299" : type === "annuel" ? "1 999" : "249"; // RON
+}
 const ABO_LABELS: Record<AboType, string> = { mensuel: "Mensuel", "6mois": "6 mois", annuel: "Annuel" };
 const ABO_COLORS = {
   actif:  { bg: "rgba(52,199,89,0.10)",   fg: "#1C7A37",  label: "Actif" },
@@ -1315,7 +1320,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Formule</p>
-                  <select value={ctType} onChange={e => setCtType(e.target.value as AboType)} style={{ ...inputStyle }}>
+                  <select value={ctType} onChange={e => { const t = e.target.value as AboType; setCtType(t); setCtPrix(prixParFormule(t, ctDevise)); }} style={{ ...inputStyle }}>
                     <option value="mensuel">Mensuel</option>
                     <option value="6mois">6 mois</option>
                     <option value="annuel">Annuel</option>
@@ -1327,7 +1332,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Devise</p>
-                  <select value={ctDevise} onChange={e => setCtDevise(e.target.value)} style={{ ...inputStyle }}>
+                  <select value={ctDevise} onChange={e => { setCtDevise(e.target.value); setCtPrix(prixParFormule(ctType, e.target.value)); }} style={{ ...inputStyle }}>
                     <option value="DH">DH (Maroc)</option>
                     <option value="€">€ (Europe)</option>
                     <option value="RON">RON (Roumanie)</option>
@@ -1392,7 +1397,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Formule</p>
-                  <select value={faType} onChange={e => setFaType(e.target.value as AboType)} style={{ ...inputStyle }}>
+                  <select value={faType} onChange={e => { const t = e.target.value as AboType; setFaType(t); setFaPrix(prixParFormule(t, faDevise)); }} style={{ ...inputStyle }}>
                     <option value="mensuel">Mensuel</option>
                     <option value="6mois">6 mois</option>
                     <option value="annuel">Annuel</option>
@@ -1404,7 +1409,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Devise</p>
-                  <select value={faDevise} onChange={e => setFaDevise(e.target.value)} style={{ ...inputStyle }}>
+                  <select value={faDevise} onChange={e => { setFaDevise(e.target.value); setFaPrix(prixParFormule(faType, e.target.value)); }} style={{ ...inputStyle }}>
                     <option value="DH">DH (Maroc)</option>
                     <option value="€">€ (Europe)</option>
                     <option value="RON">RON (Roumanie)</option>
