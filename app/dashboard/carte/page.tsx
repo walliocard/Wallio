@@ -159,6 +159,32 @@ export default function CartePage() {
     ((marchand as Record<string, unknown>).google_links as {uri: string; description: string}[]) || []
   );
 
+  // ── Infos partagées (alimente Apple aux1/2/3 + Google text modules) ──
+  const initSharedInfos = (): {label: string; value: string}[] => {
+    // Si des text modules Google existent, partir de là — sinon partir des aux Apple
+    const gm = ((marchand as Record<string, unknown>).google_text_modules as {header: string; body: string}[]) || [];
+    if (gm.length > 0) return gm.slice(0,3).map(m => ({ label: m.header, value: m.body }));
+    const infos: {label: string; value: string}[] = [];
+    if ((marchand as Record<string, unknown>).apple_aux1_value) infos.push({ label: (marchand as Record<string, unknown>).apple_aux1_label as string || "Info", value: (marchand as Record<string, unknown>).apple_aux1_value as string });
+    if ((marchand as Record<string, unknown>).apple_aux2_value) infos.push({ label: (marchand as Record<string, unknown>).apple_aux2_label as string || "Info", value: (marchand as Record<string, unknown>).apple_aux2_value as string });
+    if ((marchand as Record<string, unknown>).apple_aux3_value) infos.push({ label: (marchand as Record<string, unknown>).apple_aux3_label as string || "Info", value: (marchand as Record<string, unknown>).apple_aux3_value as string });
+    return infos;
+  };
+  const [sharedInfos, setSharedInfos] = useState<{label: string; value: string}[]>(initSharedInfos);
+
+  // Setters sync : changer un champ commun met à jour les deux wallets
+  function setLabelSync(v: string) { setPrimaryLabel(v); setGooglePrimaryLabel(v); }
+  function setBgColorSync(v: string) { setBgColor(v); setGoogleBgColor(v); }
+
+  // Sync des infos partagées vers les états Apple et Google
+  function updateSharedInfos(infos: {label: string; value: string}[]) {
+    setSharedInfos(infos);
+    setAux1Label(infos[0]?.label || ""); setAux1Value(infos[0]?.value || "");
+    setAux2Label(infos[1]?.label || ""); setAux2Value(infos[1]?.value || "");
+    setAux3Label(infos[2]?.label || ""); setAux3Value(infos[2]?.value || "");
+    setGoogleTextModules(infos.filter(i => i.label || i.value).map((i, idx) => ({ header: i.label, body: i.value, id: `shared_${idx}` })));
+  }
+
   // Feature 7 — preview états tampons
   const [previewFill, setPreviewFill] = useState<number>(0.5);
 
@@ -768,7 +794,9 @@ export default function CartePage() {
     setStampLogoOpacity((m.apple_stamp_logo_opacity as number) ?? 1);
     setRawStripUrl(""); setIsUploadedStrip(false); setCropZoom(1);
     setCropY((m.apple_strip_crop_y as number) ?? 50);
-    setPrimaryLabel((m.apple_primary_label as string) || tr.carte_stamps_default);
+    const loadedPrimaryLabel = (m.apple_primary_label as string) || tr.carte_stamps_default;
+    setPrimaryLabel(loadedPrimaryLabel);
+    setGooglePrimaryLabel(loadedPrimaryLabel); // sync au chargement
     setRewardLabel((m.apple_reward_label as string) || tr.carte_reward_default);
     setMemberLabel((m.apple_member_label as string) || tr.carte_member_default);
     setDescription((m.apple_description as string) || "");
@@ -778,6 +806,17 @@ export default function CartePage() {
     setAux1Label((m.apple_aux1_label as string) || ""); setAux1Value((m.apple_aux1_value as string) || "");
     setAux2Label((m.apple_aux2_label as string) || ""); setAux2Value((m.apple_aux2_value as string) || "");
     setAux3Label((m.apple_aux3_label as string) || ""); setAux3Value((m.apple_aux3_value as string) || "");
+    // Init sharedInfos depuis les données existantes
+    const gm = (m.google_text_modules as {header: string; body: string}[]) || [];
+    if (gm.length > 0) {
+      setSharedInfos(gm.slice(0,3).map(x => ({ label: x.header, value: x.body })));
+    } else {
+      const si: {label: string; value: string}[] = [];
+      if (m.apple_aux1_value) si.push({ label: (m.apple_aux1_label as string) || "Info", value: m.apple_aux1_value as string });
+      if (m.apple_aux2_value) si.push({ label: (m.apple_aux2_label as string) || "Info", value: m.apple_aux2_value as string });
+      if (m.apple_aux3_value) si.push({ label: (m.apple_aux3_label as string) || "Info", value: m.apple_aux3_value as string });
+      setSharedInfos(si);
+    }
     setIconUrl((m.apple_icon_url as string) || "");
     setStoreLocation((m.apple_location as { latitude: number; longitude: number; relevantText: string } | null) ?? null);
     setGoogleBgColor((m.google_bg_color as string) || couleurPrincipale || "#007AFF");
@@ -1684,16 +1723,15 @@ export default function CartePage() {
             </div>
           </Section>}
 
-          {/* Labels des champs — Apple uniquement */}
-          {walletType === "apple" && <Section label={tr.carte_labels_section}>
+          {/* ── Labels des champs — COMMUN ── */}
+          <Section label={tr.carte_labels_section}>
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
               {tr.carte_labels_hint}
             </p>
-
             <LabelField
               label={tr.carte_field_primary}
               value={primaryLabel}
-              onChange={v => { pushHistory(); setPrimaryLabel(v); }}
+              onChange={v => { pushHistory(); setLabelSync(v); }}
               suggestions={[tr.carte_stamps_default,"Points","Visites","Cafés","Soins","Séances","Passages"]}
             />
             <LabelField
@@ -1708,30 +1746,86 @@ export default function CartePage() {
               onChange={v => { pushHistory(); setMemberLabel(v); }}
               suggestions={[tr.carte_member_default,"Client","Titulaire","Fidèle","Abonné","Nom"]}
             />
-          </Section>}
-
-
-
-
-          {/* Champs auxiliaires — Apple uniquement */}
-          {walletType === "apple" && (
-            <Section label={tr.carte_info_section}>
-              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                {tr.carte_info_hint}
-              </p>
-              <Field label="Info 1">
-                <TextInput value={aux1Value} onChange={setAux1Value} placeholder="ex : Du lundi au vendredi"/>
+            {walletType === "google" && (
+              <Field label="Label objectif (Google)">
+                <TextInput value={googleSecondaryLabel} onChange={setGoogleSecondaryLabel} placeholder="ex: Objectif, Sur" />
               </Field>
-              <Field label="Info 2">
-                <TextInput value={aux2Value} onChange={setAux2Value} placeholder="ex : 8h-18h"/>
-              </Field>
-              <Field label="Info 3">
-                <TextInput value={aux3Value} onChange={setAux3Value} placeholder="ex : 06 00 00 00 00"/>
-              </Field>
-            </Section>
-          )}
+            )}
+          </Section>
 
-          {/* Icône notification — Apple uniquement */}
+          {/* ── Infos supplémentaires — COMMUN ── */}
+          <Section label={tr.carte_info_section}>
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+              Visibles sur Apple Wallet et Google Wallet. Max 3.
+            </p>
+            {sharedInfos.map((info, i) => (
+              <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 8 }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                  <input
+                    value={info.label}
+                    placeholder="Label (ex : Horaires)"
+                    onChange={e => {
+                      const next = sharedInfos.map((x, j) => j === i ? { ...x, label: e.target.value } : x);
+                      updateSharedInfos(next);
+                    }}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                  />
+                  <input
+                    value={info.value}
+                    placeholder="Valeur (ex : Lun-Sam 9h-18h)"
+                    onChange={e => {
+                      const next = sharedInfos.map((x, j) => j === i ? { ...x, value: e.target.value } : x);
+                      updateSharedInfos(next);
+                    }}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                  />
+                </div>
+                <button onClick={() => updateSharedInfos(sharedInfos.filter((_, j) => j !== i))}
+                  style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0, marginTop: 2 }}>
+                  ×
+                </button>
+              </div>
+            ))}
+            {sharedInfos.length < 3 && (
+              <button onClick={() => updateSharedInfos([...sharedInfos, { label: "", value: "" }])}
+                style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
+                + Ajouter un bloc
+              </button>
+            )}
+          </Section>
+
+          {/* ── Liens — COMMUN (Google Wallet) ── */}
+          <Section label={tr.carte_google_links}>
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+              Liens cliquables sur la carte (site web, téléphone, email…). Max 3.
+            </p>
+            {googleLinks.map((lk, i) => (
+              <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                  <input value={lk.description} placeholder="Label (ex : Notre site)"
+                    onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, description: e.target.value } : x))}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                  />
+                  <input value={lk.uri} placeholder="URL ou tel:+212... ou mailto:..."
+                    onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, uri: e.target.value } : x))}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                  />
+                </div>
+                <button onClick={() => setGoogleLinks(prev => prev.filter((_, j) => j !== i))}
+                  style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0 }}>
+                  ×
+                </button>
+              </div>
+            ))}
+            {googleLinks.length < 3 && (
+              <button onClick={() => setGoogleLinks(prev => [...prev, { uri: "", description: "" }])}
+                style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
+                + Ajouter un lien
+              </button>
+            )}
+          </Section>
+
+          {/* ── Icône notification — COMMUN ── */}
           {walletType === "apple" && (
             <Section label={tr.carte_icon_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
@@ -2068,88 +2162,7 @@ export default function CartePage() {
                 )}
               </Section>
 
-              {/* 4/4 — Labels */}
-              <Section label={tr.carte_labels_section}>
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                  Seuls textes personnalisables — le reste est imposé par Google.
-                </p>
-                <Field label={tr.carte_google_stamps_label}>
-                  <TextInput value={googlePrimaryLabel} onChange={setGooglePrimaryLabel} placeholder="ex: Tampons, Points, Visites" />
-                </Field>
-                <Field label="Label objectif">
-                  <TextInput value={googleSecondaryLabel} onChange={setGoogleSecondaryLabel} placeholder="ex: Objectif, Sur" />
-                </Field>
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
-                  Nom de la récompense modifiable dans "Récompense finale" ci-dessous.
-                </p>
-              </Section>
-
-              {/* 5/5 — Modules texte */}
-              <Section label={tr.carte_google_extra}>
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                  Blocs d'info visibles au dos de la carte (horaires, adresse, promo…). Max 5.
-                </p>
-                {googleTextModules.map((m, i) => (
-                  <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 8 }}>
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-                      <input
-                        value={m.header} placeholder="Titre (ex : Horaires)"
-                        onChange={e => setGoogleTextModules(prev => prev.map((x, j) => j === i ? { ...x, header: e.target.value } : x))}
-                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
-                      />
-                      <textarea
-                        value={m.body} placeholder="Contenu (ex : Lun-Sam 9h-18h)"
-                        rows={2}
-                        onChange={e => setGoogleTextModules(prev => prev.map((x, j) => j === i ? { ...x, body: e.target.value } : x))}
-                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none", resize: "none", fontFamily: "inherit" }}
-                      />
-                    </div>
-                    <button onClick={() => setGoogleTextModules(prev => prev.filter((_, j) => j !== i))}
-                      style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0, marginTop: 2 }}>
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {googleTextModules.length < 5 && (
-                  <button onClick={() => setGoogleTextModules(prev => [...prev, { header: "", body: "", id: `mod_${Date.now()}` }])}
-                    style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
-                    + Ajouter un bloc
-                  </button>
-                )}
-              </Section>
-
-              {/* 6/6 — Liens */}
-              <Section label={tr.carte_google_links}>
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                  Liens cliquables sur la carte (site web, téléphone, email…). Max 3.
-                </p>
-                {googleLinks.map((lk, i) => (
-                  <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-                      <input
-                        value={lk.description} placeholder="Label (ex : Notre site)"
-                        onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, description: e.target.value } : x))}
-                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
-                      />
-                      <input
-                        value={lk.uri} placeholder="URL ou tel:+212... ou mailto:..."
-                        onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, uri: e.target.value } : x))}
-                        style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
-                      />
-                    </div>
-                    <button onClick={() => setGoogleLinks(prev => prev.filter((_, j) => j !== i))}
-                      style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0 }}>
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {googleLinks.length < 3 && (
-                  <button onClick={() => setGoogleLinks(prev => [...prev, { uri: "", description: "" }])}
-                    style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
-                    + Ajouter un lien
-                  </button>
-                )}
-              </Section>
+              {/* Labels et infos maintenant gérés dans la section commune ci-dessus */}
             </>
           )}
 
