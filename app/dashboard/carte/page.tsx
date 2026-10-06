@@ -1116,8 +1116,18 @@ export default function CartePage() {
             </p>
           </Section>
 
-          {/* Bannière — Apple uniquement */}
-          {walletType === "apple" && <Section label={tr.carte_banner_label}>
+          {/* ─── Séparateur Apple ─── */}
+          <div style={{ display:"flex", alignItems:"center", gap:8, margin:"4px 0" }}>
+            <div style={{ flex:1, height:1, background:"var(--border)" }}/>
+            <span style={{ fontSize:10, fontWeight:700, color:"var(--fg-tertiary)", textTransform:"uppercase", letterSpacing:"0.08em", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              Apple Wallet
+            </span>
+            <div style={{ flex:1, height:1, background:"var(--border)" }}/>
+          </div>
+
+          {/* Bannière photo */}
+          <Section label={tr.carte_banner_label}>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {(stripUrl || rawStripUrl) ? (() => {
                 const canCrop = isUploadedStrip && !!rawStripUrl;
@@ -1246,10 +1256,10 @@ export default function CartePage() {
                 {tr.carte_banner_size_hint}
               </p>
             </div>
-          </Section>}
+          </Section>
 
-          {/* Éditeur bannière — Apple uniquement */}
-          {walletType === "apple" && <Section label={tr.carte_banner_section}>
+          {/* Éditeur bannière Apple — dégradé, texte, tampons */}
+          <Section label={tr.carte_banner_section}>
 
             {/* Thèmes dégradés */}
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
@@ -1607,10 +1617,9 @@ export default function CartePage() {
                 )}
               </div>
             )}
-          </Section>}
+          </Section>
 
-          {/* Couleurs — Apple uniquement */}
-          {walletType === "apple" && <Section label="Couleurs de la carte">
+          <Section label="Couleurs de la carte">
 
             {/* Fond */}
             <ColorRow
@@ -1723,7 +1732,7 @@ export default function CartePage() {
                 </div>
               )}
             </div>
-          </Section>}
+          </Section>
 
           {/* ── Labels des champs — COMMUN ── */}
           <Section label={tr.carte_labels_section}>
@@ -1827,9 +1836,8 @@ export default function CartePage() {
             )}
           </Section>
 
-          {/* ── Icône notification — COMMUN ── */}
-          {walletType === "apple" && (
-            <Section label={tr.carte_icon_section}>
+          {/* Icône notification */}
+          <Section label={tr.carte_icon_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
                 38×38px idéal — affichée dans les pushs Apple Wallet. Uploadez une image carrée avec votre logo sans fond.
               </p>
@@ -1863,11 +1871,9 @@ export default function CartePage() {
                 </div>
               </div>
             </Section>
-          )}
 
-          {/* Géolocalisation — Apple uniquement */}
-          {walletType === "apple" && (
-            <Section label={tr.carte_geo_section}>
+          {/* Géolocalisation */}
+          <Section label={tr.carte_geo_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
                 Apple affiche une notification sur l'écran de verrouillage quand le client s'approche de votre établissement.
               </p>
@@ -1907,11 +1913,9 @@ export default function CartePage() {
                 </button>
               )}
             </Section>
-          )}
 
-          {/* Dos de la carte — Apple uniquement */}
-          {walletType === "apple" && (
-            <Section label={tr.carte_back_section}>
+          {/* Dos de la carte */}
+          <Section label={tr.carte_back_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
                 Visible quand le client retourne sa carte dans Wallet.
               </p>
@@ -1935,11 +1939,20 @@ export default function CartePage() {
                 />
               </Field>
             </Section>
-          )}
 
-          {/* Google Wallet — même trame qu'Apple : Bannière → Éditeur → Couleur → Labels */}
-          {walletType === "google" && (
-            <>
+          {/* ─── Séparateur Google ─── */}
+          <div style={{ display:"flex", alignItems:"center", gap:8, margin:"4px 0" }}>
+            <div style={{ flex:1, height:1, background:"var(--border)" }}/>
+            <span style={{ fontSize:10, fontWeight:700, color:"var(--fg-tertiary)", textTransform:"uppercase", letterSpacing:"0.08em", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24"><path d="M21 7H3a1 1 0 00-1 1v8a1 1 0 001 1h18a1 1 0 001-1V8a1 1 0 00-1-1z" fill="#4285F4" opacity=".4"/><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h18v8z" fill="#4285F4"/></svg>
+              Google Wallet
+            </span>
+            <div style={{ flex:1, height:1, background:"var(--border)" }}/>
+          </div>
+
+          {/* Google Wallet sections */}
+          <>
+
               {/* Bouton sync Google Wallet */}
               <div style={{ padding: "12px 14px", borderRadius: 14, background: syncedGW ? "rgba(52,199,89,0.08)" : "rgba(0,122,255,0.06)", border: `1px solid ${syncedGW ? "rgba(52,199,89,0.25)" : "rgba(0,122,255,0.15)"}` }}>
                 <p style={{ fontSize: 11, fontWeight: 600, color: "var(--fg)", marginBottom: 6 }}>
@@ -2165,8 +2178,7 @@ export default function CartePage() {
               </Section>
 
               {/* Labels et infos maintenant gérés dans la section commune ci-dessus */}
-            </>
-          )}
+          </>
 
 
         </div>
