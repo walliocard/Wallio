@@ -46,171 +46,174 @@ export default function GoogleWalletCard({
   stampsObjective,
   rewardName,
   primaryLabel = "Tampons",
+  secondaryLabel = "Objectif",
   textModules = [],
   links = [],
   previewUid,
+  clientPrenom,
+  clientNom,
+  rewardLabel = "Récompense",
+  memberLabel = "Membre",
 }: GoogleWalletCardProps) {
   const [qr, setQr] = useState("");
 
-  // Google Wallet affiche toujours le fond de la carte sur fond clair
-  // Le backgroundColor est utilisé pour le fond du card MAIS Google Wallet
-  // utilise un fond gris clair pour la vue détail
-  const bg = /^#[0-9a-f]{6}$/i.test(backgroundColor) ? backgroundColor : "#F5F5F5";
+  const bg = /^#[0-9a-f]{6}$/i.test(backgroundColor) ? backgroundColor : "#1A73E8";
   const dark = isDarkBg(bg);
-  const text = dark ? "#FFFFFF" : "#1A1A1A";
-  const textSec = dark ? "rgba(255,255,255,0.6)" : "#6E6E73";
-  const divider = dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
+  const headerText = dark ? "#FFFFFF" : "#1A1A1A";
+  const headerTextSec = dark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.55)";
 
   const qrValue = previewUid ? `WALLIO:${previewUid}` : "WALLIO:preview";
+  const memberName = clientPrenom && clientNom ? `${clientPrenom} ${clientNom[0]}.` : clientPrenom || "Client fidèle";
 
   useEffect(() => {
     QRCode.toDataURL(qrValue, {
-      width: 600, margin: 1,
-      color: { dark: "#000000", light: "#FFFFFF" },
+      width: 400, margin: 1,
+      color: { dark: "#1A1A1A", light: "#FFFFFF" },
       errorCorrectionLevel: "M",
     }).then(setQr).catch(() => {});
   }, [qrValue]);
 
-  const allModules = textModules.filter(m => m.header && m.body);
+  const validModules = textModules.filter(m => m.header && m.body);
   const validLinks = links.filter(l => l.uri && l.description);
+  const pct = Math.min(100, Math.round((stampsCurrent / stampsObjective) * 100));
 
   return (
     <div style={{
       width: 340,
       borderRadius: 16,
       overflow: "hidden",
-      background: bg,
       fontFamily: "'Google Sans', Roboto, 'Helvetica Neue', sans-serif",
-      boxShadow: "0 2px 12px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.10)",
       WebkitFontSmoothing: "antialiased",
+      background: "#FFFFFF",
     }}>
 
-      {/* ── Logo + texte logo + issuer + nom programme ── */}
-      <div style={{ padding: "10px 20px 6px", textAlign: "center" }}>
-
-        {/* Logo — 36px */}
-        <div style={{
-          width: 36, height: 36, borderRadius: "50%",
-          background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.06)",
-          overflow: "hidden", margin: "0 auto 4px",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          {logoUrl
-            ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            : <span style={{ fontSize: 16, fontWeight: 700, color: text }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
-          }
-        </div>
-
-        <p style={{ fontSize: 10, color: textSec, margin: "0 0 1px", fontWeight: 500 }}>{logoText}</p>
-        <p style={{ fontSize: 12, color: textSec, margin: "0 0 3px", fontWeight: 400 }}>Wallio</p>
-        <p style={{ fontSize: 26, fontWeight: 700, color: text, margin: 0, letterSpacing: -0.5, lineHeight: 1.1 }}>
-          {logoText || "Programme"}
-        </p>
-      </div>
-
-      {/* ── QR code + tampons dans la même box blanche ── */}
-      <div style={{ padding: "0 12px 10px" }}>
-        <div style={{
-          background: "#FFFFFF",
-          borderRadius: 14,
-          padding: 8,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          boxShadow: dark ? "0 4px 20px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.10)",
-        }}>
-          {qr
-            ? <img src={qr} alt="QR" style={{ width: "100%", maxWidth: 155, height: "auto", display: "block" }} />
-            : <div style={{ width: 155, height: 155, background: "#f0f0f0", borderRadius: 4 }} />
-          }
-          {/* Tampons — directement sous le QR dans la box */}
-          <div style={{ marginTop: 8, textAlign: "center" }}>
-            <p style={{ fontSize: 10, color: "#6E6E73", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 1px", fontWeight: 600 }}>
-              {primaryLabel}
+      {/* ── Header coloré ── */}
+      <div style={{ background: bg, padding: "14px 16px 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Logo */}
+          <div style={{
+            width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+            background: dark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.08)",
+            overflow: "hidden",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            {logoUrl
+              ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <span style={{ fontSize: 18, fontWeight: 700, color: headerText }}>{logoText?.[0]?.toUpperCase() || "W"}</span>
+            }
+          </div>
+          {/* Nom programme */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: headerText, margin: 0, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {logoText}
             </p>
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#1A1A1A", margin: 0, lineHeight: 1 }}>
-              {stampsCurrent} / {stampsObjective}
+            <p style={{ fontSize: 11, color: headerTextSec, margin: 0, marginTop: 1 }}>
+              Programme de fidélité
             </p>
+          </div>
+          {/* Google Wallet badge */}
+          <div style={{ flexShrink: 0, opacity: 0.7 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={dark ? "white" : "#1A1A1A"}>
+              <path d="M21 7H3a1 1 0 00-1 1v8a1 1 0 001 1h18a1 1 0 001-1V8a1 1 0 00-1-1z" opacity=".3"/>
+              <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h18v8z"/>
+            </svg>
           </div>
         </div>
       </div>
 
-      {/* ── Séparateur ── */}
-      {(allModules.length > 0 || heroUrl) && (
-        <div style={{ height: 1, background: divider, margin: "0 20px" }} />
+      {/* ── Hero image ── */}
+      {heroUrl && (
+        <div style={{ width: "100%", height: 100, overflow: "hidden" }}>
+          <img src={heroUrl} alt="" style={{
+            width: "100%", height: "100%", objectFit: "cover", display: "block",
+            objectPosition: `50% ${previewCropY}%`,
+            transform: previewZoom > 1 ? `scale(${previewZoom})` : "none",
+            transformOrigin: `50% ${previewCropY}%`,
+          }} />
+        </div>
       )}
 
+      {/* ── Compteur tampons ── */}
+      <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 8 }}>
+          <div>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+              {primaryLabel}
+            </p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: bg, margin: 0, lineHeight: 1 }}>
+              {stampsCurrent}<span style={{ fontSize: 16, fontWeight: 400, color: "#9AA0A6", marginLeft: 2 }}>/{stampsObjective}</span>
+            </p>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+              {secondaryLabel}
+            </p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#3C4043", margin: 0 }}>{stampsObjective}</p>
+          </div>
+        </div>
+        {/* Barre de progression */}
+        <div style={{ height: 4, borderRadius: 2, background: "rgba(0,0,0,0.08)", overflow: "hidden" }}>
+          <div style={{ height: "100%", borderRadius: 2, background: bg, width: `${pct}%`, transition: "width 0.5s ease" }} />
+        </div>
+      </div>
+
+      {/* ── Membre + Récompense ── */}
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+        <div style={{ flex: 1, padding: "10px 16px" }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+            {memberLabel}
+          </p>
+          <p style={{ fontSize: 13, fontWeight: 500, color: "#3C4043", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {memberName}
+          </p>
+        </div>
+        {rewardName && (
+          <div style={{ flex: 1, padding: "10px 16px", borderLeft: "1px solid rgba(0,0,0,0.07)" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+              {rewardLabel}
+            </p>
+            <p style={{ fontSize: 13, fontWeight: 500, color: "#3C4043", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {rewardName}
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* ── Text modules ── */}
-      {allModules.map((m, i) => (
+      {validModules.map((m, i) => (
         <div key={m.id} style={{
-          padding: "12px 20px",
-          borderBottom: i < allModules.length - 1 ? `1px solid ${divider}` : "none",
+          padding: "10px 16px",
+          borderBottom: i < validModules.length - 1 || validLinks.length > 0 ? "1px solid rgba(0,0,0,0.07)" : "none",
         }}>
-          <p style={{ fontSize: 11, color: textSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px", fontWeight: 600 }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
             {m.header}
           </p>
-          <p style={{ fontSize: 15, fontWeight: 600, color: text, margin: 0 }}>{m.body}</p>
+          <p style={{ fontSize: 13, fontWeight: 500, color: "#3C4043", margin: 0 }}>{m.body}</p>
         </div>
       ))}
 
       {/* ── Liens ── */}
       {validLinks.length > 0 && (
-        <div style={{ padding: "12px 20px", display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <div style={{ padding: "10px 16px", display: "flex", flexWrap: "wrap", gap: 6, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
           {validLinks.map((l, i) => (
-            <a key={i} href={l.uri} target="_blank" rel="noopener noreferrer" style={{
+            <span key={i} style={{
               display: "inline-flex", alignItems: "center", gap: 4,
-              padding: "5px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600,
-              background: dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.07)",
-              color: text, textDecoration: "none",
+              padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
+              background: `${bg}18`, color: bg, border: `1px solid ${bg}30`,
             }}>
-              {l.uri.startsWith("tel:") ? "!" : l.uri.startsWith("mailto:") ? "@" : "→"} {l.description}
-            </a>
+              {l.description}
+            </span>
           ))}
         </div>
       )}
 
-      {/* ── Hero image EN BAS — position réelle dans Google Wallet ── */}
-      {heroUrl && (
-        <div style={{ width: "100%", marginTop: 4 }}>
-          <div style={{ width: "100%", height: 60, overflow: "hidden" }}>
-            <img src={heroUrl} alt="" style={{
-              width: "100%", height: "100%", objectFit: "cover", display: "block",
-              objectPosition: `50% ${previewCropY}%`,
-              transform: previewZoom > 1 ? `scale(${previewZoom})` : "none",
-              transformOrigin: `50% ${previewCropY}%`,
-            }} />
-          </div>
-        </div>
-      )}
-
-      {/* ── Bloc coloré bas — Nom de membre + Récompense côte à côte ── */}
-      <div style={{
-        background: bg,
-        borderRadius: "0 0 16px 16px",
-        padding: "8px 12px 12px",
-        display: "flex",
-        gap: 6,
-      }}>
-        <div style={{
-          flex: 1,
-          background: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
-          borderRadius: 10,
-          padding: "7px 10px",
-        }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: text, margin: "0 0 1px" }}>Nom de membre</p>
-          <p style={{ fontSize: 11, color: textSec, margin: 0 }}>Prénom N.</p>
-        </div>
-        {rewardName && (
-          <div style={{
-            flex: 1,
-            background: dark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)",
-            borderRadius: 10,
-            padding: "7px 10px",
-          }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: text, margin: "0 0 1px" }}>Récompense</p>
-            <p style={{ fontSize: 11, color: textSec, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rewardName}</p>
-          </div>
-        )}
+      {/* ── QR Code ── */}
+      <div style={{ padding: "12px 16px 14px", display: "flex", justifyContent: "center", background: "#FAFAFA" }}>
+        {qr
+          ? <img src={qr} alt="QR" style={{ width: 110, height: 110, display: "block", borderRadius: 4 }} />
+          : <div style={{ width: 110, height: 110, background: "#f0f0f0", borderRadius: 4 }} />
+        }
       </div>
 
     </div>
