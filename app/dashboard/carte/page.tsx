@@ -1051,9 +1051,11 @@ export default function CartePage() {
               rewardName={recompense}
               primaryLabel={googlePrimaryLabel}
               secondaryLabel={googleSecondaryLabel}
-              textModules={googleTextModules}
+              textModules={sharedInfos.filter(i => i.label || i.value).map((i, idx) => ({ header: i.label, body: i.value, id: `si_${idx}` }))}
               links={googleLinks}
               previewUid={user.uid}
+              rewardLabel={rewardLabel}
+              memberLabel={memberLabel}
             />
           )}
 
