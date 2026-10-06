@@ -3,6 +3,8 @@
 import { useAuth } from "@/lib/auth-context";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { saveMarchandFields } from "@/lib/save-marchand";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import AppleWalletCard, { type StampStyle } from "@/components/AppleWalletCard";
 import GoogleWalletCard from "@/components/GoogleWalletCard";
 import { drawChevaleret, drawComptoir, type Template as ComptoirTemplate, type Format as ComptoirFormat } from "@/lib/carte-comptoir-draw";
@@ -533,6 +535,19 @@ export default function CartePage() {
       method: "POST",
       headers: { Authorization: `Bearer ${idToken}` },
     }).catch(e => console.warn("[GW auto-sync]", e));
+    // Push Apple + Google Wallet à tous les clients pour mettre à jour les passes
+    getDocs(query(collection(db, "clients"), where("marchand_id", "==", user!.uid)))
+      .then(snap => {
+        snap.docs.forEach(d => {
+          const wt = d.data().wallet_type;
+          if (wt !== "apple" && wt !== "google") return;
+          const wid = d.data().wallet_id as string;
+          const body = JSON.stringify({ walletId: wid });
+          const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+          if (wt === "apple")  fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+          if (wt === "google") fetch("/api/google-wallet/push-update", opts).catch(() => {});
+        });
+      }).catch(() => {});
     } catch (err) {
       setSaving(false);
       const msg = err instanceof Error ? err.message : String(err);
