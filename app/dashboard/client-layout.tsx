@@ -59,9 +59,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+    <div style={{ background: "var(--bg)", height: "100svh", overflow: "hidden", position: "relative" }}>
       <DashboardNav marchand={marchand} />
-      <div className="md:ml-[72px] lg:ml-[240px] min-h-screen">
+      <div className="md:ml-[72px] lg:ml-[240px]" style={{ height: "100svh", overflowY: "auto" }}>
         {children}
       </div>
       <RecompenseAlert marchand={marchand} marchandId={user.uid} />

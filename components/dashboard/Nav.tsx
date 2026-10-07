@@ -153,7 +153,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
 
       {/* ── Bottom nav mobile — style pill Instagram ── */}
       <nav
-        className="md:hidden fixed z-40 flex items-center"
+        className="md:hidden absolute z-40 flex items-center"
         style={{
           bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
           left: "50%",
