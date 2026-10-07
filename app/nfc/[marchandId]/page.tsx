@@ -662,6 +662,10 @@ function PasskeyPromptScreen({ marchand, onPasskey, onInscription }: {
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
+
+  const label = isAndroid ? "Empreinte digitale" : "FaceID";
 
   async function handlePasskey() {
     setLoading(true);
@@ -669,7 +673,7 @@ function PasskeyPromptScreen({ marchand, onPasskey, onInscription }: {
     try {
       await onPasskey();
     } catch {
-      setError("Identification annulée ou non disponible.");
+      setError("Identification annulée. Essayez de créer un compte.");
     } finally {
       setLoading(false);
     }
@@ -695,7 +699,7 @@ function PasskeyPromptScreen({ marchand, onPasskey, onInscription }: {
             Déjà inscrit ?
           </h2>
           <p className="text-[13px] leading-relaxed mb-6" style={{ color: FG_SEC }}>
-            Identifiez-vous avec FaceID ou votre empreinte pour retrouver vos tampons instantanément.
+            Identifiez-vous avec {label} pour retrouver vos tampons instantanément.
           </p>
 
           {error && <p className="text-[13px] mb-4" style={{ color: "#FF453A" }}>{error}</p>}
@@ -705,7 +709,7 @@ function PasskeyPromptScreen({ marchand, onPasskey, onInscription }: {
             disabled={loading}
             className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-3 active:opacity-80 transition-opacity"
             style={{ background: BTN_BG, boxShadow: "0 4px 24px rgba(99,102,241,0.30)", opacity: loading ? 0.7 : 1 }}>
-            {loading ? "Identification…" : "Me reconnaître avec FaceID"}
+            {loading ? "Identification…" : `Me reconnaître avec ${label}`}
           </button>
 
           <button
@@ -1149,28 +1153,34 @@ function LienParrainage({ marchand }: { marchand: Marchand }) {
 }
 
 function PasskeyRegisterBanner({ walletId }: { walletId: string }) {
-  const [state, setState] = useState<"idle" | "loading" | "done" | "hidden">("idle");
-  const [supported, setSupported] = useState(false);
+  const [state, setState] = useState<"checking" | "idle" | "loading" | "done" | "hidden">("checking");
+  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem(`wallio_pk_${walletId}`)) { setState("hidden"); return; }
-    import("@/lib/passkey-client").then(m => m.isPasskeySupported()).then(setSupported);
+    setIsAndroid(/android/i.test(navigator.userAgent));
+    async function check() {
+      const { isPasskeySupported } = await import("@/lib/passkey-client");
+      if (!(await isPasskeySupported())) { setState("hidden"); return; }
+      // Vérifie Firestore — pas localStorage (résiste à la purge)
+      const res = await fetch(`/api/passkey/check/${walletId}`).catch(() => null);
+      if (!res?.ok) { setState("hidden"); return; }
+      const { registered } = await res.json();
+      setState(registered ? "hidden" : "idle");
+    }
+    check();
   }, [walletId]);
 
-  if (!supported || state === "hidden") return null;
+  if (state === "checking" || state === "hidden") return null;
+
+  const label = isAndroid ? "Empreinte digitale" : "FaceID";
 
   async function handleRegister() {
     setState("loading");
     try {
       const { registerPasskey } = await import("@/lib/passkey-client");
       const ok = await registerPasskey(walletId);
-      if (ok) {
-        localStorage.setItem(`wallio_pk_${walletId}`, "1");
-        setState("done");
-        setTimeout(() => setState("hidden"), 2000);
-      } else {
-        setState("idle");
-      }
+      setState(ok ? "done" : "idle");
+      if (ok) setTimeout(() => setState("hidden"), 2000);
     } catch {
       setState("idle");
     }
@@ -1183,21 +1193,21 @@ function PasskeyRegisterBanner({ walletId }: { walletId: string }) {
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <p className="text-[13px] font-medium" style={{ color: "#34C759" }}>FaceID enregistré</p>
+          <p className="text-[13px] font-medium" style={{ color: "#34C759" }}>{label} enregistré</p>
         </div>
       ) : (
         <>
           <p className="text-[15px] font-semibold mb-1" style={{ color: FG_MAIN }}>Ne perdez jamais vos tampons</p>
           <p className="text-[13px] mb-4" style={{ color: FG_SEC }}>
-            Sauvegardez avec FaceID pour vous reconnaître automatiquement, même si vous changez de téléphone.
+            Sauvegardez avec {label} pour vous reconnaître automatiquement, même si vous changez de téléphone.
           </p>
           <div className="flex gap-2">
             <button onClick={handleRegister} disabled={state === "loading"}
               className="flex-1 py-3 rounded-2xl text-[14px] font-semibold text-white active:opacity-80 transition-opacity"
               style={{ background: ACCENT, opacity: state === "loading" ? 0.7 : 1 }}>
-              {state === "loading" ? "Enregistrement…" : "Sauvegarder avec FaceID"}
+              {state === "loading" ? "Enregistrement…" : `Sauvegarder avec ${label}`}
             </button>
-            <button onClick={() => { localStorage.setItem(`wallio_pk_${walletId}`, "1"); setState("hidden"); }}
+            <button onClick={() => setState("hidden")}
               className="py-3 px-5 rounded-2xl text-[14px] font-medium active:opacity-80"
               style={{ background: "rgba(0,0,0,0.04)", color: FG_SEC }}>
               Plus tard
