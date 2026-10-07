@@ -453,8 +453,9 @@ export default function CartePage() {
   function onGoogleHeroPointerUp() {
     if (!isGoogleHeroDraggingRef.current) return;
     isGoogleHeroDraggingRef.current = false;
-    if (rawStripUrl) {
-      applyHeroCrop(rawStripUrl, googleHeroCropYRef.current, googleHeroCropZoom).then(url => setGoogleHeroUrl(url)).catch(() => {});
+    const src = rawStripUrl || stripRawCloudinaryUrl || stripUrl;
+    if (src) {
+      applyHeroCrop(src, googleHeroCropYRef.current, googleHeroCropZoom).then(url => setGoogleHeroUrl(url)).catch(() => {});
     }
   }
 
@@ -471,9 +472,10 @@ export default function CartePage() {
       } catch { /* keep existing */ }
     }
     let finalGoogleHeroUrl = googleHeroUrl;
-    if (rawStripUrl) {
+    const googleCropSrc = rawStripUrl || stripRawCloudinaryUrl || stripUrl;
+    if (googleCropSrc) {
       try {
-        finalGoogleHeroUrl = await applyHeroCrop(rawStripUrl, googleHeroCropY, googleHeroCropZoom);
+        finalGoogleHeroUrl = await applyHeroCrop(googleCropSrc, googleHeroCropY, googleHeroCropZoom);
         setGoogleHeroUrl(finalGoogleHeroUrl);
       } catch { /* keep existing */ }
     }
@@ -1407,119 +1409,8 @@ export default function CartePage() {
             </Section>
           )}
 
-          {/* Bannière Apple — texte overlay + tampons */}
+          {/* Bannière Apple — tampons */}
           <Section label={tr.carte_banner_section}>
-
-            {/* Texte sur la bannière */}
-            <Field label={tr.carte_banner_text}>
-              <TextInput value={stripText} onChange={setStripText} placeholder="Nom, slogan, accroche…"/>
-            </Field>
-
-            {stripText && (
-              <>
-                {/* Taille texte 1 */}
-                <Field label={tr.carte_text_size}>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {(["s","m","l"] as const).map(s => (
-                      <button key={s} onClick={() => setStripTextSize(s)} style={{
-                        flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                        background: stripTextSize === s ? "var(--accent)" : "var(--glass-bg)",
-                        color: stripTextSize === s ? "white" : "var(--fg-secondary)",
-                        border: `1px solid ${stripTextSize === s ? "var(--accent)" : "var(--border)"}`,
-                        cursor: "pointer",
-                      }}>
-                        {s === "s" ? tr.carte_small : s === "m" ? tr.carte_medium : tr.carte_large}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
-
-                {/* Feature 5 — Sous-titre */}
-                <Field label={tr.carte_subtitle_label}>
-                  <TextInput value={stripText2} onChange={setStripText2} placeholder={tr.carte_subtitle_placeholder}/>
-                </Field>
-                {stripText2 && (
-                  <Field label={tr.carte_subtitle_size}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {(["s","m","l"] as const).map(s => (
-                        <button key={s} onClick={() => setStripText2Size(s)} style={{
-                          flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                          background: stripText2Size === s ? "var(--accent)" : "var(--glass-bg)",
-                          color: stripText2Size === s ? "white" : "var(--fg-secondary)",
-                          border: `1px solid ${stripText2Size === s ? "var(--accent)" : "var(--border)"}`,
-                          cursor: "pointer",
-                        }}>
-                          {s === "s" ? tr.carte_small : s === "m" ? tr.carte_medium : tr.carte_large}
-                        </button>
-                      ))}
-                    </div>
-                  </Field>
-                )}
-
-                {/* Police */}
-                <Field label={tr.carte_font}>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {(["sans", "serif", "mono"] as const).map(f => (
-                      <button key={f} onClick={() => setStripTextFont(f)} style={{
-                        flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 600,
-                        background: stripTextFont === f ? "var(--accent)" : "var(--glass-bg)",
-                        color: stripTextFont === f ? "white" : "var(--fg-secondary)",
-                        border: `1px solid ${stripTextFont === f ? "var(--accent)" : "var(--border)"}`,
-                        cursor: "pointer",
-                        fontFamily: f === "sans" ? "sans-serif" : f === "serif" ? "serif" : "monospace",
-                      }}>
-                        {f === "sans" ? tr.carte_sans : f === "serif" ? tr.carte_serif : tr.carte_mono}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
-
-                {/* Couleur texte */}
-                <Field label={tr.carte_text_color}>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    {["#FFFFFF","#000000","#F5F0E8","#FFD60A","#00F5A0"].map(c => (
-                      <button key={c} onClick={() => setStripTextColor(c)} style={{
-                        width: 28, height: 28, borderRadius: 8, background: c, padding: 0, cursor: "pointer",
-                        border: stripTextColor === c ? "2px solid var(--accent)" : "1px solid var(--border)",
-                        boxShadow: c === "#FFFFFF" ? "inset 0 0 0 1px rgba(0,0,0,0.1)" : undefined,
-                      }}/>
-                    ))}
-                    <input type="color" value={/^#[0-9a-f]{6}$/i.test(stripTextColor) ? stripTextColor : "#ffffff"}
-                      onChange={e => setStripTextColor(e.target.value)}
-                      style={{ width: 28, height: 28, borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", padding: 2 }}
-                    />
-                  </div>
-                </Field>
-
-                {/* Position */}
-                <Field label={tr.carte_position_size}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 5 }}>
-                    {([
-                      { k: "bl", label: tr.carte_left },
-                      { k: "bc", label: tr.carte_center },
-                      { k: "br", label: tr.carte_right },
-                    ] as const).map(({ k, label }) => (
-                      <button key={k} onClick={() => setStripTextPos(k)} style={{
-                        padding: "5px 3px", borderRadius: 8, fontSize: 11, fontWeight: (stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? 600 : 400,
-                        background: (stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? "var(--accent)" : "var(--glass-bg)",
-                        color: (stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? "white" : "var(--fg-secondary)",
-                        border: `1px solid ${(stripTextPos === k || (stripTextPos === "c" && k === "bc")) ? "var(--accent)" : "var(--border)"}`,
-                        cursor: "pointer",
-                      }}>{label}</button>
-                    ))}
-                  </div>
-                </Field>
-                <Field label={`Position Y — ${Math.round(stripTextY)}%`}>
-                  <input type="range" min={5} max={95} step={1} value={stripTextY}
-                    onChange={e => setStripTextY(Number(e.target.value))}
-                    style={{ width: "100%", accentColor: "var(--accent)" }}
-                  />
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--fg-tertiary)", marginTop: 2 }}>
-                    <span>Haut</span><span>Milieu</span><span>Bas</span>
-                  </div>
-                </Field>
-              </>
-            )}
 
             {/* Tampons sur la bannière */}
             <div>
@@ -1880,7 +1771,9 @@ export default function CartePage() {
               </Section>
 
               {/* Disposition bannière Google */}
-              {rawStripUrl && (
+              {(rawStripUrl || stripRawCloudinaryUrl || stripUrl) && (() => {
+                const googleSrc = rawStripUrl || stripRawCloudinaryUrl || stripUrl;
+                return (
                 <Section label="Disposition Google">
                   <div
                     ref={googleHeroPreviewRef}
@@ -1895,7 +1788,7 @@ export default function CartePage() {
                     onPointerCancel={onGoogleHeroPointerUp}
                   >
                     <img
-                      src={rawStripUrl}
+                      src={googleSrc}
                       alt=""
                       draggable={false}
                       style={{
@@ -1927,7 +1820,7 @@ export default function CartePage() {
                       onPointerUp={e => {
                         isZoomingGoogleRef.current = false;
                         const z = Number((e.target as HTMLInputElement).value);
-                        if (rawStripUrl) applyHeroCrop(rawStripUrl, googleHeroCropYRef.current, z).then(url => setGoogleHeroUrl(url)).catch(() => {});
+                        applyHeroCrop(googleSrc, googleHeroCropYRef.current, z).then(url => setGoogleHeroUrl(url)).catch(() => {});
                       }}
                       style={{ flex: 1 }}
                     />
@@ -1945,7 +1838,8 @@ export default function CartePage() {
                     )}
                   </div>
                 </Section>
-              )}
+                );
+              })()}
           </>
 
 
