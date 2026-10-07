@@ -49,7 +49,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     const result = await ajouterTampon(client, marchand);
     setScreen({ type: "result", result, client, marchand });
     try { sessionStorage.setItem(`nfc_result_${marchand.id}`, JSON.stringify({ result, client })); } catch {}
-    try { localStorage.setItem(`nfc_last_${marchand.id}`, JSON.stringify({ result, client, ts: Date.now() })); } catch {}
+    try { localStorage.setItem(`nfc_dead_${marchand.id}`, JSON.stringify({ ts: Date.now(), type: "result", result, client })); } catch {}
     if (result.type === "ok" || result.type === "recompense") {
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
@@ -94,22 +94,25 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           return;
         }
 
-        // Cache localStorage (24h) — survit aux onglets tués par iOS
-        try {
-          const lsCached = localStorage.getItem(`nfc_last_${marchand.id}`);
-          if (lsCached) {
-            const { result, client, ts } = JSON.parse(lsCached) as { result: TamponResult; client: Client; ts: number };
-            if (Date.now() - ts < 24 * 60 * 60 * 1000) {
-              setScreen({ type: "result", result, client, marchand });
-              return;
-            }
-            localStorage.removeItem(`nfc_last_${marchand.id}`);
-          }
-        } catch {}
-
-        // Reload ou retour arrière → sessionStorage (même session)
+        // Dead flag — back_forward/reload → afficher résultat en cache, jamais de re-tampon
         const navType = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type;
-        if (navType === "reload" || navType === "back_forward") {
+        if (navType !== "navigate") {
+          try {
+            const deadRaw = localStorage.getItem(`nfc_dead_${marchand.id}`);
+            if (deadRaw) {
+              const dead = JSON.parse(deadRaw) as { ts: number; type: "result" | "carte"; result?: TamponResult; client: Client; parraine?: boolean; recuperation?: boolean };
+              if (Date.now() - dead.ts < 24 * 60 * 60 * 1000) {
+                if (dead.type === "result" && dead.result) {
+                  setScreen({ type: "result", result: dead.result, client: dead.client, marchand });
+                } else {
+                  setScreen({ type: "carte", client: dead.client, marchand, parraine: dead.parraine, recuperation: dead.recuperation });
+                }
+                return;
+              }
+              localStorage.removeItem(`nfc_dead_${marchand.id}`);
+            }
+          } catch {}
+          // Backup sessionStorage (même session)
           try {
             const stored = sessionStorage.getItem(`nfc_result_${marchand.id}`);
             if (stored) {
@@ -298,7 +301,9 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ parrainWalletId: screen.refParam, filleulPrenom: client.prenom, filleulNom: client.nom, type: "rejoint", marchandId: screen.marchand.id, marchandNom: screen.marchand.nom }),
           }).catch(() => {});
-          setScreen({ type: "carte", client: { ...client, tampons: 1 }, marchand: screen.marchand, parraine: true });
+          const parrainClient = { ...client, tampons: 1 };
+          setScreen({ type: "carte", client: parrainClient, marchand: screen.marchand, parraine: true });
+          try { localStorage.setItem(`nfc_dead_${screen.marchand.id}`, JSON.stringify({ ts: Date.now(), type: "carte", client: parrainClient, parraine: true })); } catch {}
         } else {
           const result = await ajouterTampon(client, screen.marchand);
           if (result.type === "ok" || result.type === "recompense") {
@@ -307,7 +312,9 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             fetch("/api/apple-wallet/push-update", opts).catch(() => {});
             fetch("/api/google-wallet/push-update", opts).catch(() => {});
           }
-          setScreen({ type: "carte", client: { ...client, tampons: result.type === "ok" ? result.tampons : 1 }, marchand: screen.marchand });
+          const newClient = { ...client, tampons: result.type === "ok" ? result.tampons : 1 };
+          setScreen({ type: "carte", client: newClient, marchand: screen.marchand });
+          try { localStorage.setItem(`nfc_dead_${screen.marchand.id}`, JSON.stringify({ ts: Date.now(), type: "carte", client: newClient })); } catch {}
         }
       }}
       onRecuperation={() => setScreen({ type: "recuperation", marchand: screen.marchand })}
@@ -323,6 +330,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         if (client.nom)            localStorage.setItem("wallio_client_nom", client.nom);
         if (client.date_naissance) localStorage.setItem("wallio_client_dob", client.date_naissance);
         setScreen({ type: "carte", client, marchand: screen.marchand, recuperation: true });
+        try { localStorage.setItem(`nfc_dead_${screen.marchand.id}`, JSON.stringify({ ts: Date.now(), type: "carte", client, recuperation: true })); } catch {}
       }}
       onBack={() => setScreen({ type: "inscription", marchand: screen.marchand, refParam: null })}
     />
