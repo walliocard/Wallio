@@ -453,9 +453,8 @@ export default function CartePage() {
   function onGoogleHeroPointerUp() {
     if (!isGoogleHeroDraggingRef.current) return;
     isGoogleHeroDraggingRef.current = false;
-    const src = rawGoogleHeroUrl || googleHeroUrl;
-    if (src) {
-      applyHeroCrop(src, googleHeroCropYRef.current, googleHeroCropZoom).then(url => setGoogleHeroUrl(url)).catch(() => {});
+    if (rawStripUrl) {
+      applyHeroCrop(rawStripUrl, googleHeroCropYRef.current, googleHeroCropZoom).then(url => setGoogleHeroUrl(url)).catch(() => {});
     }
   }
 
@@ -472,9 +471,9 @@ export default function CartePage() {
       } catch { /* keep existing */ }
     }
     let finalGoogleHeroUrl = googleHeroUrl;
-    if (isUploadedGoogleHero && rawGoogleHeroUrl) {
+    if (rawStripUrl) {
       try {
-        finalGoogleHeroUrl = await applyHeroCrop(rawGoogleHeroUrl, googleHeroCropY, googleHeroCropZoom);
+        finalGoogleHeroUrl = await applyHeroCrop(rawStripUrl, googleHeroCropY, googleHeroCropZoom);
         setGoogleHeroUrl(finalGoogleHeroUrl);
       } catch { /* keep existing */ }
     }
@@ -1116,62 +1115,19 @@ export default function CartePage() {
             </p>
           </Section>
 
-          {/* ─── Séparateur Apple ─── */}
-          <div style={{ display:"flex", alignItems:"center", gap:8, margin:"4px 0" }}>
-            <div style={{ flex:1, height:1, background:"var(--border)" }}/>
-            <span style={{ fontSize:10, fontWeight:700, color:"var(--fg-tertiary)", textTransform:"uppercase", letterSpacing:"0.08em", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-              Apple Wallet
-            </span>
-            <div style={{ flex:1, height:1, background:"var(--border)" }}/>
-          </div>
-
-          {/* Bannière photo */}
+          {/* Bannière photo — COMMUN */}
           <Section label={tr.carte_banner_label}>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {(stripUrl || rawStripUrl) ? (() => {
-                const canCrop = isUploadedStrip && !!rawStripUrl;
-                const src = rawStripUrl || stripUrl;
-                return (
-                <div
-                  ref={canCrop ? stripPreviewRef : undefined}
-                  style={{
-                    borderRadius: 10, overflow: "hidden", aspectRatio: "375/144",
-                    minHeight: 200,
-                    border: "1px solid var(--border)", position: "relative",
-                    cursor: canCrop ? "grab" : "default",
-                    userSelect: "none", touchAction: "none",
-                  }}
-                  onPointerDown={canCrop ? onStripPointerDown : undefined}
-                  onPointerMove={canCrop ? onStripPointerMove : undefined}
-                  onPointerUp={canCrop ? onStripPointerUp : undefined}
-                  onPointerCancel={canCrop ? onStripPointerUp : undefined}
-                >
+              {(stripUrl || rawStripUrl) ? (
+                <div style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "375/144", border: "1px solid var(--border)" }}>
                   <img
-                    src={src}
+                    src={rawStripUrl || stripUrl}
                     alt=""
                     draggable={false}
-                    style={{
-                      width: "100%", height: "100%", objectFit: "cover",
-                      objectPosition: canCrop ? `50% ${cropY}%` : "center",
-                      transform: canCrop && cropZoom > 1 ? `scale(${cropZoom})` : "none",
-                      transformOrigin: `50% ${cropY}%`,
-                      pointerEvents: "none", userSelect: "none",
-                    }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
                   />
-                  {canCrop && (
-                    <div style={{
-                      position: "absolute", bottom: 6, right: 6,
-                      background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-                      borderRadius: 6, padding: "2px 8px", fontSize: 10, color: "white",
-                      pointerEvents: "none",
-                    }}>
-                      {tr.carte_drag_crop}
-                    </div>
-                  )}
                 </div>
-                );
-              })() : (
+              ) : (
                 <label style={{
                   borderRadius: 10, aspectRatio: "375/144", minHeight: 200,
                   border: "2px dashed var(--border)",
@@ -1191,38 +1147,6 @@ export default function CartePage() {
                   )}
                 </label>
               )}
-              {(isUploadedStrip || (!stripFrom && !!stripUrl)) && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    <line x1="8" y1="11" x2="14" y2="11"/>
-                  </svg>
-                  <input type="range" min="1" max="3" step="0.01" value={cropZoom}
-                    className="zoom-slider"
-                    onChange={e => setCropZoom(Number(e.target.value))}
-                    onPointerDown={() => { isZoomingStripRef.current = true; }}
-                    onPointerUp={e => {
-                      isZoomingStripRef.current = false;
-                      const z = Number((e.target as HTMLInputElement).value);
-                      const src = rawStripUrl || (!stripFrom ? stripUrl : "");
-                      if (src) applyCrop(src, cropYRef.current, z).then(url => setStripUrl(url)).catch(() => {});
-                    }}
-                    style={{ flex: 1 }}
-                  />
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    <line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>
-                  </svg>
-                  <span style={{ fontSize: 11, color: "var(--fg-tertiary)", fontFamily: "monospace", minWidth: 32, textAlign: "right", flexShrink: 0 }}>
-                    {Math.round(cropZoom * 100)}%
-                  </span>
-                  {cropZoom > 1.01 && (
-                    <button onClick={() => setCropZoom(1)} style={{ fontSize: 10, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 0 }}>
-                      reset
-                    </button>
-                  )}
-                </div>
-              )}
               <div style={{ display: "flex", gap: 6 }}>
                 <label style={{
                   flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
@@ -1232,13 +1156,6 @@ export default function CartePage() {
                   <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleStripUpload} disabled={uploadingStrip}/>
                   {uploadingStrip ? tr.carte_importing : stripUrl ? tr.carte_change : tr.carte_upload}
                 </label>
-                {(stripUrl || rawStripUrl) && (
-                  <button onClick={() => setShowStripCrop(true)}
-                    style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}
-                  >
-                    {tr.carte_crop}
-                  </button>
-                )}
                 {stripUrl && (
                   <button
                     onClick={() => {
@@ -1251,50 +1168,107 @@ export default function CartePage() {
                   </button>
                 )}
               </div>
-
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: 0 }}>
                 {tr.carte_banner_size_hint}
               </p>
             </div>
           </Section>
 
-          {/* Éditeur bannière Apple — dégradé, texte, tampons */}
-          <Section label={tr.carte_banner_section}>
+          {/* Couleur de fond — COMMUN */}
+          <Section label={tr.carte_bg}>
+            <ColorRow
+              label={tr.carte_bg}
+              value={bgColor}
+              onChange={handleBgColorChange}
+              presets={BG_PRESETS}
+            />
+          </Section>
 
-            {/* Thèmes dégradés */}
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-              {tr.carte_gradient_theme}
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 5 }}>
-              {GRADIENT_THEMES.map(t => (
-                <button key={t.name} title={t.name} onClick={async () => {
-                  pushHistory();
-                  const angle = t.angle ?? 135;
-                  setStripFrom(t.from); setStripTo(t.to); setStripAngle(angle);
-                  setBgColor(t.bg);
-                  setIsUploadedStrip(false); setRawStripUrl("");
-                  const glassMode = (t as { glass?: boolean }).glass ?? false;
-                  setStripGlass(glassMode);
-                  const strip = await buildStrip(
-                    t.from, t.to, angle,
-                    stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
-                    stripText2, stripText2Size,
-                    stripIncludeLogo ? logoUrl : undefined,
-                    glassMode
-                  );
-                  setStripUrl(strip);
-                  saveMarchandFields(user!, { strip_url: strip, apple_bg_color: t.bg });
-                }} style={{
-                  width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
-                  background: (t as { glass?: boolean }).glass
-                    ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 55%), linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`
-                    : `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
-                  border: stripFrom === t.from && stripTo === t.to ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.2)",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
-                  flexShrink: 0,
-                }}/>
-              ))}
-            </div>
+          {/* ─── Séparateur Apple ─── */}
+          <div style={{ display:"flex", alignItems:"center", gap:8, margin:"4px 0" }}>
+            <div style={{ flex:1, height:1, background:"var(--border)" }}/>
+            <span style={{ fontSize:10, fontWeight:700, color:"var(--fg-tertiary)", textTransform:"uppercase", letterSpacing:"0.08em", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              Apple Wallet
+            </span>
+            <div style={{ flex:1, height:1, background:"var(--border)" }}/>
+          </div>
+
+          {/* Disposition bannière Apple */}
+          {rawStripUrl && (
+            <Section label="Disposition Apple">
+              <div
+                ref={stripPreviewRef}
+                style={{
+                  borderRadius: 10, overflow: "hidden", aspectRatio: "375/144",
+                  border: "1px solid var(--border)", position: "relative",
+                  cursor: "grab", userSelect: "none", touchAction: "none",
+                }}
+                onPointerDown={onStripPointerDown}
+                onPointerMove={onStripPointerMove}
+                onPointerUp={onStripPointerUp}
+                onPointerCancel={onStripPointerUp}
+              >
+                <img
+                  src={rawStripUrl}
+                  alt=""
+                  draggable={false}
+                  style={{
+                    width: "100%", height: "100%", objectFit: "cover",
+                    objectPosition: `50% ${cropY}%`,
+                    transform: cropZoom > 1 ? `scale(${cropZoom})` : "none",
+                    transformOrigin: `50% ${cropY}%`,
+                    pointerEvents: "none", userSelect: "none",
+                  }}
+                />
+                <div style={{
+                  position: "absolute", bottom: 6, right: 6,
+                  background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+                  borderRadius: 6, padding: "2px 8px", fontSize: 10, color: "white",
+                  pointerEvents: "none",
+                }}>
+                  {tr.carte_drag_crop}
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  <line x1="8" y1="11" x2="14" y2="11"/>
+                </svg>
+                <input type="range" min="1" max="3" step="0.01" value={cropZoom}
+                  className="zoom-slider"
+                  onChange={e => setCropZoom(Number(e.target.value))}
+                  onPointerDown={() => { isZoomingStripRef.current = true; }}
+                  onPointerUp={e => {
+                    isZoomingStripRef.current = false;
+                    const z = Number((e.target as HTMLInputElement).value);
+                    if (rawStripUrl) applyCrop(rawStripUrl, cropYRef.current, z).then(url => setStripUrl(url)).catch(() => {});
+                  }}
+                  style={{ flex: 1 }}
+                />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  <line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>
+                </svg>
+                <span style={{ fontSize: 11, color: "var(--fg-tertiary)", fontFamily: "monospace", minWidth: 32, textAlign: "right", flexShrink: 0 }}>
+                  {Math.round(cropZoom * 100)}%
+                </span>
+                {cropZoom > 1.01 && (
+                  <button onClick={() => setCropZoom(1)} style={{ fontSize: 10, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 0 }}>
+                    reset
+                  </button>
+                )}
+              </div>
+              <button onClick={() => setShowStripCrop(true)}
+                style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}
+              >
+                {tr.carte_crop}
+              </button>
+            </Section>
+          )}
+
+          {/* Bannière Apple — texte overlay + tampons */}
+          <Section label={tr.carte_banner_section}>
 
             {/* Texte sur la bannière */}
             <Field label={tr.carte_banner_text}>
@@ -1405,19 +1379,6 @@ export default function CartePage() {
                   </div>
                 </Field>
               </>
-            )}
-
-            {/* Feature 4 — Logo dans la bannière */}
-            {stripFrom && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input type="checkbox" id="strip-include-logo"
-                  checked={stripIncludeLogo} onChange={e => setStripIncludeLogo(e.target.checked)}
-                  style={{ accentColor: "var(--accent)", width: 14, height: 14, cursor: "pointer" }}
-                />
-                <label htmlFor="strip-include-logo" style={{ fontSize: 12, color: "var(--fg)", cursor: "pointer" }}>
-                  Ajouter le logo dans la bannière
-                </label>
-              </div>
             )}
 
             {/* Tampons sur la bannière */}
@@ -1584,69 +1545,9 @@ export default function CartePage() {
               )}
             </div>
 
-            {/* Actions */}
-            {(stripFrom || stripUrl) && (
-              <div style={{ display: "flex", gap: 8 }}>
-                {stripFrom && (
-                  <button onClick={async () => {
-                    const strip = await buildStrip(
-                      stripFrom, stripTo, stripAngle,
-                      stripText, stripTextColor, stripTextSize, stripTextPos, stripTextFont,
-                      stripText2, stripText2Size,
-                      stripIncludeLogo ? logoUrl : undefined,
-                      stripGlass
-                    );
-                    setStripUrl(strip);
-                    saveMarchandFields(user!, { strip_url: strip });
-                  }} style={{
-                    flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                    background: "var(--glass-bg)", border: "1px solid var(--border)",
-                    color: "var(--fg)", cursor: "pointer",
-                  }}>
-                    {tr.carte_regenerate}
-</button>
-                )}
-                {stripUrl && (
-                  <button onClick={() => downloadStrip(stripUrl, `wallio-strip-${nom || "carte"}.jpg`)} style={{
-                    flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                    background: "var(--glass-bg)", border: "1px solid var(--border)",
-                    color: "var(--fg)", cursor: "pointer",
-                  }}>
-                    {tr.carte_download}
-</button>
-                )}
-              </div>
-            )}
           </Section>
 
-          <Section label="Couleurs de la carte">
-
-            {/* Fond */}
-            <ColorRow
-              label={tr.carte_bg}
-              value={bgColor}
-              onChange={handleBgColorChange}
-              presets={BG_PRESETS}
-            />
-
-            {/* Bouton téléchargement bannière depuis palette */}
-            <button
-              onClick={handleDownloadBanner}
-              style={{
-                width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600,
-                background: "var(--glass-bg)", border: "1px solid var(--border)",
-                color: "var(--fg)", cursor: "pointer", display: "flex",
-                alignItems: "center", justifyContent: "center", gap: 6,
-              }}
-            >
-              <span>⬇</span>
-              <span>{tr.carte_download}</span>
-              <span style={{
-                display: "inline-block", width: 14, height: 14, borderRadius: 4,
-                background: bgColor, border: "1px solid var(--border)",
-                verticalAlign: "middle",
-              }}/>
-            </button>
+          <Section label="Couleurs texte Apple">
 
             {/* Vérificateur de contraste */}
             <div style={{
@@ -1757,11 +1658,6 @@ export default function CartePage() {
               onChange={v => { pushHistory(); setMemberLabel(v); }}
               suggestions={[tr.carte_member_default,"Client","Titulaire","Fidèle","Abonné","Nom"]}
             />
-            {walletType === "google" && (
-              <Field label="Label objectif (Google)">
-                <TextInput value={googleSecondaryLabel} onChange={setGoogleSecondaryLabel} placeholder="ex: Objectif, Sur" />
-              </Field>
-            )}
           </Section>
 
           {/* ── Infos supplémentaires — COMMUN ── */}
@@ -1834,6 +1730,13 @@ export default function CartePage() {
                 + Ajouter un lien
               </button>
             )}
+          </Section>
+
+          {/* Description — nom dans la liste Wallet */}
+          <Section label="Description">
+            <Field label="Nom dans la liste Wallet">
+              <TextInput value={description} onChange={setDescription} placeholder={`Fidélité ${nom || "Établissement"}`}/>
+            </Field>
           </Section>
 
           {/* Icône notification */}
@@ -1914,14 +1817,11 @@ export default function CartePage() {
               )}
             </Section>
 
-          {/* Dos de la carte */}
+          {/* Info dos de carte Apple */}
           <Section label={tr.carte_back_section}>
               <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
                 Visible quand le client retourne sa carte dans Wallet.
               </p>
-              <Field label="Description (nom dans la liste Wallet)">
-                <TextInput value={description} onChange={setDescription} placeholder={`Fidélité ${nom || "Établissement"}`}/>
-              </Field>
               <Field label="Message / infos (dos de carte)">
                 <textarea
                   value={backInfo}
@@ -1972,212 +1872,80 @@ export default function CartePage() {
                   {syncingGW ? "Sync en cours…" : syncedGW ? "✓ Synchronisé — re-ajouter la carte" : "Forcer la sync Google Wallet"}
                 </button>
               </div>
-              {/* 1/4 — Bannière photo */}
-              <Section label={tr.carte_banner_label}>
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-                  Photo · Ratio 3:1 · Remplace le dégradé si définie
-                </p>
-                {(googleHeroUrl || rawGoogleHeroUrl) && (() => {
-                  const canCrop = isUploadedGoogleHero || (!googleStripFrom && !!googleHeroUrl);
-                  const src = rawGoogleHeroUrl || googleHeroUrl;
-                  return (<>
+              {/* Label objectif */}
+              <Section label="Label objectif">
+                <Field label="Label objectif">
+                  <TextInput value={googleSecondaryLabel} onChange={setGoogleSecondaryLabel} placeholder="ex: Objectif, Sur" />
+                </Field>
+              </Section>
+
+              {/* Disposition bannière Google */}
+              {rawStripUrl && (
+                <Section label="Disposition Google">
                   <div
-                    ref={canCrop ? googleHeroPreviewRef : undefined}
+                    ref={googleHeroPreviewRef}
                     style={{
-                      marginBottom: 8, borderRadius: 10, overflow: "hidden",
-                      border: "1px solid var(--border)", aspectRatio: "3/1", minHeight: 160,
-                      position: "relative",
-                      cursor: canCrop ? "grab" : "default",
-                      userSelect: "none", touchAction: "none",
+                      borderRadius: 10, overflow: "hidden", aspectRatio: "3/1",
+                      border: "1px solid var(--border)", position: "relative",
+                      cursor: "grab", userSelect: "none", touchAction: "none",
                     }}
-                    onPointerDown={canCrop ? onGoogleHeroPointerDown : undefined}
-                    onPointerMove={canCrop ? onGoogleHeroPointerMove : undefined}
-                    onPointerUp={canCrop ? onGoogleHeroPointerUp : undefined}
-                    onPointerCancel={canCrop ? onGoogleHeroPointerUp : undefined}
+                    onPointerDown={onGoogleHeroPointerDown}
+                    onPointerMove={onGoogleHeroPointerMove}
+                    onPointerUp={onGoogleHeroPointerUp}
+                    onPointerCancel={onGoogleHeroPointerUp}
                   >
                     <img
-                      src={src}
-                      alt="Hero"
+                      src={rawStripUrl}
+                      alt=""
                       draggable={false}
                       style={{
                         width: "100%", height: "100%", objectFit: "cover", display: "block",
-                        objectPosition: canCrop ? `50% ${googleHeroCropY}%` : "center",
-                        transform: canCrop && googleHeroCropZoom > 1 ? `scale(${googleHeroCropZoom})` : "none",
+                        objectPosition: `50% ${googleHeroCropY}%`,
+                        transform: googleHeroCropZoom > 1 ? `scale(${googleHeroCropZoom})` : "none",
                         transformOrigin: `50% ${googleHeroCropY}%`,
                         pointerEvents: "none", userSelect: "none",
                       }}
                     />
-                    {canCrop && (
-                      <div style={{
-                        position: "absolute", bottom: 5, right: 5,
-                        background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-                        borderRadius: 5, padding: "2px 7px", fontSize: 10, color: "white",
-                        pointerEvents: "none",
-                      }}>
-                        {tr.carte_drag_crop}
-                      </div>
+                    <div style={{
+                      position: "absolute", bottom: 5, right: 5,
+                      background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+                      borderRadius: 5, padding: "2px 7px", fontSize: 10, color: "white",
+                      pointerEvents: "none",
+                    }}>
+                      {tr.carte_drag_crop}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      <line x1="8" y1="11" x2="14" y2="11"/>
+                    </svg>
+                    <input type="range" min="1" max="3" step="0.01" value={googleHeroCropZoom}
+                      className="zoom-slider"
+                      onChange={e => setGoogleHeroCropZoom(Number(e.target.value))}
+                      onPointerDown={() => { isZoomingGoogleRef.current = true; }}
+                      onPointerUp={e => {
+                        isZoomingGoogleRef.current = false;
+                        const z = Number((e.target as HTMLInputElement).value);
+                        if (rawStripUrl) applyHeroCrop(rawStripUrl, googleHeroCropYRef.current, z).then(url => setGoogleHeroUrl(url)).catch(() => {});
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      <line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>
+                    </svg>
+                    <span style={{ fontSize: 11, color: "var(--fg-tertiary)", fontFamily: "monospace", minWidth: 32, textAlign: "right", flexShrink: 0 }}>
+                      {Math.round(googleHeroCropZoom * 100)}%
+                    </span>
+                    {googleHeroCropZoom > 1.01 && (
+                      <button onClick={() => setGoogleHeroCropZoom(1)} style={{ fontSize: 10, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 0 }}>
+                        reset
+                      </button>
                     )}
                   </div>
-                  {canCrop && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
-                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        <line x1="8" y1="11" x2="14" y2="11"/>
-                      </svg>
-                      <input type="range" min="1" max="3" step="0.01" value={googleHeroCropZoom}
-                        className="zoom-slider"
-                        onChange={e => setGoogleHeroCropZoom(Number(e.target.value))}
-                        onPointerDown={() => { isZoomingGoogleRef.current = true; }}
-                        onPointerUp={e => {
-                          isZoomingGoogleRef.current = false;
-                          const z = Number((e.target as HTMLInputElement).value);
-                          const src = rawGoogleHeroUrl || googleHeroUrl;
-                          if (src) applyHeroCrop(src, googleHeroCropYRef.current, z).then(url => setGoogleHeroUrl(url)).catch(() => {});
-                        }}
-                        style={{ flex: 1 }}
-                      />
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" style={{ flexShrink: 0 }}>
-                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        <line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>
-                      </svg>
-                      <span style={{ fontSize: 11, color: "var(--fg-tertiary)", fontFamily: "monospace", minWidth: 32, textAlign: "right", flexShrink: 0 }}>
-                        {Math.round(googleHeroCropZoom * 100)}%
-                      </span>
-                      {googleHeroCropZoom > 1.01 && (
-                        <button onClick={() => setGoogleHeroCropZoom(1)} style={{ fontSize: 10, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 0 }}>
-                          reset
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  </>);
-                })()}
-                <div style={{ display: "flex", gap: 6 }}>
-                  <label style={{
-                    flex: 1, display: "block", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 500,
-                    background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)",
-                    cursor: uploadingGoogleHero ? "wait" : "pointer", textAlign: "center",
-                  }}>
-                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleGoogleHeroUpload} disabled={uploadingGoogleHero} />
-                    {uploadingGoogleHero ? tr.carte_importing : googleHeroUrl ? tr.carte_change : tr.carte_upload}
-                  </label>
-                  {(googleHeroUrl || rawGoogleHeroUrl) && (
-                    <button onClick={() => setShowGoogleCrop(true)}
-                      style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>
-                      {tr.carte_crop}
-                    </button>
-                  )}
-                  {googleHeroUrl && (
-                    <button onClick={async () => {
-                      setGoogleHeroUrl(""); setRawGoogleHeroUrl(""); setIsUploadedGoogleHero(false);
-                      setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleHeroCropZoom(1);
-                      await saveMarchandFields(user!, { google_hero_url: "" });
-                    }} style={{ padding: "8px 12px", borderRadius: 10, fontSize: 12, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer" }}>
-                      Suppr.
-                    </button>
-                  )}
-                </div>
-              </Section>
-
-              {/* 2/4 — Éditeur bannière dégradé */}
-              <Section label={tr.carte_banner_section}>
-                <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>Choisir un thème dégradé</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 40px)", gap: 5 }}>
-                  {GRADIENT_THEMES.map(t => (
-                    <button key={t.name} title={t.name} onClick={async () => {
-                      const angle = t.angle ?? 135;
-                      const glassMode = (t as { glass?: boolean }).glass ?? false;
-                      setGoogleStripFrom(t.from); setGoogleStripTo(t.to);
-                      setGoogleStripAngle(angle); setGoogleStripGlass(glassMode);
-                      setIsUploadedGoogleHero(false); setRawGoogleHeroUrl("");
-                      // Auto-couleur fond : la couleur la plus sombre du dégradé
-                      const lumFrom = relativeLuminance(t.from);
-                      const lumTo = relativeLuminance(t.to);
-                      setGoogleBgColor(lumFrom < lumTo ? t.from : t.to);
-                      const hero = await buildStrip(t.from, t.to, angle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, glassMode, 88, 1032, 344);
-                      setGoogleHeroUrl(hero);
-                    }} style={{
-                      width: 40, height: 26, borderRadius: 7, padding: 0, cursor: "pointer",
-                      background: (t as { glass?: boolean }).glass ? `linear-gradient(to bottom, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 55%), linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})` : `linear-gradient(${t.angle ?? 135}deg, ${t.from}, ${t.to})`,
-                      border: googleStripFrom === t.from && googleStripTo === t.to ? "2px solid var(--accent)" : "1px solid rgba(128,128,128,0.2)",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.18)", flexShrink: 0,
-                    }}/>
-                  ))}
-                </div>
-                <Field label={tr.carte_banner_text}>
-                  <TextInput value={googleStripText} onChange={setGoogleStripText} placeholder="Nom, slogan, accroche…"/>
-                </Field>
-                {googleStripText && (<>
-                  <Field label={tr.carte_size_label}>
-                    <div style={{ display: "flex", gap: 5 }}>
-                      {(["xs","s","m","l","xl"] as const).map(s => (
-                        <button key={s} onClick={() => setGoogleStripTextSize(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 600, background: googleStripTextSize === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextSize === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextSize === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>
-                          {s === "xs" ? "XS" : s === "s" ? "S" : s === "m" ? "M" : s === "l" ? "L" : "XL"}
-                        </button>
-                      ))}
-                    </div>
-                  </Field>
-                  <Field label={tr.carte_position_size}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 5 }}>
-                      {([
-                        ["tl","↖ H.G"],["tc","↑ H.C"],["tr","↗ H.D"],
-                        ["ml","← M.G"],["mc","⊙ Centre"],["mr","→ M.D"],
-                        ["bl","↙ B.G"],["bc","↓ B.C"],["br","↘ B.D"],
-                      ] as const).map(([v,l]) => (
-                        <button key={v} onClick={() => setGoogleStripTextPos(v as "tl"|"tc"|"tr"|"ml"|"mc"|"mr"|"bl"|"bc"|"br")} style={{ padding: "6px 0", borderRadius: 9, fontSize: 10, fontWeight: 500, background: googleStripTextPos === v ? "var(--accent)" : "var(--glass-bg)", color: googleStripTextPos === v ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripTextPos === v ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{l}</button>
-                      ))}
-                    </div>
-                  </Field>
-                  <Field label={tr.carte_font}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {([["sans","Sans"],["serif","Serif"],["mono","Mono"]] as const).map(([v,l]) => (
-                        <button key={v} onClick={() => setGoogleStripFont(v)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 12, fontFamily: v === "serif" ? "Georgia, serif" : v === "mono" ? "monospace" : "inherit", background: googleStripFont === v ? "var(--accent)" : "var(--glass-bg)", color: googleStripFont === v ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripFont === v ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>{l}</button>
-                      ))}
-                    </div>
-                  </Field>
-                  <ColorRow label={tr.carte_text_color} value={googleStripTextColor} onChange={setGoogleStripTextColor} presets={["#FFFFFF","#F0F0F0","#CCCCCC","#000000","#1C1C1E","#FFD700","#FFB300","#FF9500","#FF6600","#FF3B30","#FF2D55","#AF52DE","#007AFF","#34C759","#5AC8FA"]}/>
-                  <Field label={tr.carte_subtitle_label}>
-                    <TextInput value={googleStripText2} onChange={setGoogleStripText2} placeholder={tr.carte_subtitle_placeholder}/>
-                  </Field>
-                  {googleStripText2 && (
-                    <Field label={tr.carte_subtitle_size}>
-                      <div style={{ display: "flex", gap: 5 }}>
-                        {(["xs","s","m","l","xl"] as const).map(s => (
-                          <button key={s} onClick={() => setGoogleStripText2Size(s)} style={{ flex: 1, padding: "6px 0", borderRadius: 10, fontSize: 11, fontWeight: 600, background: googleStripText2Size === s ? "var(--accent)" : "var(--glass-bg)", color: googleStripText2Size === s ? "white" : "var(--fg-secondary)", border: `1px solid ${googleStripText2Size === s ? "var(--accent)" : "var(--border)"}`, cursor: "pointer" }}>
-                            {s === "xs" ? "XS" : s === "s" ? "S" : s === "m" ? "M" : s === "l" ? "L" : "XL"}
-                          </button>
-                        ))}
-                      </div>
-                    </Field>
-                  )}
-                </>)}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 4 }}>
-                  <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>Inclure le logo</span>
-                  <button onClick={() => setGoogleStripIncludeLogo(v => !v)} style={{ width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: googleStripIncludeLogo ? "var(--accent)" : "var(--border)", position: "relative", transition: "background 0.2s" }}>
-                    <div style={{ position: "absolute", top: 2, width: 20, height: 20, borderRadius: 10, background: "#fff", transition: "left 0.2s", left: googleStripIncludeLogo ? 22 : 2 }}/>
-                  </button>
-                </div>
-                {googleStripFrom && (
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={async () => { const hero = await buildStrip(googleStripFrom, googleStripTo, googleStripAngle, googleStripText, googleStripTextColor, googleStripTextSize, googleStripTextPos, googleStripFont, googleStripText2, googleStripText2Size, googleStripIncludeLogo ? logoUrl : undefined, googleStripGlass, 88, 1032, 344); setGoogleHeroUrl(hero); }} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>{tr.carte_regenerate}</button>
-                    {googleHeroUrl && <button onClick={() => downloadStrip(googleHeroUrl, `wallio-hero-${nom || "carte"}.jpg`)} style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", cursor: "pointer" }}>{tr.carte_download}</button>}
-                    <button onClick={() => { setGoogleHeroUrl(""); setGoogleStripFrom(""); setGoogleStripTo(""); setGoogleStripGlass(false); }} style={{ padding: "8px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.08)", border: "1px solid rgba(255,59,48,0.2)", color: "#FF3B30", cursor: "pointer" }}>×</button>
-                  </div>
-                )}
-              </Section>
-
-              {/* 3/4 — Couleur de fond */}
-              <Section label={tr.carte_bg}>
-                <ColorRow label={tr.carte_bg} value={googleBgColor} onChange={setGoogleBgColor} presets={BG_PRESETS}/>
-                {googleBgColor === bgColor && (
-                  <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 7L9 18l-5-5"/></svg>
-                    Synchronisée avec Apple Wallet
-                  </p>
-                )}
-              </Section>
-
-              {/* Labels et infos maintenant gérés dans la section commune ci-dessus */}
+                </Section>
+              )}
           </>
 
 
