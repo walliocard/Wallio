@@ -23,6 +23,7 @@ type Screen =
   | { type: "loading" }
   | { type: "result"; result: TamponResult; client: Client; marchand: Marchand }
   | { type: "inscription"; marchand: Marchand; refParam: string | null }
+  | { type: "passkey_prompt"; marchand: Marchand; refParam: string | null }
   | { type: "recuperation"; marchand: Marchand }
   | { type: "carte"; client: Client; marchand: Marchand; recuperation?: boolean; parraine?: boolean }
   | { type: "lien_parrainage"; marchand: Marchand }
@@ -225,6 +226,15 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           }
         }
 
+        // Passkey — dernier recours avant le formulaire d'inscription
+        if (!compteSupprimeIci) {
+          const { isPasskeySupported } = await import("@/lib/passkey-client");
+          if (await isPasskeySupported()) {
+            setScreen({ type: "passkey_prompt", marchand, refParam: parrainageActif ? ref : null });
+            return;
+          }
+        }
+
         setScreen({ type: "inscription", marchand, refParam: parrainageActif ? ref : null });
       } catch (e) {
         setScreen({ type: "erreur", message: `Erreur de connexion. Réessayez. (${String(e).slice(0, 60)})` });
@@ -283,6 +293,29 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         fetch("/api/apple-wallet/push-update", po).catch(() => {});
         fetch("/api/google-wallet/push-update", po).catch(() => {});
       }}
+    />
+  );
+  if (screen.type === "passkey_prompt") return (
+    <PasskeyPromptScreen
+      marchand={screen.marchand}
+      onPasskey={async () => {
+        setScreen({ type: "loading" });
+        const { authenticateWithPasskey } = await import("@/lib/passkey-client");
+        const walletId = await authenticateWithPasskey();
+        if (!walletId) {
+          setScreen({ type: "inscription", marchand: screen.marchand, refParam: screen.refParam });
+          return;
+        }
+        const client = await getClientByWalletId(walletId, screen.marchand.id);
+        if (!client) {
+          setScreen({ type: "inscription", marchand: screen.marchand, refParam: screen.refParam });
+          return;
+        }
+        localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
+        if (client.telephone) { localStorage.setItem("wallio_client_phone", client.telephone); setCookiePhone(client.telephone); }
+        await traiterTampon(client, screen.marchand);
+      }}
+      onInscription={() => setScreen({ type: "inscription", marchand: screen.marchand, refParam: screen.refParam })}
     />
   );
   if (screen.type === "inscription") return (
@@ -616,6 +649,73 @@ function RecompenseQR({ walletId }: { walletId: string }) {
         <div className="w-36 h-36 mx-auto rounded-xl" style={{ background: "var(--border)" }} />
       )}
     </div>
+  );
+}
+
+// ─── Passkey Prompt ───────────────────────────────────────────────────────────
+
+function PasskeyPromptScreen({ marchand, onPasskey, onInscription }: {
+  marchand: Marchand;
+  onPasskey: () => Promise<void>;
+  onInscription: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handlePasskey() {
+    setLoading(true);
+    setError("");
+    try {
+      await onPasskey();
+    } catch {
+      setError("Identification annulée ou non disponible.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen flex flex-col px-5 py-12" style={{ background: BG_PAGE }}>
+      <div className="w-full max-w-[390px] mx-auto">
+        <MarchandHeader marchand={marchand} />
+
+        <div className="rounded-[28px] p-6 text-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, boxShadow: "0 8px 40px rgba(0,0,0,0.05)" }}>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.28)" }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="4"/>
+              <circle cx="9" cy="10" r="1.5" fill="white" stroke="none"/>
+              <circle cx="15" cy="10" r="1.5" fill="white" stroke="none"/>
+              <path d="M9 15c0 1.66 1.34 3 3 3s3-1.34 3-3"/>
+            </svg>
+          </div>
+
+          <h2 className="text-[20px] font-semibold tracking-tight mb-2" style={{ color: FG_MAIN }}>
+            Déjà inscrit ?
+          </h2>
+          <p className="text-[13px] leading-relaxed mb-6" style={{ color: FG_SEC }}>
+            Identifiez-vous avec FaceID ou votre empreinte pour retrouver vos tampons instantanément.
+          </p>
+
+          {error && <p className="text-[13px] mb-4" style={{ color: "#FF453A" }}>{error}</p>}
+
+          <button
+            onClick={handlePasskey}
+            disabled={loading}
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-3 active:opacity-80 transition-opacity"
+            style={{ background: BTN_BG, boxShadow: "0 4px 24px rgba(99,102,241,0.30)", opacity: loading ? 0.7 : 1 }}>
+            {loading ? "Identification…" : "Me reconnaître avec FaceID"}
+          </button>
+
+          <button
+            onClick={onInscription}
+            className="w-full py-3.5 rounded-2xl text-[15px] font-medium active:opacity-80 transition-opacity"
+            style={{ background: "rgba(0,0,0,0.04)", color: FG_SEC }}>
+            Créer un compte
+          </button>
+        </div>
+      </div>
+    </main>
   );
 }
 
@@ -1047,6 +1147,67 @@ function LienParrainage({ marchand }: { marchand: Marchand }) {
   );
 }
 
+function PasskeyRegisterBanner({ walletId }: { walletId: string }) {
+  const [state, setState] = useState<"idle" | "loading" | "done" | "hidden">("idle");
+  const [supported, setSupported] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(`wallio_pk_${walletId}`)) { setState("hidden"); return; }
+    import("@/lib/passkey-client").then(m => m.isPasskeySupported()).then(setSupported);
+  }, [walletId]);
+
+  if (!supported || state === "hidden") return null;
+
+  async function handleRegister() {
+    setState("loading");
+    try {
+      const { registerPasskey } = await import("@/lib/passkey-client");
+      const ok = await registerPasskey(walletId);
+      if (ok) {
+        localStorage.setItem(`wallio_pk_${walletId}`, "1");
+        setState("done");
+        setTimeout(() => setState("hidden"), 2000);
+      } else {
+        setState("idle");
+      }
+    } catch {
+      setState("idle");
+    }
+  }
+
+  return (
+    <div className="rounded-[22px] p-5 mb-4" style={{ background: "rgba(0,122,255,0.06)", border: "1px solid rgba(0,122,255,0.15)" }}>
+      {state === "done" ? (
+        <div className="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <p className="text-[13px] font-medium" style={{ color: "#34C759" }}>FaceID enregistré</p>
+        </div>
+      ) : (
+        <>
+          <p className="text-[15px] font-semibold mb-1" style={{ color: FG_MAIN }}>Ne perdez jamais vos tampons</p>
+          <p className="text-[13px] mb-4" style={{ color: FG_SEC }}>
+            Sauvegardez avec FaceID pour vous reconnaître automatiquement, même si vous changez de téléphone.
+          </p>
+          <div className="flex gap-2">
+            <button onClick={handleRegister} disabled={state === "loading"}
+              className="flex-1 py-3 rounded-2xl text-[14px] font-semibold text-white active:opacity-80 transition-opacity"
+              style={{ background: ACCENT, opacity: state === "loading" ? 0.7 : 1 }}>
+              {state === "loading" ? "Enregistrement…" : "Sauvegarder avec FaceID"}
+            </button>
+            <button onClick={() => { localStorage.setItem(`wallio_pk_${walletId}`, "1"); setState("hidden"); }}
+              className="py-3 px-5 rounded-2xl text-[14px] font-medium active:opacity-80"
+              style={{ background: "rgba(0,0,0,0.04)", color: FG_SEC }}>
+              Plus tard
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function CarteCreee({ client, marchand, recuperation = false, parraine = false }: { client: Client; marchand: Marchand; recuperation?: boolean; parraine?: boolean }) {
   const [isAndroid, setIsAndroid] = useState(false);
   useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
@@ -1223,6 +1384,7 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
         )}
 
         <InstallBanner />
+        <PasskeyRegisterBanner walletId={client.wallet_id} />
 
         {/* Boutons Wallet — Apple sur iOS, Google sur Android */}
 
