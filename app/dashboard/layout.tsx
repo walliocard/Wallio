@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import DashboardClientLayout from "./client-layout";
 
 export const metadata: Metadata = {
@@ -6,12 +6,16 @@ export const metadata: Metadata = {
   manifest: "/dashboard/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Wallio",
   },
   icons: {
     apple: "/wallio-instagram-profil.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0A0A0A",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
