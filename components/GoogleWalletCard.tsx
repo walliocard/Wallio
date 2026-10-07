@@ -215,10 +215,10 @@ export default function GoogleWalletCard({
       )}
 
       {/* ── QR Code ── */}
-      <div style={{ padding: "12px 16px 14px", display: "flex", justifyContent: "center", background: qrBg }}>
+      <div style={{ padding: "12px 16px 20px", display: "flex", justifyContent: "center", background: qrBg }}>
         {qr
-          ? <img src={qr} alt="QR" style={{ width: 110, height: 110, display: "block", borderRadius: 4 }} />
-          : <div style={{ width: 110, height: 110, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", borderRadius: 4 }} />
+          ? <img src={qr} alt="QR" style={{ width: 120, height: 120, display: "block", borderRadius: 4 }} />
+          : <div style={{ width: 120, height: 120, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", borderRadius: 4 }} />
         }
       </div>
 
