@@ -487,30 +487,12 @@ export default function ReglagesPage() {
 
       </div>
 
-      {/* Sticky save — mobile uniquement */}
-      <div className="md:hidden fixed left-0 right-0 z-30 px-4 pt-3 pb-3"
-        style={{
-          bottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
-          background: "var(--glass-bg)",
-          backdropFilter: "blur(20px)",
-          borderTop: "1px solid var(--border)",
-        }}>
-        <button
-          onClick={sauvegarder}
-          disabled={saving}
-          className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
-          style={{ background: saved ? "#34C759" : "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.25)" }}
-        >
-          {saving ? t.settings_saving : saved ? `${t.settings_saved} ✓` : t.settings_save}
-        </button>
-      </div>
-
-      {/* Save desktop */}
+      {/* Save — inline en bas de page (mobile + desktop) */}
       <div className="mt-6">
         <button
           onClick={sauvegarder}
           disabled={saving}
-          className="hidden md:block w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
+          className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all duration-300"
           style={{ background: saved ? "#34C759" : "var(--accent)", boxShadow: "0 4px 20px rgba(0,122,255,0.2)" }}
         >
           {saving ? t.settings_saving : saved ? `${t.settings_saved} ✓` : t.settings_save}
