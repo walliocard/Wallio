@@ -28,6 +28,17 @@ type Screen =
   | { type: "lien_parrainage"; marchand: Marchand }
   | { type: "erreur"; message: string };
 
+function setCookiePhone(phone: string) {
+  const exp = new Date();
+  exp.setFullYear(exp.getFullYear() + 1);
+  document.cookie = `wallio_p=${encodeURIComponent(phone)}; expires=${exp.toUTCString()}; path=/; SameSite=Lax`;
+}
+
+function getCookiePhone(): string | null {
+  const m = document.cookie.match(/(?:^|;\s*)wallio_p=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
@@ -144,6 +155,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
               return;
             }
             localStorage.setItem(WALLET_KEY(marchandId), existing.wallet_id);
+            setCookiePhone(cachedPhone);
             await traiterTampon(existing, marchand);
             return;
           }
@@ -179,6 +191,21 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             setScreen({ type: "carte", client: { ...newClient, tampons: result.type === "ok" ? result.tampons : 1 }, marchand });
           }
           return;
+        }
+
+        // Fallback cookie — si localStorage vidé mais cookie présent → reconnexion silencieuse
+        if (!compteSupprimeIci) {
+          const cookiePhone = getCookiePhone();
+          if (cookiePhone) {
+            const existing = await getClientByTelephone(cookiePhone, marchand.id);
+            if (existing) {
+              localStorage.setItem(WALLET_KEY(marchandId), existing.wallet_id);
+              localStorage.setItem("wallio_client_phone", existing.telephone);
+              setCookiePhone(existing.telephone);
+              await traiterTampon(existing, marchand);
+              return;
+            }
+          }
         }
 
         setScreen({ type: "inscription", marchand, refParam: parrainageActif ? ref : null });
@@ -247,7 +274,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       parrainWalletId={screen.refParam ?? undefined}
       onSuccess={async (client, isNew) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
-        if (client.telephone)      localStorage.setItem("wallio_client_phone", client.telephone);
+        if (client.telephone)      { localStorage.setItem("wallio_client_phone", client.telephone); setCookiePhone(client.telephone); }
         if (client.prenom)         localStorage.setItem("wallio_client_prenom", client.prenom);
         if (client.nom)            localStorage.setItem("wallio_client_nom", client.nom);
         if (client.date_naissance) localStorage.setItem("wallio_client_dob", client.date_naissance);
@@ -277,7 +304,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       marchand={screen.marchand}
       onSuccess={(client) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
-        if (client.telephone)      localStorage.setItem("wallio_client_phone", client.telephone);
+        if (client.telephone)      { localStorage.setItem("wallio_client_phone", client.telephone); setCookiePhone(client.telephone); }
         if (client.prenom)         localStorage.setItem("wallio_client_prenom", client.prenom);
         if (client.nom)            localStorage.setItem("wallio_client_nom", client.nom);
         if (client.date_naissance) localStorage.setItem("wallio_client_dob", client.date_naissance);
