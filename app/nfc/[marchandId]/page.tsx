@@ -93,9 +93,9 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           return;
         }
 
-        // Reload détecté → afficher le dernier résultat sans re-tamponner
+        // Reload ou retour arrière → afficher le dernier résultat sans re-tamponner
         const navType = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type;
-        if (navType === "reload") {
+        if (navType === "reload" || navType === "back_forward") {
           try {
             const stored = sessionStorage.getItem(`nfc_result_${marchand.id}`);
             if (stored) {
