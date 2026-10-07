@@ -584,6 +584,7 @@ function ResultScreen({ result, marchand, walletId, paliersValides, onValiderRec
 
         {/* Installer la PWA si pas encore fait */}
         <div className="mt-8"><InstallBanner /></div>
+        <div className="mt-3"><PasskeyRegisterBanner walletId={walletId} /></div>
 
         {/* Ajouter au Wallet */}
         <div className="flex flex-col gap-2.5">
