@@ -1184,6 +1184,146 @@ export default function CartePage() {
             />
           </Section>
 
+          {/* ── Labels des champs — COMMUN ── */}
+          <Section label={tr.carte_labels_section}>
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
+              {tr.carte_labels_hint}
+            </p>
+            <LabelField
+              label={tr.carte_field_primary}
+              value={primaryLabel}
+              onChange={v => { pushHistory(); setLabelSync(v); }}
+              suggestions={[tr.carte_stamps_default,"Points","Visites","Cafés","Soins","Séances","Passages"]}
+            />
+            <LabelField
+              label={tr.carte_field_reward}
+              value={rewardLabel}
+              onChange={v => { pushHistory(); setRewardLabel(v); }}
+              suggestions={[tr.carte_reward_default,"Cadeau","Offre","Avantage","Bonus","Surprise"]}
+            />
+            <LabelField
+              label={tr.carte_field_member}
+              value={memberLabel}
+              onChange={v => { pushHistory(); setMemberLabel(v); }}
+              suggestions={[tr.carte_member_default,"Client","Titulaire","Fidèle","Abonné","Nom"]}
+            />
+          </Section>
+
+          {/* ── Infos supplémentaires — COMMUN ── */}
+          <Section label={tr.carte_info_section}>
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+              Visibles sur Apple Wallet et Google Wallet. Max 3.
+            </p>
+            {sharedInfos.map((info, i) => (
+              <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 8 }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                  <input
+                    value={info.label}
+                    placeholder="Label (ex : Horaires)"
+                    onChange={e => {
+                      const next = sharedInfos.map((x, j) => j === i ? { ...x, label: e.target.value } : x);
+                      updateSharedInfos(next);
+                    }}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                  />
+                  <input
+                    value={info.value}
+                    placeholder="Valeur (ex : Lun-Sam 9h-18h)"
+                    onChange={e => {
+                      const next = sharedInfos.map((x, j) => j === i ? { ...x, value: e.target.value } : x);
+                      updateSharedInfos(next);
+                    }}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                  />
+                </div>
+                <button onClick={() => updateSharedInfos(sharedInfos.filter((_, j) => j !== i))}
+                  style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0, marginTop: 2 }}>
+                  ×
+                </button>
+              </div>
+            ))}
+            {sharedInfos.length < 3 && (
+              <button onClick={() => updateSharedInfos([...sharedInfos, { label: "", value: "" }])}
+                style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
+                + Ajouter un bloc
+              </button>
+            )}
+          </Section>
+
+          {/* ── Liens — COMMUN ── */}
+          <Section label={tr.carte_google_links}>
+            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
+              Liens cliquables sur la carte (site web, téléphone, email…). Max 3.
+            </p>
+            {googleLinks.map((lk, i) => (
+              <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                  <input value={lk.description} placeholder="Label (ex : Notre site)"
+                    onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, description: e.target.value } : x))}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                  />
+                  <input value={lk.uri} placeholder="URL ou tel:+212... ou mailto:..."
+                    onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, uri: e.target.value } : x))}
+                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
+                  />
+                </div>
+                <button onClick={() => setGoogleLinks(prev => prev.filter((_, j) => j !== i))}
+                  style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0 }}>
+                  ×
+                </button>
+              </div>
+            ))}
+            {googleLinks.length < 3 && (
+              <button onClick={() => setGoogleLinks(prev => [...prev, { uri: "", description: "" }])}
+                style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
+                + Ajouter un lien
+              </button>
+            )}
+          </Section>
+
+          {/* Description — nom dans la liste Wallet */}
+          <Section label="Description">
+            <Field label="Nom dans la liste Wallet">
+              <TextInput value={description} onChange={setDescription} placeholder={`Fidélité ${nom || "Établissement"}`}/>
+            </Field>
+          </Section>
+
+          {/* Icône notification */}
+          <Section label={tr.carte_icon_section}>
+              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
+                38×38px idéal — affichée dans les pushs Apple Wallet. Uploadez une image carrée avec votre logo sans fond.
+              </p>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+                  border: "1px solid var(--border)", overflow: "hidden",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "var(--glass-bg)",
+                }}>
+                  {iconUrl
+                    ? <img src={iconUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }}/>
+                    : <span style={{ fontSize: 18 }}>🔔</span>
+                  }
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{
+                    display: "block", width: "100%", padding: "7px 0", borderRadius: 10,
+                    fontSize: 12, fontWeight: 500, background: "var(--glass-bg)",
+                    border: "1px solid var(--border)", color: "var(--fg)",
+                    cursor: uploadingIcon ? "wait" : "pointer", textAlign: "center",
+                  }}>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleIconUpload} disabled={uploadingIcon}/>
+                    {uploadingIcon ? tr.carte_importing : iconUrl ? tr.carte_change : tr.carte_upload}
+                  </label>
+                  {iconUrl && (
+                    <button onClick={() => setIconUrl("")} style={{ width: "100%", marginTop: 4, padding: "4px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
+                      {tr.carte_delete}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </Section>
+
           {/* ─── Séparateur Apple ─── */}
           <div style={{ display:"flex", alignItems:"center", gap:8, margin:"4px 0" }}>
             <div style={{ flex:1, height:1, background:"var(--border)" }}/>
@@ -1634,146 +1774,6 @@ export default function CartePage() {
               )}
             </div>
           </Section>
-
-          {/* ── Labels des champs — COMMUN ── */}
-          <Section label={tr.carte_labels_section}>
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 4px" }}>
-              {tr.carte_labels_hint}
-            </p>
-            <LabelField
-              label={tr.carte_field_primary}
-              value={primaryLabel}
-              onChange={v => { pushHistory(); setLabelSync(v); }}
-              suggestions={[tr.carte_stamps_default,"Points","Visites","Cafés","Soins","Séances","Passages"]}
-            />
-            <LabelField
-              label={tr.carte_field_reward}
-              value={rewardLabel}
-              onChange={v => { pushHistory(); setRewardLabel(v); }}
-              suggestions={[tr.carte_reward_default,"Cadeau","Offre","Avantage","Bonus","Surprise"]}
-            />
-            <LabelField
-              label={tr.carte_field_member}
-              value={memberLabel}
-              onChange={v => { pushHistory(); setMemberLabel(v); }}
-              suggestions={[tr.carte_member_default,"Client","Titulaire","Fidèle","Abonné","Nom"]}
-            />
-          </Section>
-
-          {/* ── Infos supplémentaires — COMMUN ── */}
-          <Section label={tr.carte_info_section}>
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-              Visibles sur Apple Wallet et Google Wallet. Max 3.
-            </p>
-            {sharedInfos.map((info, i) => (
-              <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start", marginBottom: 8 }}>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-                  <input
-                    value={info.label}
-                    placeholder="Label (ex : Horaires)"
-                    onChange={e => {
-                      const next = sharedInfos.map((x, j) => j === i ? { ...x, label: e.target.value } : x);
-                      updateSharedInfos(next);
-                    }}
-                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
-                  />
-                  <input
-                    value={info.value}
-                    placeholder="Valeur (ex : Lun-Sam 9h-18h)"
-                    onChange={e => {
-                      const next = sharedInfos.map((x, j) => j === i ? { ...x, value: e.target.value } : x);
-                      updateSharedInfos(next);
-                    }}
-                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
-                  />
-                </div>
-                <button onClick={() => updateSharedInfos(sharedInfos.filter((_, j) => j !== i))}
-                  style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0, marginTop: 2 }}>
-                  ×
-                </button>
-              </div>
-            ))}
-            {sharedInfos.length < 3 && (
-              <button onClick={() => updateSharedInfos([...sharedInfos, { label: "", value: "" }])}
-                style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
-                + Ajouter un bloc
-              </button>
-            )}
-          </Section>
-
-          {/* ── Liens — COMMUN (Google Wallet) ── */}
-          <Section label={tr.carte_google_links}>
-            <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 8px" }}>
-              Liens cliquables sur la carte (site web, téléphone, email…). Max 3.
-            </p>
-            {googleLinks.map((lk, i) => (
-              <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-                  <input value={lk.description} placeholder="Label (ex : Notre site)"
-                    onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, description: e.target.value } : x))}
-                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
-                  />
-                  <input value={lk.uri} placeholder="URL ou tel:+212... ou mailto:..."
-                    onChange={e => setGoogleLinks(prev => prev.map((x, j) => j === i ? { ...x, uri: e.target.value } : x))}
-                    style={{ width: "100%", padding: "6px 10px", borderRadius: 8, fontSize: 12, background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none" }}
-                  />
-                </div>
-                <button onClick={() => setGoogleLinks(prev => prev.filter((_, j) => j !== i))}
-                  style={{ padding: "6px 8px", borderRadius: 8, fontSize: 13, background: "rgba(255,59,48,0.08)", border: "none", color: "#FF3B30", cursor: "pointer", flexShrink: 0 }}>
-                  ×
-                </button>
-              </div>
-            ))}
-            {googleLinks.length < 3 && (
-              <button onClick={() => setGoogleLinks(prev => [...prev, { uri: "", description: "" }])}
-                style={{ width: "100%", padding: "8px 0", borderRadius: 10, fontSize: 12, fontWeight: 600, background: "var(--glass-bg)", border: "1px dashed var(--border)", color: "var(--accent)", cursor: "pointer" }}>
-                + Ajouter un lien
-              </button>
-            )}
-          </Section>
-
-          {/* Description — nom dans la liste Wallet */}
-          <Section label="Description">
-            <Field label="Nom dans la liste Wallet">
-              <TextInput value={description} onChange={setDescription} placeholder={`Fidélité ${nom || "Établissement"}`}/>
-            </Field>
-          </Section>
-
-          {/* Icône notification */}
-          <Section label={tr.carte_icon_section}>
-              <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "-4px 0 6px" }}>
-                38×38px idéal — affichée dans les pushs Apple Wallet. Uploadez une image carrée avec votre logo sans fond.
-              </p>
-              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 10, flexShrink: 0,
-                  border: "1px solid var(--border)", overflow: "hidden",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  background: "var(--glass-bg)",
-                }}>
-                  {iconUrl
-                    ? <img src={iconUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }}/>
-                    : <span style={{ fontSize: 18 }}>🔔</span>
-                  }
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{
-                    display: "block", width: "100%", padding: "7px 0", borderRadius: 10,
-                    fontSize: 12, fontWeight: 500, background: "var(--glass-bg)",
-                    border: "1px solid var(--border)", color: "var(--fg)",
-                    cursor: uploadingIcon ? "wait" : "pointer", textAlign: "center",
-                  }}>
-                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleIconUpload} disabled={uploadingIcon}/>
-                    {uploadingIcon ? tr.carte_importing : iconUrl ? tr.carte_change : tr.carte_upload}
-                  </label>
-                  {iconUrl && (
-                    <button onClick={() => setIconUrl("")} style={{ width: "100%", marginTop: 4, padding: "4px 0", borderRadius: 8, fontSize: 11, background: "none", border: "none", color: "#FF3B30", cursor: "pointer" }}>
-                      {tr.carte_delete}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </Section>
 
           {/* Géolocalisation */}
           <Section label={tr.carte_geo_section}>
