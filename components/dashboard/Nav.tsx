@@ -155,7 +155,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
       <nav
         className="md:hidden fixed z-40 flex items-center"
         style={{
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)",
           left: "50%",
           transform: "translateX(-50%)",
           background: "var(--glass-bg)",
@@ -163,7 +163,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           WebkitBackdropFilter: "blur(28px)",
           border: "1px solid var(--border)",
           borderRadius: 50,
-          padding: "0 6px",
+          padding: "0 8px",
           boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)",
           gap: 0,
         }}
@@ -177,22 +177,22 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               href={href}
               className="flex items-center justify-center transition-all duration-150 active:scale-90 flex-shrink-0"
               style={isScanner ? {
-                width: 50,
-                height: 42,
-                borderRadius: 14,
+                width: 56,
+                height: 48,
+                borderRadius: 16,
                 color: "white",
                 background: "var(--wallio-gradient)",
                 boxShadow: "0 4px 14px rgba(0,122,255,0.35)",
-                margin: "0 2px",
+                margin: "0 3px",
               } : {
-                width: 46,
-                height: 46,
-                borderRadius: 38,
+                width: 52,
+                height: 52,
+                borderRadius: 40,
                 color: isActive ? "var(--accent)" : "var(--fg-tertiary)",
                 background: isActive ? "rgba(0,122,255,0.10)" : "transparent",
               }}
             >
-              <Icon size={isScanner ? 20 : 20} />
+              <Icon size={22} />
             </Link>
           );
         })}
