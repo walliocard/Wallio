@@ -77,6 +77,11 @@ export default function GoogleWalletCard({
   const validLinks = links.filter(l => l.uri && l.description);
   const pct = Math.min(100, Math.round((stampsCurrent / stampsObjective) * 100));
 
+  const bodyText = dark ? "#FFFFFF" : "#1A1A1A";
+  const bodyTextSec = dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)";
+  const divider = dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.07)";
+  const qrBg = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)";
+
   return (
     <div style={{
       width: 340,
@@ -85,11 +90,11 @@ export default function GoogleWalletCard({
       fontFamily: "'Google Sans', Roboto, 'Helvetica Neue', sans-serif",
       boxShadow: "0 4px 24px rgba(0,0,0,0.22), 0 1px 4px rgba(0,0,0,0.10)",
       WebkitFontSmoothing: "antialiased",
-      background: "#FFFFFF",
+      background: bg,
     }}>
 
-      {/* ── Header coloré ── */}
-      <div style={{ background: bg, padding: "14px 16px 12px" }}>
+      {/* ── Header ── */}
+      <div style={{ padding: "14px 16px 12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {/* Logo */}
           <div style={{
@@ -135,45 +140,45 @@ export default function GoogleWalletCard({
       )}
 
       {/* ── Compteur tampons ── */}
-      <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+      <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${divider}` }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 8 }}>
           <div>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: bodyTextSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
               {primaryLabel}
             </p>
-            <p style={{ fontSize: 32, fontWeight: 700, color: bg, margin: 0, lineHeight: 1 }}>
-              {stampsCurrent}<span style={{ fontSize: 16, fontWeight: 400, color: "#9AA0A6", marginLeft: 2 }}>/{stampsObjective}</span>
+            <p style={{ fontSize: 32, fontWeight: 700, color: bodyText, margin: 0, lineHeight: 1 }}>
+              {stampsCurrent}<span style={{ fontSize: 16, fontWeight: 400, color: bodyTextSec, marginLeft: 2 }}>/{stampsObjective}</span>
             </p>
           </div>
           <div style={{ textAlign: "right" }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: bodyTextSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
               {secondaryLabel}
             </p>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#3C4043", margin: 0 }}>{stampsObjective}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: bodyText, margin: 0 }}>{stampsObjective}</p>
           </div>
         </div>
         {/* Barre de progression */}
-        <div style={{ height: 4, borderRadius: 2, background: "rgba(0,0,0,0.08)", overflow: "hidden" }}>
-          <div style={{ height: "100%", borderRadius: 2, background: bg, width: `${pct}%`, transition: "width 0.5s ease" }} />
+        <div style={{ height: 4, borderRadius: 2, background: dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.12)", overflow: "hidden" }}>
+          <div style={{ height: "100%", borderRadius: 2, background: bodyText, width: `${pct}%`, transition: "width 0.5s ease" }} />
         </div>
       </div>
 
       {/* ── Membre + Récompense ── */}
-      <div style={{ display: "flex", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+      <div style={{ display: "flex", borderBottom: `1px solid ${divider}` }}>
         <div style={{ flex: 1, padding: "10px 16px" }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: bodyTextSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
             {memberLabel}
           </p>
-          <p style={{ fontSize: 13, fontWeight: 500, color: "#3C4043", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <p style={{ fontSize: 13, fontWeight: 500, color: bodyText, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {memberName}
           </p>
         </div>
         {rewardName && (
-          <div style={{ flex: 1, padding: "10px 16px", borderLeft: "1px solid rgba(0,0,0,0.07)" }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+          <div style={{ flex: 1, padding: "10px 16px", borderLeft: `1px solid ${divider}` }}>
+            <p style={{ fontSize: 10, fontWeight: 700, color: bodyTextSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
               {rewardLabel}
             </p>
-            <p style={{ fontSize: 13, fontWeight: 500, color: "#3C4043", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <p style={{ fontSize: 13, fontWeight: 500, color: bodyText, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {rewardName}
             </p>
           </div>
@@ -184,23 +189,24 @@ export default function GoogleWalletCard({
       {validModules.map((m, i) => (
         <div key={m.id} style={{
           padding: "10px 16px",
-          borderBottom: i < validModules.length - 1 || validLinks.length > 0 ? "1px solid rgba(0,0,0,0.07)" : "none",
+          borderBottom: i < validModules.length - 1 || validLinks.length > 0 ? `1px solid ${divider}` : "none",
         }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: "#5F6368", textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: bodyTextSec, textTransform: "uppercase", letterSpacing: 0.8, margin: "0 0 2px" }}>
             {m.header}
           </p>
-          <p style={{ fontSize: 13, fontWeight: 500, color: "#3C4043", margin: 0 }}>{m.body}</p>
+          <p style={{ fontSize: 13, fontWeight: 500, color: bodyText, margin: 0 }}>{m.body}</p>
         </div>
       ))}
 
       {/* ── Liens ── */}
       {validLinks.length > 0 && (
-        <div style={{ padding: "10px 16px", display: "flex", flexWrap: "wrap", gap: 6, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+        <div style={{ padding: "10px 16px", display: "flex", flexWrap: "wrap", gap: 6, borderBottom: `1px solid ${divider}` }}>
           {validLinks.map((l, i) => (
             <span key={i} style={{
               display: "inline-flex", alignItems: "center", gap: 4,
               padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
-              background: `${bg}18`, color: bg, border: `1px solid ${bg}30`,
+              background: dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)",
+              color: bodyText, border: `1px solid ${divider}`,
             }}>
               {l.description}
             </span>
@@ -209,10 +215,10 @@ export default function GoogleWalletCard({
       )}
 
       {/* ── QR Code ── */}
-      <div style={{ padding: "12px 16px 14px", display: "flex", justifyContent: "center", background: "#FAFAFA" }}>
+      <div style={{ padding: "12px 16px 14px", display: "flex", justifyContent: "center", background: qrBg }}>
         {qr
           ? <img src={qr} alt="QR" style={{ width: 110, height: 110, display: "block", borderRadius: 4 }} />
-          : <div style={{ width: 110, height: 110, background: "#f0f0f0", borderRadius: 4 }} />
+          : <div style={{ width: 110, height: 110, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)", borderRadius: 4 }} />
         }
       </div>
 
