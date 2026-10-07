@@ -400,7 +400,7 @@ export default function CartePage() {
   function onStripPointerUp() {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-    const src = rawStripUrl || stripUrl;
+    const src = rawStripUrl || stripRawCloudinaryUrl || stripUrl;
     if (src) {
       applyCrop(src, cropYRef.current, cropZoom).then(url => setStripUrl(url)).catch(() => {});
     }
@@ -1337,7 +1337,9 @@ export default function CartePage() {
           </div>
 
           {/* Disposition bannière Apple */}
-          {rawStripUrl && (
+          {(rawStripUrl || stripRawCloudinaryUrl || stripUrl) && (() => {
+            const appleSrc = rawStripUrl || stripRawCloudinaryUrl || stripUrl;
+            return (
             <Section label="Disposition Apple">
               <div
                 ref={stripPreviewRef}
@@ -1352,7 +1354,7 @@ export default function CartePage() {
                 onPointerCancel={onStripPointerUp}
               >
                 <img
-                  src={rawStripUrl}
+                  src={appleSrc}
                   alt=""
                   draggable={false}
                   style={{
@@ -1384,7 +1386,7 @@ export default function CartePage() {
                   onPointerUp={e => {
                     isZoomingStripRef.current = false;
                     const z = Number((e.target as HTMLInputElement).value);
-                    if (rawStripUrl) applyCrop(rawStripUrl, cropYRef.current, z).then(url => setStripUrl(url)).catch(() => {});
+                    applyCrop(appleSrc, cropYRef.current, z).then(url => setStripUrl(url)).catch(() => {});
                   }}
                   style={{ flex: 1 }}
                 />
@@ -1407,7 +1409,8 @@ export default function CartePage() {
                 {tr.carte_crop}
               </button>
             </Section>
-          )}
+            );
+          })()}
 
           {/* Bannière Apple — tampons */}
           <Section label={tr.carte_banner_section}>
