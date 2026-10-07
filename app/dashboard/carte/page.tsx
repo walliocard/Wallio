@@ -1763,13 +1763,6 @@ export default function CartePage() {
                   {syncingGW ? "Sync en cours…" : syncedGW ? "✓ Synchronisé — re-ajouter la carte" : "Forcer la sync Google Wallet"}
                 </button>
               </div>
-              {/* Label objectif */}
-              <Section label="Label objectif">
-                <Field label="Label objectif">
-                  <TextInput value={googleSecondaryLabel} onChange={setGoogleSecondaryLabel} placeholder="ex: Objectif, Sur" />
-                </Field>
-              </Section>
-
               {/* Disposition bannière Google */}
               {(rawStripUrl || stripRawCloudinaryUrl || stripUrl) && (() => {
                 const googleSrc = rawStripUrl || stripRawCloudinaryUrl || stripUrl;
