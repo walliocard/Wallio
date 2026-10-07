@@ -15,7 +15,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0A0A",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)",  color: "#0A0A0A" },
+    { media: "(prefers-color-scheme: light)", color: "#F5F5F7" },
+  ],
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
