@@ -49,6 +49,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     const result = await ajouterTampon(client, marchand);
     setScreen({ type: "result", result, client, marchand });
     try { sessionStorage.setItem(`nfc_result_${marchand.id}`, JSON.stringify({ result, client })); } catch {}
+    try { localStorage.setItem(`nfc_last_${marchand.id}`, JSON.stringify({ result, client, ts: Date.now() })); } catch {}
     if (result.type === "ok" || result.type === "recompense") {
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
@@ -93,7 +94,20 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           return;
         }
 
-        // Reload ou retour arrière → afficher le dernier résultat sans re-tamponner
+        // Cache localStorage (24h) — survit aux onglets tués par iOS
+        try {
+          const lsCached = localStorage.getItem(`nfc_last_${marchand.id}`);
+          if (lsCached) {
+            const { result, client, ts } = JSON.parse(lsCached) as { result: TamponResult; client: Client; ts: number };
+            if (Date.now() - ts < 24 * 60 * 60 * 1000) {
+              setScreen({ type: "result", result, client, marchand });
+              return;
+            }
+            localStorage.removeItem(`nfc_last_${marchand.id}`);
+          }
+        } catch {}
+
+        // Reload ou retour arrière → sessionStorage (même session)
         const navType = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type;
         if (navType === "reload" || navType === "back_forward") {
           try {
