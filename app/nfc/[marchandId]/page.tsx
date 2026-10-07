@@ -1199,7 +1199,7 @@ function PasskeyRegisterBanner({ walletId }: { walletId: string }) {
         <>
           <p className="text-[15px] font-semibold mb-1" style={{ color: FG_MAIN }}>Ne perdez jamais vos tampons</p>
           <p className="text-[13px] mb-4" style={{ color: FG_SEC }}>
-            Sauvegardez avec {label} pour retrouver vos tampons automatiquement, même si vos données sont effacées.
+            Sauvegardez avec {label} pour vous reconnaître instantanément à chaque visite, sans rien saisir.
           </p>
           <div className="flex gap-2">
             <button onClick={handleRegister} disabled={state === "loading"}
