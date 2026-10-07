@@ -46,7 +46,7 @@ export async function POST(req: Request) {
 
     await passkeyDoc.ref.update({ counter: verification.authenticationInfo.newCounter });
 
-    return Response.json({ wallet_id: passkeyData.wallet_id });
+    return Response.json({ telephone: passkeyData.telephone });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
   }

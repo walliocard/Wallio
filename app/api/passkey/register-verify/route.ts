@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const { credential } = verification.registrationInfo;
 
     await db.collection("passkeys").doc(credential.id).set({
-      wallet_id: data.wallet_id,
+      telephone: data.telephone,
       public_key: Buffer.from(credential.publicKey).toString("base64"),
       counter: credential.counter,
       created_at: Timestamp.now(),

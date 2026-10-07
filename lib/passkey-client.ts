@@ -7,6 +7,7 @@ export async function isPasskeySupported(): Promise<boolean> {
   }
 }
 
+// Retourne le numéro de téléphone lié à la passkey, ou null
 export async function authenticateWithPasskey(): Promise<string | null> {
   const { startAuthentication } = await import("@simplewebauthn/browser");
 
@@ -26,17 +27,18 @@ export async function authenticateWithPasskey(): Promise<string | null> {
     body: JSON.stringify({ sessionId, response }),
   });
   if (!verRes.ok) return null;
-  const { wallet_id } = await verRes.json();
-  return wallet_id || null;
+  const { telephone } = await verRes.json();
+  return telephone || null;
 }
 
-export async function registerPasskey(walletId: string): Promise<boolean> {
+// Enregistre une passkey liée au numéro de téléphone
+export async function registerPasskey(telephone: string): Promise<boolean> {
   const { startRegistration } = await import("@simplewebauthn/browser");
 
   const optRes = await fetch("/api/passkey/register-options", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ wallet_id: walletId }),
+    body: JSON.stringify({ telephone }),
   });
   if (!optRes.ok) return false;
   const { sessionId, options } = await optRes.json();
@@ -49,4 +51,11 @@ export async function registerPasskey(walletId: string): Promise<boolean> {
     body: JSON.stringify({ sessionId, response }),
   });
   return verRes.ok;
+}
+
+export async function isPasskeyRegistered(telephone: string): Promise<boolean> {
+  const res = await fetch(`/api/passkey/check?telephone=${encodeURIComponent(telephone)}`).catch(() => null);
+  if (!res?.ok) return false;
+  const { registered } = await res.json();
+  return !!registered;
 }

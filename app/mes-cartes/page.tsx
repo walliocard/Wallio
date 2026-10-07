@@ -5,6 +5,7 @@ import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, QueryDocu
 import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone } from "@/lib/loyalty";
 import InstallBanner from "@/components/InstallBanner";
+import PasskeyRegisterBanner from "@/components/PasskeyRegisterBanner";
 import { useLang } from "@/lib/lang-context";
 
 interface CardData {
@@ -411,6 +412,7 @@ export default function MesCartesPage() {
       {/* Content */}
       <div style={{ padding: "0 20px 48px", maxWidth: 430, margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", gap: 14 }}>
         <InstallBanner />
+        {phone && <PasskeyRegisterBanner telephone={phone} />}
 
         {/* ── Tab Mes cartes ── */}
         {tab === "cartes" && (

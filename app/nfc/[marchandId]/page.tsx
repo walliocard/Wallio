@@ -18,6 +18,7 @@ import { getWalletLang } from "@/lib/wallet-lang";
 // Lazy-load composants lourds — pas besoin au premier rendu
 const AppleWalletCard = lazy(() => import("@/components/AppleWalletCard"));
 const GoogleWalletCard = lazy(() => import("@/components/GoogleWalletCard"));
+const PasskeyRegisterBanner = lazy(() => import("@/components/PasskeyRegisterBanner"));
 
 type Screen =
   | { type: "loading" }
@@ -250,6 +251,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       result={screen.result}
       marchand={screen.marchand}
       walletId={screen.client.wallet_id}
+      telephone={screen.client.telephone || ""}
       paliersValides={screen.client.paliers_valides || []}
       onValiderRecompense={async () => {
         const mn = screen.marchand as Record<string, unknown>;
@@ -301,18 +303,22 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       onPasskey={async () => {
         setScreen({ type: "loading" });
         const { authenticateWithPasskey } = await import("@/lib/passkey-client");
-        const walletId = await authenticateWithPasskey();
-        if (!walletId) {
+        const telephone = await authenticateWithPasskey();
+        if (!telephone) {
           setScreen({ type: "inscription", marchand: screen.marchand, refParam: screen.refParam });
           return;
         }
-        const client = await getClientByWalletId(walletId, screen.marchand.id);
+        const client = await getClientByTelephone(telephone, screen.marchand.id);
         if (!client) {
+          // Passkey reconnue mais pas encore inscrit chez ce marchand → inscription auto
+          localStorage.setItem("wallio_client_phone", telephone);
+          setCookiePhone(telephone);
           setScreen({ type: "inscription", marchand: screen.marchand, refParam: screen.refParam });
           return;
         }
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
-        if (client.telephone) { localStorage.setItem("wallio_client_phone", client.telephone); setCookiePhone(client.telephone); }
+        localStorage.setItem("wallio_client_phone", telephone);
+        setCookiePhone(telephone);
         await traiterTampon(client, screen.marchand);
       }}
       onInscription={() => setScreen({ type: "inscription", marchand: screen.marchand, refParam: screen.refParam })}
@@ -404,10 +410,11 @@ function Erreur({ message }: { message: string }) {
 
 // ─── Résultat tampon ──────────────────────────────────────────────────────────
 
-function ResultScreen({ result, marchand, walletId, paliersValides, onValiderRecompense }: {
+function ResultScreen({ result, marchand, walletId, telephone, paliersValides, onValiderRecompense }: {
   result: TamponResult;
   marchand: Marchand;
   walletId: string;
+  telephone: string;
   paliersValides: boolean[];
   onValiderRecompense: () => void;
 }) {
@@ -584,7 +591,7 @@ function ResultScreen({ result, marchand, walletId, paliersValides, onValiderRec
 
         {/* Installer la PWA si pas encore fait */}
         <div className="mt-8"><InstallBanner /></div>
-        <div className="mt-3"><PasskeyRegisterBanner walletId={walletId} /></div>
+        <div className="mt-3"><PasskeyRegisterBanner telephone={telephone} /></div>
 
         {/* Ajouter au Wallet */}
         <div className="flex flex-col gap-2.5">
@@ -1152,73 +1159,6 @@ function LienParrainage({ marchand }: { marchand: Marchand }) {
   );
 }
 
-function PasskeyRegisterBanner({ walletId }: { walletId: string }) {
-  const [state, setState] = useState<"checking" | "idle" | "loading" | "done" | "hidden">("checking");
-  const [isAndroid, setIsAndroid] = useState(false);
-
-  useEffect(() => {
-    setIsAndroid(/android/i.test(navigator.userAgent));
-    async function check() {
-      const { isPasskeySupported } = await import("@/lib/passkey-client");
-      if (!(await isPasskeySupported())) { setState("hidden"); return; }
-      // Vérifie Firestore — pas localStorage (résiste à la purge)
-      const res = await fetch(`/api/passkey/check/${walletId}`).catch(() => null);
-      if (!res?.ok) { setState("hidden"); return; }
-      const { registered } = await res.json();
-      setState(registered ? "hidden" : "idle");
-    }
-    check();
-  }, [walletId]);
-
-  if (state === "checking" || state === "hidden") return null;
-
-  const label = isAndroid ? "Empreinte digitale" : "FaceID";
-
-  async function handleRegister() {
-    setState("loading");
-    try {
-      const { registerPasskey } = await import("@/lib/passkey-client");
-      const ok = await registerPasskey(walletId);
-      setState(ok ? "done" : "idle");
-      if (ok) setTimeout(() => setState("hidden"), 2000);
-    } catch {
-      setState("idle");
-    }
-  }
-
-  return (
-    <div className="rounded-[22px] p-5 mb-4" style={{ background: "rgba(0,122,255,0.06)", border: "1px solid rgba(0,122,255,0.15)" }}>
-      {state === "done" ? (
-        <div className="flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <p className="text-[13px] font-medium" style={{ color: "#34C759" }}>{label} enregistré</p>
-        </div>
-      ) : (
-        <>
-          <p className="text-[15px] font-semibold mb-1" style={{ color: FG_MAIN }}>Ne perdez jamais vos tampons</p>
-          <p className="text-[13px] mb-4" style={{ color: FG_SEC }}>
-            Sauvegardez avec {label} pour vous reconnaître instantanément à chaque visite.
-          </p>
-          <div className="flex gap-2">
-            <button onClick={handleRegister} disabled={state === "loading"}
-              className="flex-1 py-3 rounded-2xl text-[14px] font-semibold text-white active:opacity-80 transition-opacity"
-              style={{ background: ACCENT, opacity: state === "loading" ? 0.7 : 1 }}>
-              {state === "loading" ? "Enregistrement…" : `Sauvegarder avec ${label}`}
-            </button>
-            <button onClick={() => setState("hidden")}
-              className="py-3 px-5 rounded-2xl text-[14px] font-medium active:opacity-80"
-              style={{ background: "rgba(0,0,0,0.04)", color: FG_SEC }}>
-              Plus tard
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 function CarteCreee({ client, marchand, recuperation = false, parraine = false }: { client: Client; marchand: Marchand; recuperation?: boolean; parraine?: boolean }) {
   const [isAndroid, setIsAndroid] = useState(false);
   useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
@@ -1395,7 +1335,7 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
         )}
 
         <InstallBanner />
-        <PasskeyRegisterBanner walletId={client.wallet_id} />
+        <PasskeyRegisterBanner telephone={client.telephone || ""} />
 
         {/* Boutons Wallet — Apple sur iOS, Google sur Android */}
 
