@@ -40,12 +40,13 @@ export async function POST(req: Request) {
     }
 
     const mn = marchand as Record<string, unknown>;
+    const r = result as Record<string, unknown>;
     return Response.json({
       ...result,
       clientId: client.id,
       telephone: client.telephone,
       prenom: client.prenom,
-      // Infos nécessaires pour validerRecompense progressif
+      prochain_recompense: (r.prochainRecompense as string) || (mn.nom_recompense as string) || "",
       mode_recompense: (mn.mode_recompense as string) || "cyclique",
       paliers_valides: client.paliers_valides || [],
       total_paliers: ((mn.paliers as unknown[]) || []).length,
