@@ -23,6 +23,10 @@ interface TamponResult {
   clientId?: string;
   double?: boolean;
   birthday?: boolean;
+  palier_index?: number;
+  mode_recompense?: string;
+  paliers_valides?: boolean[];
+  total_paliers?: number;
 }
 
 function formatTemps(sec: number): string {
@@ -126,15 +130,30 @@ export default function EquipeScannerPage() {
   }
 
   async function handleValiderRecompense() {
-    if (!session || !result?.clientId) return;
+    const s = sessionRef.current;
+    if (!s || !result?.clientId) return;
     setValidating(true);
     try {
+      const isProgressif = result.mode_recompense === "progressif" && result.palier_index !== undefined;
       await fetch("/api/equipe/valider-recompense", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
-        body: JSON.stringify({ clientId: result.clientId }),
+        headers: { "Content-Type": "application/json", "x-equipe-token": s.token },
+        body: JSON.stringify({
+          clientId: result.clientId,
+          mode: result.mode_recompense || "cyclique",
+          palierIndex: isProgressif ? result.palier_index : undefined,
+          paliersValides: isProgressif ? (result.paliers_valides || []) : undefined,
+          totalPaliers: isProgressif ? result.total_paliers : undefined,
+        }),
       });
-      setResult(prev => prev ? { ...prev, type: "ok", tampons: 0, nom_recompense: undefined } : prev);
+      if (isProgressif && result.total_paliers) {
+        const pv = [...(result.paliers_valides || [])];
+        pv[result.palier_index!] = true;
+        const cycleTermine = pv.filter(Boolean).length >= result.total_paliers;
+        setResult(prev => prev ? { ...prev, type: "ok", tampons: cycleTermine ? 0 : (prev.tampons ?? 0), nom_recompense: undefined } : prev);
+      } else {
+        setResult(prev => prev ? { ...prev, type: "ok", tampons: 0, nom_recompense: undefined } : prev);
+      }
     } catch { /* silent */ }
     finally { setValidating(false); }
   }

@@ -39,7 +39,17 @@ export async function POST(req: Request) {
       }).catch(() => {});
     }
 
-    return Response.json({ ...result, clientId: client.id, telephone: client.telephone, prenom: client.prenom });
+    const mn = marchand as Record<string, unknown>;
+    return Response.json({
+      ...result,
+      clientId: client.id,
+      telephone: client.telephone,
+      prenom: client.prenom,
+      // Infos nécessaires pour validerRecompense progressif
+      mode_recompense: (mn.mode_recompense as string) || "cyclique",
+      paliers_valides: client.paliers_valides || [],
+      total_paliers: ((mn.paliers as unknown[]) || []).length,
+    });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
   }
