@@ -175,11 +175,21 @@ export async function ajouterTampon(
     }
   }
 
+  const c = client as Record<string, unknown>;
+
+  // Bonus anniversaire — +1 tampon dès le prochain scan, jamais doublé par promo
+  const birthdayBonus = c.birthday_bonus === true;
+
   // Double tampons : actif si marchand.double_tampons_fin est dans le futur
   const m = marchand as Record<string, unknown>;
   const doubleFin = m.double_tampons_fin as string | undefined;
   const doubleActif = doubleFin ? new Date(doubleFin) > new Date() : false;
-  const increment = doubleActif ? 2 : 1;
+  const increment = (doubleActif ? 2 : 1) + (birthdayBonus ? 1 : 0);
+
+  // Flags à nettoyer : birthday_bonus consommé + relance_pending réinitialisé
+  const extraUpdate: Record<string, unknown> = {};
+  if (birthdayBonus) extraUpdate.birthday_bonus = false;
+  if (c.relance_pending) extraUpdate.relance_pending = false;
   const nouveauxTampons = client.tampons + increment;
 
   // ── Mode progressif ────────────────────────────────────────────────────────
@@ -210,6 +220,7 @@ export async function ajouterTampon(
         recompense_en_attente: true,
         derniere_visite: serverTimestamp(),
         paliers_valides: pv,
+        ...extraUpdate,
       });
       return {
         type: "recompense",
@@ -227,6 +238,7 @@ export async function ajouterTampon(
       tampons: tamponsAEcrire,
       derniere_visite: serverTimestamp(),
       paliers_valides: pv,
+      ...extraUpdate,
     });
     return {
       type: "ok",
@@ -245,11 +257,12 @@ export async function ajouterTampon(
       tampons: 0,
       recompense_en_attente: true,
       derniere_visite: serverTimestamp(),
+      ...extraUpdate,
     });
     return { type: "recompense", prenom: client.prenom, nom_recompense: marchand.nom_recompense, tampons: nouveauxTampons };
   }
 
-  await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp() });
+  await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp(), ...extraUpdate });
   return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif };
 }
 

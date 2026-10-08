@@ -38,9 +38,13 @@ export async function GET(req: Request) {
     const tokens: string[] = [];
     const clientIds: string[] = [];
 
+    const currentYear = dateRef.getFullYear();
+
     for (const clientDoc of clientsSnap.docs) {
       const client = clientDoc.data();
-      if (!client.date_naissance || client.birthday_bonus_used) continue;
+      if (!client.date_naissance) continue;
+      // Réinitialisation annuelle — on vérifie l'année, pas un flag permanent
+      if (client.birthday_bonus_year === currentYear) continue;
       const dnSuffix = client.date_naissance.slice(5, 10);
       if (dnSuffix !== suffixRef) continue;
 
@@ -55,7 +59,7 @@ export async function GET(req: Request) {
       };
       await clientDoc.ref.update({
         birthday_bonus: true,
-        birthday_bonus_used: true,
+        birthday_bonus_year: currentYear,
         notifs: FieldValue.arrayUnion(notifRecord),
       });
 

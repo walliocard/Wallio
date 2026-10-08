@@ -387,11 +387,21 @@ export default function ReglagesPage() {
                 <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--border)" }}>
                   <div>
                     <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>
-                      {auto.relance_delai_jours} {t.settings_relance_days}
+                      {t.settings_relance_days}
                     </p>
-                    <input type="range" min={7} max={90} step={7} value={auto.relance_delai_jours}
-                      onChange={e => setA("relance_delai_jours", Number(e.target.value))}
-                      className="w-full" />
+                    <div className="flex flex-wrap gap-2">
+                      {[7, 14, 21, 30, 45, 60, 90].map(j => (
+                        <button key={j} onClick={() => setA("relance_delai_jours", j)}
+                          className="px-3 py-1.5 rounded-xl text-[13px] font-semibold transition-all"
+                          style={{
+                            background: auto.relance_delai_jours === j ? "var(--accent)" : "var(--bg)",
+                            color: auto.relance_delai_jours === j ? "white" : "var(--fg-secondary)",
+                            border: `1px solid ${auto.relance_delai_jours === j ? "var(--accent)" : "var(--border)"}`,
+                          }}>
+                          {j}j
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>{t.settings_relance_msg_label}</p>
