@@ -48,8 +48,8 @@ export type Client = {
 };
 
 export type TamponResult =
-  | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean; prochainRecompense?: string }
-  | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number }
+  | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean; birthday?: boolean; prochainRecompense?: string }
+  | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number; birthday?: boolean }
   | { type: "anti_doublon"; prenom: string; secondes_restantes: number }
   | { type: "not_found" };
 
@@ -229,6 +229,7 @@ export async function ajouterTampon(
         nom_recompense: paliers[palierIndex].recompense,
         tampons: tamponsAEcrire,
         palier_index: palierIndex,
+        birthday: birthdayBonus,
       };
     }
 
@@ -246,7 +247,8 @@ export async function ajouterTampon(
       tampons: tamponsAEcrire,
       objectif: prochainPalier.tampons,
       prenom: client.prenom,
-      double: doubleActif,
+      double: doubleActif && !birthdayBonus,
+      birthday: birthdayBonus,
       prochainRecompense: prochainPalier.recompense,
     };
   }
@@ -260,11 +262,11 @@ export async function ajouterTampon(
       derniere_visite: serverTimestamp(),
       ...extraUpdate,
     });
-    return { type: "recompense", prenom: client.prenom, nom_recompense: marchand.nom_recompense, tampons: nouveauxTampons };
+    return { type: "recompense", prenom: client.prenom, nom_recompense: marchand.nom_recompense, tampons: nouveauxTampons, birthday: birthdayBonus };
   }
 
   await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp(), ...extraUpdate });
-  return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif };
+  return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif && !birthdayBonus, birthday: birthdayBonus };
 }
 
 export async function validerRecompense(

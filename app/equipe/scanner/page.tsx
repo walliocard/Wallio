@@ -21,6 +21,7 @@ interface TamponResult {
   secondes_restantes?: number;
   clientId?: string;
   double?: boolean;
+  birthday?: boolean;
 }
 
 function formatTemps(sec: number): string {
@@ -245,10 +246,15 @@ export default function EquipeScannerPage() {
               {result.type === "ok" && (
                 <>
                   <div style={{ width: 72, height: 72, borderRadius: 22, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 10px 30px rgba(91,124,250,0.35)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-                    <span style={{ fontSize: 26, fontWeight: 800, color: "white" }}>+{result.double ? "2" : "1"}</span>
+                    <span style={{ fontSize: 26, fontWeight: 800, color: "white" }}>+{(result.double || result.birthday) ? "2" : "1"}</span>
                   </div>
-                  <p style={{ fontSize: 26, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.4 }}>Tampon ajouté</p>
+                  <p style={{ fontSize: 26, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.4 }}>
+                    {result.birthday ? "Joyeux anniversaire !" : result.double ? "2 tampons ajoutés" : "Tampon ajouté"}
+                  </p>
                   <p style={{ fontSize: 16, color: "#6E6E73" }}>Bonjour {result.prenom}</p>
+                  {result.birthday && (
+                    <p style={{ fontSize: 13, color: "#FF2D55", fontWeight: 600, marginTop: 4 }}>Bonus anniversaire — 2 tampons offerts</p>
+                  )}
                   <div style={{ width: "100%", marginTop: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#AEAEB2", marginBottom: 8 }}>
                       <span>{result.tampons} tampon{(result.tampons ?? 0) > 1 ? "s" : ""}</span>

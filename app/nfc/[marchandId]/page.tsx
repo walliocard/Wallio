@@ -439,7 +439,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
         {isOk && (
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
             style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.28)" }}>
-            <span className="text-[22px] font-bold text-white">+{result.double ? "2" : "1"}</span>
+            <span className="text-[22px] font-bold text-white">+{(result.double || result.birthday) ? "2" : "1"}</span>
           </div>
         )}
         {isRecompense && (
@@ -457,7 +457,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
 
         {/* Titre */}
         <h1 className="text-[26px] font-semibold tracking-tight mb-2" style={{ color: "#1D1D1F" }}>
-          {isOk && (result.double ? "2 tampons ajoutés" : "Tampon ajouté")}
+          {isOk && (result.birthday ? "Joyeux anniversaire !" : result.double ? "2 tampons ajoutés" : "Tampon ajouté")}
           {isRecompense && "Récompense débloquée"}
           {isAntiDoublon && "Déjà enregistré"}
         </h1>
@@ -472,6 +472,12 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
         {/* Barre de progression (ok) */}
         {isOk && (
           <div className="mb-6">
+            {result.birthday && (
+              <p className="text-[12px] font-medium mb-3 px-3 py-1.5 rounded-full inline-block"
+                style={{ background: "rgba(255,45,85,0.08)", color: "#FF2D55" }}>
+                Bonus anniversaire — 2 tampons offerts
+              </p>
+            )}
             {result.double && (
               <p className="text-[12px] font-medium mb-3 px-3 py-1.5 rounded-full inline-block"
                 style={{ background: "rgba(0,122,255,0.08)", color: "#007AFF" }}>
