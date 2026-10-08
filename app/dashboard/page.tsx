@@ -2,13 +2,14 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useRef, useState } from "react";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
 
 type TopClient = { prenom: string; nom: string; tampons: number; id: string };
+type MembreEquipe = { id: string; prenom: string; statut: string };
 
 type Stats = {
   total: number;
@@ -34,6 +35,8 @@ export default function AccueilPage() {
     taux_fidelite: 0, nouvelles_semaine: 0, proches_recompense: 0,
   });
 
+  const [membres, setMembres] = useState<MembreEquipe[]>([]);
+
   // Refs pour avoir les données marchand toujours à jour dans le callback onSnapshot
   const objectifRef = useRef<number>(marchand?.objectif_tampons || 10);
   const marchandModeRef = useRef<string>("cyclique");
@@ -44,6 +47,13 @@ export default function AccueilPage() {
     marchandModeRef.current = (m?.mode_recompense as string) || "cyclique";
     marchandPaliersRef.current = (m?.paliers as { tampons: number; recompense: string }[]) || [];
   }, [marchand]);
+
+  useEffect(() => {
+    if (!user || !(marchand as Record<string,unknown>)?.equipe_actif) return;
+    getDocs(collection(db, "marchands", user.uid, "membres")).then(snap => {
+      setMembres(snap.docs.map(d => ({ id: d.id, prenom: d.data().prenom, statut: d.data().statut })));
+    }).catch(() => {});
+  }, [user, marchand]);
 
   useEffect(() => {
     if (!user) return;
@@ -400,6 +410,47 @@ export default function AccueilPage() {
           <Icons.ChevronRight />
         </Link>
       </div>
+
+      {/* Carte Équipe — visible si equipe_actif */}
+      {!!(marchand as Record<string,unknown>)?.equipe_actif && (
+        <Link href="/dashboard/reglages"
+          className="flex items-center justify-between p-4 rounded-2xl mt-4 transition-all hover:opacity-80"
+          style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(139,92,246,0.12)" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Équipe</p>
+              {membres.length === 0 ? (
+                <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>Aucun membre</p>
+              ) : (
+                <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                  {membres.filter(m => m.statut === "actif").map(m => (
+                    <span key={m.id} className="text-[11px] font-semibold px-2 py-0.5 rounded-lg"
+                      style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
+                      {m.prenom}
+                    </span>
+                  ))}
+                  {membres.filter(m => m.statut !== "actif").map(m => (
+                    <span key={m.id} className="text-[11px] font-semibold px-2 py-0.5 rounded-lg"
+                      style={{ background: "rgba(0,0,0,0.05)", color: "var(--fg-tertiary)" }}>
+                      {m.prenom}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <Icons.ChevronRight />
+        </Link>
+      )}
     </div>
   );
 }

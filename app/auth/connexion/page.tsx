@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -86,6 +86,22 @@ function ConnexionInner() {
     }
   }
 
+  // Résumé de l'établissement — permet à "Changer" de revenir directement au choix du prénom
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("changer") === "1") {
+      try {
+        const cache = localStorage.getItem("equipe_etablissement");
+        if (cache) {
+          const d = JSON.parse(cache);
+          setEquipeData(d);
+          setEquipeStep("prenom");
+          setMode("equipe");
+        }
+      } catch { /* ignore */ }
+    }
+  }, []);
+
   async function handleValiderCode(e: React.FormEvent) {
     e.preventDefault();
     setEquipeLoading(true); setEquipeError("");
@@ -94,6 +110,7 @@ function ConnexionInner() {
       const data = await res.json();
       if (!res.ok) { setEquipeError(data.error || "Code invalide"); return; }
       setEquipeData(data);
+      localStorage.setItem("equipe_etablissement", JSON.stringify(data));
       setEquipeStep("prenom");
     } catch { setEquipeError("Erreur de connexion. Réessayez."); }
     finally { setEquipeLoading(false); }

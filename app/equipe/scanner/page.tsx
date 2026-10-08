@@ -149,7 +149,13 @@ export default function EquipeScannerPage() {
           <p style={{ fontSize: 19, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.3 }}>Bonjour, {session.prenom}</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => router.replace("/auth/connexion")}
+          <button onClick={async () => {
+            if (session) {
+              fetch("/api/equipe/session", { method: "DELETE", headers: { "x-equipe-token": session.token } }).catch(() => {});
+            }
+            localStorage.removeItem("equipe_session");
+            router.replace("/auth/connexion?changer=1");
+          }}
             style={{ padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600, background: "rgba(0,0,0,0.06)", color: "#6E6E73", border: "none", cursor: "pointer" }}>
             Changer
           </button>
