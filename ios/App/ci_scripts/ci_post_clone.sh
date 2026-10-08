@@ -1,11 +1,10 @@
 #!/bin/sh
 set -e
 
+# Install npm dependencies (required by Capacitor Podfile)
+cd "$CI_PRIMARY_REPOSITORY_PATH"
+npm ci
+
+# Install CocoaPods dependencies
 cd "$CI_PRIMARY_REPOSITORY_PATH/ios/App"
-
-# Install CocoaPods if not available
-if ! command -v pod &> /dev/null; then
-  gem install cocoapods --no-document
-fi
-
 pod install
