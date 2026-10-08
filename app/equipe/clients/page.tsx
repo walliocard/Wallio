@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface EquipeSession {
   token: string;
@@ -40,16 +38,18 @@ export default function EquipeClientsPage() {
     try {
       const s: EquipeSession = JSON.parse(raw);
       setSession(s);
-      loadClients(s.marchandId);
+      loadClients(s.token);
     } catch { router.replace("/auth/connexion"); }
   }, [router]);
 
-  async function loadClients(marchandId: string) {
+  async function loadClients(token: string) {
     setLoading(true);
     try {
-      const q = query(collection(db, "clients"), where("marchand_id", "==", marchandId), orderBy("tampons", "desc"));
-      const snap = await getDocs(q);
-      setClients(snap.docs.map(d => ({ id: d.id, ...d.data() } as Client)));
+      const res = await fetch("/api/equipe/clients", { headers: { "x-equipe-token": token } });
+      if (res.ok) {
+        const data = await res.json();
+        setClients(data.clients || []);
+      }
     } catch { /* silent */ }
     finally { setLoading(false); }
   }
