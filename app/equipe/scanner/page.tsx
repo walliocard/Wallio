@@ -33,6 +33,7 @@ function formatTemps(sec: number): string {
 export default function EquipeScannerPage() {
   const router = useRouter();
   const [session, setSession] = useState<EquipeSession | null>(null);
+  const sessionRef = useRef<EquipeSession | null>(null);
   const [result, setResult] = useState<TamponResult | null>(null);
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,7 +46,11 @@ export default function EquipeScannerPage() {
   useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
     if (!raw) { router.replace("/auth/connexion"); return; }
-    try { setSession(JSON.parse(raw)); } catch { router.replace("/auth/connexion"); }
+    try {
+      const s = JSON.parse(raw) as EquipeSession;
+      setSession(s);
+      sessionRef.current = s;
+    } catch { router.replace("/auth/connexion"); }
   }, [router]);
 
   const stopCamera = useCallback(() => {
@@ -102,12 +107,13 @@ export default function EquipeScannerPage() {
   }
 
   async function handleTampon(walletId: string) {
-    if (!session) return;
+    const s = sessionRef.current;
+    if (!s) return;
     setLoading(true);
     try {
       const res = await fetch("/api/equipe/tampon", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
+        headers: { "Content-Type": "application/json", "x-equipe-token": s.token },
         body: JSON.stringify({ walletId }),
       });
       const data = await res.json();
