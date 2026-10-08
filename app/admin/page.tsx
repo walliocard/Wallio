@@ -21,6 +21,8 @@ type Marchand = {
   ville?: string;
   pays?: string;
   telephone?: string;
+  equipe_actif?: boolean;
+  code_etablissement?: string;
 };
 
 const VILLES_ADMIN: Record<string, string[]> = {
@@ -962,6 +964,38 @@ export default function AdminPage() {
                   {generatingNfc ? "Génération…" : "Générer l'ID NFC"}
                 </button>
               )}
+
+              <SLabel>Équipe</SLabel>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: T.surfCard, borderRadius: 12, padding: "13px 16px", border: `1px solid ${T.border}` }}>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: T.label }}>Mode équipe</p>
+                    <p style={{ fontSize: 12, color: T.tert, marginTop: 2 }}>Permet aux serveurs de scanner avec un PIN</p>
+                  </div>
+                  <button onClick={async () => {
+                    const next = !selected.equipe_actif;
+                    let code = selected.code_etablissement;
+                    if (next && !code) {
+                      const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+                      code = Array.from({length:6},()=>chars[Math.floor(Math.random()*chars.length)]).join("");
+                    }
+                    const fields: Record<string,unknown> = { equipe_actif: next };
+                    if (code) fields.code_etablissement = code;
+                    await adminPatch(selected.id, fields);
+                    setSelected(prev => prev ? { ...prev, equipe_actif: next, code_etablissement: code } : prev);
+                    setMarchands(prev => prev.map(m => m.id === selected.id ? { ...m, equipe_actif: next, code_etablissement: code } : m));
+                  }}
+                  style={{ padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", background: selected.equipe_actif ? "rgba(255,59,48,0.1)" : T.btnBg, color: selected.equipe_actif ? "#FF3B30" : T.btnFg }}>
+                    {selected.equipe_actif ? "Désactiver" : "Activer"}
+                  </button>
+                </div>
+                {selected.equipe_actif && selected.code_etablissement && (
+                  <div style={{ background: T.surfCard, borderRadius: 12, padding: "13px 16px", border: `1px solid ${T.border}` }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>Code établissement</p>
+                    <p style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.25em", color: T.label, fontVariantNumeric: "tabular-nums" }}>{selected.code_etablissement}</p>
+                  </div>
+                )}
+              </div>
 
               <SLabel>Carte comptoir imprimable</SLabel>
               <div style={{ display: "flex", gap: 8 }}>

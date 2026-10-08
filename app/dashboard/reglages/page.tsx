@@ -1,13 +1,19 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { saveMarchandFields } from "@/lib/save-marchand";
 import { useLang } from "@/lib/lang-context";
 import CustomSelect from "@/components/CustomSelect";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+
+async function getIdToken(): Promise<string> {
+  const u = getAuth().currentUser;
+  return u ? u.getIdToken() : "";
+}
 
 const FUSEAUX = [
   "Africa/Casablanca",
@@ -499,6 +505,10 @@ export default function ReglagesPage() {
         </button>
 
         {/* Apparence */}
+        {!!(marchand as Record<string, unknown>)?.equipe_actif && (
+          <SectionEquipe />
+        )}
+
         <div className="mt-4 rounded-2xl p-5"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
           <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>
@@ -526,6 +536,167 @@ export default function ReglagesPage() {
           </div>
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+// ─── Section Équipe ───────────────────────────────────────────────────────────
+
+interface Membre { id: string; prenom: string; statut: string; }
+
+function SectionEquipe() {
+  const { marchand, user } = useAuth();
+  const m = marchand as Record<string, unknown>;
+  const [membres, setMembres] = useState<Membre[]>([]);
+  const [code] = useState<string>((m?.code_etablissement as string) || "");
+  const [permissions, setPermissions] = useState({ notifs: !!(m?.equipe_permissions as Record<string,boolean>)?.notifs, clients: !!(m?.equipe_permissions as Record<string,boolean>)?.clients });
+  const [showAdd, setShowAdd] = useState(false);
+  const [newPrenom, setNewPrenom] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [resetTarget, setResetTarget] = useState<string | null>(null);
+  const [resetPin, setResetPin] = useState("");
+
+  const loadMembres = useCallback(async () => {
+    const token = await getIdToken();
+    const res = await fetch("/api/equipe/membres", { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) { const d = await res.json(); setMembres(d.membres || []); }
+  }, []);
+
+  useEffect(() => { if (user) loadMembres(); }, [user, loadMembres]);
+
+  async function handleAddMembre(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newPrenom || newPin.length !== 4) return;
+    setAdding(true);
+    const token = await getIdToken();
+    await fetch("/api/equipe/membres", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ prenom: newPrenom, pin: newPin }) });
+    setNewPrenom(""); setNewPin(""); setShowAdd(false); setAdding(false);
+    loadMembres();
+  }
+
+  async function toggleStatut(membreId: string, statut: string) {
+    const token = await getIdToken();
+    await fetch("/api/equipe/membres", { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ membreId, action: statut === "actif" ? "desactiver" : "activer" }) });
+    loadMembres();
+  }
+
+  async function handleResetPin(membreId: string) {
+    if (resetPin.length !== 4) return;
+    const token = await getIdToken();
+    await fetch("/api/equipe/membres", { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ membreId, action: "reset_pin", pin: resetPin }) });
+    setResetTarget(null); setResetPin(""); loadMembres();
+  }
+
+  async function handlePermissions(key: "notifs" | "clients", val: boolean) {
+    const next = { ...permissions, [key]: val };
+    setPermissions(next);
+    await saveMarchandFields(user!, { equipe_permissions: next });
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(code).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+      <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>Équipe</p>
+
+      {/* Code établissement */}
+      <div className="rounded-2xl p-4 mb-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+        <p className="text-[12px] font-medium mb-2" style={{ color: "var(--fg-secondary)" }}>Code établissement</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[28px] font-bold tracking-[0.25em]" style={{ color: "var(--fg)", fontVariantNumeric: "tabular-nums" }}>{code || "—"}</p>
+          <button onClick={copyCode} className="px-4 py-2 rounded-xl text-[13px] font-semibold" style={{ background: copied ? "rgba(52,199,89,0.15)" : "var(--accent)", color: copied ? "#34C759" : "white" }}>
+            {copied ? "Copié !" : "Copier"}
+          </button>
+        </div>
+        <p className="text-[12px] mt-2" style={{ color: "var(--fg-tertiary)" }}>Partagez ce code avec votre équipe</p>
+      </div>
+
+      {/* Permissions */}
+      <div className="mb-4 space-y-3">
+        <p className="text-[12px] font-medium" style={{ color: "var(--fg-secondary)" }}>Accès équipe</p>
+        {([
+          { key: "notifs", label: "Envoyer des notifications" },
+          { key: "clients", label: "Voir la liste des clients" },
+        ] as const).map(({ key, label }) => (
+          <div key={key} className="flex items-center justify-between">
+            <p className="text-[14px]" style={{ color: "var(--fg)" }}>{label}</p>
+            <Toggle value={permissions[key]} onChange={v => handlePermissions(key, v)} />
+          </div>
+        ))}
+      </div>
+
+      {/* Membres */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[12px] font-medium" style={{ color: "var(--fg-secondary)" }}>Membres ({membres.length})</p>
+          <button onClick={() => setShowAdd(v => !v)} className="text-[13px] font-semibold" style={{ color: "var(--accent)" }}>
+            {showAdd ? "Annuler" : "+ Ajouter"}
+          </button>
+        </div>
+
+        {showAdd && (
+          <form onSubmit={handleAddMembre} className="rounded-2xl p-4 mb-3 space-y-3" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+            <input type="text" placeholder="Prénom" required value={newPrenom} onChange={e => setNewPrenom(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl text-[14px] outline-none"
+              style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }} />
+            <input type="password" inputMode="numeric" placeholder="PIN 4 chiffres" maxLength={4} required value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              className="w-full px-3 py-2.5 rounded-xl text-[14px] outline-none"
+              style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }} />
+            <button type="submit" disabled={adding || newPin.length !== 4}
+              className="w-full py-2.5 rounded-xl text-[14px] font-semibold text-white"
+              style={{ background: "var(--accent)", opacity: adding ? 0.7 : 1 }}>
+              {adding ? "Ajout…" : "Ajouter"}
+            </button>
+          </form>
+        )}
+
+        <div className="space-y-2">
+          {membres.map(m => (
+            <div key={m.id}>
+              <div className="flex items-center justify-between py-2.5 px-3 rounded-2xl" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold text-white"
+                    style={{ background: m.statut === "actif" ? "var(--accent)" : "var(--border)" }}>
+                    {m.prenom[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-medium" style={{ color: m.statut === "actif" ? "var(--fg)" : "var(--fg-tertiary)" }}>{m.prenom}</p>
+                    <p className="text-[11px]" style={{ color: m.statut === "actif" ? "#34C759" : "var(--fg-tertiary)" }}>{m.statut === "actif" ? "Actif" : "Désactivé"}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => { setResetTarget(resetTarget === m.id ? null : m.id); setResetPin(""); }}
+                    className="px-3 py-1.5 rounded-xl text-[12px] font-medium" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>
+                    PIN
+                  </button>
+                  <button onClick={() => toggleStatut(m.id, m.statut)}
+                    className="px-3 py-1.5 rounded-xl text-[12px] font-medium"
+                    style={{ background: m.statut === "actif" ? "rgba(255,59,48,0.1)" : "rgba(52,199,89,0.1)", color: m.statut === "actif" ? "#FF3B30" : "#34C759" }}>
+                    {m.statut === "actif" ? "Désactiver" : "Activer"}
+                  </button>
+                </div>
+              </div>
+              {resetTarget === m.id && (
+                <div className="flex gap-2 mt-1 px-1">
+                  <input type="password" inputMode="numeric" placeholder="Nouveau PIN" maxLength={4} value={resetPin} onChange={e => setResetPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
+                    style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }} />
+                  <button onClick={() => handleResetPin(m.id)} disabled={resetPin.length !== 4}
+                    className="px-4 py-2 rounded-xl text-[13px] font-semibold text-white"
+                    style={{ background: "var(--accent)", opacity: resetPin.length !== 4 ? 0.4 : 1 }}>
+                    OK
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+          {membres.length === 0 && <p className="text-[13px] text-center py-3" style={{ color: "var(--fg-tertiary)" }}>Aucun membre pour l&apos;instant</p>}
+        </div>
       </div>
     </div>
   );
