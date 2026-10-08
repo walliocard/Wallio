@@ -88,7 +88,6 @@ function ConnexionInner() {
 
   // Résumé de l'établissement — permet à "Changer" de revenir directement au choix du prénom
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get("changer") === "1") {
       try {
         const cache = localStorage.getItem("equipe_etablissement");
@@ -100,7 +99,7 @@ function ConnexionInner() {
         }
       } catch { /* ignore */ }
     }
-  }, []);
+  }, [searchParams]);
 
   async function handleValiderCode(e: React.FormEvent) {
     e.preventDefault();
