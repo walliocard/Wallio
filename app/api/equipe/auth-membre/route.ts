@@ -29,6 +29,7 @@ export async function POST(req: Request) {
       prenom: membre.prenom,
       marchandId,
       marchandNom: marchand.nom,
+      logo_url: marchand.logo_url || null,
       permissions,
     });
   } catch (e) {

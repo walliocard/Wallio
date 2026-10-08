@@ -8,6 +8,7 @@ interface EquipeSession {
   prenom: string;
   marchandId: string;
   marchandNom: string;
+  logo_url?: string | null;
   permissions: { notifs: boolean; clients: boolean };
 }
 
@@ -132,9 +133,14 @@ export default function EquipeClientsPage() {
     }}>
       {/* Header */}
       <div style={{ padding: "16px 20px 12px", display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 12, color: "#6E6E73" }}>{session.marchandNom}</p>
-          <p style={{ fontSize: 19, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.3 }}>Clients</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+          {session.logo_url && (
+            <img src={session.logo_url} alt="" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+          )}
+          <div>
+            <p style={{ fontSize: 12, color: "#6E6E73" }}>{session.marchandNom}</p>
+            <p style={{ fontSize: 19, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.3 }}>Clients</p>
+          </div>
         </div>
         <p style={{ fontSize: 13, color: "#AEAEB2" }}>{clients.length}</p>
       </div>

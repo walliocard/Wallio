@@ -122,7 +122,7 @@ function ConnexionInner() {
       const res = await fetch("/api/equipe/auth-membre", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ marchandId: equipeData.marchandId, membreId: membreSelectionne.id, pin }) });
       const data = await res.json();
       if (!res.ok) { setEquipeError(data.error || "PIN incorrect"); return; }
-      localStorage.setItem("equipe_session", JSON.stringify({ token: data.token, prenom: data.prenom, marchandId: data.marchandId, marchandNom: data.marchandNom, permissions: data.permissions }));
+      localStorage.setItem("equipe_session", JSON.stringify({ token: data.token, prenom: data.prenom, marchandId: data.marchandId, marchandNom: data.marchandNom, logo_url: data.logo_url || null, permissions: data.permissions }));
       router.push("/equipe/scanner");
     } catch { setEquipeError("Erreur de connexion. Réessayez."); }
     finally { setEquipeLoading(false); }

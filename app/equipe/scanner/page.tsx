@@ -10,6 +10,7 @@ interface EquipeSession {
   prenom: string;
   marchandId: string;
   marchandNom: string;
+  logo_url?: string | null;
   permissions: { notifs: boolean; clients: boolean };
 }
 
@@ -181,9 +182,14 @@ export default function EquipeScannerPage() {
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 12px" }}>
-        <div>
-          <p style={{ fontSize: 12, color: "#6E6E73", marginBottom: 1 }}>{session.marchandNom}</p>
-          <p style={{ fontSize: 19, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.3 }}>Bonjour, {session.prenom}</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {session.logo_url && (
+            <img src={session.logo_url} alt="" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+          )}
+          <div>
+            <p style={{ fontSize: 12, color: "#6E6E73", marginBottom: 1 }}>{session.marchandNom}</p>
+            <p style={{ fontSize: 19, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.3 }}>Bonjour, {session.prenom}</p>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={async () => {
