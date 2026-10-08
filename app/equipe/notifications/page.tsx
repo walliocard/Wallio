@@ -106,7 +106,7 @@ export default function EquipeNotificationsPage() {
         </form>
       </div>
 
-      <EquipeNav active="notifications" session={session} />
+      <EquipeNav active="scanner" session={session} />
     </main>
   );
 }

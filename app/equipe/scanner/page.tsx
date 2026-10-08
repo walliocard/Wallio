@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import jsQR from "jsqr";
+import { EquipeNav } from "@/app/equipe/clients/page";
 
 interface EquipeSession {
   token: string;
@@ -355,6 +356,7 @@ export default function EquipeScannerPage() {
         )}
       </div>
 
+      <EquipeNav active="scanner" session={session} />
     </main>
   );
 }

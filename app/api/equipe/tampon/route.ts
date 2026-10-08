@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const session = await verifierTokenEquipe(getTokenFromRequest(req));
     if (!session) return Response.json({ error: "Non autorisé" }, { status: 401 });
 
-    const { walletId } = await req.json();
+    const { walletId, manual } = await req.json();
     if (!walletId) return Response.json({ error: "walletId manquant" }, { status: 400 });
 
     const marchand = await getMarchandById(session.marchand_id);
@@ -31,11 +31,16 @@ export async function POST(req: Request) {
       membreRef.get().then(doc => {
         const data = doc.data() || {};
         const isToday = data.scans_today_date === today;
-        membreRef.update({
+        const update: Record<string, unknown> = {
           scans_today: isToday ? FieldValue.increment(1) : 1,
           scans_today_date: today,
           scans_total: FieldValue.increment(1),
-        }).catch(() => {});
+        };
+        if (manual) {
+          update.scans_manual_today = isToday ? FieldValue.increment(1) : 1;
+          update.scans_manual_total = FieldValue.increment(1);
+        }
+        membreRef.update(update).catch(() => {});
       }).catch(() => {});
     }
 

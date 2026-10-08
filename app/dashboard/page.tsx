@@ -9,7 +9,7 @@ import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
 
 type TopClient = { prenom: string; nom: string; tampons: number; id: string };
-type MembreEquipe = { id: string; prenom: string; statut: string; scans_today?: number; scans_total?: number; scans_today_date?: string };
+type MembreEquipe = { id: string; prenom: string; statut: string; scans_today?: number; scans_total?: number; scans_today_date?: string; scans_manual_today?: number };
 
 type Stats = {
   total: number;
@@ -53,7 +53,7 @@ export default function AccueilPage() {
     getDocs(collection(db, "marchands", user.uid, "membres")).then(snap => {
       setMembres(snap.docs.map(d => {
         const data = d.data();
-        return { id: d.id, prenom: data.prenom, statut: data.statut, scans_today: data.scans_today, scans_total: data.scans_total, scans_today_date: data.scans_today_date };
+        return { id: d.id, prenom: data.prenom, statut: data.statut, scans_today: data.scans_today, scans_total: data.scans_total, scans_today_date: data.scans_today_date, scans_manual_today: data.scans_manual_today };
       }));
     }).catch(() => {});
   }, [user, marchand]);
@@ -444,9 +444,12 @@ export default function AccueilPage() {
                       <div className="h-full rounded-full transition-all duration-500"
                         style={{ width: `${pct}%`, background: "linear-gradient(90deg,#007AFF,#8B5CF6)" }} />
                     </div>
-                    <p className="text-[13px] font-semibold w-6 text-right flex-shrink-0" style={{ color: scans > 0 ? "var(--fg)" : "var(--fg-tertiary)" }}>
-                      {scans}
-                    </p>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <p className="text-[13px] font-semibold" style={{ color: scans > 0 ? "var(--fg)" : "var(--fg-tertiary)" }}>{scans}</p>
+                      {(m.scans_manual_today ?? 0) > 0 && m.scans_today_date === today && (
+                        <p className="text-[10px]" style={{ color: "#FF9F0A" }}>{m.scans_manual_today} manuel{(m.scans_manual_today ?? 0) > 1 ? "s" : ""}</p>
+                      )}
+                    </div>
                   </div>
                 );
               })}
