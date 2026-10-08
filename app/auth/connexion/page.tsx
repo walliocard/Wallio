@@ -17,7 +17,22 @@ type EquipeStep = "code" | "prenom" | "pin";
 function ConnexionInner() {
   const { t } = useLang();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<"gerant" | "equipe">("gerant");
+
+  // Initialisation synchrone depuis URL + localStorage — évite le flash gérant→équipe
+  const [mode, setMode] = useState<"gerant" | "equipe">(() => {
+    if (typeof window === "undefined") return "gerant";
+    const isChanger = new URLSearchParams(window.location.search).get("changer") === "1";
+    return isChanger && !!localStorage.getItem("equipe_etablissement") ? "equipe" : "gerant";
+  });
+  const [equipeStep, setEquipeStep] = useState<EquipeStep>(() => {
+    if (typeof window === "undefined") return "code";
+    return new URLSearchParams(window.location.search).get("changer") === "1" ? "prenom" : "code";
+  });
+  const [equipeData, setEquipeData] = useState<{ marchandId: string; marchandNom: string; membres: { id: string; prenom: string }[] } | null>(() => {
+    if (typeof window === "undefined") return null;
+    if (new URLSearchParams(window.location.search).get("changer") !== "1") return null;
+    try { return JSON.parse(localStorage.getItem("equipe_etablissement") || "null"); } catch { return null; }
+  });
 
   // Gérant
   const [form, setForm] = useState({ email: "", password: "" });
@@ -30,9 +45,7 @@ function ConnexionInner() {
   const [resetLoading, setResetLoading] = useState(false);
 
   // Équipe
-  const [equipeStep, setEquipeStep] = useState<EquipeStep>("code");
   const [code, setCode] = useState("");
-  const [equipeData, setEquipeData] = useState<{ marchandId: string; marchandNom: string; membres: { id: string; prenom: string }[] } | null>(null);
   const [membreSelectionne, setMembreSelectionne] = useState<{ id: string; prenom: string } | null>(null);
   const [pin, setPin] = useState("");
   const [equipeError, setEquipeError] = useState("");
@@ -86,20 +99,6 @@ function ConnexionInner() {
     }
   }
 
-  // Résumé de l'établissement — permet à "Changer" de revenir directement au choix du prénom
-  useEffect(() => {
-    if (searchParams.get("changer") === "1") {
-      try {
-        const cache = localStorage.getItem("equipe_etablissement");
-        if (cache) {
-          const d = JSON.parse(cache);
-          setEquipeData(d);
-          setEquipeStep("prenom");
-          setMode("equipe");
-        }
-      } catch { /* ignore */ }
-    }
-  }, [searchParams]);
 
   async function handleValiderCode(e: React.FormEvent) {
     e.preventDefault();
