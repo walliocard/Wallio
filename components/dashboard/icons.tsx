@@ -88,4 +88,11 @@ export const Icons = {
       <polyline points="12 19 5 12 12 5"/>
     </svg>
   ),
+  History: ({ size = 20 }: P) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <polyline points="1 4 1 10 7 10"/>
+      <path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
+      <polyline points="12 7 12 12 15 15"/>
+    </svg>
+  ),
 };
