@@ -617,17 +617,40 @@ function SectionEquipe() {
       </div>
 
       {/* Permissions */}
-      <div className="mb-4 space-y-3">
-        <p className="text-[12px] font-medium" style={{ color: "var(--fg-secondary)" }}>Accès équipe</p>
-        {([
-          { key: "notifs", label: "Envoyer des notifications" },
-          { key: "clients", label: "Voir la liste des clients" },
-        ] as const).map(({ key, label }) => (
-          <div key={key} className="flex items-center justify-between">
-            <p className="text-[14px]" style={{ color: "var(--fg)" }}>{label}</p>
-            <Toggle value={permissions[key]} onChange={v => handlePermissions(key, v)} />
+      <div className="mb-4">
+        <p className="text-[12px] font-medium mb-3" style={{ color: "var(--fg-secondary)" }}>Accès de l&apos;équipe</p>
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+          {/* Scanner — toujours actif */}
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(0,122,255,0.12)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4v-4m-4 0h-3v4"/></svg>
+              </div>
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Scanner QR clients</p>
+            </div>
+            <span className="text-[12px] font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>Toujours actif</span>
           </div>
-        ))}
+          {/* Notifs — optionnel */}
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: permissions.notifs ? "rgba(0,122,255,0.12)" : "rgba(0,0,0,0.04)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={permissions.notifs ? "var(--accent)" : "var(--fg-tertiary)"} strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              </div>
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Envoyer des notifications</p>
+            </div>
+            <Toggle value={permissions.notifs} onChange={v => handlePermissions("notifs", v)} />
+          </div>
+          {/* Clients — optionnel */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: permissions.clients ? "rgba(0,122,255,0.12)" : "rgba(0,0,0,0.04)" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={permissions.clients ? "var(--accent)" : "var(--fg-tertiary)"} strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Voir la liste des clients</p>
+            </div>
+            <Toggle value={permissions.clients} onChange={v => handlePermissions("clients", v)} />
+          </div>
+        </div>
       </div>
 
       {/* Membres */}
