@@ -622,14 +622,20 @@ function SectionEquipe() {
       {/* Accès équipe */}
       <div className="mb-4">
         <p className="text-[12px] font-medium mb-3" style={{ color: "var(--fg-secondary)" }}>Accès de l&apos;équipe</p>
-        <div className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ border: "1px solid var(--border)" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(0,122,255,0.10)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4v-4m-4 0h-3v4"/></svg>
+        <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+          {[
+            { label: "Scanner QR clients", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4v-4m-4 0h-3v4"/></svg> },
+            { label: "Voir la liste des clients", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+            { label: "Tampon manuel (si client sans téléphone)", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
+          ].map(({ label, icon }, i, arr) => (
+            <div key={label} className="flex items-center justify-between px-4 py-3" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(0,122,255,0.10)" }}>{icon}</div>
+                <p className="text-[13px] font-medium" style={{ color: "var(--fg)" }}>{label}</p>
+              </div>
+              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>Actif</span>
             </div>
-            <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Scanner QR clients</p>
-          </div>
-          <span className="text-[12px] font-semibold px-2.5 py-1 rounded-lg" style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>Actif</span>
+          ))}
         </div>
       </div>
 

@@ -25,6 +25,20 @@ export async function POST(req: Request) {
       fetch(`${process.env.NEXT_PUBLIC_APP_URL || "https://app.walliocard.com"}/api/apple-wallet/push-update`, opts).catch(() => {});
       fetch(`${process.env.NEXT_PUBLIC_APP_URL || "https://app.walliocard.com"}/api/google-wallet/push-update`, opts).catch(() => {});
 
+      // Historique (fire-and-forget)
+      const { Timestamp: TS } = await import("firebase-admin/firestore");
+      adminDb().collection("marchands").doc(session.marchand_id).collection("historique").add({
+        client_id: client.id,
+        client_prenom: client.prenom,
+        client_nom: client.nom || "",
+        tampons_apres: result.type === "ok" || result.type === "recompense" ? (result as Record<string,unknown>).tampons : client.tampons,
+        recompense: result.type === "recompense",
+        type: manual ? "manuel_equipe" : "qr_equipe",
+        added_by: session.prenom,
+        membre_id: session.membre_id,
+        created_at: TS.now(),
+      }).catch(() => {});
+
       // Mise à jour compteurs du membre (fire-and-forget)
       const today = new Date().toISOString().slice(0, 10);
       const membreRef = adminDb().collection("marchands").doc(session.marchand_id).collection("membres").doc(session.membre_id);

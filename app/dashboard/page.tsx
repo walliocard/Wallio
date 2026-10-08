@@ -429,9 +429,10 @@ export default function AccueilPage() {
                   {totalAujourdhui} tampon{totalAujourdhui > 1 ? "s" : ""} ajouté{totalAujourdhui > 1 ? "s" : ""} au total
                 </p>
               </div>
-              <Link href="/dashboard/reglages" className="text-[12px] font-medium" style={{ color: "var(--accent)" }}>
-                Gérer →
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href="/dashboard/historique" className="text-[12px] font-medium" style={{ color: "var(--fg-tertiary)" }}>Historique</Link>
+                <Link href="/dashboard/reglages" className="text-[12px] font-medium" style={{ color: "var(--accent)" }}>Gérer →</Link>
+              </div>
             </div>
             <div className="space-y-3">
               {actifs.map(m => {
