@@ -19,7 +19,8 @@ export async function POST(req: Request) {
 
     const marchandDoc = await db.collection("marchands").doc(marchandId).get();
     const marchand = marchandDoc.data()!;
-    const permissions = marchand.equipe_permissions || { notifs: false, clients: false };
+    // Scanner + Clients toujours actifs — notifs retirées
+    const permissions = { notifs: false, clients: true };
 
     const token = await creerSession(marchandId, membreId, membre.prenom, permissions);
 
