@@ -17,7 +17,7 @@ const NAV = [
   { href: "/dashboard/notifications",     label: "Notifs",        Icon: Icons.Bell,     mobile: true  },
   { href: "/dashboard/carte",             label: "Ma carte",      Icon: Icons.Card,     mobile: true  },
   { href: "/dashboard/reglages",          label: "Réglages",      Icon: Icons.Settings, mobile: true  },
-  { href: "/dashboard/historique",        label: "Historique",    Icon: Icons.History,  mobile: false },
+  { href: "/dashboard/historique",        label: "Historique",    Icon: Icons.History,  mobile: true  },
 ];
 
 function active(pathname: string, href: string) {

@@ -18,21 +18,21 @@ function ConnexionInner() {
   const { t } = useLang();
   const searchParams = useSearchParams();
 
-  // Initialisation synchrone depuis URL + localStorage — évite le flash gérant→équipe
-  const [mode, setMode] = useState<"gerant" | "equipe">(() => {
-    if (typeof window === "undefined") return "gerant";
-    const isChanger = new URLSearchParams(window.location.search).get("changer") === "1";
-    return isChanger && !!localStorage.getItem("equipe_etablissement") ? "equipe" : "gerant";
-  });
-  const [equipeStep, setEquipeStep] = useState<EquipeStep>(() => {
-    if (typeof window === "undefined") return "code";
-    return new URLSearchParams(window.location.search).get("changer") === "1" ? "prenom" : "code";
-  });
-  const [equipeData, setEquipeData] = useState<{ marchandId: string; marchandNom: string; membres: { id: string; prenom: string }[] } | null>(() => {
-    if (typeof window === "undefined") return null;
-    if (new URLSearchParams(window.location.search).get("changer") !== "1") return null;
-    try { return JSON.parse(localStorage.getItem("equipe_etablissement") || "null"); } catch { return null; }
-  });
+  const [mode, setMode] = useState<"gerant" | "equipe">("gerant");
+  const [equipeStep, setEquipeStep] = useState<EquipeStep>("code");
+  const [equipeData, setEquipeData] = useState<{ marchandId: string; marchandNom: string; membres: { id: string; prenom: string }[] } | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("changer") !== "1") return;
+    try {
+      const stored = localStorage.getItem("equipe_etablissement");
+      if (!stored) return;
+      const data = JSON.parse(stored);
+      setEquipeData(data);
+      setMode("equipe");
+      setEquipeStep("prenom");
+    } catch {}
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Gérant
   const [form, setForm] = useState({ email: "", password: "" });
