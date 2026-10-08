@@ -294,7 +294,7 @@ export default function EquipeScannerPage() {
                   )}
                   <div style={{ width: "100%", marginTop: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#AEAEB2", marginBottom: 8 }}>
-                      <span>{result.tampons} / {result.objectif} tampons</span>
+                      <span>{result.tampons} / {result.objectif ?? "?"} tampons</span>
                     </div>
                     <div style={{ height: 8, borderRadius: 99, background: "#E5E5EA", overflow: "hidden" }}>
                       <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg,#007AFF,#8B5CF6)", width: `${Math.min(((result.tampons ?? 0) / (result.objectif ?? 1)) * 100, 100)}%`, transition: "width 0.6s ease" }} />

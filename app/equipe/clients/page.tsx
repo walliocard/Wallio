@@ -29,6 +29,11 @@ interface TamponResult {
   nom_recompense?: string;
   prochain_recompense?: string;
   secondes_restantes?: number;
+  clientId?: string;
+  mode_recompense?: string;
+  palier_index?: number;
+  paliers_valides?: boolean[];
+  total_paliers?: number;
 }
 
 function formatDate(ts?: { seconds: number } | null): string {
@@ -48,6 +53,7 @@ export default function EquipeClientsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [stampingId, setStampingId] = useState<string | null>(null);
+  const [validatingId, setValidatingId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TamponResult>>({});
 
   useEffect(() => {
@@ -86,6 +92,28 @@ export default function EquipeClientsPage() {
       }
     } catch { /* silent */ }
     finally { setStampingId(null); }
+  }
+
+  async function handleValiderRecompense(clientId: string, result: TamponResult) {
+    if (!session || validatingId) return;
+    setValidatingId(clientId);
+    try {
+      const isProgressif = result.mode_recompense === "progressif" && result.palier_index !== undefined;
+      await fetch("/api/equipe/valider-recompense", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
+        body: JSON.stringify({
+          clientId: result.clientId,
+          mode: result.mode_recompense || "cyclique",
+          palierIndex: isProgressif ? result.palier_index : undefined,
+          paliersValides: isProgressif ? (result.paliers_valides || []) : undefined,
+          totalPaliers: isProgressif ? result.total_paliers : undefined,
+        }),
+      });
+      setResults(prev => ({ ...prev, [clientId]: { ...prev[clientId], type: "ok", nom_recompense: undefined, tampons: isProgressif ? (result.tampons ?? 0) : 0 } }));
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, tampons: isProgressif ? (result.tampons ?? 0) : 0 } : c));
+    } catch { /* silent */ }
+    finally { setValidatingId(null); }
   }
 
   if (!session) return null;
@@ -167,7 +195,17 @@ export default function EquipeClientsPage() {
                       )}
                     </>
                   )}
-                  {result.type === "recompense" && <p style={{ fontSize: 13, fontWeight: 600, color: "#34C759" }}>Récompense débloquée — {result.nom_recompense}</p>}
+                  {result.type === "recompense" && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: "#34C759" }}>Récompense — {result.nom_recompense}</p>
+                      <button
+                        onClick={() => handleValiderRecompense(c.id, result)}
+                        disabled={validatingId === c.id}
+                        style={{ padding: "5px 12px", borderRadius: 9, fontSize: 12, fontWeight: 600, background: "#34C759", color: "white", border: "none", cursor: "pointer", opacity: validatingId === c.id ? 0.6 : 1, flexShrink: 0 }}>
+                        {validatingId === c.id ? "…" : "Valider"}
+                      </button>
+                    </div>
+                  )}
                   {result.type === "anti_doublon" && <p style={{ fontSize: 13, fontWeight: 600, color: "#FF9F0A" }}>Déjà enregistré — prochain dans {formatTemps(result.secondes_restantes ?? 0)}</p>}
                   {result.type === "not_found" && <p style={{ fontSize: 13, fontWeight: 600, color: "#FF3B30" }}>Client introuvable</p>}
                 </div>

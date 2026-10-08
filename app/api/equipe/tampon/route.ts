@@ -65,6 +65,7 @@ export async function POST(req: Request) {
       clientId: client.id,
       telephone: client.telephone,
       prenom: client.prenom,
+      objectif: (r.objectif as number | undefined) ?? (mn.objectif_tampons as number),
       prochain_recompense: (r.prochainRecompense as string) || (mn.nom_recompense as string) || "",
       mode_recompense: (mn.mode_recompense as string) || "cyclique",
       paliers_valides: client.paliers_valides || [],
