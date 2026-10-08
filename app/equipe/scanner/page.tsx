@@ -54,10 +54,8 @@ export default function EquipeScannerPage() {
       const s = JSON.parse(raw) as EquipeSession;
       setSession(s);
       sessionRef.current = s;
-      // Démarrer la caméra automatiquement
-      startCamera();
     } catch { router.replace("/auth/connexion"); }
-  }, [router]); // eslint-disable-line
+  }, [router]);
 
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(animRef.current);
