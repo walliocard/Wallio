@@ -9,7 +9,7 @@ import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
 
 type TopClient = { prenom: string; nom: string; tampons: number; id: string };
-type MembreEquipe = { id: string; prenom: string; statut: string };
+type MembreEquipe = { id: string; prenom: string; statut: string; scans_today?: number; scans_total?: number; scans_today_date?: string };
 
 type Stats = {
   total: number;
@@ -51,7 +51,10 @@ export default function AccueilPage() {
   useEffect(() => {
     if (!user || !(marchand as Record<string,unknown>)?.equipe_actif) return;
     getDocs(collection(db, "marchands", user.uid, "membres")).then(snap => {
-      setMembres(snap.docs.map(d => ({ id: d.id, prenom: d.data().prenom, statut: d.data().statut })));
+      setMembres(snap.docs.map(d => {
+        const data = d.data();
+        return { id: d.id, prenom: data.prenom, statut: data.statut, scans_today: data.scans_today, scans_total: data.scans_total, scans_today_date: data.scans_today_date };
+      }));
     }).catch(() => {});
   }, [user, marchand]);
 
@@ -412,45 +415,50 @@ export default function AccueilPage() {
       </div>
 
       {/* Carte Équipe — visible si equipe_actif */}
-      {!!(marchand as Record<string,unknown>)?.equipe_actif && (
-        <Link href="/dashboard/reglages"
-          className="flex items-center justify-between p-4 rounded-2xl mt-4 transition-all hover:opacity-80"
-          style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(139,92,246,0.12)" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
+      {!!(marchand as Record<string,unknown>)?.equipe_actif && membres.length > 0 && (() => {
+        const today = new Date().toISOString().slice(0, 10);
+        const actifs = membres.filter(m => m.statut === "actif");
+        const totalAujourdhui = actifs.reduce((sum, m) => sum + (m.scans_today_date === today ? (m.scans_today ?? 0) : 0), 0);
+        const maxScans = Math.max(...actifs.map(m => m.scans_today_date === today ? (m.scans_today ?? 0) : 0), 1);
+        return (
+          <div className="rounded-2xl p-5 mt-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>Équipe — aujourd&apos;hui</p>
+                <p className="text-[13px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>
+                  {totalAujourdhui} tampon{totalAujourdhui > 1 ? "s" : ""} ajouté{totalAujourdhui > 1 ? "s" : ""} au total
+                </p>
+              </div>
+              <Link href="/dashboard/reglages" className="text-[12px] font-medium" style={{ color: "var(--accent)" }}>
+                Gérer →
+              </Link>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>Équipe</p>
-              {membres.length === 0 ? (
-                <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>Aucun membre</p>
-              ) : (
-                <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                  {membres.filter(m => m.statut === "actif").map(m => (
-                    <span key={m.id} className="text-[11px] font-semibold px-2 py-0.5 rounded-lg"
-                      style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
-                      {m.prenom}
-                    </span>
-                  ))}
-                  {membres.filter(m => m.statut !== "actif").map(m => (
-                    <span key={m.id} className="text-[11px] font-semibold px-2 py-0.5 rounded-lg"
-                      style={{ background: "rgba(0,0,0,0.05)", color: "var(--fg-tertiary)" }}>
-                      {m.prenom}
-                    </span>
-                  ))}
-                </div>
-              )}
+            <div className="space-y-3">
+              {actifs.map(m => {
+                const scans = m.scans_today_date === today ? (m.scans_today ?? 0) : 0;
+                const pct = maxScans > 0 ? (scans / maxScans) * 100 : 0;
+                return (
+                  <div key={m.id} className="flex items-center gap-3">
+                    <p className="text-[14px] font-medium w-20 flex-shrink-0 truncate" style={{ color: "var(--fg)" }}>{m.prenom}</p>
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                      <div className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, background: "linear-gradient(90deg,#007AFF,#8B5CF6)" }} />
+                    </div>
+                    <p className="text-[13px] font-semibold w-6 text-right flex-shrink-0" style={{ color: scans > 0 ? "var(--fg)" : "var(--fg-tertiary)" }}>
+                      {scans}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
+            {membres.some(m => m.statut !== "actif") && (
+              <p className="text-[11px] mt-3" style={{ color: "var(--fg-tertiary)" }}>
+                {membres.filter(m => m.statut !== "actif").map(m => m.prenom).join(", ")} — désactivé{membres.filter(m => m.statut !== "actif").length > 1 ? "s" : ""}
+              </p>
+            )}
           </div>
-          <Icons.ChevronRight />
-        </Link>
-      )}
+        );
+      })()}
     </div>
   );
 }

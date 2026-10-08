@@ -1,5 +1,7 @@
 import { verifierTokenEquipe, getTokenFromRequest } from "@/lib/equipe";
 import { getMarchandById, getClientByWalletId, ajouterTampon } from "@/lib/loyalty";
+import { adminDb } from "@/lib/admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 export async function POST(req: Request) {
   try {
@@ -22,6 +24,19 @@ export async function POST(req: Request) {
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       fetch(`${process.env.NEXT_PUBLIC_APP_URL || "https://app.walliocard.com"}/api/apple-wallet/push-update`, opts).catch(() => {});
       fetch(`${process.env.NEXT_PUBLIC_APP_URL || "https://app.walliocard.com"}/api/google-wallet/push-update`, opts).catch(() => {});
+
+      // Mise à jour compteurs du membre (fire-and-forget)
+      const today = new Date().toISOString().slice(0, 10);
+      const membreRef = adminDb().collection("marchands").doc(session.marchand_id).collection("membres").doc(session.membre_id);
+      membreRef.get().then(doc => {
+        const data = doc.data() || {};
+        const isToday = data.scans_today_date === today;
+        membreRef.update({
+          scans_today: isToday ? FieldValue.increment(1) : 1,
+          scans_today_date: today,
+          scans_total: FieldValue.increment(1),
+        }).catch(() => {});
+      }).catch(() => {});
     }
 
     return Response.json({ ...result, clientId: client.id, telephone: client.telephone, prenom: client.prenom });
