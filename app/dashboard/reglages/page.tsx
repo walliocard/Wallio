@@ -566,6 +566,7 @@ function SectionEquipe() {
   const [newPin, setNewPin] = useState("");
   const [adding, setAdding] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [permSaved, setPermSaved] = useState(false);
   const [resetTarget, setResetTarget] = useState<string | null>(null);
   const [resetPin, setResetPin] = useState("");
 
@@ -604,6 +605,8 @@ function SectionEquipe() {
     const next = { ...permissions, [key]: val };
     setPermissions(next);
     await saveMarchandFields(user!, { equipe_permissions: next });
+    setPermSaved(true);
+    setTimeout(() => setPermSaved(false), 2000);
   }
 
   function copyCode() {
@@ -628,7 +631,10 @@ function SectionEquipe() {
 
       {/* Permissions */}
       <div className="mb-4">
-        <p className="text-[12px] font-medium mb-3" style={{ color: "var(--fg-secondary)" }}>Accès de l&apos;équipe</p>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[12px] font-medium" style={{ color: "var(--fg-secondary)" }}>Accès de l&apos;équipe</p>
+          {permSaved && <p className="text-[11px] font-semibold" style={{ color: "#34C759" }}>Enregistré</p>}
+        </div>
         <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
           {/* Scanner — toujours actif */}
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>

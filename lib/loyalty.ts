@@ -184,7 +184,8 @@ export async function ajouterTampon(
   const m = marchand as Record<string, unknown>;
   const doubleFin = m.double_tampons_fin as string | undefined;
   const doubleActif = doubleFin ? new Date(doubleFin) > new Date() : false;
-  const increment = (doubleActif ? 2 : 1) + (birthdayBonus ? 1 : 0);
+  // Anniversaire = double tampon (x2). Si promo double déjà active, on reste à x2 (pas x4).
+  const increment = (doubleActif || birthdayBonus) ? 2 : 1;
 
   // Flags à nettoyer : birthday_bonus consommé + relance_pending réinitialisé
   const extraUpdate: Record<string, unknown> = {};
