@@ -20,7 +20,6 @@ interface TamponResult {
   nom_recompense?: string;
   secondes_restantes?: number;
   clientId?: string;
-  palier_index?: number;
   double?: boolean;
 }
 
@@ -72,6 +71,7 @@ export default function EquipeScannerPage() {
       stopCamera();
       const match = code.data.match(/\/client\/([a-f0-9-]{36})/);
       if (match) handleTampon(match[1]);
+      else setResult({ type: "not_found" });
     } else {
       animRef.current = requestAnimationFrame(scan);
     }
@@ -79,14 +79,14 @@ export default function EquipeScannerPage() {
 
   async function startCamera() {
     setResult(null);
-    setScanning(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
       streamRef.current = stream;
       if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
+      setScanning(true);
       animRef.current = requestAnimationFrame(scan);
     } catch {
-      setScanning(false);
+      setResult({ type: "not_found" });
     }
   }
 
@@ -117,15 +117,13 @@ export default function EquipeScannerPage() {
         headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
         body: JSON.stringify({ clientId: result.clientId }),
       });
-      setResult(prev => prev ? { ...prev, type: "ok", tampons: 0 } : prev);
+      setResult(prev => prev ? { ...prev, type: "ok", tampons: 0, nom_recompense: undefined } : prev);
     } catch { /* silent */ }
     finally { setValidating(false); }
   }
 
   async function handleLogout() {
-    if (session) {
-      fetch("/api/equipe/session", { method: "DELETE", headers: { "x-equipe-token": session.token } }).catch(() => {});
-    }
+    if (session) fetch("/api/equipe/session", { method: "DELETE", headers: { "x-equipe-token": session.token } }).catch(() => {});
     localStorage.removeItem("equipe_session");
     router.replace("/auth/connexion");
   }
@@ -134,109 +132,142 @@ export default function EquipeScannerPage() {
 
   if (!session) return null;
 
-  const ACCENT = "#007AFF";
-  const BG = "#F5F5F7";
-
   return (
-    <main className="min-h-screen flex flex-col" style={{ background: BG }}>
+    <main style={{
+      minHeight: "100dvh",
+      display: "flex",
+      flexDirection: "column",
+      background: "#F0F4FF",
+      paddingTop: "env(safe-area-inset-top)",
+      paddingBottom: "env(safe-area-inset-bottom)",
+    }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-12 pb-4">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 12px" }}>
         <div>
-          <p className="text-[13px]" style={{ color: "#6E6E73" }}>{session.marchandNom}</p>
-          <p className="text-[20px] font-semibold" style={{ color: "#1D1D1F" }}>Bonjour, {session.prenom}</p>
+          <p style={{ fontSize: 12, color: "#6E6E73", marginBottom: 1 }}>{session.marchandNom}</p>
+          <p style={{ fontSize: 19, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.3 }}>Bonjour, {session.prenom}</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => { setSession(null); setTimeout(() => { const raw = localStorage.getItem("equipe_session"); if (raw) { try { const s = JSON.parse(raw); s.prenom = ""; localStorage.setItem("equipe_session", JSON.stringify(s)); } catch {} } router.replace("/auth/connexion"); }, 0); }}
-            className="px-3 py-2 rounded-xl text-[12px] font-medium" style={{ background: "rgba(0,0,0,0.06)", color: "#6E6E73" }}>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => router.replace("/auth/connexion")}
+            style={{ padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600, background: "rgba(0,0,0,0.06)", color: "#6E6E73", border: "none", cursor: "pointer" }}>
             Changer
           </button>
           <button onClick={handleLogout}
-            className="px-3 py-2 rounded-xl text-[12px] font-medium" style={{ background: "rgba(255,59,48,0.1)", color: "#FF3B30" }}>
+            style={{ padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600, background: "rgba(255,59,48,0.1)", color: "#FF3B30", border: "none", cursor: "pointer" }}>
             Quitter
           </button>
         </div>
       </div>
 
-      {/* Contenu principal */}
-      <div className="flex-1 flex flex-col px-5 pb-8 gap-4">
+      {/* Zone principale */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 16px 16px", gap: 12 }}>
 
-        {/* Zone scanner / résultat */}
+        {/* ── Idle ── */}
         {!scanning && !loading && !result && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-6">
-            <div className="w-24 h-24 rounded-3xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 12px 40px rgba(91,124,250,0.35)" }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4v-4m-4 0h-3v4"/>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}>
+            <div style={{
+              width: 96, height: 96, borderRadius: 28,
+              background: "linear-gradient(135deg,#007AFF,#8B5CF6)",
+              boxShadow: "0 16px 48px rgba(91,124,250,0.4)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3m0 4h4v-4m-4 0h-3v4"/>
               </svg>
             </div>
-            <p className="text-[17px] font-semibold text-center" style={{ color: "#1D1D1F" }}>Scanner le QR code du client</p>
-            <button onClick={startCamera}
-              className="w-full max-w-[280px] py-4 rounded-2xl text-[16px] font-semibold text-white"
-              style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.35)" }}>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontSize: 20, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.3, marginBottom: 6 }}>Prêt à scanner</p>
+              <p style={{ fontSize: 14, color: "#6E6E73" }}>Demandez au client d&apos;afficher son QR code</p>
+            </div>
+            <button onClick={startCamera} style={{
+              width: "100%", maxWidth: 320, padding: "18px 0",
+              borderRadius: 20, fontSize: 17, fontWeight: 700, color: "white", border: "none", cursor: "pointer",
+              background: "linear-gradient(135deg,#007AFF,#8B5CF6)",
+              boxShadow: "0 8px 28px rgba(91,124,250,0.4)",
+              letterSpacing: -0.2,
+            }}>
               Ouvrir le scanner
             </button>
           </div>
         )}
 
-        {/* Caméra */}
+        {/* ── Caméra ── */}
         {scanning && (
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: "1", background: "#000" }}>
-              <video ref={videoRef} className="w-full h-full object-cover" playsInline muted />
-              <canvas ref={canvasRef} className="hidden" />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-52 h-52 rounded-2xl" style={{ border: "2px solid rgba(255,255,255,0.7)", boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ flex: 1, position: "relative", borderRadius: 24, overflow: "hidden", background: "#000", minHeight: 340 }}>
+              <video ref={videoRef} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} playsInline muted />
+              <canvas ref={canvasRef} style={{ display: "none" }} />
+              {/* Overlay */}
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <div style={{ width: 220, height: 220, borderRadius: 20, border: "2.5px solid white", boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)" }} />
+              </div>
+              {/* Label */}
+              <div style={{ position: "absolute", bottom: 24, left: 0, right: 0, textAlign: "center" }}>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>Pointez vers le QR code du client</p>
               </div>
             </div>
-            <button onClick={stopCamera}
-              className="w-full py-3.5 rounded-2xl text-[15px] font-medium"
-              style={{ background: "rgba(0,0,0,0.06)", color: "#6E6E73" }}>
+            <button onClick={stopCamera} style={{
+              padding: "16px 0", borderRadius: 18, fontSize: 16, fontWeight: 600,
+              background: "rgba(255,255,255,0.9)", color: "#6E6E73", border: "none", cursor: "pointer",
+              backdropFilter: "blur(12px)",
+            }}>
               Annuler
             </button>
           </div>
         )}
 
-        {/* Loading */}
+        {/* ── Loading ── */}
         {loading && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: ACCENT, borderTopColor: "transparent" }} />
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 44, height: 44, borderRadius: "50%", border: "3px solid rgba(0,122,255,0.2)", borderTopColor: "#007AFF", animation: "spin 0.7s linear infinite" }} />
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           </div>
         )}
 
-        {/* Résultat */}
+        {/* ── Résultat ── */}
         {!loading && result && (
-          <div className="flex-1 flex flex-col">
-            <div className="rounded-[28px] p-6 text-center" style={{ background: "white", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{
+              flex: 1, borderRadius: 28, padding: "32px 24px", textAlign: "center",
+              background: "white", border: "1px solid rgba(0,0,0,0.06)",
+              boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+            }}>
 
               {result.type === "ok" && (
                 <>
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.3)" }}>
-                    <span className="text-[22px] font-bold text-white">+{result.double ? "2" : "1"}</span>
+                  <div style={{ width: 72, height: 72, borderRadius: 22, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 10px 30px rgba(91,124,250,0.35)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 26, fontWeight: 800, color: "white" }}>+{result.double ? "2" : "1"}</span>
                   </div>
-                  <p className="text-[22px] font-semibold mb-1" style={{ color: "#1D1D1F" }}>Tampon ajouté</p>
-                  <p className="text-[15px] mb-5" style={{ color: "#6E6E73" }}>Bonjour {result.prenom}</p>
-                  <div className="h-2 rounded-full overflow-hidden mb-2" style={{ background: "#E5E5EA" }}>
-                    <div className="h-full rounded-full" style={{ width: `${Math.min(((result.tampons ?? 0) / (result.objectif ?? 1)) * 100, 100)}%`, background: "linear-gradient(90deg,#007AFF,#8B5CF6)" }} />
+                  <p style={{ fontSize: 26, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.4 }}>Tampon ajouté</p>
+                  <p style={{ fontSize: 16, color: "#6E6E73" }}>Bonjour {result.prenom}</p>
+                  <div style={{ width: "100%", marginTop: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#AEAEB2", marginBottom: 8 }}>
+                      <span>{result.tampons} tampon{(result.tampons ?? 0) > 1 ? "s" : ""}</span>
+                      <span>Objectif {result.objectif}</span>
+                    </div>
+                    <div style={{ height: 8, borderRadius: 99, background: "#E5E5EA", overflow: "hidden" }}>
+                      <div style={{ height: "100%", borderRadius: 99, background: "linear-gradient(90deg,#007AFF,#8B5CF6)", width: `${Math.min(((result.tampons ?? 0) / (result.objectif ?? 1)) * 100, 100)}%`, transition: "width 0.6s ease" }} />
+                    </div>
                   </div>
-                  <p className="text-[13px]" style={{ color: "#AEAEB2" }}>{result.tampons} / {result.objectif} tampons</p>
                 </>
               )}
 
               {result.type === "recompense" && (
                 <>
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg,#34C759,#30D158)", boxShadow: "0 8px 24px rgba(52,199,89,0.3)" }}>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <div style={{ width: 72, height: 72, borderRadius: 22, background: "linear-gradient(135deg,#34C759,#30D158)", boxShadow: "0 10px 30px rgba(52,199,89,0.35)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                   </div>
-                  <p className="text-[22px] font-semibold mb-1" style={{ color: "#1D1D1F" }}>Récompense !</p>
-                  <p className="text-[15px] mb-2" style={{ color: "#6E6E73" }}>Bonjour {result.prenom}</p>
-                  <p className="text-[16px] font-semibold mb-5" style={{ color: "#34C759" }}>{result.nom_recompense}</p>
-                  <button onClick={handleValiderRecompense} disabled={validating}
-                    className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
-                    style={{ background: "#34C759", opacity: validating ? 0.7 : 1 }}>
+                  <p style={{ fontSize: 26, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.4 }}>Récompense !</p>
+                  <p style={{ fontSize: 16, color: "#6E6E73" }}>Bonjour {result.prenom}</p>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: "#34C759", marginTop: 4 }}>{result.nom_recompense}</p>
+                  <button onClick={handleValiderRecompense} disabled={validating} style={{
+                    marginTop: 20, width: "100%", padding: "18px 0",
+                    borderRadius: 18, fontSize: 16, fontWeight: 700, color: "white", border: "none", cursor: "pointer",
+                    background: "#34C759", opacity: validating ? 0.7 : 1,
+                  }}>
                     {validating ? "Validation…" : "Valider la récompense"}
                   </button>
                 </>
@@ -244,16 +275,14 @@ export default function EquipeScannerPage() {
 
               {result.type === "anti_doublon" && (
                 <>
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-                    style={{ background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.28)" }}>
-                    <span className="text-[28px] font-bold" style={{ color: "#FF9F0A" }}>!</span>
+                  <div style={{ width: 72, height: 72, borderRadius: 22, background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 32, fontWeight: 800, color: "#FF9F0A" }}>!</span>
                   </div>
-                  <p className="text-[22px] font-semibold mb-1" style={{ color: "#1D1D1F" }}>Déjà enregistré</p>
-                  <p className="text-[15px] mb-4" style={{ color: "#6E6E73" }}>Bonjour {result.prenom}</p>
+                  <p style={{ fontSize: 26, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.4 }}>Déjà enregistré</p>
+                  <p style={{ fontSize: 16, color: "#6E6E73" }}>Bonjour {result.prenom}</p>
                   {(result.secondes_restantes ?? 0) > 0 && (
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
-                      style={{ background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.22)" }}>
-                      <span className="text-[13px] font-medium" style={{ color: "#FF9F0A" }}>Prochain tampon dans {formatTemps(result.secondes_restantes ?? 0)}</span>
+                    <div style={{ marginTop: 12, padding: "10px 20px", borderRadius: 14, background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.22)" }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: "#FF9F0A" }}>Prochain tampon dans {formatTemps(result.secondes_restantes ?? 0)}</p>
                     </div>
                   )}
                 </>
@@ -261,19 +290,20 @@ export default function EquipeScannerPage() {
 
               {result.type === "not_found" && (
                 <>
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-                    style={{ background: "rgba(255,59,48,0.1)", border: "1.5px solid rgba(255,59,48,0.2)" }}>
-                    <span className="text-[24px] font-bold" style={{ color: "#FF3B30" }}>!</span>
+                  <div style={{ width: 72, height: 72, borderRadius: 22, background: "rgba(255,59,48,0.10)", border: "1.5px solid rgba(255,59,48,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 32, fontWeight: 800, color: "#FF3B30" }}>!</span>
                   </div>
-                  <p className="text-[22px] font-semibold mb-1" style={{ color: "#1D1D1F" }}>Client introuvable</p>
-                  <p className="text-[15px]" style={{ color: "#6E6E73" }}>Ce QR code n&apos;est pas reconnu</p>
+                  <p style={{ fontSize: 26, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.4 }}>QR non reconnu</p>
+                  <p style={{ fontSize: 16, color: "#6E6E73" }}>Vérifiez que le client affiche bien son QR Wallio</p>
                 </>
               )}
             </div>
 
-            <button onClick={() => { setResult(null); startCamera(); }}
-              className="mt-4 w-full py-4 rounded-2xl text-[15px] font-semibold text-white"
-              style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)" }}>
+            <button onClick={startCamera} style={{
+              padding: "18px 0", borderRadius: 20, fontSize: 16, fontWeight: 700, color: "white", border: "none", cursor: "pointer",
+              background: "linear-gradient(135deg,#007AFF,#8B5CF6)",
+              boxShadow: "0 8px 24px rgba(91,124,250,0.35)",
+            }}>
               Scanner un autre client
             </button>
           </div>
