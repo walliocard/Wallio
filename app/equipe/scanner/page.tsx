@@ -68,11 +68,13 @@ export default function EquipeScannerPage() {
     canvas.width = video.videoWidth;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+    const code = jsQR(imageData.data, canvas.width, canvas.height);
     if (code?.data) {
+      const walletId =
+        code.data.match(/^WALLIO:([a-f0-9-]+)/)?.[1] ??
+        code.data.match(/\/client\/([a-f0-9-]+)/)?.[1];
       stopCamera();
-      const match = code.data.match(/\/client\/([a-f0-9-]{36})/);
-      if (match) handleTampon(match[1]);
+      if (walletId) handleTampon(walletId);
       else setResult({ type: "not_found" });
     } else {
       animRef.current = requestAnimationFrame(scan);
