@@ -9,20 +9,21 @@ export async function GET(req: Request) {
     const snap = await adminDb()
       .collection("clients")
       .where("marchand_id", "==", session.marchand_id)
-      .orderBy("tampons", "desc")
       .get();
 
-    const clients = snap.docs.map(d => {
-      const data = d.data();
-      return {
-        id: d.id,
-        prenom: data.prenom,
-        nom: data.nom,
-        telephone: data.telephone,
-        tampons: data.tampons || 0,
-        derniere_visite: data.derniere_visite ? { seconds: data.derniere_visite.seconds } : null,
-      };
-    });
+    const clients = snap.docs
+      .map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          prenom: data.prenom,
+          nom: data.nom,
+          telephone: data.telephone,
+          tampons: data.tampons || 0,
+          derniere_visite: data.derniere_visite ? { seconds: data.derniere_visite.seconds } : null,
+        };
+      })
+      .sort((a, b) => b.tampons - a.tampons);
 
     return Response.json({ clients });
   } catch (e) {
