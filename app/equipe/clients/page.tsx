@@ -13,6 +13,7 @@ interface EquipeSession {
 
 interface Client {
   id: string;
+  wallet_id: string;
   prenom: string;
   nom: string;
   telephone: string;
@@ -75,7 +76,7 @@ export default function EquipeClientsPage() {
       const res = await fetch("/api/equipe/tampon", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
-        body: JSON.stringify({ walletId: client.id, manual: true }),
+        body: JSON.stringify({ walletId: client.wallet_id, manual: true }),
       });
       const data = await res.json();
       setResults(prev => ({ ...prev, [client.id]: data }));

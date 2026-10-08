@@ -16,6 +16,7 @@ export async function GET(req: Request) {
         const data = d.data();
         return {
           id: d.id,
+          wallet_id: data.wallet_id as string,
           prenom: data.prenom,
           nom: data.nom,
           telephone: data.telephone,

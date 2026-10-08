@@ -188,6 +188,13 @@ export default function EquipeScannerPage() {
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={async () => {
             if (session) {
+              try {
+                const res = await fetch("/api/equipe/session-info", { headers: { "x-equipe-token": session.token } });
+                if (res.ok) {
+                  const data = await res.json();
+                  localStorage.setItem("equipe_etablissement", JSON.stringify(data));
+                }
+              } catch { /* silent */ }
               fetch("/api/equipe/session", { method: "DELETE", headers: { "x-equipe-token": session.token } }).catch(() => {});
             }
             localStorage.removeItem("equipe_session");
