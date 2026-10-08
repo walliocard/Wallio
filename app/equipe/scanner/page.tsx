@@ -84,9 +84,16 @@ export default function EquipeScannerPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
       streamRef.current = stream;
-      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
       setScanning(true);
-      animRef.current = requestAnimationFrame(scan);
+      // Le video est dans le DOM — on attend le prochain frame pour assigner
+      requestAnimationFrame(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().then(() => {
+            animRef.current = requestAnimationFrame(scan);
+          }).catch(() => {});
+        }
+      });
     } catch {
       setResult({ type: "not_found" });
     }
@@ -171,6 +178,26 @@ export default function EquipeScannerPage() {
       {/* Zone principale */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "0 16px 16px", gap: 12 }}>
 
+        {/* ── Caméra — toujours dans le DOM pour que videoRef soit disponible ── */}
+        <div style={{ flex: 1, display: scanning ? "flex" : "none", flexDirection: "column", gap: 12 }}>
+          <div style={{ flex: 1, position: "relative", borderRadius: 24, overflow: "hidden", background: "#000", minHeight: 340 }}>
+            <video ref={videoRef} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} playsInline muted />
+            <canvas ref={canvasRef} style={{ display: "none" }} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+              <div style={{ width: 220, height: 220, borderRadius: 20, border: "2.5px solid white", boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)" }} />
+            </div>
+            <div style={{ position: "absolute", bottom: 24, left: 0, right: 0, textAlign: "center" }}>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>Pointez vers le QR code du client</p>
+            </div>
+          </div>
+          <button onClick={stopCamera} style={{
+            padding: "16px 0", borderRadius: 18, fontSize: 16, fontWeight: 600,
+            background: "rgba(255,255,255,0.9)", color: "#6E6E73", border: "none", cursor: "pointer",
+          }}>
+            Annuler
+          </button>
+        </div>
+
         {/* ── Idle ── */}
         {!scanning && !loading && !result && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}>
@@ -194,34 +221,8 @@ export default function EquipeScannerPage() {
               borderRadius: 20, fontSize: 17, fontWeight: 700, color: "white", border: "none", cursor: "pointer",
               background: "linear-gradient(135deg,#007AFF,#8B5CF6)",
               boxShadow: "0 8px 28px rgba(91,124,250,0.4)",
-              letterSpacing: -0.2,
             }}>
               Ouvrir le scanner
-            </button>
-          </div>
-        )}
-
-        {/* ── Caméra ── */}
-        {scanning && (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ flex: 1, position: "relative", borderRadius: 24, overflow: "hidden", background: "#000", minHeight: 340 }}>
-              <video ref={videoRef} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} playsInline muted />
-              <canvas ref={canvasRef} style={{ display: "none" }} />
-              {/* Overlay */}
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                <div style={{ width: 220, height: 220, borderRadius: 20, border: "2.5px solid white", boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)" }} />
-              </div>
-              {/* Label */}
-              <div style={{ position: "absolute", bottom: 24, left: 0, right: 0, textAlign: "center" }}>
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", fontWeight: 500 }}>Pointez vers le QR code du client</p>
-              </div>
-            </div>
-            <button onClick={stopCamera} style={{
-              padding: "16px 0", borderRadius: 18, fontSize: 16, fontWeight: 600,
-              background: "rgba(255,255,255,0.9)", color: "#6E6E73", border: "none", cursor: "pointer",
-              backdropFilter: "blur(12px)",
-            }}>
-              Annuler
             </button>
           </div>
         )}
