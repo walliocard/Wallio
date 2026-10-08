@@ -6,6 +6,12 @@ service cloud.firestore {
       // Toutes les écritures passent par /api/marchand/save (Admin SDK)
       allow write: if false;
     }
+    match /marchands/{marchandId}/membres/{membreId} {
+      // Lecture : marchand authentifié uniquement (dashboard patron)
+      allow read: if request.auth != null && request.auth.uid == marchandId;
+      // Écritures via Admin SDK (/api/equipe/membres)
+      allow write: if false;
+    }
     match /clients/{clientId} {
       // Lecture ouverte : flux NFC sans auth + dashboard marchand
       allow read: if true;
