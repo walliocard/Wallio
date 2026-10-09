@@ -152,52 +152,70 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
         </div>
       </aside>
 
-      {/* ── Bottom nav mobile — style pill Instagram ── */}
-      <nav
-        className="md:hidden fixed z-40 flex items-center"
-        style={{
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 36px)",
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "var(--glass-bg)",
-          backdropFilter: "blur(28px)",
-          WebkitBackdropFilter: "blur(28px)",
-          border: "1px solid var(--border)",
-          borderRadius: 50,
-          padding: "0 10px",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)",
-          gap: 0,
-        }}
-      >
-        {NAV.filter(n => n.mobile).map(({ href, Icon }) => {
-          const isActive = active(pathname, href);
-          const isScanner = href === "/dashboard/scanner";
-          return (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center justify-center transition-all duration-150 active:scale-90 flex-shrink-0"
-              style={isScanner ? {
-                width: 62,
-                height: 54,
-                borderRadius: 18,
-                color: "white",
-                background: "var(--wallio-gradient)",
-                boxShadow: "0 4px 14px rgba(0,122,255,0.35)",
-                margin: "0 4px",
-              } : {
-                width: 58,
-                height: 58,
-                borderRadius: 44,
-                color: isActive ? "var(--accent)" : "var(--fg-tertiary)",
-                background: isActive ? "rgba(0,122,255,0.10)" : "transparent",
-              }}
-            >
-              <Icon size={25} />
-            </Link>
-          );
-        })}
-      </nav>
+      {/* ── Bottom nav mobile ── */}
+      {(() => {
+        const mobileNav = NAV.filter(n => n.mobile);
+        const activeIdx = mobileNav.findIndex(n => active(pathname, n.href));
+        const TAB_W = 58;
+        const TAB_H = 52;
+        return (
+          <nav
+            className="md:hidden fixed z-40 flex items-center"
+            style={{
+              bottom: "calc(env(safe-area-inset-bottom, 0px) + 36px)",
+              left: "50%",
+              transform: "translateX(-50%)",
+              background: "var(--glass-bg)",
+              backdropFilter: "blur(28px)",
+              WebkitBackdropFilter: "blur(28px)",
+              border: "1px solid var(--border)",
+              borderRadius: 50,
+              padding: "6px 10px",
+              boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)",
+              gap: 0,
+              position: "fixed",
+            }}
+          >
+            {/* Indicateur slide */}
+            {activeIdx >= 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 10 + activeIdx * TAB_W,
+                  top: 6,
+                  width: TAB_W,
+                  height: TAB_H,
+                  borderRadius: 14,
+                  background: "rgba(0,122,255,0.12)",
+                  transition: "left 0.28s cubic-bezier(.4,0,.2,1)",
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+            {mobileNav.map(({ href, Icon }) => {
+              const isActive = active(pathname, href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center justify-center flex-shrink-0 active:scale-90"
+                  style={{
+                    width: TAB_W,
+                    height: TAB_H,
+                    borderRadius: 14,
+                    color: isActive ? "var(--accent)" : "var(--fg-tertiary)",
+                    transition: "color 0.25s cubic-bezier(.4,0,.2,1), transform 0.15s",
+                    position: "relative",
+                    zIndex: 1,
+                  }}
+                >
+                  <Icon size={24} />
+                </Link>
+              );
+            })}
+          </nav>
+        );
+      })()}
     </>
   );
 }

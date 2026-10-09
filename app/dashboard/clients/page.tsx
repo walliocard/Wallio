@@ -257,8 +257,16 @@ export default function ClientsPage() {
               >
                 {/* Avatar */}
                 <div
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0"
-                  style={{ background: client.recompense_en_attente ? "linear-gradient(135deg,#34C759,#30D158)" : "var(--accent)" }}
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                  style={{
+                    background: client.recompense_en_attente
+                      ? "linear-gradient(135deg,#34C759,#30D158)"
+                      : "rgba(120,120,128,0.12)",
+                    color: client.recompense_en_attente ? "white" : "var(--fg-secondary)",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                    border: "1px solid rgba(120,120,128,0.18)",
+                  }}
                 >
                   {initiales}
                 </div>
