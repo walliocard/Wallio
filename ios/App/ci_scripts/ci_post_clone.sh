@@ -4,10 +4,9 @@ set -e
 # Install Node.js (not available by default on Xcode Cloud)
 brew install node
 
-# Install npm dependencies (required by Capacitor Podfile)
+# Install npm dependencies
 cd "$CI_PRIMARY_REPOSITORY_PATH"
 npm ci
 
-# Install CocoaPods dependencies
-cd "$CI_PRIMARY_REPOSITORY_PATH/ios/App"
-pod install
+# Sync Capacitor: generates config files + runs pod install
+npx cap sync ios
