@@ -157,7 +157,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
         const mobileNav = NAV.filter(n => n.mobile);
         const activeIdx = mobileNav.findIndex(n => active(pathname, n.href));
         const TAB_W = 58;
-        const TAB_H = 52;
+        const TAB_H = 62;
         return (
           <nav
             className="md:hidden fixed z-40 flex items-center"
@@ -192,13 +192,13 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
                 }}
               />
             )}
-            {mobileNav.map(({ href, Icon }) => {
+            {mobileNav.map(({ href, Icon, label }) => {
               const isActive = active(pathname, href);
               return (
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center justify-center flex-shrink-0 active:scale-90"
+                  className="flex flex-col items-center justify-center flex-shrink-0 active:scale-90 gap-0.5"
                   style={{
                     width: TAB_W,
                     height: TAB_H,
@@ -209,7 +209,10 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
                     zIndex: 1,
                   }}
                 >
-                  <Icon size={24} />
+                  <Icon size={22} />
+                  <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.02em", lineHeight: 1 }}>
+                    {label}
+                  </span>
                 </Link>
               );
             })}

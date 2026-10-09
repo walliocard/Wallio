@@ -184,7 +184,7 @@ function ConnexionInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
+    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[800px] h-[600px] rounded-full opacity-30"
@@ -370,7 +370,7 @@ function ConnexionInner() {
                 </div>
               )}
               <input
-                type="password" inputMode="numeric" maxLength={4} required placeholder="••••"
+                type="password" inputMode="numeric" maxLength={4} required placeholder="••••" autoComplete="one-time-code"
                 value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 className="w-full px-4 py-4 rounded-2xl text-[28px] font-bold text-center tracking-[0.5em] outline-none"
                 style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}

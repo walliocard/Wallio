@@ -103,6 +103,25 @@ html.dashboard-scroll body {
   overflow: hidden;
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+button, a, label, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+input[type="date"] {
+  -webkit-appearance: none;
+}
+
 @media (hover: none) {
   button:active, a[href]:active {
     transform: scale(0.97);

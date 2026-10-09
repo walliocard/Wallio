@@ -185,7 +185,9 @@ export default function EquipeClientsPage() {
                       background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white",
                       border: "none", cursor: "pointer", opacity: stampingId === c.id ? 0.6 : 1,
                     }}>
-                    {stampingId === c.id ? "…" : "+ Tampon"}
+                    {stampingId === c.id
+                      ? <span style={{ display:"flex", alignItems:"center", gap:5 }}><span style={{ width:11, height:11, borderRadius:"50%", border:"2px solid rgba(255,255,255,0.4)", borderTopColor:"white", display:"inline-block", animation:"spin 0.7s linear infinite" }} /><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></span>
+                      : "+ Tampon"}
                   </button>
                 </div>
               </div>

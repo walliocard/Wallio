@@ -25,17 +25,18 @@ export default function ChoisirPage() {
       <div style={{ display:"flex", gap:20, flexWrap:"wrap", justifyContent:"center", maxWidth:680, width:"100%" }}>
 
         {/* Espace Marchand */}
-        <Link href="/auth/connexion" style={{ textDecoration:"none", flex:"1 1 280px" }}>
+        <Link href="/auth/connexion" style={{ textDecoration:"none", flex:"1 1 280px" }}
+          onTouchStart={e => (e.currentTarget as HTMLElement).style.transform="scale(0.97)"}
+          onTouchEnd={e => (e.currentTarget as HTMLElement).style.transform=""}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform=""}>
           <div style={{
             background:"#1D1D1F", borderRadius:24, padding:"36px 32px",
             display:"flex", flexDirection:"column", gap:20,
             boxShadow:"0 8px 32px rgba(0,0,0,0.15)",
-            transition:"transform 0.2s, box-shadow 0.2s",
+            transition:"transform 0.18s ease",
             cursor:"pointer",
-          }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 16px 48px rgba(0,0,0,0.22)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=""; (e.currentTarget as HTMLElement).style.boxShadow="0 8px 32px rgba(0,0,0,0.15)"; }}
-          >
+          }}>
             <div style={{ width:52, height:52, borderRadius:16, background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
                 <rect x="3" y="3" width="7" height="7" rx="1"/>
@@ -56,18 +57,19 @@ export default function ChoisirPage() {
         </Link>
 
         {/* Espace Client */}
-        <Link href="/mes-cartes" style={{ textDecoration:"none", flex:"1 1 280px" }}>
+        <Link href="/mes-cartes" style={{ textDecoration:"none", flex:"1 1 280px" }}
+          onTouchStart={e => (e.currentTarget as HTMLElement).style.transform="scale(0.97)"}
+          onTouchEnd={e => (e.currentTarget as HTMLElement).style.transform=""}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform=""}>
           <div style={{
             background:"white", borderRadius:24, padding:"36px 32px",
             display:"flex", flexDirection:"column", gap:20,
             boxShadow:"0 4px 20px rgba(0,0,0,0.07)",
             border:"0.5px solid rgba(0,0,0,0.08)",
-            transition:"transform 0.2s, box-shadow 0.2s",
+            transition:"transform 0.18s ease",
             cursor:"pointer",
-          }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 36px rgba(0,0,0,0.12)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=""; (e.currentTarget as HTMLElement).style.boxShadow="0 4px 20px rgba(0,0,0,0.07)"; }}
-          >
+          }}>
             <div style={{ width:52, height:52, borderRadius:16, background:"linear-gradient(135deg,rgba(68,114,245,0.12),rgba(138,92,246,0.12))", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round">
                 <rect x="2" y="5" width="20" height="14" rx="3"/>
