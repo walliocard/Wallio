@@ -261,11 +261,8 @@ export default function ClientsPage() {
                   style={{
                     background: client.recompense_en_attente
                       ? "linear-gradient(135deg,#34C759,#30D158)"
-                      : "rgba(120,120,128,0.12)",
-                    color: client.recompense_en_attente ? "white" : "var(--fg-secondary)",
-                    backdropFilter: "blur(8px)",
-                    WebkitBackdropFilter: "blur(8px)",
-                    border: "1px solid rgba(120,120,128,0.18)",
+                      : "#1D1D1F",
+                    color: "white",
                   }}
                 >
                   {initiales}

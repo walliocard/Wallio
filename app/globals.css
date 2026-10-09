@@ -103,6 +103,15 @@ html.dashboard-scroll body {
   overflow: hidden;
 }
 
+@keyframes splash-in {
+  from { opacity: 0; transform: scale(1.15); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.12); }
+}
+
 ::selection {
   background: rgba(0, 122, 255, 0.2);
 }
