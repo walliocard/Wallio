@@ -8,6 +8,7 @@ import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
 import { useLang } from "@/lib/lang-context";
 import WallioLogo from "@/components/WallioLogo";
 import { ToastProvider } from "@/components/Toast";
+import { useRef } from "react";
 
 function SplashScreen({ exiting }: { exiting: boolean }) {
   return (
@@ -47,6 +48,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const [showSplash, setShowSplash] = useState(true);
   const [splashExiting, setSplashExiting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = (marchand as Record<string, unknown>)?.langue as "fr" | "ro" | "es" | undefined;
@@ -104,6 +108,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div style={{ height: "100dvh", overflow: "hidden", background: "var(--bg)" }}>
           <DashboardNav marchand={marchand} />
           <div
+            ref={scrollRef}
             className="md:ml-[72px] lg:ml-[240px]"
             style={{
               height: "100dvh",
@@ -112,7 +117,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               background: "var(--bg)",
               animation: "page-in 0.2s ease",
             } as React.CSSProperties}
+            onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
+            onTouchEnd={e => {
+              const dy = e.changedTouches[0].clientY - touchStartY.current;
+              const atTop = (scrollRef.current?.scrollTop ?? 0) === 0;
+              if (dy > 70 && atTop && !refreshing) {
+                setRefreshing(true);
+                setTimeout(() => { window.location.reload(); }, 300);
+              }
+            }}
           >
+            {refreshing && (
+              <div style={{ display: "flex", justifyContent: "center", paddingTop: 16, paddingBottom: 4 }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid var(--border)", borderTopColor: "var(--accent)", animation: "spin 0.7s linear infinite" }} />
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+              </div>
+            )}
             {children}
           </div>
           <RecompenseAlert marchand={marchand} marchandId={user.uid} />

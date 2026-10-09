@@ -1,13 +1,31 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { collection, onSnapshot, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
+
+function useCountUp(target: number, duration = 700) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (target === 0) { setVal(0); return; }
+    let cur = 0;
+    const step = Math.max(1, Math.floor(target / (duration / 16)));
+    const t = setInterval(() => {
+      cur = Math.min(cur + step, target);
+      setVal(cur);
+      if (cur >= target) clearInterval(t);
+    }, 16);
+    return () => clearInterval(t);
+  }, [target, duration]);
+  return val;
+}
+
+function fmt(n: number) { return n.toLocaleString("fr-FR"); }
 
 type TopClient = { prenom: string; nom: string; tampons: number; id: string };
 type MembreEquipe = { id: string; prenom: string; statut: string; scans_today?: number; scans_total?: number; scans_today_date?: string; scans_manual_today?: number };
@@ -25,6 +43,16 @@ type Stats = {
   nouvelles_semaine: number;   // inscriptions dans les 7 derniers jours
   proches_recompense: number;  // clients à 1-2 tampons du but
 };
+
+function StatCard({ value, label, gradient, color }: { value: number; label: string; gradient?: boolean; color?: string }) {
+  const animated = useCountUp(value);
+  return (
+    <div className="rounded-2xl p-4 flex flex-col justify-between" style={{ background: gradient ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "var(--glass-bg)", border: gradient ? "none" : "1px solid var(--border)", minHeight: 80 }}>
+      <p className="text-[32px] font-bold leading-none" style={{ color: gradient ? "white" : (color || "var(--fg)") }}>{fmt(animated)}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-widest mt-2" style={{ color: gradient ? "rgba(255,255,255,0.7)" : "var(--fg-tertiary)" }}>{label}</p>
+    </div>
+  );
+}
 
 export default function AccueilPage() {
   const { user, marchand, loading } = useAuth();
@@ -165,18 +193,16 @@ export default function AccueilPage() {
           style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
           {m.logo_url
             ? <img src={m.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            : <span className="text-[24px] font-bold" style={{ color: "var(--accent)" }}>
-                {(marchand.nom?.[0] || "?").toUpperCase()}
-              </span>
+            : <span className="text-[24px] font-bold" style={{ color: "var(--accent)" }}>{(marchand.nom?.[0] || "?").toUpperCase()}</span>
           }
         </div>
         <div>
-          <h1 className="text-[22px] lg:text-[28px] font-bold tracking-[-0.8px] leading-none" style={{ color: "var(--fg)" }}>
-            {marchand.nom}
-          </h1>
-          <p className="text-[13px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+          <p className="text-[13px] font-medium" style={{ color: "var(--fg-tertiary)" }}>
             {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
+          <h1 className="text-[22px] lg:text-[26px] font-bold tracking-[-0.6px] leading-tight" style={{ color: "var(--fg)" }}>
+            Bonjour, {marchand.nom}
+          </h1>
         </div>
       </div>
 
@@ -225,20 +251,8 @@ export default function AccueilPage() {
       {/* Stats grid — 2 col mobile, 5 col desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         {STAT_CARDS.map((s, i) => (
-          <div key={s.label}
-            className={`rounded-[20px] p-4 lg:p-5${i === STAT_CARDS.length - 1 && STAT_CARDS.length % 2 !== 0 ? " col-span-2 lg:col-span-1" : ""}`}
-            style={{
-              background: s.gradient ? "var(--wallio-gradient)" : "var(--glass-bg)",
-              boxShadow: s.gradient ? "0 4px 20px rgba(0,122,255,0.22)" : "var(--shadow-sm)",
-            }}>
-            <p className="text-[26px] lg:text-[38px] font-bold tracking-tight leading-none mb-1.5"
-              style={{ color: s.gradient ? "white" : s.color }}>
-              {s.value}
-            </p>
-            <p className="text-[10px] font-semibold uppercase tracking-wider"
-              style={{ color: s.gradient ? "rgba(255,255,255,0.75)" : "var(--fg-tertiary)" }}>
-              {s.label}
-            </p>
+          <div key={s.label} className={i === STAT_CARDS.length - 1 && STAT_CARDS.length % 2 !== 0 ? "col-span-2 lg:col-span-1" : ""}>
+            <StatCard value={s.value} label={s.label} gradient={s.gradient} color={s.color} />
           </div>
         ))}
       </div>

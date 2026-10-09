@@ -4,14 +4,24 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
-import { getClientByTelephone, type Client } from "@/lib/loyalty";
+import { getClientByTelephone, formatTemps, type Client } from "@/lib/loyalty";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import Link from "next/link";
 import jsQR from "jsqr";
 import { useLang } from "@/lib/lang-context";
 
 type Tab = "qr" | "telephone" | "nom";
+interface TamponResult {
+  type: "ok" | "recompense" | "anti_doublon" | "not_found";
+  prenom?: string; tampons?: number; objectif?: number;
+  nom_recompense?: string; prochain_recompense?: string;
+  secondes_restantes?: number; clientId?: string; walletId?: string;
+  double?: boolean; birthday?: boolean;
+  palier_index?: number; mode_recompense?: string;
+  paliers_valides?: boolean[]; total_paliers?: number;
+}
 
 export default function ScannerPage() {
   const { user } = useAuth();
@@ -24,7 +34,9 @@ export default function ScannerPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const [scanning, setScanning] = useState(false);
-  const [detected, setDetected] = useState<string | null>(null);
+  const [result, setResult] = useState<TamponResult | null>(null);
+  const [loadingTampon, setLoadingTampon] = useState(false);
+  const [validating, setValidating] = useState(false);
 
   // Téléphone
   const [phone, setPhone] = useState("");
@@ -55,13 +67,11 @@ export default function ScannerPage() {
         code.data.match(/^WALLIO:([a-f0-9-]+)/)?.[1] ??
         code.data.match(/\/client\/([a-f0-9-]+)/)?.[1];
       if (walletId) {
-      if (navigator.vibrate) navigator.vibrate(50);
-      setDetected(walletId);
-      stopCamera();
-      // Auto-redirect après 1s sur mobile
-      setTimeout(() => router.push(`/client/${walletId}`), 1000);
-      return;
-    }
+        if (navigator.vibrate) navigator.vibrate(50);
+        stopCamera();
+        handleTampon(walletId);
+        return;
+      }
     }
     animRef.current = requestAnimationFrame(scan);
   }, []);
@@ -91,6 +101,43 @@ export default function ScannerPage() {
 
   useEffect(() => () => { cancelAnimationFrame(animRef.current); stopCamera(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  async function handleTampon(walletId: string, forceOverride = false) {
+    if (!auth.currentUser) return;
+    setLoadingTampon(true); setResult(null);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/dashboard/tampon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ walletId, forceOverride }),
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch { setResult({ type: "not_found" }); }
+    finally { setLoadingTampon(false); }
+  }
+
+  async function handleValiderRecompense() {
+    if (!result?.clientId || !auth.currentUser) return;
+    setValidating(true);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const isProgressif = result.mode_recompense === "progressif" && result.palier_index !== undefined;
+      await fetch("/api/equipe/valider-recompense", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+          clientId: result.clientId, mode: result.mode_recompense || "cyclique",
+          palierIndex: isProgressif ? result.palier_index : undefined,
+          paliersValides: isProgressif ? (result.paliers_valides || []) : undefined,
+          totalPaliers: isProgressif ? result.total_paliers : undefined,
+        }),
+      });
+      setResult(prev => prev ? { ...prev, type: "ok", tampons: 0, nom_recompense: undefined } : prev);
+    } catch { /**/ }
+    finally { setValidating(false); }
+  }
+
   async function rechercherParTelephone() {
     if (!user || !phone.trim()) return;
     setSearching(true);
@@ -114,27 +161,6 @@ export default function ScannerPage() {
     setSearchingNom(false);
   }
 
-  // QR détecté
-  if (detected) return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-44 md:pb-6 text-center" style={{ animation: "page-in 0.25s ease" }}>
-      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
-        style={{ background: "rgba(52,199,89,0.12)", color: "#34C759", animation: "splash-in 0.35s cubic-bezier(.4,0,.2,1)" }}>
-        <Icons.Check size={36} />
-      </div>
-      <h2 className="text-[22px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>{t.scan_success}</h2>
-      <p className="text-[14px] mb-8" style={{ color: "var(--fg-secondary)" }}>QR code reconnu</p>
-      <Link
-        href={`/client/${detected}`}
-        className="w-full max-w-xs py-4 rounded-2xl text-center text-white font-semibold text-[15px] block"
-        style={{ background: "var(--accent)", boxShadow: "0 4px 20px rgba(0,122,255,0.3)" }}
-      >
-        {t.scan_view_profile}
-      </Link>
-      <button onClick={() => setDetected(null)} className="mt-4 text-[14px] px-4 py-2" style={{ color: "var(--fg-tertiary)" }}>
-        {t.scan_again}
-      </button>
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex flex-col pb-44 md:pb-8">
@@ -182,17 +208,19 @@ export default function ScannerPage() {
                 <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
                 <canvas ref={canvasRef} className="hidden" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative w-48 h-48 md:w-52 md:h-52">
+                  <div className="relative w-48 h-48 md:w-52 md:h-52" style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }}>
                     {[
                       "top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl",
                       "top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl",
                       "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl",
                       "bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl",
                     ].map((cls, i) => (
-                      <div key={i} className={`absolute w-8 h-8 ${cls}`} style={{ borderColor: "white", opacity: 0.8 }} />
+                      <div key={i} className={`absolute w-8 h-8 ${cls}`}
+                        style={{ borderColor: "white", animation: `qr-pulse 1.8s ease-in-out ${i * 0.15}s infinite` }} />
                     ))}
                   </div>
                 </div>
+                <style>{`@keyframes qr-pulse{0%,100%{opacity:.7}50%{opacity:1}}`}</style>
                 <button
                   onClick={stopCamera}
                   className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
@@ -202,8 +230,64 @@ export default function ScannerPage() {
                 </button>
               </div>
 
+              {/* Loading tampon */}
+              {loadingTampon && (
+                <div className="rounded-3xl flex items-center justify-center h-[300px]" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                  <div className="w-10 h-10 rounded-full border-2 animate-spin" style={{ borderColor: "var(--border)", borderTopColor: "var(--accent)" }} />
+                </div>
+              )}
+
+              {/* Résultat */}
+              {!loadingTampon && result && (
+                <div className="rounded-3xl p-6 flex flex-col items-center text-center gap-3" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", animation: "page-in 0.25s ease" }}>
+                  {result.type === "ok" && (<>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(0,122,255,0.10)" }}>
+                      <span className="text-[22px] font-black" style={{ color: "var(--accent)" }}>+{result.double || result.birthday ? 2 : 1}</span>
+                    </div>
+                    <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Bonjour, {result.prenom}</p>
+                    <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>{result.tampons} / {result.objectif} tampons</p>
+                    <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                      <div className="h-full rounded-full" style={{ width: `${Math.min(((result.tampons ?? 0) / (result.objectif ?? 1)) * 100, 100)}%`, background: "var(--accent)", transition: "width 0.6s ease" }} />
+                    </div>
+                    <Link href={`/client/${result.walletId}`} className="text-[13px] font-medium mt-1" style={{ color: "var(--accent)" }}>Voir le profil</Link>
+                  </>)}
+                  {result.type === "recompense" && (<>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(52,199,89,0.10)", color: "#34C759" }}>
+                      <Icons.Check size={28} />
+                    </div>
+                    <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Récompense — {result.prenom}</p>
+                    <p className="text-[15px] font-semibold" style={{ color: "#34C759" }}>{result.nom_recompense}</p>
+                    <button onClick={handleValiderRecompense} disabled={validating} className="w-full py-3 rounded-2xl font-semibold text-white mt-1" style={{ background: "#34C759" }}>
+                      {validating ? "Validation…" : "Valider la récompense"}
+                    </button>
+                    <Link href={`/client/${result.walletId}`} className="text-[13px] font-medium" style={{ color: "var(--accent)" }}>Voir le profil</Link>
+                  </>)}
+                  {result.type === "anti_doublon" && (<>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(255,159,10,0.10)" }}>
+                      <span className="text-[26px] font-black" style={{ color: "#FF9F0A" }}>!</span>
+                    </div>
+                    <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Déjà enregistré — {result.prenom}</p>
+                    {(result.secondes_restantes ?? 0) > 0 && (
+                      <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>Prochain tampon dans {formatTemps(result.secondes_restantes ?? 0)}</p>
+                    )}
+                    <button onClick={() => result.walletId && handleTampon(result.walletId, true)} className="w-full py-3 rounded-2xl font-semibold mt-1" style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30", border: "1px solid rgba(255,59,48,0.2)" }}>
+                      Forcer quand même
+                    </button>
+                  </>)}
+                  {result.type === "not_found" && (<>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30" }}>
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </div>
+                    <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Client non reconnu</p>
+                  </>)}
+                  <button onClick={() => { setResult(null); startCamera(); }} className="w-full py-3 rounded-2xl font-semibold text-white mt-1" style={{ background: "var(--accent)" }}>
+                    Scanner un autre client
+                  </button>
+                </div>
+              )}
+
               {/* État idle */}
-              {!scanning && (
+              {!scanning && !loadingTampon && !result && (
                 <div className="rounded-3xl flex flex-col items-center justify-center text-center h-[300px] md:h-auto md:aspect-square p-8"
                   style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
                   <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
