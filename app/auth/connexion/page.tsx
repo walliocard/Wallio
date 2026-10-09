@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
+import WallioLogo from "@/components/WallioLogo";
 import {
   isPasskeySupported,
   isPasskeyRegistered,
@@ -184,32 +185,46 @@ function ConnexionInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <main className="min-h-screen flex items-center justify-center px-5" style={{ background: "var(--bg)", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
 
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[800px] h-[600px] rounded-full opacity-30"
-          style={{ background: "radial-gradient(circle, rgba(0,122,255,0.15) 0%, transparent 70%)" }} />
+      {/* Gradient background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[50%] translate-x-[-50%] w-[600px] h-[500px] rounded-full opacity-40"
+          style={{ background: "radial-gradient(circle, rgba(0,122,255,0.18) 0%, transparent 65%)" }} />
+        <div className="absolute bottom-[-10%] left-[30%] w-[400px] h-[400px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 65%)" }} />
       </div>
 
-      <div className="w-full max-w-[380px] relative">
+      <div className="w-full max-w-[360px] relative">
 
-        <div className="text-center mb-10">
-          <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 88, height: 88, borderRadius: 22, margin: "0 auto 16px", display: "block" }} />
+        {/* Logo + titre */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <WallioLogo size={52} />
+          </div>
+          <h1 className="text-[26px] font-bold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Wallio Pro</h1>
+          <p className="text-[14px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>Tableau de bord marchand</p>
         </div>
 
-        {/* Toggle Gérant / Équipe */}
-        <div className="flex rounded-2xl p-1 mb-6" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
-          {(["gerant", "equipe"] as const).map(m => (
-            <button key={m} onClick={() => { setMode(m); setError(""); setEquipeError(""); setEquipeStep("code"); setCode(""); setPin(""); }}
-              className="flex-1 py-2.5 rounded-xl text-[14px] font-semibold transition-all"
-              style={{ background: mode === m ? "var(--accent)" : "transparent", color: mode === m ? "white" : "var(--fg-secondary)" }}>
-              {m === "gerant" ? "Gérant" : "Équipe"}
-            </button>
-          ))}
-        </div>
+        <div className="rounded-[24px] overflow-hidden"
+          style={{ background: "rgba(20,20,22,0.82)", backdropFilter: "blur(32px)", WebkitBackdropFilter: "blur(32px)", border: "1px solid rgba(255,255,255,0.10)", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
 
-        <div className="rounded-[28px] p-8"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(30px)", boxShadow: "var(--shadow-lg)" }}>
+          {/* Toggle Gérant / Équipe */}
+          <div className="flex border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+            {(["gerant", "equipe"] as const).map(m => (
+              <button key={m} onClick={() => { setMode(m); setError(""); setEquipeError(""); setEquipeStep("code"); setCode(""); setPin(""); }}
+                className="flex-1 py-3.5 text-[14px] font-semibold transition-all"
+                style={{
+                  color: mode === m ? "white" : "rgba(255,255,255,0.35)",
+                  borderBottom: mode === m ? "2px solid var(--accent)" : "2px solid transparent",
+                  background: "transparent",
+                }}>
+                {m === "gerant" ? "Gérant" : "Équipe"}
+              </button>
+            ))}
+          </div>
+
+          <div className="p-6">
 
           {/* ── Banner passkey gérant ── */}
           {gerantPasskeyBanner && (
@@ -223,7 +238,7 @@ function ConnexionInner() {
                 style={{ background: "var(--accent)" }}>
                 Activer Face ID
               </button>
-              <button onClick={() => router.push("/dashboard")} className="w-full text-[13px] py-2" style={{ color: "var(--fg-tertiary)" }}>
+              <button onClick={() => router.push("/dashboard")} className="w-full text-[13px] py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
                 Plus tard
               </button>
             </div>
@@ -241,7 +256,7 @@ function ConnexionInner() {
                 style={{ background: "var(--accent)" }}>
                 Activer Face ID
               </button>
-              <button onClick={() => router.push("/equipe/scanner")} className="w-full text-[13px] py-2" style={{ color: "var(--fg-tertiary)" }}>
+              <button onClick={() => router.push("/equipe/scanner")} className="w-full text-[13px] py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
                 Plus tard
               </button>
             </div>
@@ -254,14 +269,14 @@ function ConnexionInner() {
                 <div className="space-y-2">
                   <button type="button" onClick={handleGerantFaceId} disabled={passkeyLoading}
                     className="w-full py-3.5 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2"
-                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     {passkeyLoading ? "Vérification…" : "Face ID / Empreinte"}
                   </button>
                   {passkeyError && <p className="text-[12px] text-center text-red-500">{passkeyError}</p>}
                   <div className="flex items-center gap-3 my-1">
                     <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
-                    <span className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>ou</span>
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>ou</span>
                     <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
                   </div>
                 </div>
@@ -270,14 +285,14 @@ function ConnexionInner() {
                 <input type="email" required placeholder={t.auth_email} value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
                   className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all duration-200"
-                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-                  onFocus={e => e.target.style.borderColor = "var(--accent)"}
+                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}
+                  onFocus={e => e.target.style.borderColor = "rgba(0,122,255,0.7)"}
                   onBlur={e => e.target.style.borderColor = "var(--border)"} />
                 <input type="password" required placeholder={t.auth_password} value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
                   className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-all duration-200"
-                  style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-                  onFocus={e => e.target.style.borderColor = "var(--accent)"}
+                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}
+                  onFocus={e => e.target.style.borderColor = "rgba(0,122,255,0.7)"}
                   onBlur={e => e.target.style.borderColor = "var(--border)"} />
               </div>
               {privateMode && (
@@ -305,8 +320,8 @@ function ConnexionInner() {
                 type="text" required maxLength={6} placeholder="Ex : X7K3P2"
                 value={code} onChange={e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
                 className="w-full px-4 py-4 rounded-2xl text-[22px] font-bold text-center tracking-[0.3em] outline-none"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-                onFocus={e => e.target.style.borderColor = "var(--accent)"}
+                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}
+                onFocus={e => e.target.style.borderColor = "rgba(0,122,255,0.7)"}
                 onBlur={e => e.target.style.borderColor = "var(--border)"}
               />
               {equipeError && <p className="text-[13px] text-red-500 text-center">{equipeError}</p>}
@@ -335,12 +350,12 @@ function ConnexionInner() {
                     }
                   }}
                     className="w-full py-3.5 rounded-2xl text-[16px] font-semibold text-left px-5 transition-all active:opacity-75"
-                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}>
                     {m.prenom}
                   </button>
                 ))}
               </div>
-              <button onClick={() => setEquipeStep("code")} className="w-full mt-4 text-[13px] text-center" style={{ color: "var(--fg-tertiary)" }}>
+              <button onClick={() => setEquipeStep("code")} className="w-full mt-4 text-[13px] text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
                 ← Changer de code
               </button>
             </div>
@@ -357,14 +372,14 @@ function ConnexionInner() {
                 <div className="space-y-2">
                   <button type="button" onClick={handleMembreFaceId} disabled={passkeyLoading}
                     className="w-full py-3.5 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2"
-                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     {passkeyLoading ? "Vérification…" : "Face ID / Empreinte"}
                   </button>
                   {passkeyError && <p className="text-[12px] text-center text-red-500">{passkeyError}</p>}
                   <div className="flex items-center gap-3 my-1">
                     <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
-                    <span className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>ou</span>
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>ou</span>
                     <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
                   </div>
                 </div>
@@ -373,8 +388,8 @@ function ConnexionInner() {
                 type="password" inputMode="numeric" maxLength={4} required placeholder="••••" autoComplete="one-time-code"
                 value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 className="w-full px-4 py-4 rounded-2xl text-[28px] font-bold text-center tracking-[0.5em] outline-none"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-                onFocus={e => e.target.style.borderColor = "var(--accent)"}
+                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}
+                onFocus={e => e.target.style.borderColor = "rgba(0,122,255,0.7)"}
                 onBlur={e => e.target.style.borderColor = "var(--border)"}
                 autoFocus
               />
@@ -385,18 +400,19 @@ function ConnexionInner() {
                 {equipeLoading ? "Connexion…" : "Se connecter"}
               </button>
               <button type="button" onClick={() => { setEquipeStep("prenom"); setPin(""); setEquipeError(""); }}
-                className="w-full text-[13px] text-center" style={{ color: "var(--fg-tertiary)" }}>
+                className="w-full text-[13px] text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
                 ← Ce n&apos;est pas moi
               </button>
             </form>
           )}
-        </div>
+          </div>{/* end p-6 */}
+        </div>{/* end card */}
 
         {mode === "gerant" && (
           <>
-            {resetSent && <p className="text-center text-[13px] mt-4" style={{ color: "#34C759" }}>✅ {t.auth_reset_sent}</p>}
-            <div className="flex items-center justify-between mt-5">
-              <button onClick={handleReset} disabled={resetLoading} className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>
+            {resetSent && <p className="text-center text-[13px] mt-4" style={{ color: "#34C759" }}>{t.auth_reset_sent}</p>}
+            <div className="flex items-center justify-between mt-5 px-1">
+              <button onClick={handleReset} disabled={resetLoading} className="text-[13px]" style={{ color: "rgba(255,255,255,0.35)" }}>
                 {resetLoading ? "…" : t.auth_forgot}
               </button>
               <Link href="/auth/inscription" className="text-[13px] font-medium" style={{ color: "var(--accent)" }}>
