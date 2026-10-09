@@ -79,7 +79,7 @@
 
 html {
   overflow-x: hidden;
-  overscroll-behavior-x: none;
+  overscroll-behavior: none;
   touch-action: pan-y;
   background-color: #F5F5F7;
   min-height: 100%;
@@ -92,7 +92,7 @@ body {
   font-family: var(--font-geist), Inter, system-ui, sans-serif;
   transition: background 0.3s ease;
   overflow-x: hidden;
-  overscroll-behavior-x: none;
+  overscroll-behavior: none;
   touch-action: pan-y;
   min-height: 100dvh;
 }
