@@ -43,5 +43,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Wallio Pro utilise la caméra pour scanner les QR codes des clients.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Wallio Pro accède à vos photos pour le logo de votre établissement.</string>
 </dict>
 </plist>
