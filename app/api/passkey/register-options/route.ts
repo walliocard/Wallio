@@ -7,14 +7,15 @@ const RP_ID = process.env.PASSKEY_RP_ID || "walliocard.com";
 
 export async function POST(req: Request) {
   try {
-    const { telephone } = await req.json();
-    if (!telephone) return Response.json({ error: "telephone requis" }, { status: 400 });
+    const body = await req.json();
+    const identifier: string = body.identifier || body.telephone;
+    if (!identifier) return Response.json({ error: "identifier requis" }, { status: 400 });
 
     const options = await generateRegistrationOptions({
       rpName: "Wallio",
       rpID: RP_ID,
-      userID: new TextEncoder().encode(telephone),
-      userName: telephone,
+      userID: new TextEncoder().encode(identifier),
+      userName: identifier,
       attestationType: "none",
       authenticatorSelection: {
         residentKey: "preferred",
@@ -26,7 +27,9 @@ export async function POST(req: Request) {
     const sessionId = randomUUID();
     await adminDb().collection("passkey_challenges").doc(sessionId).set({
       challenge: options.challenge,
-      telephone,
+      identifier,
+      // backward compat pour les clients NFC existants
+      telephone: body.telephone || null,
       type: "register",
       expires_at: Timestamp.fromDate(new Date(Date.now() + 5 * 60 * 1000)),
     });

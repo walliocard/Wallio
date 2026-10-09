@@ -1,5 +1,6 @@
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
-import { adminDb } from "@/lib/admin";
+import { adminDb, adminAuth } from "@/lib/admin";
+import { creerSession } from "@/lib/equipe";
 import { Timestamp } from "firebase-admin/firestore";
 
 const RP_ID = process.env.PASSKEY_RP_ID || "walliocard.com";
@@ -46,7 +47,45 @@ export async function POST(req: Request) {
 
     await passkeyDoc.ref.update({ counter: verification.authenticationInfo.newCounter });
 
-    return Response.json({ telephone: passkeyData.telephone });
+    const identifier: string = passkeyData.identifier || passkeyData.telephone;
+
+    // Gérant : custom token Firebase
+    if (identifier?.startsWith("gerant:")) {
+      const uid = identifier.replace("gerant:", "");
+      const customToken = await adminAuth().createCustomToken(uid);
+      return Response.json({ identifier, customToken });
+    }
+
+    // Membre équipe : créer la session directement
+    if (identifier?.startsWith("membre:")) {
+      const parts = identifier.split(":");
+      const marchandId = parts[1];
+      const membreId = parts[2];
+
+      const membreDoc = await db.collection("marchands").doc(marchandId).collection("membres").doc(membreId).get();
+      if (!membreDoc.exists) return Response.json({ error: "Membre introuvable" }, { status: 404 });
+      const membre = membreDoc.data()!;
+      if (membre.statut !== "actif") return Response.json({ error: "Compte désactivé" }, { status: 403 });
+
+      const marchandDoc = await db.collection("marchands").doc(marchandId).get();
+      const marchand = marchandDoc.data()!;
+      const permissions = { notifs: false, clients: true };
+      const token = await creerSession(marchandId, membreId, membre.prenom, permissions);
+
+      return Response.json({
+        identifier,
+        type: "membre",
+        token,
+        prenom: membre.prenom,
+        marchandId,
+        marchandNom: marchand.nom,
+        logo_url: marchand.logo_url || null,
+        permissions,
+      });
+    }
+
+    // Client NFC (backward compat)
+    return Response.json({ identifier, telephone: passkeyData.telephone });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
   }

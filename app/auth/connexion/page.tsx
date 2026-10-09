@@ -1,12 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithCustomToken, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
+import {
+  isPasskeySupported,
+  isPasskeyRegistered,
+  registerPasskeyForGerant,
+  registerPasskeyForMembre,
+  authenticateGerantWithPasskey,
+  authenticateMembreWithPasskey,
+} from "@/lib/passkey-client";
 
 function isPrivateMode(): boolean {
   try { const k = "__w__"; localStorage.setItem(k, "1"); localStorage.removeItem(k); return false; } catch { return true; }
@@ -51,7 +59,18 @@ function ConnexionInner() {
   const [equipeError, setEquipeError] = useState("");
   const [equipeLoading, setEquipeLoading] = useState(false);
 
+  const [passkeySupported, setPasskeySupported] = useState(false);
+  const [gerantPasskeyBanner, setGerantPasskeyBanner] = useState<string | null>(null); // uid après login
+  const [membrePasskeyBanner, setMembrePasskeyBanner] = useState<{ marchandId: string; membreId: string } | null>(null);
+  const [membrePasskeyOk, setMembrePasskeyOk] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [passkeyError, setPasskeyError] = useState("");
+
   const router = useRouter();
+
+  useEffect(() => {
+    isPasskeySupported().then(setPasskeySupported);
+  }, []);
 
   async function handleReset() {
     if (!form.email) { setError(t.auth_error_email); return; }
@@ -81,10 +100,15 @@ function ConnexionInner() {
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("timeout")), 15000)
       );
-      await Promise.race([
+      const cred = await Promise.race([
         signInWithEmailAndPassword(auth, form.email, form.password),
         timeout,
       ]);
+      if (passkeySupported) {
+        const uid = cred.user.uid;
+        const already = await isPasskeyRegistered(`gerant:${uid}`);
+        if (!already) { setGerantPasskeyBanner(uid); return; }
+      }
       router.push("/dashboard");
     } catch (e: unknown) {
       signOut(auth).catch(() => {});
@@ -114,6 +138,29 @@ function ConnexionInner() {
     finally { setEquipeLoading(false); }
   }
 
+  async function handleGerantFaceId() {
+    setPasskeyLoading(true); setPasskeyError("");
+    try {
+      const result = await authenticateGerantWithPasskey();
+      if (!result) { setPasskeyError("Authentification annulée ou échouée."); return; }
+      await signInWithCustomToken(auth, result.customToken);
+      router.push("/dashboard");
+    } catch { setPasskeyError("Erreur Face ID. Utilisez email et mot de passe."); }
+    finally { setPasskeyLoading(false); }
+  }
+
+  async function handleMembreFaceId() {
+    if (!equipeData) return;
+    setPasskeyLoading(true); setPasskeyError("");
+    try {
+      const result = await authenticateMembreWithPasskey();
+      if (!result) { setPasskeyError("Authentification annulée ou échouée."); return; }
+      localStorage.setItem("equipe_session", JSON.stringify({ token: result.token, prenom: result.prenom, marchandId: result.marchandId, marchandNom: result.marchandNom, logo_url: result.logo_url || null, permissions: result.permissions }));
+      router.push("/equipe/scanner");
+    } catch { setPasskeyError("Erreur Face ID. Utilisez votre PIN."); }
+    finally { setPasskeyLoading(false); }
+  }
+
   async function handleAuthMembre(e: React.FormEvent) {
     e.preventDefault();
     if (!equipeData || !membreSelectionne) return;
@@ -123,6 +170,10 @@ function ConnexionInner() {
       const data = await res.json();
       if (!res.ok) { setEquipeError(data.error || "PIN incorrect"); return; }
       localStorage.setItem("equipe_session", JSON.stringify({ token: data.token, prenom: data.prenom, marchandId: data.marchandId, marchandNom: data.marchandNom, logo_url: data.logo_url || null, permissions: data.permissions }));
+      if (passkeySupported && membreSelectionne && equipeData) {
+        const already = await isPasskeyRegistered(`membre:${equipeData.marchandId}:${membreSelectionne.id}`);
+        if (!already) { setMembrePasskeyBanner({ marchandId: equipeData.marchandId, membreId: membreSelectionne.id }); return; }
+      }
       router.push("/equipe/scanner");
     } catch { setEquipeError("Erreur de connexion. Réessayez."); }
     finally { setEquipeLoading(false); }
@@ -156,9 +207,61 @@ function ConnexionInner() {
         <div className="rounded-[28px] p-8"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", backdropFilter: "blur(30px)", boxShadow: "var(--shadow-lg)" }}>
 
+          {/* ── Banner passkey gérant ── */}
+          {gerantPasskeyBanner && (
+            <div className="space-y-3 text-center">
+              <p className="text-[17px] font-semibold" style={{ color: "var(--fg)" }}>Connexion rapide</p>
+              <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>
+                Activer Face ID / Empreinte pour vous connecter sans mot de passe la prochaine fois ?
+              </p>
+              <button onClick={async () => { await registerPasskeyForGerant(gerantPasskeyBanner); router.push("/dashboard"); }}
+                className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
+                style={{ background: "var(--accent)" }}>
+                Activer Face ID
+              </button>
+              <button onClick={() => router.push("/dashboard")} className="w-full text-[13px] py-2" style={{ color: "var(--fg-tertiary)" }}>
+                Plus tard
+              </button>
+            </div>
+          )}
+
+          {/* ── Banner passkey membre ── */}
+          {membrePasskeyBanner && (
+            <div className="space-y-3 text-center">
+              <p className="text-[17px] font-semibold" style={{ color: "var(--fg)" }}>Connexion rapide</p>
+              <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>
+                Activer Face ID / Empreinte pour vous connecter sans PIN la prochaine fois ?
+              </p>
+              <button onClick={async () => { await registerPasskeyForMembre(membrePasskeyBanner.marchandId, membrePasskeyBanner.membreId); router.push("/equipe/scanner"); }}
+                className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
+                style={{ background: "var(--accent)" }}>
+                Activer Face ID
+              </button>
+              <button onClick={() => router.push("/equipe/scanner")} className="w-full text-[13px] py-2" style={{ color: "var(--fg-tertiary)" }}>
+                Plus tard
+              </button>
+            </div>
+          )}
+
           {/* ── Formulaire Gérant ── */}
-          {mode === "gerant" && (
+          {!gerantPasskeyBanner && !membrePasskeyBanner && mode === "gerant" && (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {passkeySupported && (
+                <div className="space-y-2">
+                  <button type="button" onClick={handleGerantFaceId} disabled={passkeyLoading}
+                    className="w-full py-3.5 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2"
+                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    {passkeyLoading ? "Vérification…" : "Face ID / Empreinte"}
+                  </button>
+                  {passkeyError && <p className="text-[12px] text-center text-red-500">{passkeyError}</p>}
+                  <div className="flex items-center gap-3 my-1">
+                    <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                    <span className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>ou</span>
+                    <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                  </div>
+                </div>
+              )}
               <div className="space-y-3">
                 <input type="email" required placeholder={t.auth_email} value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
@@ -188,7 +291,7 @@ function ConnexionInner() {
           )}
 
           {/* ── Flow Équipe — Étape 1 : Code ── */}
-          {mode === "equipe" && equipeStep === "code" && (
+          {!gerantPasskeyBanner && !membrePasskeyBanner && mode === "equipe" && equipeStep === "code" && (
             <form onSubmit={handleValiderCode} className="space-y-4">
               <div className="text-center mb-2">
                 <p className="text-[17px] font-semibold" style={{ color: "var(--fg)" }}>Code de l&apos;établissement</p>
@@ -212,7 +315,7 @@ function ConnexionInner() {
           )}
 
           {/* ── Flow Équipe — Étape 2 : Choix prénom ── */}
-          {mode === "equipe" && equipeStep === "prenom" && equipeData && (
+          {!gerantPasskeyBanner && !membrePasskeyBanner && mode === "equipe" && equipeStep === "prenom" && equipeData && (
             <div>
               <div className="text-center mb-5">
                 <p className="text-[17px] font-semibold" style={{ color: "var(--fg)" }}>{equipeData.marchandNom}</p>
@@ -220,7 +323,13 @@ function ConnexionInner() {
               </div>
               <div className="space-y-2">
                 {equipeData.membres.map(m => (
-                  <button key={m.id} onClick={() => { setMembreSelectionne(m); setEquipeStep("pin"); setEquipeError(""); }}
+                  <button key={m.id} onClick={async () => {
+                    setMembreSelectionne(m); setEquipeStep("pin"); setEquipeError("");
+                    if (passkeySupported && equipeData) {
+                      const ok = await isPasskeyRegistered(`membre:${equipeData.marchandId}:${m.id}`);
+                      setMembrePasskeyOk(ok);
+                    }
+                  }}
                     className="w-full py-3.5 rounded-2xl text-[16px] font-semibold text-left px-5 transition-all active:opacity-75"
                     style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
                     {m.prenom}
@@ -234,12 +343,28 @@ function ConnexionInner() {
           )}
 
           {/* ── Flow Équipe — Étape 3 : PIN ── */}
-          {mode === "equipe" && equipeStep === "pin" && membreSelectionne && (
+          {!gerantPasskeyBanner && !membrePasskeyBanner && mode === "equipe" && equipeStep === "pin" && membreSelectionne && (
             <form onSubmit={handleAuthMembre} className="space-y-4">
               <div className="text-center mb-2">
                 <p className="text-[17px] font-semibold" style={{ color: "var(--fg)" }}>Bonjour, {membreSelectionne.prenom}</p>
                 <p className="text-[13px] mt-1" style={{ color: "var(--fg-secondary)" }}>Saisissez votre PIN</p>
               </div>
+              {membrePasskeyOk && (
+                <div className="space-y-2">
+                  <button type="button" onClick={handleMembreFaceId} disabled={passkeyLoading}
+                    className="w-full py-3.5 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2"
+                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    {passkeyLoading ? "Vérification…" : "Face ID / Empreinte"}
+                  </button>
+                  {passkeyError && <p className="text-[12px] text-center text-red-500">{passkeyError}</p>}
+                  <div className="flex items-center gap-3 my-1">
+                    <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                    <span className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>ou</span>
+                    <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                  </div>
+                </div>
+              )}
               <input
                 type="password" inputMode="numeric" maxLength={4} required placeholder="••••"
                 value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
