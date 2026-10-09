@@ -21,6 +21,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!loading && !user) router.push("/auth/connexion");
   }, [user, loading, router]);
 
+  useEffect(() => {
+    document.documentElement.classList.add("dashboard-scroll");
+    document.body.classList.add("dashboard-scroll");
+    return () => {
+      document.documentElement.classList.remove("dashboard-scroll");
+      document.body.classList.remove("dashboard-scroll");
+    };
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
@@ -59,9 +68,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+    <div style={{ height: "100dvh", overflow: "hidden", background: "var(--bg)" }}>
       <DashboardNav marchand={marchand} />
-      <div className="md:ml-[72px] lg:ml-[240px] min-h-screen">
+      <div
+        className="md:ml-[72px] lg:ml-[240px]"
+        style={{ height: "100dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+      >
         {children}
       </div>
       <RecompenseAlert marchand={marchand} marchandId={user.uid} />
