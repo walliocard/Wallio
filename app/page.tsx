@@ -1255,10 +1255,20 @@ export default function LandingPage() {
   const [navVisible, setNavVisible] = useState(false);
   const [activeAnchor, setActiveAnchor] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { region } = useLang();
+  const { region, lang: contextLang, setLang: setContextLang } = useLang();
   const [lang, setLang] = useState<Lang>("fr");
   const [anchorOpen, setAnchorOpen] = useState(false);
   const t = T[lang];
+
+  // Sync local lang with context (browser/localStorage auto-detection)
+  useEffect(() => {
+    if (contextLang === "ro" || contextLang === "es") setLang(contextLang);
+  }, [contextLang]);
+
+  function changeLang(l: Lang) {
+    setLang(l);
+    if (l !== "en") setContextLang(l as "fr" | "ro" | "es");
+  }
   const WA = `${WA_BASE}?text=${encodeURIComponent(WA_MSGS[lang] || WA_MSGS.fr)}`;
   const pricing = REGIONS[region];
   useReveal();
@@ -1502,7 +1512,7 @@ export default function LandingPage() {
           {/* Toggle langue mobile — cycle simple */}
           <button
             className="lp-nav-lang-mobile"
-            onClick={() => setLang(l => l === "fr" ? "en" : l === "en" ? "ro" : l === "ro" ? "es" : "fr")}
+            onClick={() => changeLang(lang === "fr" ? "en" : lang === "en" ? "ro" : lang === "ro" ? "es" : "fr")}
             style={{ display:"none", alignItems:"center", justifyContent:"center", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,0.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color:"#1D1D1F" }}>
             {lang.toUpperCase()}
           </button>
@@ -1510,7 +1520,7 @@ export default function LandingPage() {
           <div className="lp-nav-right" style={{ display:"flex", gap:8, alignItems:"center" }}>
             <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,0.06)", borderRadius:20, padding:"2px" }}>
               {(["fr","en","ro","es"] as const).map(l => (
-                <button key={l} onClick={() => setLang(l)}
+                <button key={l} onClick={() => changeLang(l)}
                   className="lang-pill"
                   style={{ padding:"4px 10px", borderRadius:18, border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", background: lang === l ? "#1D1D1F" : "transparent", color: lang === l ? "white" : "#6E6E73", transition:"all 0.15s" }}>
                   {l.toUpperCase()}
