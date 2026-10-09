@@ -81,13 +81,13 @@ html {
   overflow-x: hidden;
   overscroll-behavior: none;
   touch-action: pan-y;
-  background-color: var(--bg);
+  background-color: #F5F5F7;
   min-height: 100%;
 }
 
 body {
-  background: var(--bg);
-  background-color: var(--bg);
+  background: #F5F5F7;
+  background-color: #F5F5F7;
   color: var(--fg);
   font-family: var(--font-geist), Inter, system-ui, sans-serif;
   transition: background 0.3s ease;
