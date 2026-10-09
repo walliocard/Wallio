@@ -8,7 +8,7 @@ import { useLang } from "@/lib/lang-context";
 import CustomSelect from "@/components/CustomSelect";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
 
 async function getIdToken(): Promise<string> {
   const u = getAuth().currentUser;
@@ -721,6 +721,14 @@ function SectionEquipe() {
           {membres.length === 0 && <p className="text-[13px] text-center py-3" style={{ color: "var(--fg-tertiary)" }}>Aucun membre pour l&apos;instant</p>}
         </div>
       </div>
+
+      <button
+        onClick={() => signOut(getAuth())}
+        className="w-full rounded-2xl py-3.5 text-[15px] font-semibold mt-2"
+        style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30", border: "1px solid rgba(255,59,48,0.15)" }}
+      >
+        Se déconnecter
+      </button>
     </div>
   );
 }
