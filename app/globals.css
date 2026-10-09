@@ -103,6 +103,27 @@ html.dashboard-scroll body {
   overflow: hidden;
 }
 
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  from { background-position: -400px 0; }
+  to   { background-position: 400px 0; }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-16px) scale(0.97); }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--border) 25%, rgba(120,120,128,0.08) 50%, var(--border) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
 @keyframes splash-in {
   from { opacity: 0; transform: scale(1.15); }
   to   { opacity: 1; transform: scale(1); }

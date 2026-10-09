@@ -119,8 +119,22 @@ export default function AccueilPage() {
     return unsub;
   }, [user]);
 
-  if (loading) return null;
-  if (!user || !marchand) { router.replace("/choisir"); return null; }
+  if (!user || !marchand) { if (!loading) router.replace("/choisir"); }
+
+  if (loading || !marchand) return (
+    <div className="px-5 md:px-8 pt-8 pb-44 max-w-5xl">
+      <div className="shimmer h-5 w-28 rounded-xl mb-2" />
+      <div className="shimmer h-8 w-40 rounded-xl mb-8" />
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="shimmer rounded-2xl" style={{ height: 90 }} />
+        ))}
+      </div>
+      <div className="shimmer rounded-2xl mb-3" style={{ height: 90 }} />
+      <div className="shimmer rounded-2xl mb-3" style={{ height: 180 }} />
+      <div className="shimmer rounded-2xl" style={{ height: 80 }} />
+    </div>
+  );
 
   const maxSemaine = Math.max(...stats.semaine, 1);
   const totalSemaine = stats.semaine.reduce((a, b) => a + b, 0);

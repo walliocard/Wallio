@@ -8,6 +8,21 @@ import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } fro
 import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
+
+const AVATAR_PALETTES = [
+  { bg: "rgba(94,140,247,0.18)",  text: "#5E8CF7" },
+  { bg: "rgba(139,127,212,0.18)", text: "#9B8FE8" },
+  { bg: "rgba(52,199,137,0.18)",  text: "#34C789" },
+  { bg: "rgba(247,133,110,0.18)", text: "#E8785E" },
+  { bg: "rgba(240,160,96,0.18)",  text: "#E0A060" },
+  { bg: "rgba(112,184,232,0.18)", text: "#60B8E8" },
+  { bg: "rgba(212,127,179,0.18)", text: "#D47FB3" },
+  { bg: "rgba(92,200,168,0.18)",  text: "#5CC8A8" },
+];
+function avatarColor(initials: string) {
+  const code = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
+  return AVATAR_PALETTES[code % AVATAR_PALETTES.length];
+}
 import CustomSelect from "@/components/CustomSelect";
 
 const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
@@ -231,15 +246,24 @@ export default function ClientsPage() {
             style={{ borderColor: "var(--border)", borderTopColor: "var(--accent)" }} />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-[15px]" style={{ color: "var(--fg-tertiary)" }}>
-            {t.clients_empty}
-          </p>
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "rgba(0,122,255,0.08)" }}>
+            <span style={{ color: "var(--accent)" }}><Icons.Users size={28} /></span>
+          </div>
+          <div>
+            <p className="text-[16px] font-semibold mb-1" style={{ color: "var(--fg)" }}>
+              {search ? "Aucun résultat" : "Aucun client pour l'instant"}
+            </p>
+            <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>
+              {search ? "Essayez un autre nom ou numéro" : "Les clients apparaissent ici après leur premier scan"}
+            </p>
+          </div>
         </div>
       ) : (
         <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
           {filtered.map(client => {
             const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
+            const aColor = avatarColor(initiales);
             const mn = marchand as Record<string, unknown> | undefined;
             const paliersDef = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
             const pv = client.paliers_valides || [];
@@ -257,15 +281,11 @@ export default function ClientsPage() {
               >
                 {/* Avatar */}
                 <div
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                  className="w-11 h-11 flex items-center justify-center text-[13px] font-bold flex-shrink-0"
                   style={{
-                    background: client.recompense_en_attente
-                      ? "linear-gradient(135deg,#34C759,#30D158)"
-                      : "rgba(118,118,128,0.18)",
-                    color: client.recompense_en_attente ? "white" : "var(--fg-secondary)",
-                    backdropFilter: "blur(12px)",
-                    WebkitBackdropFilter: "blur(12px)",
-                    border: "0.5px solid rgba(118,118,128,0.22)",
+                    borderRadius: 12,
+                    background: client.recompense_en_attente ? "linear-gradient(135deg,#34C759,#30D158)" : aColor.bg,
+                    color: client.recompense_en_attente ? "white" : aColor.text,
                   }}
                 >
                   {initiales}

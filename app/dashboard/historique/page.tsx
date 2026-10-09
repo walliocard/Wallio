@@ -109,8 +109,14 @@ export default function HistoriquePage() {
             <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }} />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl p-8 text-center" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-            <p className="text-[14px]" style={{ color: "var(--fg-tertiary)" }}>Aucun historique pour le moment</p>
+          <div className="rounded-2xl p-10 flex flex-col items-center gap-4 text-center" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "rgba(0,122,255,0.08)" }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <p className="text-[15px] font-semibold mb-1" style={{ color: "var(--fg)" }}>Aucun historique</p>
+              <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>Les scans apparaîtront ici après chaque visite client</p>
+            </div>
           </div>
         ) : (
           <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>

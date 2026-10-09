@@ -172,18 +172,25 @@ export default function NotificationsPage() {
             </div>
 
             {(title || body) && (
-              <div className="rounded-2xl p-4" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
-                    style={{ background: (marchand as Record<string,unknown>).logo_url ? "var(--bg)" : (marchand.couleur_principale || "var(--accent)") }}>
-                    {(marchand as Record<string,unknown>).logo_url
-                      ? <img src={(marchand as Record<string,unknown>).logo_url as string} alt="" className="w-full h-full object-cover"/>
-                      : <span className="text-white font-bold text-[16px]">{marchand.nom[0]?.toUpperCase()}</span>
-                    }
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>Aperçu</p>
+                <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(20,20,22,0.82)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
+                  {/* Barre iOS */}
+                  <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg overflow-hidden flex-shrink-0" style={{ background: marchand.couleur_principale || "var(--accent)" }}>
+                        {(marchand as Record<string,unknown>).logo_url
+                          ? <img src={(marchand as Record<string,unknown>).logo_url as string} alt="" className="w-full h-full object-cover"/>
+                          : <span className="text-white font-bold text-[10px] flex items-center justify-center w-full h-full">{marchand.nom[0]?.toUpperCase()}</span>
+                        }
+                      </div>
+                      <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.5)" }}>{marchand.nom}</span>
+                    </div>
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>maintenant</span>
                   </div>
-                  <div>
-                    <p className="text-[13px] font-semibold" style={{ color: "var(--fg)" }}>{marchand.nom}</p>
-                    <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{title ? `${title} · ${body || ""}` : "…"}</p>
+                  <div className="px-4 pb-4">
+                    <p className="text-[14px] font-semibold mb-0.5" style={{ color: "white" }}>{title || "Titre…"}</p>
+                    <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.65)" }}>{body || "Message…"}</p>
                   </div>
                 </div>
               </div>
@@ -242,12 +249,15 @@ export default function NotificationsPage() {
         <button
           onClick={envoyer}
           disabled={!canSend || sendState === "sending"}
-          className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all"
+          className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white transition-all flex items-center justify-center gap-2"
           style={{
             background: canSend ? "var(--accent)" : "var(--border)",
             boxShadow: canSend ? "0 8px 24px rgba(0,122,255,0.25)" : "none",
             cursor: canSend ? "pointer" : "not-allowed",
           }}>
+          {sendState === "sending" && (
+            <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+          )}
           {sendState === "sending" ? t.notif_sending : t.notif_send}
         </button>
 

@@ -55,6 +55,7 @@ export default function ScannerPage() {
         code.data.match(/^WALLIO:([a-f0-9-]+)/)?.[1] ??
         code.data.match(/\/client\/([a-f0-9-]+)/)?.[1];
       if (walletId) {
+      if (navigator.vibrate) navigator.vibrate(50);
       setDetected(walletId);
       stopCamera();
       // Auto-redirect après 1s sur mobile
@@ -115,13 +116,13 @@ export default function ScannerPage() {
 
   // QR détecté
   if (detected) return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-44 md:pb-6 text-center">
-      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
-        style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
-        <Icons.Check size={28} />
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-44 md:pb-6 text-center" style={{ animation: "page-in 0.25s ease" }}>
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+        style={{ background: "rgba(52,199,89,0.12)", color: "#34C759", animation: "splash-in 0.35s cubic-bezier(.4,0,.2,1)" }}>
+        <Icons.Check size={36} />
       </div>
       <h2 className="text-[22px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>{t.scan_success}</h2>
-      <p className="text-[14px] mb-8" style={{ color: "var(--fg-secondary)" }}>✓ QR</p>
+      <p className="text-[14px] mb-8" style={{ color: "var(--fg-secondary)" }}>QR code reconnu</p>
       <Link
         href={`/client/${detected}`}
         className="w-full max-w-xs py-4 rounded-2xl text-center text-white font-semibold text-[15px] block"

@@ -7,6 +7,7 @@ import DashboardNav from "@/components/dashboard/Nav";
 import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
 import { useLang } from "@/lib/lang-context";
 import WallioLogo from "@/components/WallioLogo";
+import { ToastProvider } from "@/components/Toast";
 
 function SplashScreen({ exiting }: { exiting: boolean }) {
   return (
@@ -97,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <>
+    <ToastProvider>
       {showSplash && <SplashScreen exiting={splashExiting} />}
       {marchand && user && (
         <div style={{ height: "100dvh", overflow: "hidden", background: "var(--bg)" }}>
@@ -109,6 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               overflowY: "auto",
               WebkitOverflowScrolling: "touch",
               background: "var(--bg)",
+              animation: "page-in 0.2s ease",
             } as React.CSSProperties}
           >
             {children}
@@ -116,6 +118,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <RecompenseAlert marchand={marchand} marchandId={user.uid} />
         </div>
       )}
-    </>
+    </ToastProvider>
   );
 }
