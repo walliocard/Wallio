@@ -618,7 +618,7 @@ function SectionEquipe() {
   }
 
   return (
-    <div className="mt-4 rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+    <><div className="mt-4 rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
       <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>Équipe</p>
 
       {/* Code établissement */}
@@ -730,6 +730,7 @@ function SectionEquipe() {
     >
       Se déconnecter
     </button>
+    </>
   );
 }
 
