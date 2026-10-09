@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { collection, onSnapshot, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
@@ -26,8 +27,9 @@ type Stats = {
 };
 
 export default function AccueilPage() {
-  const { user, marchand } = useAuth();
+  const { user, marchand, loading } = useAuth();
   const { t } = useLang();
+  const router = useRouter();
   const [stats, setStats] = useState<Stats>({
     total: 0, aujourd_hui: 0, tampons_total: 0, ce_mois: 0,
     semaine: [0,0,0,0,0,0,0], semaine_precedente: [0,0,0,0,0,0,0],
@@ -117,7 +119,8 @@ export default function AccueilPage() {
     return unsub;
   }, [user]);
 
-  if (!marchand || !user) return null;
+  if (loading) return null;
+  if (!user || !marchand) { router.replace("/choisir"); return null; }
 
   const maxSemaine = Math.max(...stats.semaine, 1);
   const totalSemaine = stats.semaine.reduce((a, b) => a + b, 0);
