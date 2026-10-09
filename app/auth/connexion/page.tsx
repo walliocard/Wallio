@@ -104,8 +104,9 @@ function ConnexionInner() {
         signInWithEmailAndPassword(auth, form.email, form.password),
         timeout,
       ]);
-      if (passkeySupported) {
-        const uid = cred.user.uid;
+      const uid = cred.user.uid;
+      const supported = await isPasskeySupported();
+      if (supported) {
         const already = await isPasskeyRegistered(`gerant:${uid}`);
         if (!already) { setGerantPasskeyBanner(uid); return; }
       }
@@ -170,9 +171,12 @@ function ConnexionInner() {
       const data = await res.json();
       if (!res.ok) { setEquipeError(data.error || "PIN incorrect"); return; }
       localStorage.setItem("equipe_session", JSON.stringify({ token: data.token, prenom: data.prenom, marchandId: data.marchandId, marchandNom: data.marchandNom, logo_url: data.logo_url || null, permissions: data.permissions }));
-      if (passkeySupported && membreSelectionne && equipeData) {
-        const already = await isPasskeyRegistered(`membre:${equipeData.marchandId}:${membreSelectionne.id}`);
-        if (!already) { setMembrePasskeyBanner({ marchandId: equipeData.marchandId, membreId: membreSelectionne.id }); return; }
+      if (membreSelectionne && equipeData) {
+        const supported = await isPasskeySupported();
+        if (supported) {
+          const already = await isPasskeyRegistered(`membre:${equipeData.marchandId}:${membreSelectionne.id}`);
+          if (!already) { setMembrePasskeyBanner({ marchandId: equipeData.marchandId, membreId: membreSelectionne.id }); return; }
+        }
       }
       router.push("/equipe/scanner");
     } catch { setEquipeError("Erreur de connexion. Réessayez."); }

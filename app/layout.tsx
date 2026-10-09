@@ -41,6 +41,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#EEF2F7",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 const jsonLd = {

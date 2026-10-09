@@ -113,6 +113,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             style={{
               height: "100dvh",
               overflowY: "auto",
+              overflowX: "hidden",
               WebkitOverflowScrolling: "touch",
               background: "var(--bg)",
               animation: "page-in 0.2s ease",
