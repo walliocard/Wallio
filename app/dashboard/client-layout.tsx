@@ -17,7 +17,7 @@ function SplashScreen({ exiting }: { exiting: boolean }) {
         position: "fixed",
         inset: 0,
         zIndex: 100,
-        background: "var(--bg)",
+        background: "#FFFFFF",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
