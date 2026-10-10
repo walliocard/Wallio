@@ -117,7 +117,12 @@ function ConnexionInner() {
       const supported = await isPasskeySupported();
       if (supported) {
         const already = await isPasskeyRegistered(`gerant:${uid}`);
-        if (!already) { setGerantPasskeyBanner(uid); return; }
+        if (already) {
+          try { localStorage.setItem("wallio_pk_gerant", "1"); } catch {}
+        } else {
+          setGerantPasskeyBanner(uid);
+          return;
+        }
       }
       router.push("/dashboard");
     } catch (e: unknown) {
