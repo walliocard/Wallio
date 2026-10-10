@@ -61,6 +61,7 @@ function ConnexionInner() {
   const [equipeLoading, setEquipeLoading] = useState(false);
 
   const [passkeySupported, setPasskeySupported] = useState(false);
+  const [passkeyAvailable, setPasskeyAvailable] = useState(false);
   const [gerantPasskeyBanner, setGerantPasskeyBanner] = useState<string | null>(null); // uid après login
   const [membrePasskeyBanner, setMembrePasskeyBanner] = useState<{ marchandId: string; membreId: string } | null>(null);
   const [membrePasskeyOk, setMembrePasskeyOk] = useState(false);
@@ -70,7 +71,14 @@ function ConnexionInner() {
   const router = useRouter();
 
   useEffect(() => {
-    isPasskeySupported().then(setPasskeySupported);
+    isPasskeySupported().then(supported => {
+      setPasskeySupported(supported);
+      if (supported) {
+        try {
+          setPasskeyAvailable(localStorage.getItem("wallio_pk_gerant") === "1");
+        } catch {}
+      }
+    });
   }, []);
 
   async function handleReset() {
@@ -185,14 +193,14 @@ function ConnexionInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-5" style={{ background: "var(--bg)", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <main className="min-h-screen flex items-center justify-center px-5" style={{ background: "#FFFFFF", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
 
       {/* Gradient background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[50%] translate-x-[-50%] w-[600px] h-[500px] rounded-full opacity-40"
-          style={{ background: "radial-gradient(circle, rgba(0,122,255,0.18) 0%, transparent 65%)" }} />
+          style={{ background: "radial-gradient(circle, rgba(0,122,255,0.10) 0%, transparent 65%)" }} />
         <div className="absolute bottom-[-10%] left-[30%] w-[400px] h-[400px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 65%)" }} />
+          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 65%)" }} />
       </div>
 
       <div className="w-full max-w-[360px] relative">
@@ -202,8 +210,8 @@ function ConnexionInner() {
           <div className="flex items-center justify-center mb-4">
             <WallioLogo size={52} />
           </div>
-          <h1 className="text-[26px] font-bold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>Wallio Pro</h1>
-          <p className="text-[14px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>Tableau de bord marchand</p>
+          <h1 className="text-[26px] font-bold tracking-[-0.5px]" style={{ color: "#1D1D1F" }}>Wallio Pro</h1>
+          <p className="text-[14px] mt-1" style={{ color: "#6E6E73" }}>Tableau de bord marchand</p>
         </div>
 
         <div className="rounded-[24px] overflow-hidden"
@@ -233,7 +241,7 @@ function ConnexionInner() {
               <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>
                 Activer Face ID / Empreinte pour vous connecter sans mot de passe la prochaine fois ?
               </p>
-              <button onClick={async () => { await registerPasskeyForGerant(gerantPasskeyBanner); router.push("/dashboard"); }}
+              <button onClick={async () => { await registerPasskeyForGerant(gerantPasskeyBanner); try { localStorage.setItem("wallio_pk_gerant", "1"); } catch {} router.push("/dashboard"); }}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
                 style={{ background: "var(--accent)" }}>
                 Activer Face ID
@@ -265,7 +273,7 @@ function ConnexionInner() {
           {/* ── Formulaire Gérant ── */}
           {!gerantPasskeyBanner && !membrePasskeyBanner && mode === "gerant" && (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {passkeySupported && (
+              {passkeyAvailable && (
                 <div className="space-y-2">
                   <button type="button" onClick={handleGerantFaceId} disabled={passkeyLoading}
                     className="w-full py-3.5 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2"
@@ -412,7 +420,7 @@ function ConnexionInner() {
           <>
             {resetSent && <p className="text-center text-[13px] mt-4" style={{ color: "#34C759" }}>{t.auth_reset_sent}</p>}
             <div className="flex items-center justify-between mt-5 px-1">
-              <button onClick={handleReset} disabled={resetLoading} className="text-[13px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <button onClick={handleReset} disabled={resetLoading} className="text-[13px]" style={{ color: "#6E6E73" }}>
                 {resetLoading ? "…" : t.auth_forgot}
               </button>
               <Link href="/auth/inscription" className="text-[13px] font-medium" style={{ color: "var(--accent)" }}>
