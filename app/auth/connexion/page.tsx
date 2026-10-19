@@ -157,7 +157,12 @@ function ConnexionInner() {
     setPasskeyLoading(true); setPasskeyError("");
     try {
       const result = await authenticateGerantWithPasskey();
-      if (!result) { setPasskeyError("Authentification annulée ou échouée."); return; }
+      if (!result) {
+        try { localStorage.removeItem("wallio_pk_gerant"); } catch {}
+        setPasskeyAvailable(false);
+        setPasskeyError("Clé d'accès introuvable. Reconnectez-vous avec votre mot de passe pour la recréer.");
+        return;
+      }
       await signInWithCustomToken(auth, result.customToken);
       router.push("/dashboard");
     } catch { setPasskeyError("Erreur Face ID. Utilisez email et mot de passe."); }
@@ -246,7 +251,11 @@ function ConnexionInner() {
               <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>
                 Activer Face ID / Empreinte pour vous connecter sans mot de passe la prochaine fois ?
               </p>
-              <button onClick={async () => { await registerPasskeyForGerant(gerantPasskeyBanner); try { localStorage.setItem("wallio_pk_gerant", "1"); } catch {} router.push("/dashboard"); }}
+              <button onClick={async () => {
+                const ok = await registerPasskeyForGerant(gerantPasskeyBanner);
+                try { if (ok) localStorage.setItem("wallio_pk_gerant", "1"); else localStorage.removeItem("wallio_pk_gerant"); } catch {}
+                router.push("/dashboard");
+              }}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
                 style={{ background: "var(--accent)" }}>
                 Activer Face ID
