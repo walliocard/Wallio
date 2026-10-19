@@ -156,6 +156,7 @@ export default function AdminPage() {
   const [ctEmail,  setCtEmail]  = useState("");
   const [ctAdresse,setCtAdresse]= useState("");
   const [ctPays,   setCtPays]   = useState("Maroc");
+  const [downloadingDoc, setDownloadingDoc] = useState(false);
   const [drawerClientCount, setDrawerClientCount] = useState<number | null>(null);
   const [clientCounts, setClientCounts] = useState<Record<string, number>>({});
   const [showPaiement, setShowPaiement] = useState<Marchand | null>(null);
@@ -352,8 +353,56 @@ export default function AdminPage() {
     setCtPrix(prix);
   }
 
-  function telechargerContrat() {
+  function calcFin(debut: string, type: AboType): string {
+    const d = new Date(debut + "T12:00:00");
+    if (type === "mensuel") d.setMonth(d.getMonth() + 1);
+    else if (type === "6mois") d.setMonth(d.getMonth() + 6);
+    else d.setFullYear(d.getFullYear() + 1);
+    d.setDate(d.getDate() - 1);
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  async function downloadPDF(html: string, filename: string) {
+    const { default: jsPDF } = await import("jspdf");
+    const { default: html2canvas } = await import("html2canvas");
+    const parsed = new DOMParser().parseFromString(html, "text/html");
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "position:fixed;left:-9999px;top:0;width:820px;background:#F5F5F7;z-index:-1;";
+    const style = document.createElement("style");
+    style.textContent = Array.from(parsed.head.querySelectorAll("style")).map((s) => s.textContent).join("\n");
+    wrap.appendChild(style);
+    const body = document.createElement("div");
+    body.innerHTML = parsed.body.innerHTML;
+    body.querySelector(".actions")?.remove();
+    wrap.appendChild(body);
+    document.body.appendChild(wrap);
+    try {
+      const canvas = await html2canvas(wrap, { scale: 2, useCORS: true, backgroundColor: "#F5F5F7", logging: false });
+      const A4W = 210, A4H = 297;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pxPerMM = canvas.width / A4W;
+      const pageHpx = A4H * pxPerMM;
+      let y = 0, page = 0;
+      while (y < canvas.height) {
+        if (page > 0) pdf.addPage();
+        const sliceH = Math.min(pageHpx, canvas.height - y);
+        const pc = document.createElement("canvas");
+        pc.width = canvas.width; pc.height = pageHpx;
+        const ctx = pc.getContext("2d")!;
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, pc.width, pc.height);
+        ctx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        pdf.addImage(pc.toDataURL("image/jpeg", 0.93), "JPEG", 0, 0, A4W, A4H);
+        y += pageHpx; page++;
+      }
+      pdf.save(`${filename}.pdf`);
+    } finally {
+      document.body.removeChild(wrap);
+    }
+  }
+
+  async function telechargerContrat() {
     const dureeLabel = ctType === "6mois" ? "6 mois" : ctType === "annuel" ? "1 an" : "1 mois";
+    const dateFin = calcFin(ctDebut, ctType);
     const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -463,7 +512,7 @@ export default function AdminPage() {
 
     <div class="article">
       <h2>Article 2 — Durée</h2>
-      <p>Le contrat prend effet le <strong>${new Date(ctDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong> et est conclu pour une durée de <strong>${dureeLabel}</strong>, renouvelable automatiquement jusqu'à résiliation par l'une des parties avec un préavis de 30 jours.</p>
+      <p>Le contrat prend effet le <strong>${new Date(ctDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong> et est conclu pour une durée de <strong>${dureeLabel}</strong>, soit jusqu'au <strong>${dateFin}</strong>, renouvelable automatiquement jusqu'à résiliation par l'une des parties avec un préavis de 30 jours.</p>
     </div>
 
     <div class="article">
@@ -473,7 +522,7 @@ export default function AdminPage() {
         <p><strong>Montant :</strong> ${ctPrix} ${ctDevise} par période</p>
         <p><strong>Paiement :</strong> Par virement bancaire, en avance de chaque période</p>
       </div>
-      <p>Toute période entamée est due dans son intégralité. Aucun remboursement ne sera accordé en cas de résiliation anticipée. En cas de non-paiement, Wallio se réserve le droit de suspendre l'accès immédiatement, avec pénalités de retard de 10 % par mois.</p>
+      <p>Toute période entamée est due dans son intégralité. Aucun remboursement ne sera accordé en cas de résiliation anticipée. En cas de non-paiement, Wallio se réserve le droit de suspendre l'accès immédiatement.</p>
     </div>
 
     <div class="article">
@@ -536,11 +585,7 @@ export default function AdminPage() {
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const w = window.open(url, "_blank");
-    if (!w) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    await downloadPDF(html, `Contrat-Wallio-${ctNom || ctRef}`);
   }
 
   function chargerMarchandFacture(id: string) {
@@ -560,8 +605,9 @@ export default function AdminPage() {
     setFaPrix(prix);
   }
 
-  function telechargerFacture() {
+  async function telechargerFacture() {
     const dureeLabel = faType === "6mois" ? "6 mois" : faType === "annuel" ? "1 an" : "1 mois";
+    const dateFin = calcFin(faEcheance, faType);
     const paiementLabel = faPaiement === "virement" ? "Virement bancaire" : faPaiement === "especes" ? "Espèces" : "Chèque";
     const statutColor = faStatut === "payee" ? "#34C759" : "#FF9F0A";
     const statutLabel = faStatut === "payee" ? "PAYÉE" : "ÉMISE";
@@ -718,6 +764,7 @@ export default function AdminPage() {
         <p><strong>Mode :</strong> ${paiementLabel}</p>
         <p><strong>Référence :</strong> ${faRef}</p>
         <p><strong>Début de période :</strong> ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+        <p><strong>Fin de période :</strong> ${dateFin}</p>
         ${faPaiement === "virement" ? `
         <div class="rib-box">
           <p><strong>Banque :</strong> Attijariwafa Bank</p>
@@ -739,11 +786,7 @@ export default function AdminPage() {
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const w = window.open(url, "_blank");
-    if (!w) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    await downloadPDF(html, `Facture-Wallio-${faNom || faRef}`);
   }
 
   // ── Palette active ──────────────────────────────────────────────────────────
@@ -1496,9 +1539,9 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <button onClick={telechargerContrat}
-                style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
-                Télécharger le contrat (PDF)
+              <button onClick={async () => { setDownloadingDoc(true); await telechargerContrat(); setDownloadingDoc(false); }} disabled={downloadingDoc}
+                style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: downloadingDoc ? "default" : "pointer", opacity: downloadingDoc ? 0.7 : 1 }}>
+                {downloadingDoc ? "Génération en cours…" : "Télécharger en PDF"}
               </button>
             </div>
 
@@ -1607,9 +1650,9 @@ export default function AdminPage() {
                 </div>
               )}
 
-              <button onClick={telechargerFacture}
-                style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer" }}>
-                Télécharger la facture (PDF)
+              <button onClick={async () => { setDownloadingDoc(true); await telechargerFacture(); setDownloadingDoc(false); }} disabled={downloadingDoc}
+                style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: downloadingDoc ? "default" : "pointer", opacity: downloadingDoc ? 0.7 : 1 }}>
+                {downloadingDoc ? "Génération en cours…" : "Télécharger en PDF"}
               </button>
             </div>
 
