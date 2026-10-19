@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, use, lazy, Suspense } from "react";
 import Link from "next/link";
 import {
+  getMarchandByNfcId,
   getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
   creerClient, ajouterTampon, validerRecompense, checkEtRecompenseParrain,
   formatTemps, WALLET_KEY,
@@ -77,20 +78,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       try {
         // Fetch marchand via API route avec timeout 6s (cold start Vercel)
         // Fallback vers SDK client si la fonction est froide
-        let marchand: Marchand | null = null;
-        try {
-          const controller = new AbortController();
-          const tid = setTimeout(() => controller.abort(), 6000);
-          const res = await fetch(`/api/nfc/${marchandId}`, { signal: controller.signal });
-          clearTimeout(tid);
-          if (res.ok) marchand = await res.json();
-        } catch {
-          // Cold start timeout → fallback SDK client
-        }
-        if (!marchand) {
-          const { getMarchandByNfcId } = await import("@/lib/loyalty");
-          marchand = await getMarchandByNfcId(marchandId);
-        }
+        const marchand: Marchand | null = await getMarchandByNfcId(marchandId);
         if (!marchand || !marchand.actif) {
           setScreen({ type: "erreur", message: "Ce service est temporairement indisponible." });
           return;
