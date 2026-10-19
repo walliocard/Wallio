@@ -123,9 +123,10 @@ function ConnexionInner() {
       }
       const supported = await isPasskeySupported();
       if (supported) {
+        const deviceHasIt = (() => { try { return localStorage.getItem("wallio_pk_gerant") === "1"; } catch { return false; } })();
         const already = await isPasskeyRegistered(`gerant:${uid}`);
-        if (already) {
-          try { localStorage.setItem("wallio_pk_gerant", "1"); } catch {}
+        if (already && deviceHasIt) {
+          // appareil + serveur OK, on passe
         } else {
           setGerantPasskeyBanner(uid);
           return;
