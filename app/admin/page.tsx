@@ -358,115 +358,172 @@ export default function AdminPage() {
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Contrat Wallio — ${ctNom}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1D1D1F; line-height: 1.75; font-size: 13px; padding: 60px 80px; max-width: 800px; margin: 0 auto; }
-  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.3px; }
-  h2 { font-size: 14px; font-weight: 700; margin: 28px 0 8px; border-bottom: 1px solid #E5E5EA; padding-bottom: 4px; }
-  p { margin-bottom: 8px; }
-  ul { padding-left: 20px; margin-bottom: 8px; }
-  li { margin-bottom: 4px; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #1D1D1F; padding-bottom: 20px; }
-  .ref { font-size: 11px; color: #6E6E73; text-align: right; }
-  .parties { background: #F2F2F7; border-radius: 8px; padding: 16px 20px; margin-bottom: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .partie h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6E6E73; margin-bottom: 6px; }
-  .tarif-box { background: #F2F2F7; border-radius: 8px; padding: 14px 18px; margin: 10px 0; }
-  .signatures { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-  .sig-block { border-top: 1px solid #1D1D1F; padding-top: 10px; }
-  .sig-block p { font-size: 11px; color: #6E6E73; }
-  strong { font-weight: 600; }
-  @media print { body { padding: 40px; } }
+  body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1D1D1F; line-height: 1.75; font-size: 13.5px; background: #F5F5F7; }
+  .actions { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #E5E5EA; padding: 12px 24px; display: flex; gap: 10px; align-items: center; }
+  .actions button { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+  .btn-back { background: #F2F2F7; color: #1D1D1F; }
+  .btn-pdf { background: #007AFF; color: white; }
+  .doc { max-width: 800px; margin: 32px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .accent-bar { height: 4px; background: linear-gradient(90deg, #007AFF, #8B5CF6); }
+  .doc-inner { padding: 52px 64px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid #E5E5EA; }
+  .brand-name { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: #007AFF; }
+  .brand-sub { font-size: 11px; color: #AEAEB2; margin-top: 3px; }
+  .doc-title { text-align: right; }
+  .doc-title h1 { font-size: 18px; font-weight: 700; color: #1D1D1F; letter-spacing: -0.3px; }
+  .doc-title .meta { font-size: 11px; color: #6E6E73; margin-top: 6px; line-height: 1.9; }
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 36px; border: 1px solid #E5E5EA; border-radius: 12px; overflow: hidden; }
+  .partie { padding: 20px 24px; }
+  .partie:first-child { border-right: 1px solid #E5E5EA; }
+  .partie h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #007AFF; margin-bottom: 10px; }
+  .partie p { font-size: 13px; line-height: 1.7; color: #3A3A3C; }
+  .article { margin-bottom: 28px; }
+  .article h2 { font-size: 13px; font-weight: 700; color: #1D1D1F; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #F2F2F7; display: flex; align-items: center; gap: 8px; }
+  .article h2::before { content: ""; display: inline-block; width: 3px; height: 14px; background: #007AFF; border-radius: 2px; flex-shrink: 0; }
+  .article p { color: #3A3A3C; margin-bottom: 6px; }
+  .article ul { padding-left: 18px; color: #3A3A3C; }
+  .article li { margin-bottom: 4px; }
+  .tarif-box { background: #F2F2F7; border-radius: 10px; padding: 16px 20px; margin: 10px 0; }
+  .tarif-box p { margin-bottom: 4px; }
+  .signatures { margin-top: 52px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .sig-block { }
+  .sig-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6E6E73; margin-bottom: 6px; }
+  .sig-name { font-size: 14px; font-weight: 600; color: #1D1D1F; margin-bottom: 48px; }
+  .sig-line { border-top: 1px solid #1D1D1F; padding-top: 8px; font-size: 11px; color: #6E6E73; }
+  .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #F2F2F7; font-size: 11px; color: #AEAEB2; text-align: center; }
+  @media print {
+    .actions { display: none !important; }
+    body { background: white; }
+    .doc { box-shadow: none; border-radius: 0; margin: 0; }
+    .doc-inner { padding: 40px 48px; }
+    .accent-bar { display: none; }
+  }
 </style>
 </head>
 <body>
-<div class="header">
-  <div>
-    <h1>Contrat de service marchand</h1>
-    <p style="color:#6E6E73;font-size:12px;">Wallio · Mohamed Karim Mejbar</p>
-  </div>
-  <div class="ref">
-    <p><strong>Réf :</strong> ${ctRef}</p>
-    <p><strong>Date :</strong> ${new Date(ctDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+<div class="actions">
+  <button class="btn-back" onclick="window.close()">← Fermer</button>
+  <button class="btn-pdf" onclick="window.print()">Télécharger en PDF</button>
+</div>
+<div class="doc">
+  <div class="accent-bar"></div>
+  <div class="doc-inner">
+
+    <div class="header">
+      <div>
+        <div class="brand-name">Wallio</div>
+        <div class="brand-sub">Mohamed Karim Mejbar · Auto-entrepreneur</div>
+        <div class="brand-sub">ICE 003655578000095 · IF 42798171</div>
+      </div>
+      <div class="doc-title">
+        <h1>Contrat de service marchand</h1>
+        <div class="meta">
+          Réf : <strong>${ctRef}</strong><br>
+          Date : ${new Date(ctDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+        </div>
+      </div>
+    </div>
+
+    <div class="parties">
+      <div class="partie">
+        <h3>Le Prestataire</h3>
+        <p><strong>Mohamed Karim Mejbar</strong></p>
+        <p>Auto-entrepreneur · Wallio</p>
+        <p>ICE : 003655578000095</p>
+        <p>IF : 42798171</p>
+        <p>Quartier Founty, Secteur R, N°266<br>Agadir, Maroc</p>
+        <p>walliocard@gmail.com</p>
+      </div>
+      <div class="partie">
+        <h3>Le Marchand (Client)</h3>
+        <p><strong>${ctNom || "—"}</strong></p>
+        <p>${ctEmail || "—"}</p>
+        <p>${ctAdresse || "—"}</p>
+        <p>${ctPays}</p>
+      </div>
+    </div>
+
+    <div class="article">
+      <h2>Article 1 — Objet</h2>
+      <p>Le présent contrat définit les conditions dans lesquelles Wallio met à disposition du Marchand sa plateforme SaaS de fidélisation numérique, comprenant la création et gestion de cartes de fidélité Apple Wallet et Google Wallet, l'enregistrement des visites client par NFC et QR code, le dashboard marchand et le support technique.</p>
+    </div>
+
+    <div class="article">
+      <h2>Article 2 — Durée</h2>
+      <p>Le contrat prend effet le <strong>${new Date(ctDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong> et est conclu pour une durée de <strong>${dureeLabel}</strong>, renouvelable automatiquement jusqu'à résiliation par l'une des parties avec un préavis de 30 jours.</p>
+    </div>
+
+    <div class="article">
+      <h2>Article 3 — Tarifs et paiement</h2>
+      <div class="tarif-box">
+        <p><strong>Formule :</strong> ${ABO_LABELS[ctType]}</p>
+        <p><strong>Montant :</strong> ${ctPrix} ${ctDevise} par période</p>
+        <p><strong>Paiement :</strong> Par virement bancaire, en avance de chaque période</p>
+      </div>
+      <p>Toute période entamée est due dans son intégralité. Aucun remboursement ne sera accordé en cas de résiliation anticipée. En cas de non-paiement, Wallio se réserve le droit de suspendre l'accès immédiatement, avec pénalités de retard de 10 % par mois.</p>
+    </div>
+
+    <div class="article">
+      <h2>Article 4 — Obligations de Wallio</h2>
+      <p>Wallio s'engage à mettre à disposition la plateforme avec soin et professionnalisme, à assurer la sécurité des données et à fournir un support réactif. Wallio est tenu à une obligation de moyens et non de résultat. Sa responsabilité est limitée au montant de l'abonnement mensuel du mois concerné.</p>
+    </div>
+
+    <div class="article">
+      <h2>Article 5 — Obligations du Marchand</h2>
+      <ul>
+        <li>Fournir des informations exactes et à jour</li>
+        <li>Utiliser le service conformément aux CGU et aux lois applicables</li>
+        <li>Informer ses clients de la collecte de leurs données via Wallio</li>
+        <li>Régler l'abonnement à l'échéance convenue</li>
+        <li>Ne pas céder l'accès au service à un tiers sans accord écrit</li>
+      </ul>
+    </div>
+
+    <div class="article">
+      <h2>Article 6 — Propriété intellectuelle et données</h2>
+      <p>La marque Wallio, le logo et le code source sont la propriété exclusive de Mohamed Karim Mejbar. Les données des clients finaux collectées via la plateforme restent la propriété du Marchand ; Wallio agit en qualité de sous-traitant au sens du RGPD.</p>
+    </div>
+
+    <div class="article">
+      <h2>Article 7 — Résiliation</h2>
+      <p><strong>Par le Marchand :</strong> préavis de 30 jours par email à walliocard@gmail.com. Aucun remboursement pour la période en cours.</p>
+      <p><strong>Par Wallio :</strong> résiliation immédiate sans préavis ni indemnité en cas de non-paiement, violation des CGU, usage frauduleux ou atteinte aux intérêts de Wallio.</p>
+    </div>
+
+    <div class="article">
+      <h2>Article 8 — Droit applicable et juridiction</h2>
+      <p>Le présent contrat est soumis au droit marocain. En cas de litige non résolu à l'amiable, le Tribunal de Commerce d'Agadir (Maroc) est seul compétent.</p>
+    </div>
+
+    <div class="article">
+      <h2>Article 9 — Documents contractuels</h2>
+      <p>Le présent contrat doit être lu conjointement avec les <strong>CGU</strong> et la <strong>Politique de confidentialité</strong> disponibles sur app.walliocard.com. En cas de contradiction, le présent contrat prévaut.</p>
+    </div>
+
+    <div class="signatures">
+      <div class="sig-block">
+        <div class="sig-label">Pour Wallio</div>
+        <div class="sig-name">Mohamed Karim Mejbar</div>
+        <div class="sig-line">Signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date : ___________</div>
+      </div>
+      <div class="sig-block">
+        <div class="sig-label">Pour le Marchand</div>
+        <div class="sig-name">${ctNom || "_______________"}</div>
+        <div class="sig-line">Signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date : ___________</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Wallio · Mohamed Karim Mejbar · Auto-entrepreneur · ICE 003655578000095 · IF 42798171<br>
+      Quartier Founty, Secteur R, N°266, Agadir, Maroc · walliocard@gmail.com · app.walliocard.com
+    </div>
+
   </div>
 </div>
-
-<div class="parties">
-  <div class="partie">
-    <h3>Le Prestataire</h3>
-    <p><strong>Mohamed Karim Mejbar</strong></p>
-    <p>Auto-entrepreneur</p>
-    <p>ICE : 003655578000095</p>
-    <p>IF : 42798171</p>
-    <p>Quartier Founty, Secteur R, N°266<br>Agadir, Maroc</p>
-    <p>walliocard@gmail.com</p>
-  </div>
-  <div class="partie">
-    <h3>Le Marchand (Client)</h3>
-    <p><strong>${ctNom || "—"}</strong></p>
-    <p>${ctEmail || "—"}</p>
-    <p>${ctAdresse || "—"}</p>
-    <p>${ctPays}</p>
-  </div>
-</div>
-
-<h2>Article 1 — Objet</h2>
-<p>Le présent contrat a pour objet de définir les conditions dans lesquelles Wallio met à disposition du Marchand sa plateforme SaaS de fidélisation numérique, comprenant la création et gestion de cartes de fidélité Apple Wallet et Google Wallet, l'enregistrement des visites client par NFC et QR code, le dashboard marchand et le support technique.</p>
-
-<h2>Article 2 — Durée</h2>
-<p>Le contrat prend effet le <strong>${new Date(ctDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</strong> et est conclu pour une durée de <strong>${dureeLabel}</strong>, renouvelable automatiquement jusqu'à résiliation par l'une des parties avec un préavis de 30 jours.</p>
-
-<h2>Article 3 — Tarifs et paiement</h2>
-<div class="tarif-box">
-  <p><strong>Formule :</strong> ${ABO_LABELS[ctType]}</p>
-  <p><strong>Montant :</strong> ${ctPrix} ${ctDevise} par période</p>
-  <p><strong>Paiement :</strong> Par virement bancaire, en avance de chaque période</p>
-</div>
-<p>Toute période entamée est due dans son intégralité. Aucun remboursement ne sera accordé en cas de résiliation anticipée. En cas de non-paiement, Wallio se réserve le droit de suspendre l'accès immédiatement, avec pénalités de retard de 10 % par mois.</p>
-
-<h2>Article 4 — Obligations de Wallio</h2>
-<p>Wallio s'engage à mettre à disposition la plateforme avec soin et professionnalisme, à assurer la sécurité des données et à fournir un support réactif. Wallio est tenu à une obligation de moyens et non de résultat. La responsabilité de Wallio est limitée au montant de l'abonnement mensuel du mois concerné.</p>
-
-<h2>Article 5 — Obligations du Marchand</h2>
-<ul>
-  <li>Fournir des informations exactes et à jour</li>
-  <li>Utiliser le service conformément aux CGU et aux lois applicables</li>
-  <li>Informer ses clients de la collecte de leurs données via Wallio</li>
-  <li>Régler l'abonnement à l'échéance convenue</li>
-  <li>Ne pas céder l'accès au service à un tiers sans accord écrit</li>
-</ul>
-
-<h2>Article 6 — Propriété intellectuelle et données</h2>
-<p>La marque Wallio, le logo et le code source sont la propriété exclusive de Mohamed Karim Mejbar. Les données des clients finaux collectées via la plateforme restent la propriété du Marchand ; Wallio agit en qualité de sous-traitant au sens du RGPD.</p>
-
-<h2>Article 7 — Résiliation</h2>
-<p><strong>Par le Marchand :</strong> préavis de 30 jours par email à walliocard@gmail.com. Aucun remboursement pour la période en cours.</p>
-<p><strong>Par Wallio :</strong> résiliation immédiate sans préavis ni indemnité en cas de non-paiement, violation des CGU, usage frauduleux ou atteinte aux intérêts de Wallio.</p>
-
-<h2>Article 8 — Droit applicable et juridiction</h2>
-<p>Le présent contrat est soumis au droit marocain. En cas de litige non résolu à l'amiable, le Tribunal de Commerce d'Agadir (Maroc) est seul compétent.</p>
-
-<h2>Article 9 — Documents contractuels</h2>
-<p>Le présent contrat doit être lu conjointement avec les <strong>Conditions Générales d'Utilisation</strong> et la <strong>Politique de confidentialité</strong> disponibles sur app.walliocard.com. En cas de contradiction, le présent contrat prévaut.</p>
-
-<div class="signatures">
-  <div class="sig-block">
-    <p><strong>Pour Wallio</strong></p>
-    <p>Mohamed Karim Mejbar</p>
-    <br><br><br>
-    <p>Signature :</p>
-    <p style="margin-top:4px">Date : _______________</p>
-  </div>
-  <div class="sig-block">
-    <p><strong>Pour le Marchand</strong></p>
-    <p>${ctNom || "_______________"}</p>
-    <br><br><br>
-    <p>Signature :</p>
-    <p style="margin-top:4px">Date : _______________</p>
-  </div>
-</div>
-
-<p style="margin-top:48px;font-size:11px;color:#AEAEB2;text-align:center;">Wallio · Mohamed Karim Mejbar · ICE 003655578000095 · Agadir, Maroc · walliocard@gmail.com</p>
 </body>
 </html>`;
 
@@ -475,7 +532,6 @@ export default function AdminPage() {
     w.document.write(html);
     w.document.close();
     w.focus();
-    setTimeout(() => w.print(), 500);
   }
 
   function chargerMarchandFacture(id: string) {
@@ -509,125 +565,157 @@ export default function AdminPage() {
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Facture ${faRef} — ${faNom}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1D1D1F; font-size: 13px; padding: 60px 80px; max-width: 820px; margin: 0 auto; background: #fff; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #1D1D1F; }
-  .brand-sub { font-size: 11px; color: #6E6E73; margin-top: 2px; }
+  body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #1D1D1F; font-size: 13px; background: #F5F5F7; }
+  .actions { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #E5E5EA; padding: 12px 24px; display: flex; gap: 10px; align-items: center; }
+  .actions button { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+  .btn-back { background: #F2F2F7; color: #1D1D1F; }
+  .btn-pdf { background: #007AFF; color: white; }
+  .doc { max-width: 820px; margin: 32px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .accent-bar { height: 4px; background: linear-gradient(90deg, #007AFF, #8B5CF6); }
+  .doc-inner { padding: 52px 64px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+  .brand-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #007AFF; }
+  .brand-sub { font-size: 11px; color: #AEAEB2; margin-top: 3px; line-height: 1.8; }
   .facture-label { text-align: right; }
-  .facture-label h1 { font-size: 28px; font-weight: 800; letter-spacing: -1px; color: #1D1D1F; }
-  .facture-label .ref { font-size: 13px; color: #6E6E73; margin-top: 4px; }
-  .statut { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: ${statutColor}; background: ${faStatut === "payee" ? "rgba(52,199,89,0.10)" : "rgba(255,159,10,0.10)"}; margin-top: 8px; }
-  .divider { height: 2px; background: #1D1D1F; margin: 32px 0; }
-  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-  .partie h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #6E6E73; margin-bottom: 10px; }
-  .partie p { font-size: 13px; line-height: 1.7; color: #1D1D1F; }
-  .partie p.light { color: #6E6E73; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+  .facture-label h1 { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: #1D1D1F; }
+  .facture-label .ref { font-size: 12px; color: #6E6E73; margin-top: 6px; line-height: 1.9; }
+  .statut { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: ${statutColor}; background: ${faStatut === "payee" ? "rgba(52,199,89,0.10)" : "rgba(255,159,10,0.10)"}; margin-top: 8px; }
+  .divider { height: 1px; background: #E5E5EA; margin: 0 0 32px; }
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 36px; border: 1px solid #E5E5EA; border-radius: 12px; overflow: hidden; }
+  .partie { padding: 20px 24px; }
+  .partie:first-child { border-right: 1px solid #E5E5EA; }
+  .partie h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #007AFF; margin-bottom: 10px; }
+  .partie p { font-size: 13px; line-height: 1.7; color: #3A3A3C; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 28px; border-radius: 10px; overflow: hidden; border: 1px solid #E5E5EA; }
   thead tr { background: #F2F2F7; }
-  thead th { padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #6E6E73; text-align: left; }
-  tbody td { padding: 14px; font-size: 13px; color: #1D1D1F; border-bottom: 1px solid #F2F2F7; }
+  thead th { padding: 11px 16px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6E6E73; text-align: left; }
+  tbody td { padding: 16px; font-size: 13px; color: #1D1D1F; border-bottom: 1px solid #F2F2F7; }
   tbody tr:last-child td { border-bottom: none; }
-  .totaux { display: flex; justify-content: flex-end; margin-bottom: 40px; }
-  .totaux-inner { min-width: 260px; }
-  .totaux-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 1px solid #F2F2F7; }
-  .totaux-row.total { border-bottom: none; border-top: 2px solid #1D1D1F; margin-top: 4px; padding-top: 12px; font-size: 16px; font-weight: 700; }
-  .infos-paiement { background: #F2F2F7; border-radius: 10px; padding: 18px 22px; margin-bottom: 40px; }
-  .infos-paiement h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6E6E73; margin-bottom: 12px; }
-  .infos-paiement p { font-size: 13px; line-height: 1.8; }
-  .footer { font-size: 11px; color: #AEAEB2; text-align: center; padding-top: 32px; border-top: 1px solid #F2F2F7; }
-  @media print { body { padding: 40px; } }
+  .totaux { display: flex; justify-content: flex-end; margin-bottom: 32px; }
+  .totaux-inner { min-width: 280px; border: 1px solid #E5E5EA; border-radius: 10px; overflow: hidden; }
+  .totaux-row { display: flex; justify-content: space-between; padding: 10px 16px; font-size: 13px; border-bottom: 1px solid #F2F2F7; }
+  .totaux-row:last-child { border-bottom: none; }
+  .totaux-row.total { background: #007AFF; color: white; font-size: 15px; font-weight: 700; }
+  .infos-paiement { border: 1px solid #E5E5EA; border-radius: 12px; overflow: hidden; margin-bottom: 36px; }
+  .infos-paiement-header { background: #F2F2F7; padding: 10px 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6E6E73; }
+  .infos-paiement-body { padding: 16px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  .infos-paiement-body p { font-size: 13px; line-height: 1.8; color: #3A3A3C; }
+  .rib-box { grid-column: 1 / -1; background: #F9F9FB; border-radius: 8px; padding: 12px 16px; margin-top: 6px; }
+  .rib-box p { font-size: 12px; line-height: 1.9; }
+  .footer { font-size: 11px; color: #AEAEB2; text-align: center; padding-top: 24px; border-top: 1px solid #F2F2F7; }
+  @media print {
+    .actions { display: none !important; }
+    body { background: white; }
+    .doc { box-shadow: none; border-radius: 0; margin: 0; }
+    .doc-inner { padding: 40px 48px; }
+    .accent-bar { display: none; }
+  }
 </style>
 </head>
 <body>
+<div class="actions">
+  <button class="btn-back" onclick="window.close()">← Fermer</button>
+  <button class="btn-pdf" onclick="window.print()">Télécharger en PDF</button>
+</div>
+<div class="doc">
+  <div class="accent-bar"></div>
+  <div class="doc-inner">
 
-<div class="header">
-  <div class="brand">
-    <div>
-      <div class="brand-name">Wallio</div>
-      <div class="brand-sub">Mohamed Karim Mejbar · Auto-entrepreneur</div>
-      <div class="brand-sub">ICE : 003655578000095 · IF : 42798171</div>
-      <div class="brand-sub">Quartier Founty, Secteur R, N°266 · Agadir, Maroc</div>
-      <div class="brand-sub">walliocard@gmail.com · app.walliocard.com</div>
+    <div class="header">
+      <div>
+        <div class="brand-name">Wallio</div>
+        <div class="brand-sub">Mohamed Karim Mejbar · Auto-entrepreneur<br>ICE : 003655578000095 · IF : 42798171<br>Quartier Founty, Secteur R, N°266 · Agadir, Maroc<br>walliocard@gmail.com · app.walliocard.com</div>
+      </div>
+      <div class="facture-label">
+        <h1>FACTURE</h1>
+        <div class="ref">
+          N° <strong>${faRef}</strong><br>
+          Date : ${new Date(faDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}<br>
+          Échéance : ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+        </div>
+        <span class="statut">${statutLabel}</span>
+      </div>
     </div>
-  </div>
-  <div class="facture-label">
-    <h1>FACTURE</h1>
-    <div class="ref">N° ${faRef}</div>
-    <div class="ref">Date : ${new Date(faDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
-    <div class="ref">Échéance : ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>
-    <span class="statut">${statutLabel}</span>
+
+    <div class="divider"></div>
+
+    <div class="parties">
+      <div class="partie">
+        <h3>Émetteur</h3>
+        <p><strong>Mohamed Karim Mejbar</strong></p>
+        <p>Auto-entrepreneur · Wallio</p>
+        <p>ICE : 003655578000095</p>
+        <p>IF : 42798171</p>
+        <p>Quartier Founty, Secteur R, N°266<br>Agadir, Maroc</p>
+      </div>
+      <div class="partie">
+        <h3>Facturé à</h3>
+        <p><strong>${faNom || "—"}</strong></p>
+        <p>${faEmail || "—"}</p>
+        <p>${faAdresse || "—"}</p>
+        <p>${faPays}</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Période</th>
+          <th style="text-align:right">Qté</th>
+          <th style="text-align:right">Montant HT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong>Wallio — Abonnement ${ABO_LABELS[faType]}</strong><br>
+            <span style="color:#6E6E73;font-size:12px;">Plateforme SaaS fidélité · Apple Wallet &amp; Google Wallet · Dashboard marchand</span>
+          </td>
+          <td style="color:#6E6E73">${dureeLabel}</td>
+          <td style="text-align:right">1</td>
+          <td style="text-align:right"><strong>${faPrix} ${faDevise}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totaux">
+      <div class="totaux-inner">
+        <div class="totaux-row"><span>Sous-total HT</span><span>${faPrix} ${faDevise}</span></div>
+        ${remiseNum > 0 ? `<div class="totaux-row" style="color:#FF3B30"><span>${faRemiseLabel || "Remise"}</span><span>− ${fmt(remiseNum)} ${faDevise}</span></div>` : ""}
+        <div class="totaux-row"><span>TVA (auto-entrepreneur exonéré)</span><span>0,00 ${faDevise}</span></div>
+        <div class="totaux-row total"><span>TOTAL TTC</span><span>${fmt(totalNet)} ${faDevise}</span></div>
+      </div>
+    </div>
+
+    <div class="infos-paiement">
+      <div class="infos-paiement-header">Informations de paiement</div>
+      <div class="infos-paiement-body">
+        <p><strong>Mode :</strong> ${paiementLabel}</p>
+        <p><strong>Référence :</strong> ${faRef}</p>
+        <p><strong>Échéance :</strong> ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+        ${faPaiement === "virement" ? `
+        <div class="rib-box">
+          <p><strong>Banque :</strong> Attijariwafa Bank</p>
+          <p><strong>Titulaire :</strong> M. Mohamed Karim Mejbar</p>
+          <p><strong>RIB :</strong> 007 010 0006682000480455 27</p>
+          <p><strong>SWIFT/BIC :</strong> BCMAMAMC</p>
+        </div>` : ""}
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Wallio · Mohamed Karim Mejbar · Auto-entrepreneur · ICE 003655578000095 · IF 42798171</p>
+      <p style="margin-top:4px">Quartier Founty, Secteur R, N°266, Agadir, Maroc · walliocard@gmail.com · app.walliocard.com</p>
+      <p style="margin-top:8px;font-style:italic">En application de la franchise en base de TVA, la TVA n'est pas applicable.</p>
+    </div>
+
   </div>
 </div>
-
-<div class="divider"></div>
-
-<div class="parties">
-  <div class="partie">
-    <h3>Émetteur</h3>
-    <p><strong>Mohamed Karim Mejbar</strong></p>
-    <p class="light">Auto-entrepreneur · Wallio</p>
-    <p class="light">ICE : 003655578000095</p>
-    <p class="light">IF : 42798171</p>
-    <p class="light">Quartier Founty, Secteur R, N°266<br>Agadir, Maroc</p>
-  </div>
-  <div class="partie">
-    <h3>Facturé à</h3>
-    <p><strong>${faNom || "—"}</strong></p>
-    <p class="light">${faEmail || "—"}</p>
-    <p class="light">${faAdresse || "—"}</p>
-    <p class="light">${faPays}</p>
-  </div>
-</div>
-
-<table>
-  <thead>
-    <tr>
-      <th style="border-radius:8px 0 0 8px">Description</th>
-      <th>Période</th>
-      <th style="text-align:right">Qté</th>
-      <th style="text-align:right;border-radius:0 8px 8px 0">Montant HT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>
-        <strong>Wallio — Abonnement ${ABO_LABELS[faType]}</strong><br>
-        <span style="color:#6E6E73;font-size:12px;">Plateforme SaaS fidélité · Apple Wallet &amp; Google Wallet · Dashboard marchand</span>
-      </td>
-      <td style="color:#6E6E73">${dureeLabel}</td>
-      <td style="text-align:right">1</td>
-      <td style="text-align:right"><strong>${faPrix} ${faDevise}</strong></td>
-    </tr>
-  </tbody>
-</table>
-
-<div class="totaux">
-  <div class="totaux-inner">
-    <div class="totaux-row"><span>Sous-total HT</span><span>${faPrix} ${faDevise}</span></div>
-    ${remiseNum > 0 ? `<div class="totaux-row" style="color:#FF3B30"><span>${faRemiseLabel || "Remise"}</span><span>− ${fmt(remiseNum)} ${faDevise}</span></div>` : ""}
-    <div class="totaux-row"><span>TVA (auto-entrepreneur exonéré)</span><span>0,00 ${faDevise}</span></div>
-    <div class="totaux-row total"><span>TOTAL TTC</span><span>${fmt(totalNet)} ${faDevise}</span></div>
-  </div>
-</div>
-
-<div class="infos-paiement">
-  <h3>Informations de paiement</h3>
-  <p><strong>Mode de paiement :</strong> ${paiementLabel}</p>
-  ${faPaiement === "virement" ? `<p><strong>IBAN :</strong> À compléter selon votre banque</p>` : ""}
-  <p><strong>Référence à indiquer :</strong> ${faRef}</p>
-  <p><strong>Date d'échéance :</strong> ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
-</div>
-
-<div class="footer">
-  <p>Wallio · Mohamed Karim Mejbar · Auto-entrepreneur · ICE 003655578000095 · IF 42798171</p>
-  <p style="margin-top:4px">Quartier Founty, Secteur R, N°266, Agadir, Maroc · walliocard@gmail.com · app.walliocard.com</p>
-  <p style="margin-top:8px;font-style:italic">En application de l'article relatif à la franchise en base de TVA, la TVA n'est pas applicable.</p>
-</div>
-
 </body>
 </html>`;
 
@@ -636,7 +724,6 @@ export default function AdminPage() {
     w.document.write(html);
     w.document.close();
     w.focus();
-    setTimeout(() => w.print(), 500);
   }
 
   // ── Palette active ──────────────────────────────────────────────────────────
