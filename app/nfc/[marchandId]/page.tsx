@@ -76,9 +76,20 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   useEffect(() => {
     async function init() {
       try {
-        // Fetch marchand via API route avec timeout 6s (cold start Vercel)
-        // Fallback vers SDK client si la fonction est froide
-        const marchand: Marchand | null = await getMarchandByNfcId(marchandId);
+        const CACHE_KEY = `wm_${marchandId}`;
+        const CACHE_TTL = 4 * 60 * 60 * 1000; // 4h
+        let marchand: Marchand | null = null;
+        try {
+          const raw = localStorage.getItem(CACHE_KEY);
+          if (raw) {
+            const { d, ts } = JSON.parse(raw);
+            if (Date.now() - ts < CACHE_TTL) marchand = d;
+          }
+        } catch {}
+        if (!marchand) {
+          marchand = await getMarchandByNfcId(marchandId);
+          if (marchand) try { localStorage.setItem(CACHE_KEY, JSON.stringify({ d: marchand, ts: Date.now() })); } catch {}
+        }
         if (!marchand || !marchand.actif) {
           setScreen({ type: "erreur", message: "Ce service est temporairement indisponible." });
           return;

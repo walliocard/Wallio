@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, initializeFirestore, memoryLocalCache } from "firebase/firestore";
+import { getFirestore, initializeFirestore, memoryLocalCache, persistentLocalCache } from "firebase/firestore";
 import { getAuth, initializeAuth, browserLocalPersistence, inMemoryPersistence } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -27,9 +27,15 @@ function isPrivateMode(): boolean {
 const isNew = getApps().length === 0;
 const app = isNew ? initializeApp(firebaseConfig) : getApps()[0];
 
-// memoryLocalCache : Firestore sans IndexedDB — propre dans tous les contextes
+// persistentLocalCache (IndexedDB) en mode normal : met en cache les lectures Firestore
+// entre les rechargements de page → scans plus rapides.
+// Fallback memoryLocalCache en navigation privée (IndexedDB bloqué).
+const localCache = typeof window === "undefined" || isPrivateMode()
+  ? memoryLocalCache()
+  : persistentLocalCache();
+
 export const db = isNew
-  ? initializeFirestore(app, { localCache: memoryLocalCache() })
+  ? initializeFirestore(app, { localCache })
   : getFirestore(app);
 
 // initializeAuth sans popupRedirectResolver évite l'iframe __/auth/iframe
