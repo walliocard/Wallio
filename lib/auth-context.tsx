@@ -57,12 +57,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const marchandRef = doc(db, "marchands", u.uid);
 
           // getDoc immédiat — charge le marchand dès que possible sans attendre onSnapshot
-          getDoc(marchandRef).then(snap => {
-            if (snap.exists()) {
-              setMarchand(prev => prev ?? ({ id: snap.id, actif: false, ...snap.data() } as MarchandData));
-            }
-            setLoading(false);
-          }).catch(() => setLoading(false));
+          const tryGetMarchand = (attempt = 1) =>
+            getDoc(marchandRef).then(snap => {
+              if (snap.exists()) {
+                setMarchand(prev => prev ?? ({ id: snap.id, actif: false, ...snap.data() } as MarchandData));
+              }
+              setLoading(false);
+            }).catch(() => {
+              if (attempt < 3) setTimeout(() => tryGetMarchand(attempt + 1), 800 * attempt);
+              else setLoading(false);
+            });
+          tryGetMarchand();
 
           // onSnapshot garde le marchand à jour en temps réel
           unsubSnap = onSnapshot(

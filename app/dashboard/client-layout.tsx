@@ -80,6 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading]);
 
   if (!user && !loading) return null;
+  if (user && !marchand && !loading) { router.push("/auth/connexion"); return null; }
 
   // Compte en attente d'activation
   if (marchand && !marchand.actif) {
