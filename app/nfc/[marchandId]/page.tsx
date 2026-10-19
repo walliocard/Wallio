@@ -383,11 +383,69 @@ const NFC_BG = "#F0F4FF";
 
 // ─── Loading ──────────────────────────────────────────────────────────────────
 
+const STEPS = [
+  { label: "Lecture de votre carte…",      delay: 0 },
+  { label: "Connexion au service…",         delay: 2500 },
+  { label: "Mise à jour de votre carte…",   delay: 5500 },
+  { label: "Encore quelques secondes…",     delay: 9000 },
+];
+
 function Loading() {
+  const [step, setStep] = useState(0);
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    STEPS.forEach((s, i) => {
+      if (i === 0) return;
+      timers.push(setTimeout(() => setStep(i), s.delay));
+    });
+    timers.push(setTimeout(() => setSlow(true), 12000));
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
   return (
-    <main className="min-h-screen flex items-center justify-center" style={{ background: NFC_BG }}>
-      <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-        style={{ borderColor: "#007AFF", borderTopColor: "transparent" }} />
+    <main className="min-h-screen flex flex-col items-center justify-center px-8" style={{ background: NFC_BG }}>
+      <style>{`
+        @keyframes pulse-dot { 0%,100%{opacity:.3;transform:scale(.85)} 50%{opacity:1;transform:scale(1)} }
+        @keyframes fade-up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+
+      {/* Dots animés */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 28 }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{
+            width: 10, height: 10, borderRadius: "50%",
+            background: "rgba(99,102,241,0.5)",
+            animation: `pulse-dot 1.2s ease-in-out ${i * 0.2}s infinite`,
+          }} />
+        ))}
+      </div>
+
+      {/* Message courant */}
+      <p key={step} style={{
+        fontSize: 16, fontWeight: 600, color: "#3C3C43", textAlign: "center",
+        animation: "fade-up 0.35s ease",
+      }}>
+        {STEPS[step].label}
+      </p>
+
+      {/* Barre de progression */}
+      <div style={{ width: 180, height: 3, background: "rgba(99,102,241,0.12)", borderRadius: 4, marginTop: 20, overflow: "hidden" }}>
+        <div style={{
+          height: "100%", borderRadius: 4,
+          background: "linear-gradient(90deg,#6366F1,#818CF8)",
+          width: `${((step + 1) / STEPS.length) * 100}%`,
+          transition: "width 0.6s cubic-bezier(.4,0,.2,1)",
+        }} />
+      </div>
+
+      {/* Message connexion lente */}
+      {slow && (
+        <p style={{ marginTop: 20, fontSize: 13, color: "#AEAEB2", textAlign: "center", animation: "fade-up 0.4s ease" }}>
+          Connexion lente — merci de patienter
+        </p>
+      )}
     </main>
   );
 }
