@@ -132,7 +132,7 @@ export default function AdminPage() {
   const [faMarchandId, setFaMarchandId] = useState("");
   const [faRef,    setFaRef]    = useState(() => `FAC-${new Date().getFullYear()}-${Math.floor(1000+Math.random()*9000)}`);
   const [faDate,   setFaDate]   = useState(() => new Date().toISOString().slice(0,10));
-  const [faEcheance, setFaEcheance] = useState(() => { const d = new Date(); d.setDate(d.getDate()+30); return d.toISOString().slice(0,10); });
+  const [faEcheance, setFaEcheance] = useState(() => { const d = new Date(); d.setDate(1); return d.toISOString().slice(0,10); });
   const [faType,   setFaType]   = useState<AboType>("mensuel");
   const [faPrix,   setFaPrix]   = useState("349");
   const [faDevise, setFaDevise] = useState("DH");
@@ -635,7 +635,7 @@ export default function AdminPage() {
         <div class="ref">
           N° <strong>${faRef}</strong><br>
           Date : ${new Date(faDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}<br>
-          Échéance : ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+          Début : ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
         </div>
         <span class="statut">${statutLabel}</span>
       </div>
@@ -697,7 +697,7 @@ export default function AdminPage() {
       <div class="infos-paiement-body">
         <p><strong>Mode :</strong> ${paiementLabel}</p>
         <p><strong>Référence :</strong> ${faRef}</p>
-        <p><strong>Échéance :</strong> ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
+        <p><strong>Début de période :</strong> ${new Date(faEcheance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
         ${faPaiement === "virement" ? `
         <div class="rib-box">
           <p><strong>Banque :</strong> Attijariwafa Bank</p>
@@ -1513,7 +1513,7 @@ export default function AdminPage() {
                   <input type="date" value={faDate} onChange={e => setFaDate(e.target.value)} style={{ ...inputStyle }} />
                 </div>
                 <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date d&apos;échéance</p>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Début de période</p>
                   <input type="date" value={faEcheance} onChange={e => setFaEcheance(e.target.value)} style={{ ...inputStyle }} />
                 </div>
                 <div>
