@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword, signInWithCustomToken, signOut, sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -114,6 +115,12 @@ function ConnexionInner() {
         timeout,
       ]);
       const uid = cred.user.uid;
+      const marchandSnap = await getDoc(doc(db, "marchands", uid));
+      if (!marchandSnap.exists()) {
+        signOut(auth).catch(() => {});
+        setError("Compte marchand introuvable. Vérifiez vos identifiants.");
+        return;
+      }
       const supported = await isPasskeySupported();
       if (supported) {
         const already = await isPasskeyRegistered(`gerant:${uid}`);
