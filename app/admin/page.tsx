@@ -395,6 +395,15 @@ export default function AdminPage() {
   .sig-name { font-size: 14px; font-weight: 600; color: #1D1D1F; margin-bottom: 48px; }
   .sig-line { border-top: 1px solid #1D1D1F; padding-top: 8px; font-size: 11px; color: #6E6E73; }
   .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #F2F2F7; font-size: 11px; color: #AEAEB2; text-align: center; }
+  @media (max-width: 620px) {
+    .doc { margin: 0; border-radius: 0; }
+    .doc-inner { padding: 28px 20px; }
+    .header { flex-direction: column; gap: 14px; }
+    .doc-title { text-align: left; }
+    .parties { grid-template-columns: 1fr; }
+    .partie:first-child { border-right: none; border-bottom: 1px solid #E5E5EA; }
+    .signatures { grid-template-columns: 1fr; gap: 28px; }
+  }
   @media print {
     .actions { display: none !important; }
     body { background: white; }
@@ -527,11 +536,11 @@ export default function AdminPage() {
 </body>
 </html>`;
 
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (!w) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   function chargerMarchandFacture(id: string) {
@@ -607,6 +616,17 @@ export default function AdminPage() {
   .rib-box { grid-column: 1 / -1; background: #F9F9FB; border-radius: 8px; padding: 12px 16px; margin-top: 6px; }
   .rib-box p { font-size: 12px; line-height: 1.9; }
   .footer { font-size: 11px; color: #AEAEB2; text-align: center; padding-top: 24px; border-top: 1px solid #F2F2F7; }
+  @media (max-width: 620px) {
+    .doc { margin: 0; border-radius: 0; }
+    .doc-inner { padding: 28px 20px; }
+    .header { flex-direction: column; gap: 14px; }
+    .facture-label { text-align: left; }
+    .parties { grid-template-columns: 1fr; }
+    .partie:first-child { border-right: none; border-bottom: 1px solid #E5E5EA; }
+    .totaux { justify-content: stretch; }
+    .totaux-inner { min-width: 100%; }
+    .infos-paiement-body { grid-template-columns: 1fr; }
+  }
   @media print {
     .actions { display: none !important; }
     body { background: white; }
@@ -719,11 +739,11 @@ export default function AdminPage() {
 </body>
 </html>`;
 
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (!w) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   // ── Palette active ──────────────────────────────────────────────────────────
