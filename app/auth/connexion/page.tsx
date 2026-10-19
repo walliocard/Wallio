@@ -172,7 +172,11 @@ function ConnexionInner() {
       }
       await signInWithCustomToken(auth, result.customToken);
       router.push("/dashboard");
-    } catch { setPasskeyError("Erreur Face ID. Utilisez email et mot de passe."); }
+    } catch {
+      try { localStorage.removeItem("wallio_pk_gerant"); } catch {}
+      setPasskeyAvailable(false);
+      setPasskeyError("Erreur Face ID. Utilisez email et mot de passe.");
+    }
     finally { setPasskeyLoading(false); }
   }
 
