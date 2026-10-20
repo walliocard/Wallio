@@ -181,7 +181,7 @@ export async function drawPrintCard(
 
   // Bloc NFC (gauche)
   ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
-  rr(ctx, p(120), p(315), p(570), p(300), p(36));
+  rr(ctx, p(120), p(295), p(570), p(340), p(36));
   ctx.fillStyle = "#FFFFFF"; ctx.fill();
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
@@ -223,7 +223,7 @@ export async function drawPrintCard(
 
   // Bloc QR (droite)
   ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
-  rr(ctx, p(810), p(315), p(570), p(300), p(36));
+  rr(ctx, p(810), p(295), p(570), p(340), p(36));
   ctx.fillStyle = "#FFFFFF"; ctx.fill();
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
@@ -239,23 +239,23 @@ export async function drawPrintCard(
   // Texte QR
   ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.font = `600 ${p(30)}px ${font}`;
-  ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_verb, p(1100), p(375));
+  ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_verb, p(1130), p(375));
   if (T.qr_pre) {
     const preW = ctx.measureText(T.qr_pre).width;
-    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre, p(1100), p(375 + 34));
-    const gCode = ctx.createLinearGradient(p(1100) + preW, 0, p(1100) + preW + ctx.measureText(T.qr_grad).width, 0);
+    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre, p(1130), p(375 + 34));
+    const gCode = ctx.createLinearGradient(p(1130) + preW, 0, p(1130) + preW + ctx.measureText(T.qr_grad).width, 0);
     gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, p(1100) + preW, p(375 + 34));
+    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, p(1130) + preW, p(375 + 34));
   } else {
-    const gCode = ctx.createLinearGradient(p(1100), 0, p(1100) + ctx.measureText(T.qr_grad).width, 0);
+    const gCode = ctx.createLinearGradient(p(1130), 0, p(1130) + ctx.measureText(T.qr_grad).width, 0);
     gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, p(1100), p(375 + 34));
+    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, p(1130), p(375 + 34));
   }
   ctx.font = `400 ${p(17)}px ${font}`; ctx.fillStyle = "#596170";
   const descY = p(375 + 34 + 34 + 18);
-  ctx.fillText(T.qr_desc1, p(1100), descY);
-  ctx.fillText(T.qr_desc2, p(1100), descY + p(24));
-  ctx.fillText(T.qr_desc3, p(1100), descY + p(48));
+  ctx.fillText(T.qr_desc1, p(1130), descY);
+  ctx.fillText(T.qr_desc2, p(1130), descY + p(24));
+  ctx.fillText(T.qr_desc3, p(1130), descY + p(48));
 
   // Séparateur "OU"
   ctx.strokeStyle = "rgba(0,0,0,0.10)"; ctx.lineWidth = p(1);
@@ -265,25 +265,25 @@ export async function drawPrintCard(
   ctx.font = `500 ${p(20)}px ${font}`; ctx.fillStyle = "#8E8E93";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillText(T.ou, p(750), p(465));
-  ctx.beginPath(); ctx.moveTo(p(750), p(500)); ctx.lineTo(p(750), p(615));
+  ctx.beginPath(); ctx.moveTo(p(750), p(500)); ctx.lineTo(p(750), p(630));
   ctx.strokeStyle = "rgba(0,0,0,0.10)"; ctx.lineWidth = p(1); ctx.stroke();
 
   // "Ajoutez à votre portefeuille"
   ctx.font = `400 ${p(18)}px ${font}`; ctx.fillStyle = "#596170";
   ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText(T.add_wallet, p(750), p(710));
+  ctx.fillText(T.add_wallet, p(750), p(680));
 
   // Badges Wallet
   const appleImg  = await loadImg("/apple-wallet-badge.svg");
   const googleImg = await loadImg("/google-wallet-badge.svg");
-  drawBadgeCentered(ctx, appleImg,  p(580), p(755), 300, 78, p);
-  drawBadgeCentered(ctx, googleImg, p(920), p(755), 300, 78, p);
+  drawBadgeCentered(ctx, appleImg,  p(580), p(820), 300, 78, p);
+  drawBadgeCentered(ctx, googleImg, p(920), p(820), 300, 78, p);
 
   // WALLIO
   ctx.font = `500 ${p(24)}px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
   ctx.fillStyle = indigo;
   ctx.letterSpacing = `${p(8)}px`;
-  ctx.fillText("WALLIO", p(750), p(900));
+  ctx.fillText("WALLIO", p(750), p(950));
   ctx.letterSpacing = "0px";
 
   ctx.restore();
