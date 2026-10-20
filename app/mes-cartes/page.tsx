@@ -111,7 +111,8 @@ export default function MesCartesPage() {
     const saved = localStorage.getItem(PHONE_KEY);
     if (saved) { setPhone(saved); loadCards(saved); }
     else setStep("login");
-    return () => { unsubRef.current?.(); unsubMerchantsRef.current?.(); };
+    const timeout = setTimeout(() => setStep(s => s === "loading" ? "login" : s), 8000);
+    return () => { clearTimeout(timeout); unsubRef.current?.(); unsubMerchantsRef.current?.(); };
   }, []);
 
   async function loadCards(fullPhone: string) {
