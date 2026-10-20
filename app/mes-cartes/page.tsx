@@ -306,7 +306,9 @@ export default function MesCartesPage() {
   }
 
   // ── Loading ────────────────────────────────────────────────────────
-  if (step === "loading" || fetching) return (
+  // Ne jamais spinner si pas de téléphone connu (cas visiteur depuis landing)
+  const hasPhone = typeof window !== "undefined" && !!localStorage.getItem(PHONE_KEY);
+  if ((step === "loading" || fetching) && hasPhone) return (
     <main style={bg}>
       <div style={{ padding: "20px 20px 0", maxWidth: 430, margin: "0 auto", width: "100%" }}>
         <Header />
