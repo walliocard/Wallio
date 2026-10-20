@@ -215,7 +215,7 @@ function ConnexionInner() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-5" style={{ background: "#FFFFFF", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <main style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: "env(safe-area-inset-top) 20px env(safe-area-inset-bottom)", background: "#F2F2F7" }}>
 
       {/* Gradient background */}
       <div className="fixed inset-0 pointer-events-none">
