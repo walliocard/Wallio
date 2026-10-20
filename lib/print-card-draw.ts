@@ -276,8 +276,8 @@ export async function drawPrintCard(
   // Badges Wallet
   const appleImg  = await loadImg("/apple-wallet-badge.svg");
   const googleImg = await loadImg("/google-wallet-badge.svg");
-  drawBadgeCentered(ctx, appleImg,  p(435), p(755), 300, 78, p);
-  drawBadgeCentered(ctx, googleImg, p(1065), p(755), 300, 78, p);
+  drawBadgeCentered(ctx, appleImg,  p(580), p(755), 300, 78, p);
+  drawBadgeCentered(ctx, googleImg, p(920), p(755), 300, 78, p);
 
   // WALLIO
   ctx.font = `500 ${p(24)}px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
