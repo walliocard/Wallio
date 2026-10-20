@@ -7,7 +7,6 @@ import { creerClient, getClientByTelephone } from "@/lib/loyalty";
 import InstallBanner from "@/components/InstallBanner";
 import PasskeyRegisterBanner from "@/components/PasskeyRegisterBanner";
 import { useLang } from "@/lib/lang-context";
-import { auth } from "@/lib/firebase";
 
 interface CardData {
   clientId: string;
@@ -112,8 +111,8 @@ export default function MesCartesPage() {
   }
 
   useEffect(() => {
-    // Si connecté en tant que marchand Firebase, ne pas auto-charger les cartes clients
-    if (auth.currentUser) { setStep("login"); return; }
+    const forceLogin = new URLSearchParams(window.location.search).get("login") === "1";
+    if (forceLogin) { setStep("login"); return; }
     const saved = localStorage.getItem(PHONE_KEY);
     if (saved) { setPhone(saved); loadCards(saved); }
     else setStep("login");

@@ -57,7 +57,7 @@ export default function ChoisirPage() {
         </Link>
 
         {/* Espace Client */}
-        <Link href="/mes-cartes" style={{ textDecoration:"none", flex:"1 1 280px" }}
+        <Link href="/mes-cartes?login=1" style={{ textDecoration:"none", flex:"1 1 280px" }}
           onTouchStart={e => (e.currentTarget as HTMLElement).style.transform="scale(0.97)"}
           onTouchEnd={e => (e.currentTarget as HTMLElement).style.transform=""}
           onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"}
