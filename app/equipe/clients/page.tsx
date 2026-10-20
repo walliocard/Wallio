@@ -64,6 +64,9 @@ export default function EquipeClientsPage() {
       const s: EquipeSession = JSON.parse(raw);
       setSession(s);
       loadClients(s.token);
+      const onVisible = () => { if (document.visibilityState === "visible") loadClients(s.token); };
+      document.addEventListener("visibilitychange", onVisible);
+      return () => document.removeEventListener("visibilitychange", onVisible);
     } catch { router.replace("/auth/connexion"); }
   }, [router]);
 
