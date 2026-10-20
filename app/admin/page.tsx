@@ -169,6 +169,7 @@ export default function AdminPage() {
   const [locTel, setLocTel] = useState("");
   const [locMaps, setLocMaps] = useState("");
   const [savingLoc, setSavingLoc] = useState(false);
+  const [cardFormat, setCardFormat] = useState<"A5" | "A6">("A5");
   const router = useRouter();
 
   useEffect(() => {
@@ -302,9 +303,10 @@ export default function AdminPage() {
     setDownloadingCard(true);
     const canvas = document.createElement("canvas");
     const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
-    await drawPrintCard(canvas, `https://app.walliocard.com/nfc/${m.nfc_id}`, 3, lang);
+    const scale = cardFormat === "A6" ? 2.1 : 3;
+    await drawPrintCard(canvas, `https://app.walliocard.com/nfc/${m.nfc_id}`, scale, lang);
     const a = document.createElement("a");
-    a.download = `wallio-carte-${slugify(m.nom || m.id)}.png`;
+    a.download = `wallio-carte-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
     a.href = canvas.toDataURL("image/png"); a.click();
     setDownloadingCard(false);
   }
@@ -313,9 +315,10 @@ export default function AdminPage() {
     const canvas = document.createElement("canvas");
     const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
     const url = m.nfc_id ? `https://app.walliocard.com/nfc/${m.nfc_id}` : "https://app.walliocard.com";
-    await drawPrintCardQROnly(canvas, url, 3, lang);
+    const scale = cardFormat === "A6" ? 2.1 : 3;
+    await drawPrintCardQROnly(canvas, url, scale, lang);
     const a = document.createElement("a");
-    a.download = `wallio-qr-${slugify(m.nom || m.id)}.png`;
+    a.download = `wallio-qr-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
     a.href = canvas.toDataURL("image/png"); a.click();
     setDownloadingQR(false);
   }
@@ -1148,6 +1151,14 @@ export default function AdminPage() {
               </div>
 
               <SLabel>Carte comptoir imprimable</SLabel>
+              <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                {(["A5", "A6"] as const).map(f => (
+                  <button key={f} onClick={() => setCardFormat(f)}
+                    style={{ flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: `1px solid ${cardFormat === f ? T.btnBg : T.border}`, background: cardFormat === f ? T.btnBg : "transparent", color: cardFormat === f ? T.btnFg : T.sec, cursor: "pointer" }}>
+                    {f}
+                  </button>
+                ))}
+              </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => telechargerCarte(selected)} disabled={!selected.nfc_id || downloadingCard || downloadingQR}
                   style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: T.surfCard, color: selected.nfc_id ? T.label : T.tert, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: selected.nfc_id ? "pointer" : "not-allowed" }}>
