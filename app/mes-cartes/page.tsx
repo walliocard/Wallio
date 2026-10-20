@@ -71,7 +71,10 @@ const PAYS = [
 
 export default function MesCartesPage() {
   const { t } = useLang();
-  const [step, setStep]         = useState<"loading"|"login"|"main">("loading");
+  const [step, setStep]         = useState<"loading"|"login"|"main">(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem(PHONE_KEY)) return "login";
+    return "loading";
+  });
   const [tab, setTab]           = useState<"cartes"|"messages"|"decouvrir">("cartes");
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
