@@ -725,13 +725,81 @@ function SectionEquipe() {
 
     <button
       onClick={() => signOut(getAuth())}
-      className="w-full rounded-2xl py-3.5 text-[15px] font-semibold mt-2 mb-8"
+      className="w-full rounded-2xl py-3.5 text-[15px] font-semibold mt-2"
       style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30", border: "1px solid rgba(255,59,48,0.15)" }}
     >
       Se déconnecter
     </button>
+
+    <DeleteAccountSection />
+    <div className="mb-8" />
     </>
   );
+}
+
+function DeleteAccountSection() {
+  const [step, setStep] = useState<"idle" | "confirm" | "loading" | "done">("idle");
+  const [error, setError] = useState("");
+
+  async function handleDelete() {
+    setStep("loading");
+    setError("");
+    try {
+      const token = await getAuth().currentUser?.getIdToken();
+      const res = await fetch("/api/delete-merchant-account", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Erreur serveur");
+      await signOut(getAuth());
+      setStep("done");
+    } catch {
+      setError("Une erreur est survenue. Réessaie.");
+      setStep("confirm");
+    }
+  }
+
+  if (step === "idle") return (
+    <button
+      onClick={() => setStep("confirm")}
+      className="w-full rounded-2xl py-3.5 text-[14px] font-medium mt-3"
+      style={{ background: "transparent", color: "var(--fg-tertiary)", border: "none" }}
+    >
+      Supprimer mon compte
+    </button>
+  );
+
+  if (step === "confirm") return (
+    <div className="mt-3 rounded-2xl p-5" style={{ background: "rgba(255,59,48,0.06)", border: "1px solid rgba(255,59,48,0.2)" }}>
+      <p className="text-[15px] font-semibold mb-1" style={{ color: "#FF3B30" }}>Supprimer le compte ?</p>
+      <p className="text-[13px] mb-4" style={{ color: "var(--fg-secondary)" }}>
+        Cette action est irreversible. Toutes tes donnees (configuration, historique, membres) seront supprimees definitivement.
+      </p>
+      {error && <p className="text-[13px] mb-3" style={{ color: "#FF3B30" }}>{error}</p>}
+      <div className="flex gap-3">
+        <button
+          onClick={() => setStep("idle")}
+          className="flex-1 rounded-xl py-2.5 text-[14px] font-medium"
+          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+        >
+          Annuler
+        </button>
+        <button
+          onClick={handleDelete}
+          className="flex-1 rounded-xl py-2.5 text-[14px] font-semibold"
+          style={{ background: "#FF3B30", color: "#fff" }}
+        >
+          Supprimer definitivement
+        </button>
+      </div>
+    </div>
+  );
+
+  if (step === "loading") return (
+    <p className="text-center text-[13px] mt-4" style={{ color: "var(--fg-tertiary)" }}>Suppression en cours...</p>
+  );
+
+  return null;
 }
 
 function Card({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
