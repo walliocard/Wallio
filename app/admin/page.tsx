@@ -250,7 +250,7 @@ export default function AdminPage() {
     } catch { /* silent */ }
   }
   async function saveLocalisation() {
-    if (!selected || !locVille) return;
+    if (!selected) return;
     setSavingLoc(true);
     const updated = { ...selected, pays: locPays, ville: locVille, telephone: locTel || undefined };
     setMarchands(prev => prev.map(x => x.id === selected.id ? updated : x));
@@ -1077,8 +1077,8 @@ export default function AdminPage() {
                   style={{ ...inputStyle }} />
                 <input type="url" placeholder="Lien Google Maps (optionnel)" value={locMaps} onChange={e => setLocMaps(e.target.value)}
                   style={{ ...inputStyle }} />
-                <button onClick={saveLocalisation} disabled={savingLoc || !locVille}
-                  style={{ padding: "11px 0", borderRadius: 10, background: T.btnBg, color: T.btnFg, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer", opacity: !locVille ? 0.45 : 1 }}>
+                <button onClick={saveLocalisation} disabled={savingLoc}
+                  style={{ padding: "11px 0", borderRadius: 10, background: T.btnBg, color: T.btnFg, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
                   {savingLoc ? "Enregistrement…" : "Enregistrer"}
                 </button>
                 {selected.ville && <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>Actuellement : {selected.ville}</p>}
