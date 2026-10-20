@@ -189,27 +189,27 @@ export async function drawPrintCard(
   // Cercle NFC (Liquid Glass)
   const ncx = p(290), ncy = p(465);
   ctx.save();
-  ctx.beginPath(); ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2); ctx.clip();
-  const glassBase = ctx.createRadialGradient(ncx, ncy - p(20), 0, ncx, ncy, p(90));
+  ctx.beginPath(); ctx.arc(ncx, ncy, p(110), 0, Math.PI * 2); ctx.clip();
+  const glassBase = ctx.createRadialGradient(ncx, ncy - p(20), 0, ncx, ncy, p(110));
   glassBase.addColorStop(0,   "rgba(255,255,255,0.92)");
   glassBase.addColorStop(0.5, "rgba(252,252,255,0.78)");
   glassBase.addColorStop(1,   "rgba(245,245,250,0.60)");
-  ctx.fillStyle = glassBase; ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
-  const specGrad = ctx.createLinearGradient(ncx - p(90), ncy - p(90), ncx + p(20), ncy + p(10));
+  ctx.fillStyle = glassBase; ctx.fillRect(ncx - p(110), ncy - p(110), p(220), p(220));
+  const specGrad = ctx.createLinearGradient(ncx - p(110), ncy - p(110), ncx + p(20), ncy + p(10));
   specGrad.addColorStop(0,    "rgba(255,255,255,0.65)");
   specGrad.addColorStop(0.30, "rgba(255,255,255,0.18)");
   specGrad.addColorStop(1,    "rgba(255,255,255,0.00)");
-  ctx.fillStyle = specGrad; ctx.fillRect(ncx - p(90), ncy - p(90), p(180), p(180));
+  ctx.fillStyle = specGrad; ctx.fillRect(ncx - p(110), ncy - p(110), p(220), p(220));
   ctx.restore();
-  const rimGrad = ctx.createLinearGradient(ncx, ncy - p(90), ncx, ncy + p(90));
+  const rimGrad = ctx.createLinearGradient(ncx, ncy - p(110), ncx, ncy + p(110));
   rimGrad.addColorStop(0,   "rgba(255,255,255,0.90)");
   rimGrad.addColorStop(0.5, "rgba(210,215,230,0.30)");
   rimGrad.addColorStop(1,   "rgba(190,200,220,0.15)");
-  ctx.beginPath(); ctx.arc(ncx, ncy, p(90), 0, Math.PI * 2);
+  ctx.beginPath(); ctx.arc(ncx, ncy, p(110), 0, Math.PI * 2);
   ctx.strokeStyle = rimGrad; ctx.lineWidth = p(1.5); ctx.stroke();
 
   const nfcImg = await loadImg("/nfc-icon.svg");
-  if (nfcImg) ctx.drawImage(nfcImg, p(235), p(410), p(110), p(110));
+  if (nfcImg) ctx.drawImage(nfcImg, p(222), p(398), p(136), p(136));
 
   // Texte NFC
   ctx.textAlign = "left"; ctx.textBaseline = "top";
@@ -228,12 +228,12 @@ export async function drawPrintCard(
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
   ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
 
-  const qrSize = Math.round(p(210));
+  const qrSize = Math.round(p(260));
   const qrImg  = await loadQRImage(qrUrl, qrSize);
   if (qrImg) {
-    ctx.drawImage(qrImg, p(850), p(360), p(210), p(210));
+    ctx.drawImage(qrImg, p(840), p(335), p(260), p(260));
   } else {
-    ctx.fillStyle = "#F0F0F0"; rr(ctx, p(850), p(360), p(210), p(210), p(8)); ctx.fill();
+    ctx.fillStyle = "#F0F0F0"; rr(ctx, p(840), p(335), p(260), p(260), p(8)); ctx.fill();
   }
 
   // Texte QR
