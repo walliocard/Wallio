@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword, signInWithCustomToken, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
 import WallioLogo from "@/components/WallioLogo";
@@ -26,29 +25,29 @@ type EquipeStep = "code" | "prenom" | "pin";
 
 function ConnexionInner() {
   const { t } = useLang();
-  const searchParams = useSearchParams();
 
   const [mode, setMode] = useState<"gerant" | "equipe">("gerant");
   const [equipeStep, setEquipeStep] = useState<EquipeStep>("code");
   const [equipeData, setEquipeData] = useState<{ marchandId: string; marchandNom: string; membres: { id: string; prenom: string }[] } | null>(null);
 
   useEffect(() => {
-    if (searchParams.get("changer") !== "1") return;
-    try {
-      const stored = localStorage.getItem("equipe_etablissement");
-      if (!stored) return;
-      const data = JSON.parse(stored);
-      setEquipeData(data);
-      setMode("equipe");
-      setEquipeStep("prenom");
-    } catch {}
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("inactive")) setError(t.auth_inactive);
+    if (params.get("changer") === "1") {
+      try {
+        const stored = localStorage.getItem("equipe_etablissement");
+        if (!stored) return;
+        const data = JSON.parse(stored);
+        setEquipeData(data);
+        setMode("equipe");
+        setEquipeStep("prenom");
+      } catch {}
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Gérant
   const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState(
-    searchParams.get("inactive") ? t.auth_inactive : ""
-  );
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [privateMode] = useState(() => typeof window !== "undefined" && isPrivateMode());
   const [resetSent, setResetSent] = useState(false);
@@ -461,5 +460,5 @@ function ConnexionInner() {
 }
 
 export default function ConnexionPage() {
-  return <Suspense><ConnexionInner /></Suspense>;
+  return <ConnexionInner />;
 }
