@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       membres,
     });
   } catch (e) {
-    return Response.json({ error: String(e) }, { status: 500 });
+    console.error("[valider-code]", e);
+    return Response.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

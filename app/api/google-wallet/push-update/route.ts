@@ -75,6 +75,7 @@ export async function POST(req: Request) {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify(patchBody),
+        signal: AbortSignal.timeout(8000),
       }
     );
     if (!res.ok) {

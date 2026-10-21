@@ -4,7 +4,7 @@ import { adminDb, initAdmin } from "@/lib/admin";
 import { FieldValue } from "firebase-admin/firestore";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "wallio.card@gmail.com";
-const SECRET = process.env.ADMIN_SECRET ?? process.env.CRON_SECRET ?? "secret";
+const SECRET = process.env.ADMIN_SECRET ?? process.env.CRON_SECRET ?? "";
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
 
 async function checkAdmin() {

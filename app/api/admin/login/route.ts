@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "wallio.card@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "";
-const SECRET = process.env.ADMIN_SECRET ?? process.env.CRON_SECRET ?? "secret";
+const SECRET = process.env.ADMIN_SECRET ?? process.env.CRON_SECRET;
+if (!SECRET) throw new Error("ADMIN_SECRET ou CRON_SECRET manquant");
 
 export async function POST(req: Request) {
   const { email, password } = await req.json();

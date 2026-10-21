@@ -40,6 +40,7 @@ export async function getGoogleAccessToken(): Promise<string> {
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion,
     }),
+    signal: AbortSignal.timeout(8000),
   });
 
   const data = await res.json() as { access_token: string; expires_in: number };

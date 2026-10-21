@@ -71,6 +71,7 @@ export async function GET(
 
   const classRes = await fetch(`${API}/loyaltyClass/${encodeURIComponent(cid)}`, {
     headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(8000),
   });
 
   // Proxies publics HTTPS — Google ne peut pas fetcher des data URLs base64
@@ -126,6 +127,7 @@ export async function GET(
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify(classBase),
+      signal: AbortSignal.timeout(8000),
     });
     if (!createRes.ok) {
       const err = await createRes.text();
@@ -138,6 +140,7 @@ export async function GET(
       method: "PUT",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify(classBase),
+      signal: AbortSignal.timeout(8000),
     });
     if (!putRes.ok) {
       const putErr = await putRes.text();
