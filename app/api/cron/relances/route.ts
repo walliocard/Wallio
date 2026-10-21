@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Timestamp, FieldValue } from "firebase-admin/firestore";
+import { Timestamp, FieldValue, DocumentReference } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
 import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
 
@@ -30,6 +30,7 @@ export async function GET(req: Request) {
       .get();
 
     const tokens: string[] = [];
+    const clientRefs: DocumentReference[] = [];
 
     for (const clientDoc of clientsSnap.docs) {
       const client = clientDoc.data();
@@ -49,12 +50,15 @@ export async function GET(req: Request) {
         notifs: FieldValue.arrayUnion(notifRecord),
       });
 
-      if (client.fcm_token) tokens.push(client.fcm_token);
+      if (client.fcm_token) {
+        tokens.push(client.fcm_token);
+        clientRefs.push(clientDoc.ref);
+      }
       traites++;
     }
 
     if (tokens.length > 0 && message) {
-      await messaging.sendEachForMulticast({
+      const batchRes = await messaging.sendEachForMulticast({
         tokens,
         notification: { title: `${marchand.nom} vous attend !`, body: message },
         webpush: {
@@ -62,6 +66,16 @@ export async function GET(req: Request) {
           fcmOptions: { link: "https://app.walliocard.com" },
         },
       });
+      const invalid = ["messaging/registration-token-not-registered", "messaging/invalid-registration-token"];
+      const cleanupBatch = db.batch();
+      let hasCleanup = false;
+      batchRes.responses.forEach((r, i) => {
+        if (!r.success && r.error?.code && invalid.includes(r.error.code)) {
+          cleanupBatch.update(clientRefs[i], { fcm_token: null });
+          hasCleanup = true;
+        }
+      });
+      if (hasCleanup) await cleanupBatch.commit();
     }
   }
 

@@ -71,7 +71,7 @@ export async function GET(req: Request) {
     }
 
     if (tokens.length > 0 && message) {
-      await messaging.sendEachForMulticast({
+      const batchRes = await messaging.sendEachForMulticast({
         tokens,
         notification: { title: `Joyeux anniversaire !`, body: message },
         webpush: {
@@ -79,6 +79,16 @@ export async function GET(req: Request) {
           fcmOptions: { link: "https://app.walliocard.com" },
         },
       });
+      const invalid = ["messaging/registration-token-not-registered", "messaging/invalid-registration-token"];
+      const cleanupBatch = db.batch();
+      let hasCleanup = false;
+      batchRes.responses.forEach((r, i) => {
+        if (!r.success && r.error?.code && invalid.includes(r.error.code)) {
+          cleanupBatch.update(db.collection("clients").doc(clientIds[i]), { fcm_token: null });
+          hasCleanup = true;
+        }
+      });
+      if (hasCleanup) await cleanupBatch.commit();
     }
   }
 
