@@ -247,7 +247,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               backdropFilter: "blur(48px) saturate(180%)",
               WebkitBackdropFilter: "blur(48px) saturate(180%)",
               borderTop: isDark ? "0.5px solid rgba(255,255,255,0.10)" : "0.5px solid rgba(0,0,0,0.08)",
-              paddingBottom: isNative ? "env(safe-area-inset-bottom, 0px)" : 0,
+              paddingBottom: isNative ? "env(safe-area-inset-bottom, 34px)" : 0,
               position: "fixed",
             }}
           >
@@ -306,22 +306,6 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               );
             })}
           </nav>
-          {/* Couvre la safe area en bas — native Capacitor + PWA homescreen */}
-          {isNative && (
-            <div
-              className="md:hidden"
-              style={{
-                position: "fixed",
-                zIndex: 50,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: "env(safe-area-inset-bottom, 34px)",
-                minHeight: 20,
-                background: isDark ? "rgb(22,22,24)" : "rgb(255,255,255)",
-              }}
-            />
-          )}
           </>
         );
       })()}
