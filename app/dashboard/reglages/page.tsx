@@ -107,7 +107,7 @@ export default function ReglagesPage() {
           : [],
         ...config,
         automatisations: {
-          anniversaire: { actif: auto.anniversaire_actif, jours_avant: auto.anniversaire_jours_avant, message: auto.anniversaire_message },
+          anniversaire: { actif: auto.anniversaire_actif, jours_avant: 0, message: auto.anniversaire_message },
           relance: { actif: auto.relance_actif, delai_jours: auto.relance_delai_jours, message: auto.relance_message },
         },
         notif_actif: notifActif,
@@ -367,24 +367,14 @@ export default function ReglagesPage() {
                 <Toggle value={auto.anniversaire_actif} onChange={v => setA("anniversaire_actif", v)} />
               </div>
               {auto.anniversaire_actif && (
-                <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--border)" }}>
-                  <div>
-                    <p className="text-[12px] mb-2" style={{ color: "var(--fg-secondary)" }}>
-                      {auto.anniversaire_jours_avant === 0 ? t.settings_birthday_day_0 : `${auto.anniversaire_jours_avant} ${t.settings_birthday_days}`}
-                    </p>
-                    <input type="range" min={0} max={7} value={auto.anniversaire_jours_avant}
-                      onChange={e => setA("anniversaire_jours_avant", Number(e.target.value))}
-                      className="w-full" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>{t.settings_birthday_msg_label}</p>
-                    <textarea value={auto.anniversaire_message}
-                      onChange={e => setA("anniversaire_message", e.target.value)}
-                      rows={2} className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none"
-                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", lineHeight: 1.5 }}
-                      onFocus={e => (e.target.style.borderColor = "var(--accent)")}
-                      onBlur={e => (e.target.style.borderColor = "var(--border)")} />
-                  </div>
+                <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                  <p className="text-[12px] mb-1.5" style={{ color: "var(--fg-secondary)" }}>{t.settings_birthday_msg_label}</p>
+                  <textarea value={auto.anniversaire_message}
+                    onChange={e => setA("anniversaire_message", e.target.value)}
+                    rows={2} className="w-full px-3 py-2.5 rounded-xl text-[12px] outline-none resize-none"
+                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", lineHeight: 1.5 }}
+                    onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                    onBlur={e => (e.target.style.borderColor = "var(--border)")} />
                 </div>
               )}
             </div>
