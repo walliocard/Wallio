@@ -9,7 +9,7 @@ import {
   formatTemps, WALLET_KEY,
   type Marchand, type Client, type TamponResult,
 } from "@/lib/loyalty";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -481,7 +481,28 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
   const isProgressif = mn.mode_recompense === "progressif" && paliersDef.length > 0;
   const tamponsPostScan = result.type === "ok" || result.type === "recompense" ? result.tampons : 0;
   const [isAndroid, setIsAndroid] = useState(false);
-  useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
+  const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
+
+  useEffect(() => {
+    setIsAndroid(/android/i.test(navigator.userAgent));
+    if (typeof Notification !== "undefined") {
+      if (Notification.permission === "granted") setNotifState("granted");
+      else if (Notification.permission === "denied") setNotifState("denied");
+    }
+  }, []);
+
+  async function activerNotifs() {
+    try {
+      const token = await registerFcmToken();
+      if (token) {
+        const snap = await getDocs(query(collection(db, "clients"), where("wallet_id", "==", walletId)));
+        await Promise.all(snap.docs.map(d => updateDoc(d.ref, { fcm_token: token })));
+        setNotifState("granted");
+      } else {
+        setNotifState("denied");
+      }
+    } catch { setNotifState("denied"); }
+  }
 
   if (result.type === "not_found") return <Erreur message="Client introuvable." />;
 
@@ -694,7 +715,32 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
           )}
         </div>
 
-        <a href={`/preferences/${walletId}`} className="block mt-8 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
+        {/* Banner notif — visible si marchand notif actif + client pas encore autorisé */}
+        {(isOk || isRecompense) && mn.notif_actif !== false && notifState === "idle" && (
+          <div className="mt-5 rounded-2xl p-4 flex items-center gap-3"
+            style={{ background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.18)" }}>
+            <div className="flex-1 text-left">
+              <p className="text-[13px] font-semibold mb-0.5" style={{ color: "#1D1D1F" }}>Restez informé</p>
+              <p className="text-[11px]" style={{ color: "#6E6E73" }}>Recevez vos récompenses et offres</p>
+            </div>
+            <button onClick={activerNotifs}
+              className="px-4 py-2 rounded-xl text-[13px] font-semibold text-white flex-shrink-0"
+              style={{ background: "var(--accent)" }}>
+              Activer
+            </button>
+          </div>
+        )}
+        {(isOk || isRecompense) && notifState === "granted" && (
+          <div className="mt-5 rounded-2xl py-2.5 px-4 flex items-center gap-2"
+            style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.18)" }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <p className="text-[12px] font-medium" style={{ color: "#34C759" }}>Notifications activées</p>
+          </div>
+        )}
+
+        <a href={`/preferences/${walletId}`} className="block mt-6 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
           Gérer mes notifications
         </a>
         <Link href="/mes-cartes" className="block mt-3 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
