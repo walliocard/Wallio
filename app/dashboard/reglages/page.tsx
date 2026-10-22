@@ -142,7 +142,7 @@ export default function ReglagesPage() {
   }
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-24 md:pb-10 max-w-3xl">
+    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-24 md:pb-10 max-w-5xl">
 
       {/* Header */}
       <div className="mb-6">

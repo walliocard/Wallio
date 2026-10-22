@@ -95,7 +95,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-24 md:pb-10 max-w-2xl">
+    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-24 md:pb-10 max-w-5xl">
 
       <div className="mb-5 md:mb-8">
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
@@ -106,8 +106,9 @@ export default function NotificationsPage() {
         </h1>
       </div>
 
-      <div className="space-y-4">
+      <div className="lg:grid lg:grid-cols-[1fr_1.5fr] lg:gap-5 space-y-4 lg:space-y-0">
 
+        <div className="space-y-4">
         {/* Segment */}
         <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
           <div className="space-y-2">
@@ -162,7 +163,9 @@ export default function NotificationsPage() {
             ))}
           </div>
         </div>
+        </div>
 
+        <div className="space-y-4">
         {/* Rédaction */}
         <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
           <div className="space-y-3">
@@ -285,6 +288,7 @@ export default function NotificationsPage() {
           )}
           {sendState === "sending" ? t.notif_sending : t.notif_send}
         </button>
+        </div>
 
       </div>
     </div>
