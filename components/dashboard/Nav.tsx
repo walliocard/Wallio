@@ -84,8 +84,6 @@ const FilledNav: Record<string, (size: number) => React.ReactNode> = {
     <svg width={s} height={s} viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/>
       <polyline points="12 7 12 12 15 15" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-      <polyline points="1 4 1 10 7 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
-      <path d="M3.51 15a9 9 0 1 0 .49-4.95" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
     </svg>
   ),
 };
