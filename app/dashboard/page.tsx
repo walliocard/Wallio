@@ -286,7 +286,7 @@ export default function AccueilPage() {
           </h1>
           {stats.anniversaires_today > 0 && (
             <p className="text-[12px] mt-0.5 font-medium" style={{ color: "#FF9F0A" }}>
-              {stats.anniversaires_today} anniversaire{stats.anniversaires_today > 1 ? "s" : ""} aujourd&apos;hui
+              {`${stats.anniversaires_today} anniversaire${stats.anniversaires_today > 1 ? "s" : ""} aujourd'hui`}
             </p>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import DashboardNav from "@/components/dashboard/Nav";
 import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
 import { useLang } from "@/lib/lang-context";
@@ -41,10 +41,30 @@ function SplashScreen({ exiting }: { exiting: boolean }) {
   );
 }
 
+function useIsDark() {
+  const [isDark, setIsDark] = useState(true);
+  const check = useCallback(() => {
+    const root = document.documentElement;
+    if (root.classList.contains("dark")) { setIsDark(true); return; }
+    if (root.classList.contains("light")) { setIsDark(false); return; }
+    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }, []);
+  useEffect(() => {
+    check();
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", check);
+    const obs = new MutationObserver(check);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => { mq.removeEventListener("change", check); obs.disconnect(); };
+  }, [check]);
+  return isDark;
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, marchand, loading } = useAuth();
   const { t, setLang } = useLang();
   const router = useRouter();
+  const isDark = useIsDark();
 
   const [showSplash, setShowSplash] = useState(true);
   const [splashExiting, setSplashExiting] = useState(false);
@@ -120,7 +140,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               overflowY: "auto",
               overflowX: "hidden",
               WebkitOverflowScrolling: "touch",
-              background: "var(--bg)",
+              background: isDark
+                ? "var(--bg)"
+                : "radial-gradient(ellipse at 50% -10%, #ECF2FF 0%, #F5F5F7 52%)",
               animation: "page-in 0.2s ease",
             } as React.CSSProperties}
             onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
