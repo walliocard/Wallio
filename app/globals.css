@@ -288,6 +288,13 @@ input[type="range"].zoom-slider::-moz-range-progress {
   0%   { transform: scale(1); opacity: 0.6; }
   100% { transform: scale(1.5); opacity: 0; }
 }
+@keyframes tab-bounce {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(0.82); }
+  65%  { transform: scale(1.10); }
+  82%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

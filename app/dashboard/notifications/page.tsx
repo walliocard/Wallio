@@ -95,7 +95,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-44 md:pb-10 max-w-2xl">
+    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-2xl">
 
       <div className="mb-5 md:mb-8">
         <h1 className="text-[24px] md:text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
