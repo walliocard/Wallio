@@ -101,7 +101,7 @@ export default function NotificationsPage() {
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
           {t.notif_subtitle}
         </p>
-        <h1 className="text-[32px] font-black tracking-[-1px]" style={{ color: "var(--fg)" }}>
+        <h1 className="text-[32px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>
           {t.notif_title}
         </h1>
       </div>

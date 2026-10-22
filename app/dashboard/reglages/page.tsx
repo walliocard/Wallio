@@ -149,7 +149,7 @@ export default function ReglagesPage() {
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
           {t.settings_config}
         </p>
-        <h1 className="text-[32px] font-black tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.settings_title}</h1>
+        <h1 className="text-[32px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.settings_title}</h1>
       </div>
 
       {/* Raccourci Ma carte — mobile uniquement */}
