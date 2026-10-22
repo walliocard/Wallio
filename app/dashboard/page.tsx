@@ -269,19 +269,19 @@ export default function AccueilPage() {
 
       {/* Header */}
       <div className="mb-8 flex items-center gap-4">
-        <div className="w-16 h-16 rounded-[20px] flex-shrink-0 overflow-hidden flex items-center justify-center"
-          style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
+        <div className="flex-shrink-0 overflow-hidden flex items-center justify-center"
+          style={{ width: 72, height: 72, borderRadius: 22, background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
           {m.logo_url
             // eslint-disable-next-line @next/next/no-img-element
             ? <img src={m.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            : <span className="text-[28px] font-bold" style={{ color: "var(--accent)" }}>{(marchand.nom?.[0] || "?").toUpperCase()}</span>
+            : <span className="text-[30px] font-bold" style={{ color: "var(--accent)" }}>{(marchand.nom?.[0] || "?").toUpperCase()}</span>
           }
         </div>
         <div>
           <p className="text-[12px] font-medium" style={{ color: "var(--fg-tertiary)" }}>
             Bonjour · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
-          <h1 className="text-[34px] lg:text-[38px] font-black tracking-[-1.5px] leading-tight" style={{ color: "var(--fg)" }}>
+          <h1 className="text-[40px] lg:text-[44px] font-black tracking-[-2px] leading-tight" style={{ color: "var(--fg)" }}>
             {marchand.nom}
           </h1>
           {stats.anniversaires_today > 0 && (
