@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
 import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
+import { pushPassUpdate } from "@/lib/apple-wallet/apns";
 
 export async function GET(req: Request) {
   if (!process.env.CRON_SECRET || req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -66,6 +67,11 @@ export async function GET(req: Request) {
       if (client.fcm_token) {
         tokens.push(client.fcm_token);
         clientIds.push(clientDoc.id);
+      }
+      // Apple Wallet : push APNS pour que la carte se mette à jour avec le message d'anniv
+      if (client.apns_push_token) {
+        pushPassUpdate(client.apns_push_token).catch(() => {});
+        await clientDoc.ref.update({ apns_last_updated: new Date().toISOString() });
       }
       traites++;
     }
