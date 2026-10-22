@@ -176,41 +176,37 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
       {(() => {
         const mobileNav = NAV.filter(n => n.mobile);
         const activeIdx = mobileNav.findIndex(n => active(pathname, n.href));
-        const TAB_W = 58;
         const TAB_H = 62;
+        const PADDING_V = 4;
         return (
           <nav
-            className="md:hidden fixed z-40 flex items-center"
+            className="md:hidden fixed z-40 flex items-stretch"
             style={{
-              bottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)",
-              left: "50%",
-              transform: "translateX(-50%)",
-              background: isDark ? "rgba(28,28,30,0.94)" : "rgba(255,255,255,0.88)",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: isDark ? "rgba(22,22,24,0.96)" : "rgba(255,255,255,0.92)",
               backdropFilter: "blur(48px) saturate(180%)",
               WebkitBackdropFilter: "blur(48px) saturate(180%)",
-              border: isDark ? "0.5px solid rgba(255,255,255,0.12)" : "0.5px solid rgba(0,0,0,0.08)",
-              borderRadius: 50,
-              padding: "5px 8px",
-              boxShadow: isDark
-                ? "0 12px 48px rgba(0,0,0,0.45), 0 2px 12px rgba(0,0,0,0.2), inset 0 0.5px 0 rgba(255,255,255,0.08)"
-                : "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 0.5px 0 rgba(255,255,255,0.9)",
-              gap: 0,
+              borderTop: isDark ? "0.5px solid rgba(255,255,255,0.10)" : "0.5px solid rgba(0,0,0,0.08)",
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+              paddingTop: PADDING_V,
               position: "fixed",
             }}
           >
-            {/* Indicateur slide */}
+            {/* Indicateur slide — bloc pleine hauteur sous l'onglet actif */}
             {activeIdx >= 0 && (
               <div
                 style={{
                   position: "absolute",
-                  left: 10 + activeIdx * TAB_W,
-                  top: 6,
-                  width: TAB_W,
+                  top: PADDING_V,
                   height: TAB_H,
-                  borderRadius: 14,
-                  background: isDark ? "rgba(255,255,255,0.14)" : "rgba(0,122,255,0.08)",
+                  width: `${100 / mobileNav.length}%`,
+                  left: `${(activeIdx / mobileNav.length) * 100}%`,
+                  background: isDark ? "rgba(255,255,255,0.10)" : "rgba(0,122,255,0.07)",
                   transition: "left 0.28s cubic-bezier(.4,0,.2,1)",
                   pointerEvents: "none",
+                  borderRadius: 0,
                 }}
               />
             )}
@@ -220,14 +216,13 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
                 <Link
                   key={href}
                   href={href}
-                  className="flex flex-col items-center justify-center flex-shrink-0 active:scale-90 gap-0.5"
+                  className="flex flex-col items-center justify-center active:scale-90 gap-0.5"
                   style={{
-                    width: TAB_W,
+                    flex: 1,
                     height: TAB_H,
-                    borderRadius: 14,
                     color: isActive
                       ? (isDark ? "white" : "#007AFF")
-                      : (isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.35)"),
+                      : (isDark ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.32)"),
                     transition: "color 0.25s cubic-bezier(.4,0,.2,1), transform 0.15s",
                     position: "relative",
                     zIndex: 1,
