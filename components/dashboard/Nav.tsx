@@ -226,6 +226,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
         const TAB_H = 60;
         const n = mobileNav.length;
         return (
+          <>
           <nav
             className="md:hidden fixed z-40 flex items-stretch"
             style={{
@@ -295,6 +296,18 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               );
             })}
           </nav>
+          {/* Couvre la safe area en bas dans l'app native Capacitor */}
+          <div
+            className="md:hidden fixed z-40"
+            style={{
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "env(safe-area-inset-bottom, 0px)",
+              background: isDark ? "rgba(22,22,24,0.96)" : "rgba(255,255,255,0.92)",
+            }}
+          />
+          </>
         );
       })()}
     </>

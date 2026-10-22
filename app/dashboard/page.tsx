@@ -333,7 +333,7 @@ export default function AccueilPage() {
       {/* Scanner CTA — pleine largeur */}
       <Link href="/dashboard/scanner"
         className="flex items-center justify-between rounded-2xl p-5 mb-5 transition-all hover:opacity-90 active:scale-[0.98]"
-        style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 30px rgba(0,122,255,0.35)" }}>
+        style={{ background: "#007AFF", boxShadow: "0 4px 16px rgba(0,122,255,0.22)" }}>
         <div>
           <p className="text-[17px] font-bold tracking-[-0.3px]" style={{ color: "white" }}>Scanner une carte</p>
           <p className="text-[13px] mt-0.5" style={{ color: "rgba(255,255,255,0.6)" }}>Ajouter un tampon client</p>

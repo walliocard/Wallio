@@ -102,7 +102,7 @@ export default function HistoriquePage() {
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Historique — {marchand?.nom}</h2>
           <p style={{ fontSize: 12, color: "#6E6E73", marginBottom: 16 }}>Exporté le {new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</p>
         </div>
-        <style>{`.print-only { display: block !important; }`}</style>
+        <style>{`@media print { .print-only { display: block !important; } }`}</style>
 
         {loading ? (
           <div className="flex justify-center py-20">
