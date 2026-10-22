@@ -163,7 +163,7 @@ export default function ScannerPage() {
 
 
   return (
-    <div className="min-h-screen flex flex-col pb-28 md:pb-8">
+    <div className="min-h-screen flex flex-col pb-24 md:pb-8">
 
       {/* Header */}
       <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 mb-5">

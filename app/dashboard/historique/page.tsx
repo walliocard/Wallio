@@ -54,7 +54,7 @@ export default function HistoriquePage() {
   }
 
   return (
-    <div className="px-5 md:px-8 pt-6 pb-28 md:pb-10 max-w-3xl">
+    <div className="px-5 md:px-8 pt-6 pb-24 md:pb-10 max-w-3xl">
       <style>{`
         @media print {
           body * { visibility: hidden; }

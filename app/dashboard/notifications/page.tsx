@@ -95,7 +95,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-2xl">
+    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-24 md:pb-10 max-w-2xl">
 
       <div className="mb-5 md:mb-8">
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>

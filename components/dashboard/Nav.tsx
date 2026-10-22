@@ -92,7 +92,9 @@ function useIsNative() {
   const [isNative, setIsNative] = useState(false);
   useEffect(() => {
     const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
-    setIsNative(cap?.isNativePlatform?.() ?? false);
+    const isCapacitor = cap?.isNativePlatform?.() ?? false;
+    const isPWA = window.matchMedia("(display-mode: standalone)").matches;
+    setIsNative(isCapacitor || isPWA);
   }, []);
   return isNative;
 }
@@ -304,15 +306,18 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               );
             })}
           </nav>
-          {/* Couvre la ligne blanche safe area en bas dans l'app native Capacitor */}
+          {/* Couvre la safe area en bas — native Capacitor + PWA homescreen */}
           {isNative && (
             <div
-              className="md:hidden fixed z-41"
+              className="md:hidden"
               style={{
+                position: "fixed",
+                zIndex: 50,
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: 36,
+                height: "env(safe-area-inset-bottom, 34px)",
+                minHeight: 20,
                 background: isDark ? "rgb(22,22,24)" : "rgb(255,255,255)",
               }}
             />
