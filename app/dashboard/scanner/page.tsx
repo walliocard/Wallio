@@ -240,7 +240,12 @@ export default function ScannerPage() {
               {/* Résultat */}
               {!loadingTampon && result && (
                 <div className="rounded-3xl p-6 flex flex-col items-center text-center gap-3" style={{
-                  background: "var(--glass-bg)", border: "1px solid var(--border)",
+                  background: result.type === "recompense"
+                    ? "linear-gradient(135deg,rgba(0,122,255,0.04),rgba(139,92,246,0.04))"
+                    : "var(--glass-bg)",
+                  border: result.type === "recompense"
+                    ? "1px solid rgba(139,92,246,0.22)"
+                    : "1px solid var(--border)",
                   animation: (result.type === "anti_doublon" || result.type === "not_found")
                     ? "shake 0.4s ease-in-out"
                     : "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)"
@@ -250,6 +255,9 @@ export default function ScannerPage() {
                       <span className="text-[22px] font-black" style={{ color: "var(--accent)" }}>+{result.double || result.birthday ? 2 : 1}</span>
                     </div>
                     <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Bonjour, {result.prenom}</p>
+                    {result.birthday && (
+                      <p className="text-[13px] font-semibold" style={{ color: "#FF9F0A" }}>Bon anniversaire !</p>
+                    )}
                     <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>{result.tampons} / {result.objectif} tampons</p>
                     <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
                       <div className="h-full rounded-full" style={{ width: `${Math.min(((result.tampons ?? 0) / (result.objectif ?? 1)) * 100, 100)}%`, background: "var(--accent)", transition: "width 0.6s ease" }} />
@@ -257,15 +265,25 @@ export default function ScannerPage() {
                     <Link href={`/client/${result.walletId}`} className="text-[13px] font-medium mt-1" style={{ color: "var(--accent)" }}>Voir le profil</Link>
                   </>)}
                   {result.type === "recompense" && (<>
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(52,199,89,0.10)", color: "#34C759", animation: "success-pop 0.45s cubic-bezier(0.34,1.56,0.64,1)" }}>
-                      <Icons.Check size={28} />
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-1"
+                      style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.10),rgba(139,92,246,0.10))", animation: "success-pop 0.45s cubic-bezier(0.34,1.56,0.64,1)" }}>
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                        stroke="url(#rg)">
+                        <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#007AFF"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient></defs>
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
                     </div>
-                    <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Récompense — {result.prenom}</p>
-                    <p className="text-[15px] font-semibold" style={{ color: "#34C759" }}>{result.nom_recompense}</p>
-                    <button onClick={handleValiderRecompense} disabled={validating} className="w-full py-3 rounded-2xl font-semibold text-white mt-1" style={{ background: "#34C759" }}>
-                      {validating ? "Validation…" : "Valider la récompense"}
+                    <p className="text-[13px] font-medium" style={{ color: "var(--fg-secondary)" }}>{result.prenom}</p>
+                    <p className="text-[22px] font-bold tracking-tight"
+                      style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                      {result.nom_recompense}
+                    </p>
+                    <button onClick={handleValiderRecompense} disabled={validating}
+                      className="w-full py-4 rounded-2xl font-bold text-white mt-1 text-[15px]"
+                      style={{ background: validating ? "var(--border)" : "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: validating ? "none" : "0 6px 20px rgba(0,122,255,0.28)" }}>
+                      {validating ? "Validation…" : "Valider"}
                     </button>
-                    <Link href={`/client/${result.walletId}`} className="text-[13px] font-medium" style={{ color: "var(--accent)" }}>Voir le profil</Link>
+                    <Link href={`/client/${result.walletId}`} className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>Voir le profil</Link>
                   </>)}
                   {result.type === "anti_doublon" && (<>
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(255,159,10,0.10)" }}>

@@ -118,30 +118,52 @@ export default function HistoriquePage() {
               <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>Les scans apparaîtront ici après chaque visite client</p>
             </div>
           </div>
-        ) : (
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
-            {/* Header */}
-            <div className="grid gap-0 px-4 py-2.5" style={{ gridTemplateColumns: "1fr auto auto auto", background: "var(--glass-bg)", borderBottom: "1px solid var(--border)" }}>
-              {["Client", "Tampons", "Ajouté par", "Type"].map(h => (
-                <p key={h} className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>{h}</p>
+        ) : (() => {
+          const todayKey = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+          const yesterdayKey = new Date(Date.now() - 86400000).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+          const groupMap = new Map<string, Entry[]>();
+          filtered.forEach(e => {
+            const raw = e.created_at ? new Date(e.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "Sans date";
+            const label = raw === todayKey ? "Aujourd'hui" : raw === yesterdayKey ? "Hier" : raw;
+            if (!groupMap.has(label)) groupMap.set(label, []);
+            groupMap.get(label)!.push(e);
+          });
+          return (
+            <div className="space-y-4">
+              {Array.from(groupMap.entries()).map(([label, entries]) => (
+                <div key={label}>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                    {label}
+                  </p>
+                  <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+                    {entries.map((e, i) => (
+                      <div key={e.id} className="flex items-center gap-3 px-4 py-3"
+                        style={{ borderBottom: i < entries.length - 1 ? "1px solid var(--border)" : "none", background: "var(--glass-bg)" }}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{e.client_prenom} {e.client_nom}</p>
+                            {e.recompense && (
+                              <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 6, background: "rgba(52,199,89,0.12)", color: "#34C759", flexShrink: 0 }}>
+                                Récompense
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>
+                            {e.created_at ? new Date(e.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "—"} · {e.added_by}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-[15px] font-bold" style={{ color: "var(--fg)" }}>{e.tampons_apres}</span>
+                          <TypeBadge type={e.type} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
-            {filtered.map((e, i) => (
-              <div key={e.id} className="grid gap-0 px-4 py-3 items-center" style={{ gridTemplateColumns: "1fr auto auto auto", borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none" }}>
-                <div>
-                  <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{e.client_prenom} {e.client_nom}</p>
-                  <p className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>{formatDate(e.created_at)}</p>
-                </div>
-                <div className="flex items-center gap-1.5 px-4">
-                  <p className="text-[14px] font-semibold" style={{ color: "var(--fg)" }}>{e.tampons_apres}</p>
-                  {e.recompense && <span className="text-[11px] font-bold" style={{ color: "#34C759" }}>🎁</span>}
-                </div>
-                <p className="text-[13px] px-4" style={{ color: "var(--fg-secondary)" }}>{e.added_by}</p>
-                <TypeBadge type={e.type} />
-              </div>
-            ))}
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

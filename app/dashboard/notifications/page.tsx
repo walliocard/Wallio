@@ -1,9 +1,11 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type React from "react";
 import { getAuth } from "firebase/auth";
+import { getDocs, collection, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useLang } from "@/lib/lang-context";
 import DateTimePicker from "@/components/DateTimePicker";
 
@@ -21,6 +23,21 @@ export default function NotificationsPage() {
   const [expiresDate, setExpiresDate] = useState("");
   const [expiresTime, setExpiresTime] = useState("23:59");
   const expiresAt = expiresDate ? `${expiresDate}T${expiresTime || "23:59"}` : "";
+  const [segmentCounts, setSegmentCounts] = useState({ tous: 0, actifs: 0, inactifs: 0 });
+
+  useEffect(() => {
+    if (!user) return;
+    const trente = new Date(); trente.setDate(trente.getDate() - 30);
+    getDocs(query(collection(db, "clients"), where("marchand_id", "==", user.uid))).then(snap => {
+      let actifs = 0, inactifs = 0;
+      snap.docs.forEach(d => {
+        const dv = (d.data().derniere_visite?.seconds || 0) * 1000;
+        if (dv >= trente.getTime()) actifs++;
+        else if (dv > 0) inactifs++;
+      });
+      setSegmentCounts({ tous: snap.size, actifs, inactifs });
+    });
+  }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!user || !marchand) return null;
 
@@ -102,8 +119,16 @@ export default function NotificationsPage() {
                   border: `1px solid ${segment === s.id ? "var(--accent)" : "var(--border)"}`,
                 }}>
                 <span className="flex-shrink-0" style={{ color: segment === s.id ? "var(--accent)" : "var(--fg-tertiary)" }}>{s.icon}</span>
-                <div>
-                  <p className="text-[14px] font-medium" style={{ color: segment === s.id ? "var(--accent)" : "var(--fg)" }}>{s.label}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[14px] font-medium" style={{ color: segment === s.id ? "var(--accent)" : "var(--fg)" }}>{s.label}</p>
+                    {segmentCounts[s.id] > 0 && (
+                      <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: segment === s.id ? "rgba(0,122,255,0.12)" : "var(--border)", color: segment === s.id ? "var(--accent)" : "var(--fg-tertiary)" }}>
+                        {segmentCounts[s.id]}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>{s.desc}</p>
                 </div>
                 {segment === s.id && (

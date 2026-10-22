@@ -105,6 +105,11 @@ export default function ClientsPage() {
     // onSnapshot se met à jour automatiquement après creerClient
   }
 
+  const trenteJoursAgo = new Date();
+  trenteJoursAgo.setDate(trenteJoursAgo.getDate() - 30);
+  const todayMonth = new Date().getMonth() + 1;
+  const todayDay = new Date().getDate();
+
   return (
     <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-44 md:pb-10">
 
@@ -229,7 +234,11 @@ export default function ClientsPage() {
                 color: filterRecompense ? "#34C759" : "var(--fg-secondary)",
               }}
             >
-              🎁 {recompensesCount}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/>
+                <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+              </svg>
+              {recompensesCount}
             </button>
           )}
         </div>
@@ -267,11 +276,17 @@ export default function ClientsPage() {
             const mn = marchand as Record<string, unknown> | undefined;
             const paliersDef = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
             const pv = client.paliers_valides || [];
-            // Mode progressif inscrit uniquement si paliers_valides est défini (mid-cycle = cyclique)
             const enProgressif = mn?.mode_recompense === "progressif" && paliersDef.length > 0;
             const prochainPalier = enProgressif ? (paliersDef.find((p, i) => !pv[i]) ?? paliersDef[paliersDef.length - 1]) : null;
             const objectifActuel = prochainPalier ? prochainPalier.tampons : (marchand?.objectif_tampons ?? 10);
             const pct = Math.min(100, Math.round((client.tampons / objectifActuel) * 100));
+            const dvSeconds = (client.derniere_visite as { seconds?: number })?.seconds;
+            const isInactif = dvSeconds ? (dvSeconds * 1000) < trenteJoursAgo.getTime() : false;
+            const isProche = client.tampons >= objectifActuel - 2 && client.tampons < objectifActuel && !client.recompense_en_attente;
+            const isAnniversaire = (() => {
+              const parts = client.date_naissance?.split("-");
+              return parts?.length === 3 && parseInt(parts[1]) === todayMonth && parseInt(parts[2]) === todayDay;
+            })();
             return (
               <Link
                 key={client.id}
@@ -293,18 +308,30 @@ export default function ClientsPage() {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
+                  <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                     <p className="text-[14px] font-semibold truncate" style={{ color: "var(--fg)" }}>
                       {cap(client.prenom)} {cap(client.nom)}
                     </p>
                     {client.recompense_en_attente && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                        style={{ background: "rgba(52,199,89,0.15)", color: "#34C759" }}>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
                         {t.dash_rewards}
                       </span>
                     )}
+                    {isAnniversaire && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: "rgba(255,159,10,0.12)", color: "#FF9F0A" }}>
+                        Anniv.
+                      </span>
+                    )}
+                    {isProche && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: "rgba(139,92,246,0.10)", color: "#8B5CF6" }}>
+                        Proche
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>
+                  <p className="text-[11px]" style={{ color: isInactif ? "#FF3B30" : "var(--fg-tertiary)" }}>
                     {formatTempsDepuis(client.derniere_visite)}
                   </p>
                   <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
