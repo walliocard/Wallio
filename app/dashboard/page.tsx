@@ -353,7 +353,7 @@ export default function AccueilPage() {
       {/* Hero Aujourd'hui + stats 2×2 */}
       <div className="flex flex-col lg:flex-row gap-4 mb-4">
 
-        <div className="rounded-2xl p-5 flex items-center gap-5"
+        <div className="rounded-2xl p-4 flex items-center gap-5"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
           <HeroRing value={stats.aujourd_hui} ratio={heroRatio} />
           <div>

@@ -27,7 +27,7 @@ import CustomSelect from "@/components/CustomSelect";
 
 const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-type Sort = "recent" | "tampons" | "alpha";
+type Sort = "recent" | "visite" | "tampons" | "alpha";
 
 export default function ClientsPage() {
   const { user, marchand, loading: authLoading } = useAuth();
@@ -76,6 +76,7 @@ export default function ClientsPage() {
     .sort((a, b) => {
       if (sort === "tampons") return b.tampons - a.tampons;
       if (sort === "alpha") return `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr");
+      if (sort === "visite") return ((b.derniere_visite as { seconds?: number })?.seconds || 0) - ((a.derniere_visite as { seconds?: number })?.seconds || 0);
       return 0; // "recent" : déjà trié dans onSnapshot
     });
 
@@ -180,7 +181,7 @@ export default function ClientsPage() {
           <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
             {loading ? "—" : `${clients.length} client${clients.length > 1 ? "s" : ""}`}
           </p>
-          <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>{t.clients_title}</h1>
+          <h1 className="text-[32px] font-black tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.clients_title}</h1>
         </div>
         <button
           onClick={() => { setShowModal(true); setFormError(""); }}
@@ -219,6 +220,7 @@ export default function ClientsPage() {
             onChange={v => setSort(v as Sort)}
             options={[
               { label: t.clients_sort_recent, value: "recent" },
+              { label: "Dernier tampon", value: "visite" },
               { label: t.clients_sort_stamps, value: "tampons" },
               { label: t.clients_sort_alpha_label, value: "alpha" },
             ]}

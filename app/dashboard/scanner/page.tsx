@@ -170,7 +170,7 @@ export default function ScannerPage() {
         <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
           {t.scan_subtitle}
         </p>
-        <h1 className="text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>{t.scan_title}</h1>
+        <h1 className="text-[32px] font-black tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.scan_title}</h1>
 
         {/* Onglets */}
         <div className="flex gap-2 mt-4">

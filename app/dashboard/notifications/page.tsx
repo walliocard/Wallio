@@ -98,12 +98,12 @@ export default function NotificationsPage() {
     <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-2xl">
 
       <div className="mb-5 md:mb-8">
-        <h1 className="text-[24px] md:text-[28px] font-semibold tracking-[-0.5px]" style={{ color: "var(--fg)" }}>
-          {t.notif_title}
-        </h1>
-        <p className="text-[13px] md:text-[14px] mt-1" style={{ color: "var(--fg-secondary)" }}>
+        <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
           {t.notif_subtitle}
         </p>
+        <h1 className="text-[32px] font-black tracking-[-1px]" style={{ color: "var(--fg)" }}>
+          {t.notif_title}
+        </h1>
       </div>
 
       <div className="space-y-4">

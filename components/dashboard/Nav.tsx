@@ -88,9 +88,19 @@ const FilledNav: Record<string, (size: number) => React.ReactNode> = {
   ),
 };
 
+function useIsNative() {
+  const [isNative, setIsNative] = useState(false);
+  useEffect(() => {
+    const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+    setIsNative(cap?.isNativePlatform?.() ?? false);
+  }, []);
+  return isNative;
+}
+
 export default function DashboardNav({ marchand }: { marchand: Marchand }) {
   const pathname = usePathname();
   const isDark = useIsDark();
+  const isNative = useIsNative();
   const [springTab, setSpringTab] = useState<string | null>(null);
   const [installPrompt, setInstallPrompt] = useState<Event & { prompt: () => void } | null>(null);
   const [installed, setInstalled] = useState(false);
@@ -294,17 +304,19 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               );
             })}
           </nav>
-          {/* Couvre la safe area en bas dans l'app native Capacitor */}
-          <div
-            className="md:hidden fixed z-40"
-            style={{
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "env(safe-area-inset-bottom, 0px)",
-              background: isDark ? "rgba(22,22,24,0.96)" : "rgba(255,255,255,0.92)",
-            }}
-          />
+          {/* Couvre la ligne blanche safe area en bas dans l'app native Capacitor */}
+          {isNative && (
+            <div
+              className="md:hidden fixed z-41"
+              style={{
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 36,
+                background: isDark ? "rgb(22,22,24)" : "rgb(255,255,255)",
+              }}
+            />
+          )}
           </>
         );
       })()}

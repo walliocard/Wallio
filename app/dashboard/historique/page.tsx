@@ -72,7 +72,7 @@ export default function HistoriquePage() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-secondary)" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
         <div className="flex-1">
-          <h1 className="text-[22px] font-bold tracking-tight" style={{ color: "var(--fg)" }}>Historique</h1>
+          <h1 className="text-[32px] font-black tracking-[-1px]" style={{ color: "var(--fg)" }}>Historique</h1>
           <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{marchand?.nom}</p>
         </div>
         <button onClick={handlePrint}
