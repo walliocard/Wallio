@@ -57,19 +57,19 @@ function HeroRing({ value, ratio }: { value: number; ratio: number }) {
     const id = setTimeout(() => setFilled(ratio), 120);
     return () => clearTimeout(id);
   }, [ratio]);
-  const r = 52, circ = 2 * Math.PI * r;
+  const r = 58, cx = 76, circ = 2 * Math.PI * r;
   return (
-    <div style={{ position: "relative", width: 140, height: 140, flexShrink: 0 }}>
-      <svg width="140" height="140" style={{ transform: "rotate(-90deg)", position: "absolute", inset: 0 }}>
-        <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(0,122,255,0.12)" strokeWidth="8" />
-        <circle cx="70" cy="70" r={r} fill="none" stroke="#007AFF" strokeWidth="8"
+    <div style={{ position: "relative", width: 156, height: 156, flexShrink: 0 }}>
+      <svg width="156" height="156" style={{ transform: "rotate(-90deg)", position: "absolute", inset: 0 }}>
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke="rgba(0,122,255,0.12)" strokeWidth="8" />
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke="#007AFF" strokeWidth="8"
           strokeDasharray={circ} strokeDashoffset={circ * (1 - filled)}
           strokeLinecap="round"
           style={{ transition: "stroke-dashoffset 0.9s cubic-bezier(0.34,1.05,0.64,1)" }} />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 40, fontWeight: 800, color: "#007AFF", lineHeight: 1, letterSpacing: -1 }}>{fmt(animated)}</span>
-        <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(0,122,255,0.6)", textTransform: "uppercase", letterSpacing: "0.12em", marginTop: 3 }}>
+        <span style={{ fontSize: 42, fontWeight: 800, color: "#007AFF", lineHeight: 1, letterSpacing: -1 }}>{fmt(animated)}</span>
+        <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(0,122,255,0.6)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 4 }}>
           Aujourd&apos;hui
         </span>
       </div>
@@ -268,7 +268,7 @@ export default function AccueilPage() {
     <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-28 md:pb-10 max-w-5xl">
 
       {/* Header */}
-      <div className="mb-5 flex items-center gap-4">
+      <div className="mb-8 flex items-center gap-4">
         <div className="w-16 h-16 rounded-[20px] flex-shrink-0 overflow-hidden flex items-center justify-center"
           style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
           {m.logo_url
@@ -279,9 +279,9 @@ export default function AccueilPage() {
         </div>
         <div>
           <p className="text-[12px] font-medium" style={{ color: "var(--fg-tertiary)" }}>
-            Bonjour, · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            Bonjour · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
-          <h1 className="text-[30px] lg:text-[34px] font-black tracking-[-1px] leading-tight" style={{ color: "var(--fg)" }}>
+          <h1 className="text-[34px] lg:text-[38px] font-black tracking-[-1.5px] leading-tight" style={{ color: "var(--fg)" }}>
             {marchand.nom}
           </h1>
           {stats.anniversaires_today > 0 && (
@@ -332,21 +332,21 @@ export default function AccueilPage() {
 
       {/* Scanner CTA — pleine largeur */}
       <Link href="/dashboard/scanner"
-        className="flex items-center justify-between rounded-2xl p-5 mb-5 transition-all hover:opacity-90 active:scale-[0.98]"
+        className="flex items-center justify-between rounded-2xl p-3.5 mb-5 transition-all hover:opacity-90 active:scale-[0.98]"
         style={{
           background: "linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box, linear-gradient(135deg,#007AFF,#8B5CF6) border-box",
           border: "2px solid transparent",
         }}>
         <div>
-          <p className="text-[17px] font-bold tracking-[-0.3px]"
+          <p className="text-[15px] font-bold tracking-[-0.2px]"
             style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             Scanner une carte
           </p>
-          <p className="text-[13px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>Ajouter un tampon client</p>
+          <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Ajouter un tampon client</p>
         </div>
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.10),rgba(139,92,246,0.08))", color: "#007AFF" }}>
-          <Icons.Scan size={20} />
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.10),rgba(139,92,246,0.07))", color: "#007AFF" }}>
+          <Icons.Scan size={17} />
         </div>
       </Link>
 
