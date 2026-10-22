@@ -48,8 +48,8 @@ export type Client = {
 };
 
 export type TamponResult =
-  | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean; birthday?: boolean; prochainRecompense?: string }
-  | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number; birthday?: boolean }
+  | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean; birthday?: boolean; birthday_offre?: string; prochainRecompense?: string }
+  | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number; birthday?: boolean; birthday_offre?: string }
   | { type: "anti_doublon"; prenom: string; secondes_restantes: number }
   | { type: "not_found" };
 
@@ -176,16 +176,28 @@ export async function ajouterTampon(
   }
 
   const c = client as Record<string, unknown>;
+  const m = marchand as Record<string, unknown>;
 
-  // Bonus anniversaire — +1 tampon dès le prochain scan, jamais doublé par promo
-  const birthdayBonus = c.birthday_bonus === true;
+  // Bonus anniversaire — valide uniquement le jour même de l'anniversaire
+  let birthdayBonus = c.birthday_bonus === true;
+  if (birthdayBonus && client.date_naissance) {
+    const today = new Date();
+    const todaySuffix = `${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const dobSuffix = (client.date_naissance as string).slice(5, 10);
+    if (dobSuffix !== todaySuffix) birthdayBonus = false; // pas aujourd'hui → pas de bonus
+  }
+
+  // Type d'offre anniversaire : "double" (défaut) ou "custom" (offre libre)
+  const annivRaw = (m.automatisations as Record<string, unknown> | undefined)?.anniversaire as Record<string, unknown> | undefined;
+  const birthdayType = (annivRaw?.type as string | undefined) ?? "double";
+  const birthdayOffre = (annivRaw?.offre as string | undefined) ?? "";
 
   // Double tampons : actif si marchand.double_tampons_fin est dans le futur
-  const m = marchand as Record<string, unknown>;
   const doubleFin = m.double_tampons_fin as string | undefined;
   const doubleActif = doubleFin ? new Date(doubleFin) > new Date() : false;
-  // Anniversaire = double tampon (x2). Si promo double déjà active, on reste à x2 (pas x4).
-  const increment = (doubleActif || birthdayBonus) ? 2 : 1;
+  // Double tampon anniversaire uniquement si type = "double" (pas si offre custom)
+  const birthdayDouble = birthdayBonus && birthdayType === "double";
+  const increment = (doubleActif || birthdayDouble) ? 2 : 1;
 
   // Flags à nettoyer : birthday_bonus consommé + relance_pending réinitialisé
   const extraUpdate: Record<string, unknown> = {};
@@ -230,6 +242,7 @@ export async function ajouterTampon(
         tampons: tamponsAEcrire,
         palier_index: palierIndex,
         birthday: birthdayBonus,
+        ...(birthdayBonus && birthdayType === "custom" && birthdayOffre ? { birthday_offre: birthdayOffre } : {}),
       };
     }
 
@@ -250,6 +263,7 @@ export async function ajouterTampon(
       double: doubleActif && !birthdayBonus,
       birthday: birthdayBonus,
       prochainRecompense: prochainPalier.recompense,
+      ...(birthdayBonus && birthdayType === "custom" && birthdayOffre ? { birthday_offre: birthdayOffre } : {}),
     };
   }
 
@@ -262,11 +276,13 @@ export async function ajouterTampon(
       derniere_visite: serverTimestamp(),
       ...extraUpdate,
     });
-    return { type: "recompense", prenom: client.prenom, nom_recompense: marchand.nom_recompense, tampons: nouveauxTampons, birthday: birthdayBonus };
+    const offreCustom = birthdayBonus && birthdayType === "custom" && birthdayOffre ? { birthday_offre: birthdayOffre } : {};
+    return { type: "recompense", prenom: client.prenom, nom_recompense: marchand.nom_recompense, tampons: nouveauxTampons, birthday: birthdayBonus, ...offreCustom };
   }
 
   await updateDoc(doc(db, "clients", client.id), { tampons: nouveauxTampons, derniere_visite: serverTimestamp(), ...extraUpdate });
-  return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif && !birthdayBonus, birthday: birthdayBonus };
+  const offreCustom = birthdayBonus && birthdayType === "custom" && birthdayOffre ? { birthday_offre: birthdayOffre } : {};
+  return { type: "ok", tampons: nouveauxTampons, objectif, prenom: client.prenom, double: doubleActif && !birthdayBonus, birthday: birthdayBonus, ...offreCustom };
 }
 
 export async function validerRecompense(

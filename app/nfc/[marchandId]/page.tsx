@@ -527,6 +527,16 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
           {isAntiDoublon && `Bonjour ${result.prenom}`}
         </p>
 
+        {/* Offre anniversaire personnalisée */}
+        {(isOk || isRecompense) && result.birthday && result.birthday_offre && (
+          <div className="mb-5 px-4 py-3 rounded-2xl text-center"
+            style={{ background: "rgba(255,45,85,0.07)", border: "1px solid rgba(255,45,85,0.18)" }}>
+            <p className="text-[13px] font-semibold" style={{ color: "#FF2D55" }}>
+              Offre anniversaire : {result.birthday_offre}
+            </p>
+          </div>
+        )}
+
         {/* Barre de progression (ok) */}
         {isOk && (
           <div className="mb-6">
