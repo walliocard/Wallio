@@ -269,20 +269,20 @@ export default function AccueilPage() {
 
       {/* Header */}
       <div className="mb-5 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-[18px] flex-shrink-0 overflow-hidden flex items-center justify-center"
+        <div className="w-16 h-16 rounded-[20px] flex-shrink-0 overflow-hidden flex items-center justify-center"
           style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
           {m.logo_url
             // eslint-disable-next-line @next/next/no-img-element
             ? <img src={m.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            : <span className="text-[24px] font-bold" style={{ color: "var(--accent)" }}>{(marchand.nom?.[0] || "?").toUpperCase()}</span>
+            : <span className="text-[28px] font-bold" style={{ color: "var(--accent)" }}>{(marchand.nom?.[0] || "?").toUpperCase()}</span>
           }
         </div>
         <div>
-          <p className="text-[13px] font-medium" style={{ color: "var(--fg-tertiary)" }}>
-            {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          <p className="text-[12px] font-medium" style={{ color: "var(--fg-tertiary)" }}>
+            Bonjour, · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
-          <h1 className="text-[22px] lg:text-[26px] font-bold tracking-[-0.6px] leading-tight" style={{ color: "var(--fg)" }}>
-            Bonjour, {marchand.nom}
+          <h1 className="text-[30px] lg:text-[34px] font-black tracking-[-1px] leading-tight" style={{ color: "var(--fg)" }}>
+            {marchand.nom}
           </h1>
           {stats.anniversaires_today > 0 && (
             <p className="text-[12px] mt-0.5 font-medium" style={{ color: "#FF9F0A" }}>
@@ -333,13 +333,19 @@ export default function AccueilPage() {
       {/* Scanner CTA — pleine largeur */}
       <Link href="/dashboard/scanner"
         className="flex items-center justify-between rounded-2xl p-5 mb-5 transition-all hover:opacity-90 active:scale-[0.98]"
-        style={{ background: "#007AFF", boxShadow: "0 4px 16px rgba(0,122,255,0.22)" }}>
+        style={{
+          background: "linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box, linear-gradient(135deg,#007AFF,#8B5CF6) border-box",
+          border: "2px solid transparent",
+        }}>
         <div>
-          <p className="text-[17px] font-bold tracking-[-0.3px]" style={{ color: "white" }}>Scanner une carte</p>
-          <p className="text-[13px] mt-0.5" style={{ color: "rgba(255,255,255,0.6)" }}>Ajouter un tampon client</p>
+          <p className="text-[17px] font-bold tracking-[-0.3px]"
+            style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            Scanner une carte
+          </p>
+          <p className="text-[13px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>Ajouter un tampon client</p>
         </div>
         <div className="w-11 h-11 rounded-xl flex items-center justify-center"
-          style={{ background: "rgba(255,255,255,0.18)", color: "white" }}>
+          style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.10),rgba(139,92,246,0.08))", color: "#007AFF" }}>
           <Icons.Scan size={20} />
         </div>
       </Link>
