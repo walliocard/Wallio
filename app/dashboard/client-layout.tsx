@@ -163,19 +163,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
             {children}
           </div>
-          {/* Fondu bas — masque le contenu avant la nav bar */}
-          <div
-            className="md:hidden pointer-events-none fixed z-39"
-            style={{
-              bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)",
-              left: 0,
-              right: 0,
-              height: 48,
-              background: isDark
-                ? "linear-gradient(to bottom, transparent, #0A0A0A)"
-                : "linear-gradient(to bottom, transparent, #F5F5F7)",
-            }}
-          />
           <RecompenseAlert marchand={marchand} marchandId={user.uid} />
         </div>
       )}
