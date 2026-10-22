@@ -245,7 +245,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               backdropFilter: "blur(48px) saturate(180%)",
               WebkitBackdropFilter: "blur(48px) saturate(180%)",
               borderTop: isDark ? "0.5px solid rgba(255,255,255,0.10)" : "0.5px solid rgba(0,0,0,0.08)",
-              paddingBottom: "env(safe-area-inset-bottom, 0px)",
+              paddingBottom: isNative ? "env(safe-area-inset-bottom, 0px)" : 0,
               position: "fixed",
             }}
           >
