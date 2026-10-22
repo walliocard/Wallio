@@ -54,6 +54,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     try { sessionStorage.setItem(`nfc_result_${marchand.id}`, JSON.stringify({ result, client })); } catch {}
     try { localStorage.setItem(`nfc_dead_${marchand.id}`, JSON.stringify({ ts: Date.now(), type: "result", result, client })); } catch {}
     if (result.type === "ok" || result.type === "recompense") {
+      try { navigator.vibrate(result.type === "recompense" ? [80, 60, 120] : 40); } catch {}
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       fetch("/api/apple-wallet/push-update", opts).catch(() => {});
@@ -495,19 +496,19 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
         {/* Badge icône */}
         {isOk && (
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.28)" }}>
+            style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.28)", animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
             <span className="text-[22px] font-bold text-white">+{(result.double || result.birthday) ? "2" : "1"}</span>
           </div>
         )}
         {isRecompense && (
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#34C759,#30D158)", boxShadow: "0 8px 24px rgba(52,199,89,0.28)" }}>
+            style={{ background: "linear-gradient(135deg,#34C759,#30D158)", boxShadow: "0 8px 24px rgba(52,199,89,0.28)", animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
             <span className="text-[22px] font-bold text-white">+1</span>
           </div>
         )}
         {isAntiDoublon && (
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.28)" }}>
+            style={{ background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.28)", animation: "shake 0.45s ease-in-out" }}>
             <span className="text-[28px] font-bold leading-none" style={{ color: "#FF9F0A" }}>!</span>
           </div>
         )}

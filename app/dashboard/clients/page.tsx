@@ -112,12 +112,12 @@ export default function ClientsPage() {
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-5"
-          style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)" }}
+          style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", animation: "fade-in 0.2s ease" }}
           onClick={() => setShowModal(false)}
         >
           <div
             className="w-full max-w-sm rounded-[28px] p-7"
-            style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+            style={{ background: "var(--bg)", border: "1px solid var(--border)", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)" }}
             onClick={e => e.stopPropagation()}
           >
             <h3 className="text-[18px] font-semibold mb-5" style={{ color: "var(--fg)" }}>{t.clients_add_title}</h3>
@@ -145,7 +145,7 @@ export default function ClientsPage() {
                 </div>
               ))}
               {formError && (
-                <p className="text-[13px]" style={{ color: "#FF3B30" }}>{formError}</p>
+                <p className="text-[13px]" style={{ color: "#FF3B30", animation: "shake 0.4s ease-in-out" }}>{formError}</p>
               )}
             </div>
             <div className="flex gap-3 mt-5">
@@ -261,7 +261,7 @@ export default function ClientsPage() {
         </div>
       ) : (
         <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-          {filtered.map(client => {
+          {filtered.map((client, idx) => {
             const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
             const aColor = avatarColor(initiales);
             const mn = marchand as Record<string, unknown> | undefined;
@@ -277,7 +277,7 @@ export default function ClientsPage() {
                 key={client.id}
                 href={`/client/${client.wallet_id}`}
                 className="flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-150 active:scale-[0.98] hover:opacity-80 block"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)" }}
+                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)", animation: "stagger-in 0.35s ease backwards", animationDelay: `${Math.min(idx * 0.04, 0.4)}s` }}
               >
                 {/* Avatar */}
                 <div

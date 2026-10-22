@@ -297,7 +297,7 @@ function ConnexionInner() {
 
           {/* ── Formulaire Gérant ── */}
           {!gerantPasskeyBanner && !membrePasskeyBanner && mode === "gerant" && (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" style={{ animation: "fade-in 0.25s ease" }}>
               {passkeyAvailable && (
                 <div className="space-y-2">
                   <button type="button" onClick={handleGerantFaceId} disabled={passkeyLoading}
@@ -333,7 +333,7 @@ function ConnexionInner() {
                   Navigation privée détectée — la session ne sera pas mémorisée après fermeture.
                 </p>
               )}
-              {error && <p className="text-[13px] text-red-500 px-1">{error}</p>}
+              {error && <p key={error} className="text-[13px] text-red-500 px-1" style={{ animation: "shake 0.4s ease-in-out" }}>{error}</p>}
               <button type="submit" disabled={loading}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all duration-200 mt-2"
                 style={{ background: "var(--accent)", boxShadow: "0 4px 16px rgba(0,122,255,0.3)" }}>
@@ -344,7 +344,7 @@ function ConnexionInner() {
 
           {/* ── Flow Équipe — Étape 1 : Code ── */}
           {!gerantPasskeyBanner && !membrePasskeyBanner && mode === "equipe" && equipeStep === "code" && (
-            <form onSubmit={handleValiderCode} className="space-y-4">
+            <form onSubmit={handleValiderCode} className="space-y-4" style={{ animation: "fade-in 0.25s ease" }}>
               <div className="text-center mb-2">
                 <p className="text-[17px] font-semibold" style={{ color: "var(--fg)" }}>Code de l&apos;établissement</p>
                 <p className="text-[13px] mt-1" style={{ color: "var(--fg-secondary)" }}>Demandez-le à votre gérant</p>
@@ -357,7 +357,7 @@ function ConnexionInner() {
                 onFocus={e => e.target.style.borderColor = "rgba(0,122,255,0.7)"}
                 onBlur={e => e.target.style.borderColor = "var(--border)"}
               />
-              {equipeError && <p className="text-[13px] text-red-500 text-center">{equipeError}</p>}
+              {equipeError && <p key={equipeError} className="text-[13px] text-red-500 text-center" style={{ animation: "shake 0.4s ease-in-out" }}>{equipeError}</p>}
               <button type="submit" disabled={equipeLoading || code.length !== 6}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white transition-all"
                 style={{ background: code.length === 6 ? "var(--accent)" : "var(--border)", opacity: equipeLoading ? 0.7 : 1 }}>

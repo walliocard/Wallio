@@ -239,9 +239,14 @@ export default function ScannerPage() {
 
               {/* Résultat */}
               {!loadingTampon && result && (
-                <div className="rounded-3xl p-6 flex flex-col items-center text-center gap-3" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", animation: "page-in 0.25s ease" }}>
+                <div className="rounded-3xl p-6 flex flex-col items-center text-center gap-3" style={{
+                  background: "var(--glass-bg)", border: "1px solid var(--border)",
+                  animation: (result.type === "anti_doublon" || result.type === "not_found")
+                    ? "shake 0.4s ease-in-out"
+                    : "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)"
+                }}>
                   {result.type === "ok" && (<>
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(0,122,255,0.10)" }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(0,122,255,0.10)", animation: "success-pop 0.45s cubic-bezier(0.34,1.56,0.64,1)" }}>
                       <span className="text-[22px] font-black" style={{ color: "var(--accent)" }}>+{result.double || result.birthday ? 2 : 1}</span>
                     </div>
                     <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Bonjour, {result.prenom}</p>
@@ -252,7 +257,7 @@ export default function ScannerPage() {
                     <Link href={`/client/${result.walletId}`} className="text-[13px] font-medium mt-1" style={{ color: "var(--accent)" }}>Voir le profil</Link>
                   </>)}
                   {result.type === "recompense" && (<>
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(52,199,89,0.10)", color: "#34C759" }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-1" style={{ background: "rgba(52,199,89,0.10)", color: "#34C759", animation: "success-pop 0.45s cubic-bezier(0.34,1.56,0.64,1)" }}>
                       <Icons.Check size={28} />
                     </div>
                     <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Récompense — {result.prenom}</p>
