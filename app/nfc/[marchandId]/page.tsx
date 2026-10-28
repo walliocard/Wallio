@@ -639,7 +639,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
               {paliersDef.map((palier, i) => {
                 const valide = !!(paliersValides[i]) && tamponsPostScan >= palier.tampons;
                 const atteint = !valide && tamponsPostScan >= palier.tampons;
-                const enCours = !valide && !atteint && paliersDef.findIndex((_, j) => !paliersValides[j] && paliersDef[j].tampons > tamponsPostScan) === i;
+                const enCours = !valide && !atteint && paliersDef.findIndex((_, j) => !(paliersValides[j] && paliersDef[j].tampons <= tamponsPostScan) && paliersDef[j].tampons > tamponsPostScan) === i;
                 const restants = palier.tampons - tamponsPostScan;
                 return (
                   <div key={i} className="flex items-center gap-2.5">
@@ -1247,8 +1247,8 @@ function InstallBanner() {
       <div style={{ margin: "0 10px 10px", padding: "10px 12px", borderRadius: 12, background: "rgba(91,124,250,0.06)" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
           {(isIos ? [
-            { n: "1", t: "Appuyez sur ··· en bas à droite" },
-            { n: "2", t: "Appuyez sur le bouton Partager" },
+            { n: "1", t: "Appuyez sur ≡ en bas à gauche" },
+            { n: "2", t: "Appuyez sur « Partager »" },
             { n: "3", t: "« Sur l\'écran d\'accueil » → Ajouter" },
           ] : [
             { n: "1", t: "Appuyez sur ⋮ (menu Chrome)" },
