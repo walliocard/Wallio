@@ -291,9 +291,9 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
                 Programme progressif
               </p>
               {paliersDef.map((palier, i) => {
-                const valide = !!(paliersValides[i]);
+                const valide = !!(paliersValides[i]) && client.tampons >= palier.tampons;
                 const atteint = !valide && client.tampons >= palier.tampons;
-                const enCours = !valide && !atteint && paliersDef.findIndex((p, j) => !paliersValides[j]) === i;
+                const enCours = !valide && !atteint && paliersDef.findIndex((p, j) => !(paliersValides[j] && paliersDef[j].tampons <= client.tampons) && paliersDef[j].tampons > client.tampons) === i;
                 const restants = palier.tampons - client.tampons;
                 return (
                   <div key={i} className="flex items-center gap-3">
