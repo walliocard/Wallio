@@ -513,6 +513,15 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
       if (Notification.permission === "granted") setNotifState("granted");
       else if (Notification.permission === "denied") setNotifState("denied");
     }
+    // Synchronise la couleur de l'UI Safari (Dynamic Island + barre bas) avec le fond de page
+    const prev = document.querySelector('meta[name="theme-color"]')?.getAttribute("content") ?? "";
+    const setTheme = (c: string) => {
+      let m = document.querySelector('meta[name="theme-color"]');
+      if (!m) { m = document.createElement("meta"); (m as HTMLMetaElement).name = "theme-color"; document.head.appendChild(m); }
+      m.setAttribute("content", c);
+    };
+    setTheme(NFC_BG);
+    return () => setTheme(prev);
   }, []);
 
   async function activerNotifs() {
