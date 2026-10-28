@@ -637,7 +637,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
             </p>
             <div className="space-y-2">
               {paliersDef.map((palier, i) => {
-                const valide = !!(paliersValides[i]);
+                const valide = !!(paliersValides[i]) && tamponsPostScan >= palier.tampons;
                 const atteint = !valide && tamponsPostScan >= palier.tampons;
                 const enCours = !valide && !atteint && paliersDef.findIndex((_, j) => !paliersValides[j] && paliersDef[j].tampons > tamponsPostScan) === i;
                 const restants = palier.tampons - tamponsPostScan;
