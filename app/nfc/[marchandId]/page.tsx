@@ -253,6 +253,8 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       walletId={screen.client.wallet_id}
       telephone={screen.client.telephone || ""}
       paliersValides={screen.client.paliers_valides || []}
+      hasWallet={!!(screen.client.wallet_type || screen.client.apns_push_token)}
+      hasFcmToken={!!screen.client.fcm_token}
       onValiderRecompense={async () => {
         const mn = screen.marchand as Record<string, unknown>;
         const mode = (mn.mode_recompense as string) || "cyclique";
@@ -485,19 +487,21 @@ function Erreur({ message }: { message: string }) {
 
 // ─── Résultat tampon ──────────────────────────────────────────────────────────
 
-function ResultScreen({ result, marchand, walletId, telephone, paliersValides, onValiderRecompense }: {
+function ResultScreen({ result, marchand, walletId, telephone, paliersValides, hasWallet, hasFcmToken, onValiderRecompense }: {
   result: TamponResult;
   marchand: Marchand;
   walletId: string;
   telephone: string;
   paliersValides: boolean[];
+  hasWallet: boolean;
+  hasFcmToken: boolean;
   onValiderRecompense: () => void;
 }) {
   const mn = marchand as Record<string, unknown>;
   const paliersDef = (mn.paliers as { tampons: number; recompense: string }[]) || [];
   const isProgressif = mn.mode_recompense === "progressif" && paliersDef.length > 0;
   const tamponsPostScan = result.type === "ok" || result.type === "recompense" ? result.tampons : 0;
-  const couleur = marchand.couleur_principale || "#007AFF";
+  const couleur = (mn.apple_bg_color as string) || marchand.couleur_principale || "#007AFF";
   const isLight = isLightColor(couleur);
   const badgeTextColor = isLight ? "#1D1D1F" : "#FFFFFF";
   const [isAndroid, setIsAndroid] = useState(false);
@@ -726,7 +730,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
 
         {/* Ajouter au Wallet */}
         <div className="flex flex-col gap-2.5">
-          {!isAndroid && process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" && (
+          {!isAndroid && !hasWallet && process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" && (
             <a href={`/api/apple-wallet/generate/${walletId}`}
               className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
               style={{ background: "#000" }}>
@@ -738,7 +742,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
               <span className="text-[14px] font-semibold text-white">Ajouter à Apple Wallet</span>
             </a>
           )}
-          {isAndroid && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
+          {isAndroid && !hasWallet && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
             <a href={`/api/google-wallet/generate/${walletId}`}
               className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
               style={{ background: "#1a73e8" }}>
@@ -752,7 +756,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
         </div>
 
         {/* Banner notif — visible si marchand notif actif + client pas encore autorisé */}
-        {(isOk || isRecompense) && mn.notif_actif !== false && notifState === "idle" && (
+        {(isOk || isRecompense) && mn.notif_actif !== false && notifState === "idle" && !hasFcmToken && (
           <div className="mt-5 rounded-2xl p-4 flex items-center gap-3"
             style={{ background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.18)" }}>
             <div className="flex-1 text-left">
@@ -965,7 +969,8 @@ const inputStyle: React.CSSProperties = {
 };
 
 function InscriptionButton({ marchand, loading, consent }: { marchand: Marchand; loading: boolean; consent: boolean }) {
-  const couleur = marchand.couleur_principale || "#007AFF";
+  const m = marchand as Record<string, unknown>;
+  const couleur = (m.apple_bg_color as string) || marchand.couleur_principale || "#007AFF";
   const isLight = isLightColor(couleur);
   const textColor = isLight ? "#1D1D1F" : "#FFFFFF";
   return (
@@ -1222,82 +1227,42 @@ function InstallBanner() {
 
   return (
     <div style={{
-      borderRadius: 24, marginBottom: 16, overflow: "hidden",
-      background: "linear-gradient(135deg, rgba(91,124,250,0.12) 0%, rgba(124,91,250,0.10) 100%)",
-      border: "1px solid rgba(91,124,250,0.25)",
+      borderRadius: 20, marginBottom: 16,
+      background: "rgba(255,255,255,0.7)",
+      border: "1px solid rgba(91,124,250,0.2)",
       backdropFilter: "blur(20px)",
     }}>
-      {/* Header banner */}
-      <div style={{ padding: "16px 18px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 38, height: 38, borderRadius: 10, display: "block" }} />
+      <div style={{ padding: "12px 14px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
           <div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.2 }}>
-              Installez Wallio
-            </p>
-            <p style={{ fontSize: 12, color: "var(--fg-secondary)" }}>Gratuit · 2 secondes</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.2 }}>Installez Wallio sur votre écran d&apos;accueil</p>
+            <p style={{ fontSize: 11, color: "var(--fg-secondary)" }}>Gratuit · accès rapide à vos cartes</p>
           </div>
         </div>
-        <button onClick={() => setShow(false)} style={{ background: "rgba(0,0,0,0.06)", border: "none", borderRadius: 8, padding: "4px 8px", cursor: "pointer", color: "var(--fg-tertiary)", fontSize: 12 }}>
+        <button onClick={() => setShow(false)} style={{ background: "rgba(0,0,0,0.06)", border: "none", borderRadius: 8, padding: "4px 8px", cursor: "pointer", color: "var(--fg-tertiary)", fontSize: 11, flexShrink: 0, marginLeft: 8 }}>
           Plus tard
         </button>
       </div>
-
-      {/* Benefits */}
-      <div style={{ padding: "0 18px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-        {[
-          "Offre d'anniversaire automatique",
-          "Offres exclusives de vos établissements",
-          "Toutes vos cartes au même endroit",
-        ].map(text => (
-          <div key={text} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 6, height: 6, borderRadius: 99, flexShrink: 0, background: "linear-gradient(135deg,#007AFF,#8B5CF6)" }} />
-            <span style={{ fontSize: 13, color: "var(--fg)", fontWeight: 500 }}>{text}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Instructions */}
-      <div style={{ margin: "0 14px 14px", padding: "12px 14px", borderRadius: 16, background: "rgba(255,255,255,0.6)", backdropFilter: "blur(12px)" }}>
-        {isIos ? (
-          <div>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "var(--fg)", marginBottom: 8 }}>Comment installer sur iPhone :</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {[
-                { n: "1", t: "Appuyez sur ··· en bas à droite", icon: null },
-                { n: "2", t: "Appuyez sur le bouton Partager", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> },
-                { n: "3", t: "Faites défiler vers « Sur l'écran d'accueil »", icon: null },
-                { n: "4", t: "Appuyez sur « Ajouter »", icon: null },
-              ].map(s => (
-                <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, background: "linear-gradient(135deg,#5B7CFA,#7C5BFA)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>{s.n}</span>
-                  </div>
-                  <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>{s.t}</span>
-                  {s.icon && <span style={{ color: "var(--fg-secondary)", lineHeight: 0 }}>{s.icon}</span>}
-                </div>
-              ))}
+      <div style={{ margin: "0 10px 10px", padding: "10px 12px", borderRadius: 12, background: "rgba(91,124,250,0.06)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          {(isIos ? [
+            { n: "1", t: "Appuyez sur ··· en bas à droite" },
+            { n: "2", t: "Appuyez sur le bouton Partager" },
+            { n: "3", t: "« Sur l\'écran d\'accueil » → Ajouter" },
+          ] : [
+            { n: "1", t: "Appuyez sur ⋮ (menu Chrome)" },
+            { n: "2", t: "« Ajouter à l\'écran d\'accueil »" },
+            { n: "3", t: "Confirmez avec « Ajouter »" },
+          ]).map(s => (
+            <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+              <div style={{ width: 18, height: 18, borderRadius: 5, background: "linear-gradient(135deg,#5B7CFA,#7C5BFA)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "white" }}>{s.n}</span>
+              </div>
+              <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>{s.t}</span>
             </div>
-          </div>
-        ) : (
-          <div>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "var(--fg)", marginBottom: 8 }}>Comment installer sur Android :</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {[
-                { n: "1", t: "Appuyez sur ⋮ (menu Chrome en haut à droite)" },
-                { n: "2", t: "Appuyez sur « Ajouter à l'écran d'accueil »" },
-                { n: "3", t: "Confirmez avec « Ajouter »" },
-              ].map(s => (
-                <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, background: "linear-gradient(135deg,#5B7CFA,#7C5BFA)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>{s.n}</span>
-                  </div>
-                  <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>{s.t}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
     </div>
   );

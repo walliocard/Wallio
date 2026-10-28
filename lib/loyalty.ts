@@ -329,9 +329,12 @@ export function formatTempsDepuis(ts?: { seconds: number } | null): string {
 }
 
 export async function setTampons(clientId: string, tampons: number, paliersValides?: boolean[]): Promise<void> {
+  const val = Math.max(0, tampons);
   await updateDoc(doc(db, "clients", clientId), {
-    tampons: Math.max(0, tampons),
-    ...(paliersValides !== undefined ? { paliers_valides: paliersValides } : {}),
+    tampons: val,
+    ...(paliersValides !== undefined
+      ? { paliers_valides: paliersValides }
+      : val === 0 ? { paliers_valides: [] } : {}),
   });
 }
 
