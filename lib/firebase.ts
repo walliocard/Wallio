@@ -24,18 +24,31 @@ function isPrivateMode(): boolean {
   }
 }
 
+// Pages publiques (clients) → memoryLocalCache : évite tout blocage IndexedDB
+// sur un nouvel appareil. Les pages dashboard gardent persistentLocalCache
+// pour le support hors-ligne du marchand.
+function isPublicClientPage(): boolean {
+  if (typeof window === "undefined") return false;
+  return /^\/(nfc|client|ref|inscription|mes-cartes|preferences|choisir)/.test(
+    window.location.pathname
+  );
+}
+
 const isNew = getApps().length === 0;
 const app = isNew ? initializeApp(firebaseConfig) : getApps()[0];
 
-// persistentLocalCache (IndexedDB) en mode normal : met en cache les lectures Firestore
-// entre les rechargements de page → scans plus rapides.
-// Fallback memoryLocalCache en navigation privée (IndexedDB bloqué).
-const localCache = typeof window === "undefined" || isPrivateMode()
-  ? memoryLocalCache()
-  : persistentLocalCache();
+const localCache =
+  typeof window === "undefined" || isPrivateMode() || isPublicClientPage()
+    ? memoryLocalCache()
+    : persistentLocalCache();
 
 export const db = isNew
-  ? initializeFirestore(app, { localCache })
+  ? initializeFirestore(app, {
+      localCache,
+      // Détecte automatiquement si WebSocket est bloqué par l'opérateur mobile
+      // et bascule en HTTP long polling en quelques secondes (au lieu de ~8 min).
+      experimentalAutoDetectLongPolling: true,
+    })
   : getFirestore(app);
 
 // initializeAuth sans popupRedirectResolver évite l'iframe __/auth/iframe

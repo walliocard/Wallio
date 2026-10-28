@@ -322,6 +322,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         await traiterTampon(client, screen.marchand);
       }}
       onInscription={() => setScreen({ type: "inscription", marchand: screen.marchand, refParam: screen.refParam })}
+      onRecuperation={() => setScreen({ type: "recuperation", marchand: screen.marchand })}
     />
   );
   if (screen.type === "inscription") return (
@@ -782,10 +783,11 @@ function RecompenseQR({ walletId }: { walletId: string }) {
 
 // ─── Passkey Prompt ───────────────────────────────────────────────────────────
 
-function PasskeyPromptScreen({ marchand, onPasskey, onInscription }: {
+function PasskeyPromptScreen({ marchand, onPasskey, onInscription, onRecuperation }: {
   marchand: Marchand;
   onPasskey: () => Promise<void>;
   onInscription: () => void;
+  onRecuperation: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -844,6 +846,13 @@ function PasskeyPromptScreen({ marchand, onPasskey, onInscription }: {
             className="w-full py-3.5 rounded-2xl text-[15px] font-medium active:opacity-80 transition-opacity"
             style={{ background: "rgba(0,0,0,0.04)", color: FG_SEC }}>
             Créer un compte
+          </button>
+
+          <button
+            onClick={onRecuperation}
+            className="w-full py-3 text-[13px] font-medium active:opacity-60 transition-opacity mt-1"
+            style={{ background: "none", border: "none", color: FG_SEC, textDecoration: "underline", cursor: "pointer" }}>
+            J&apos;ai déjà un compte → me connecter avec mon numéro
           </button>
         </div>
       </div>
