@@ -382,6 +382,22 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
 
 const NFC_BG = "#F0F4FF";
 
+function isLightColor(hex: string): boolean {
+  const h = (hex || "#007AFF").replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const h = (hex || "#007AFF").replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 // ─── Loading ──────────────────────────────────────────────────────────────────
 
 const STEPS = [
@@ -481,6 +497,9 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
   const paliersDef = (mn.paliers as { tampons: number; recompense: string }[]) || [];
   const isProgressif = mn.mode_recompense === "progressif" && paliersDef.length > 0;
   const tamponsPostScan = result.type === "ok" || result.type === "recompense" ? result.tampons : 0;
+  const couleur = marchand.couleur_principale || "#007AFF";
+  const isLight = isLightColor(couleur);
+  const badgeTextColor = isLight ? "#1D1D1F" : "#FFFFFF";
   const [isAndroid, setIsAndroid] = useState(false);
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
 
@@ -512,14 +531,30 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
   const isAntiDoublon = result.type === "anti_doublon";
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: NFC_BG }}>
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-10"
+      style={{ background: `linear-gradient(180deg, ${hexToRgba(couleur, 0.06)} 0%, ${NFC_BG} 40%)` }}>
       <div className="w-full max-w-[360px] text-center">
+
+        {/* Mini header commerçant */}
+        <div className="flex flex-col items-center mb-8">
+          {mn.logo_url ? (
+            <img src={mn.logo_url as string} alt={marchand.nom}
+              className="w-12 h-12 rounded-xl mb-2.5 object-cover"
+              style={{ boxShadow: `0 4px 16px ${hexToRgba(couleur, 0.25)}` }} />
+          ) : (
+            <div className="w-12 h-12 rounded-xl mb-2.5 flex items-center justify-center text-[20px] font-bold"
+              style={{ background: couleur, color: badgeTextColor, boxShadow: `0 4px 16px ${hexToRgba(couleur, 0.25)}` }}>
+              {marchand.nom.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <p className="text-[15px] font-semibold" style={{ color: "#1D1D1F" }}>{marchand.nom}</p>
+        </div>
 
         {/* Badge icône */}
         {isOk && (
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.28)", animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
-            <span className="text-[22px] font-bold text-white">+{(result.double || result.birthday) ? "2" : "1"}</span>
+            style={{ background: couleur, boxShadow: `0 8px 24px ${hexToRgba(couleur, 0.35)}`, animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
+            <span className="text-[22px] font-bold" style={{ color: badgeTextColor }}>+{(result.double || result.birthday) ? "2" : "1"}</span>
           </div>
         )}
         {isRecompense && (
@@ -580,7 +615,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, o
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ background: "#E5E5EA" }}>
               <div className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${Math.min((result.tampons / result.objectif) * 100, 100)}%`, background: "linear-gradient(90deg,#007AFF,#8B5CF6)" }} />
+                style={{ width: `${Math.min((result.tampons / result.objectif) * 100, 100)}%`, background: couleur }} />
             </div>
             {result.tampons < result.objectif && (
               <p className="text-[12px] mt-2" style={{ color: "#AEAEB2" }}>
@@ -929,6 +964,19 @@ const inputStyle: React.CSSProperties = {
   WebkitAppearance: "none",
 };
 
+function InscriptionButton({ marchand, loading, consent }: { marchand: Marchand; loading: boolean; consent: boolean }) {
+  const couleur = marchand.couleur_principale || "#007AFF";
+  const isLight = isLightColor(couleur);
+  const textColor = isLight ? "#1D1D1F" : "#FFFFFF";
+  return (
+    <button type="submit" disabled={loading || !consent}
+      className="w-full py-4 rounded-2xl text-[16px] font-semibold transition-opacity active:opacity-80 mt-1"
+      style={{ background: couleur, color: textColor, boxShadow: consent ? `0 4px 24px ${hexToRgba(couleur, 0.35)}` : "none", opacity: consent ? 1 : 0.45 }}>
+      {loading ? "Création…" : "Créer ma carte"}
+    </button>
+  );
+}
+
 function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation }: {
   marchand: Marchand;
   parrainWalletId?: string;
@@ -1062,11 +1110,7 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
               </span>
             </label>
 
-            <button type="submit" disabled={loading || !consent}
-              className="w-full py-4 rounded-2xl text-[16px] font-semibold transition-opacity active:opacity-80 mt-1"
-              style={{ background: BTN_BG, color: ACCENT_FG, boxShadow: consent ? "0 4px 24px rgba(99,102,241,0.30)" : "none", opacity: consent ? 1 : 0.45 }}>
-              {loading ? "Création…" : "Créer ma carte"}
-            </button>
+            <InscriptionButton marchand={marchand} loading={loading} consent={consent} />
           </form>
         </div>
 
