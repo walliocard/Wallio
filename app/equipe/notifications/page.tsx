@@ -24,12 +24,12 @@ export default function EquipeNotificationsPage() {
 
   useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
-    if (!raw) { router.replace("/auth/connexion"); return; }
+    if (!raw) { router.replace("/equipe/auth"); return; }
     try {
       const s: EquipeSession = JSON.parse(raw);
       if (!s.permissions?.notifs) { router.replace("/equipe/scanner"); return; }
       setSession(s);
-    } catch { router.replace("/auth/connexion"); }
+    } catch { router.replace("/equipe/auth"); }
   }, [router]);
 
   async function handleSend(e: React.FormEvent) {

@@ -61,12 +61,12 @@ export default function EquipeScannerPage() {
 
   useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
-    if (!raw) { router.replace("/auth/connexion"); return; }
+    if (!raw) { router.replace("/equipe/auth"); return; }
     try {
       const s = JSON.parse(raw) as EquipeSession;
       setSession(s);
       sessionRef.current = s;
-    } catch { router.replace("/auth/connexion"); }
+    } catch { router.replace("/equipe/auth"); }
   }, [router]);
 
   const stopCamera = useCallback(() => {
@@ -171,7 +171,7 @@ export default function EquipeScannerPage() {
   async function handleLogout() {
     if (session) fetch("/api/equipe/session", { method: "DELETE", headers: { "x-equipe-token": session.token } }).catch(() => {});
     localStorage.removeItem("equipe_session");
-    router.replace("/auth/connexion");
+    router.replace("/equipe/auth");
   }
 
   useEffect(() => () => { stopCamera(); }, [stopCamera]);
@@ -211,7 +211,7 @@ export default function EquipeScannerPage() {
               fetch("/api/equipe/session", { method: "DELETE", headers: { "x-equipe-token": session.token } }).catch(() => {});
             }
             localStorage.removeItem("equipe_session");
-            router.replace("/auth/connexion?changer=1");
+            router.replace("/equipe/auth?changer=1");
           }}
             style={{ padding: "8px 14px", borderRadius: 12, fontSize: 13, fontWeight: 600, background: "rgba(0,0,0,0.06)", color: "#6E6E73", border: "none", cursor: "pointer" }}>
             Changer
