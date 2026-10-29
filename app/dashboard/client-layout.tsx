@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import DashboardNav from "@/components/dashboard/Nav";
 import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
@@ -64,7 +64,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, marchand, loading } = useAuth();
   const { t, setLang } = useLang();
   const router = useRouter();
+  const pathname = usePathname();
   const isDark = useIsDark();
+
+  // Page de connexion dans le scope dashboard — pas de vérification auth
+  if (pathname === "/dashboard/auth") return <>{children}</>;
+
 
   const [showSplash, setShowSplash] = useState(true);
   const [splashExiting, setSplashExiting] = useState(false);
