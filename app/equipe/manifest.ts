@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Dashboard",
     description: "Espace équipe Wallio",
     start_url: "/equipe/scanner",
-    scope: "/equipe",
+    scope: "/",
     display: "standalone",
     orientation: "portrait",
     background_color: "#F5F5F7",
