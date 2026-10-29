@@ -56,19 +56,13 @@ export default function EquipeClientsPage() {
   const [stampingId, setStampingId] = useState<string | null>(null);
   const [validatingId, setValidatingId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TamponResult>>({});
-  const [pageHeight, setPageHeight] = useState("100dvh");
-
   useEffect(() => {
-    const updateHeight = () => {
-      const h = window.visualViewport?.height ?? window.innerHeight;
-      setPageHeight(`${h}px`);
-    };
-    updateHeight();
-    window.visualViewport?.addEventListener("resize", updateHeight);
-    window.addEventListener("resize", updateHeight);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
-      window.visualViewport?.removeEventListener("resize", updateHeight);
-      window.removeEventListener("resize", updateHeight);
+      document.body.style.overflow = prev;
+      document.documentElement.style.overflow = "";
     };
   }, []);
 
