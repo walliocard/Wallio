@@ -302,6 +302,9 @@ export async function validerRecompense(
       paliers_valides: cycleTermine ? [] : nouveauxPV,
       ...(cycleTermine ? { tampons: 0 } : {}),
     });
+  } else if (mode === "progressif") {
+    // palierIndex introuvable en mode progressif — ne jamais reset les tampons
+    await updateDoc(doc(db, "clients", clientId), { recompense_en_attente: false });
   } else {
     await updateDoc(doc(db, "clients", clientId), { recompense_en_attente: false, tampons: 0 });
   }

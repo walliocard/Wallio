@@ -42,7 +42,8 @@ export async function POST(req: Request) {
     if (mode === "progressif") {
       const paliers = (marchandData.paliers as { tampons: number; recompense: string }[]) || [];
       totalPaliers = paliers.length;
-      paliersValides = (clientData.paliers_valides as boolean[]) || new Array(paliers.length).fill(false);
+      const rawPV = clientData.paliers_valides as boolean[] | undefined;
+      paliersValides = (rawPV && rawPV.length > 0) ? rawPV : new Array(paliers.length).fill(false);
       palierIndex = paliers.findIndex((p, i) =>
         clientData.tampons >= p.tampons && !paliersValides![i]
       );
