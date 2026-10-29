@@ -146,8 +146,8 @@ export default function EquipeClientsPage() {
 
   return (
     <main style={{
-      height: pageHeight, overflow: "hidden", display: "flex", flexDirection: "column", background: "#F5F5F7",
-      paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(env(safe-area-inset-bottom) + 72px)",
+      height: pageHeight, display: "flex", flexDirection: "column", background: "#F5F5F7",
+      paddingTop: "env(safe-area-inset-top)",
     }}>
       {/* Header */}
       <div style={{ padding: "16px 20px 12px", display: "flex", alignItems: "center", gap: 12 }}>
@@ -173,7 +173,7 @@ export default function EquipeClientsPage() {
       </div>
 
       {/* Liste */}
-      <div style={{ flex: 1, overflow: "auto", padding: "0 16px 80px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ flex: 1, overflow: "auto", padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
         {loading ? (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 60 }}>
             <div style={{ width: 32, height: 32, borderRadius: "50%", border: "2.5px solid rgba(0,122,255,0.2)", borderTopColor: "#007AFF", animation: "spin 0.7s linear infinite" }} />
@@ -253,7 +253,7 @@ export function EquipeNav({ active, session }: { active: "scanner" | "clients"; 
     { key: "clients" as const, label: "Clients", path: "/equipe/clients", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
   ];
   return (
-    <div style={{ display: "flex", padding: "8px 16px", gap: 8, borderTop: "1px solid rgba(0,0,0,0.06)", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)", position: "fixed", bottom: 0, left: 0, right: 0 }}>
+    <div style={{ display: "flex", padding: "8px 16px", gap: 8, borderTop: "1px solid rgba(0,0,0,0.06)", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)", flexShrink: 0, paddingBottom: "calc(8px + env(safe-area-inset-bottom))" }}>
       {tabs.map(tab => (
         <button key={tab.key} onClick={() => router.push(tab.path)}
           style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 0", borderRadius: 12, border: "none", cursor: "pointer", background: active === tab.key ? "rgba(0,122,255,0.08)" : "transparent", color: active === tab.key ? "#007AFF" : "#8E8E93" }}>

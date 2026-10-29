@@ -188,12 +188,10 @@ export default function EquipeScannerPage() {
   return (
     <main style={{
       height: pageHeight,
-      overflow: "hidden",
       display: "flex",
       flexDirection: "column",
       background: "#F0F4FF",
       paddingTop: "env(safe-area-inset-top)",
-      paddingBottom: "calc(env(safe-area-inset-bottom) + 72px)",
     }}>
 
       {/* Header */}
