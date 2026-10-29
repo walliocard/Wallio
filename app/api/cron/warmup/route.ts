@@ -15,8 +15,11 @@ export async function GET(req: Request) {
   // 2. Chauffe la page NFC
   fetch(`${origin}/nfc/warmup-ping`).catch(() => {});
 
-  // 3. Chauffe la page de connexion marchand
-  fetch(`${origin}/auth/connexion`).catch(() => {});
+  // 3. Chauffe les start_url des PWAs (évite "This page couldn't load" au démarrage)
+  fetch(`${origin}/equipe/scanner`).catch(() => {});
+  fetch(`${origin}/dashboard`).catch(() => {});
+  fetch(`${origin}/dashboard/auth`).catch(() => {});
+  fetch(`${origin}/equipe/auth`).catch(() => {});
 
   // 4. Chauffe les routes API critiques (Apple + Google Wallet push)
   fetch(`${origin}/api/apple-wallet/push-update`, { method: "POST", body: "{}", headers: { "Content-Type": "application/json" } }).catch(() => {});
