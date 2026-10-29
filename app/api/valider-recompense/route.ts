@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     const marchandDoc = await adminDb().collection("marchands").doc(marchandId).get();
     const marchandData = marchandDoc.data() || {};
-    const mode = (marchandData.mode_recompense as string) || "cyclique";
+    const mode = ((marchandData.mode_recompense as string) || "cyclique") as "cyclique" | "progressif";
 
     let palierIndex: number | undefined;
     let paliersValides: boolean[] | undefined;
