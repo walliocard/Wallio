@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     title: "Wallio Admin",
   },
   icons: {
+    icon: "/wallio-instagram-profil.png",
     apple: "/apple-touch-icon-admin.png",
   },
 };
