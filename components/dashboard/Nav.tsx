@@ -9,7 +9,6 @@ import { auth } from "@/lib/firebase";
 import { Icons } from "./icons";
 import type { Marchand } from "@/lib/loyalty";
 import WallioIcon from "@/components/WallioIcon";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const NAV = [
   { href: "/dashboard",                   label: "Accueil",       Icon: Icons.Home,     mobile: true  },
@@ -26,24 +25,6 @@ function active(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-function useIsDark() {
-  const [isDark, setIsDark] = useState(true);
-  useEffect(() => {
-    function check() {
-      const root = document.documentElement;
-      if (root.classList.contains("dark")) { setIsDark(true); return; }
-      if (root.classList.contains("light")) { setIsDark(false); return; }
-      setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }
-    check();
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    mq.addEventListener("change", check);
-    const obs = new MutationObserver(check);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => { mq.removeEventListener("change", check); obs.disconnect(); };
-  }, []);
-  return isDark;
-}
 
 // Icônes remplies pour l'état actif de la nav mobile
 const FilledNav: Record<string, (size: number) => React.ReactNode> = {
@@ -101,7 +82,6 @@ function useIsNative() {
 
 export default function DashboardNav({ marchand }: { marchand: Marchand }) {
   const pathname = usePathname();
-  const isDark = useIsDark();
   const isNative = useIsNative();
   const [springTab, setSpringTab] = useState<string | null>(null);
   const [installPrompt, setInstallPrompt] = useState<Event & { prompt: () => void } | null>(null);
@@ -192,12 +172,8 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           })}
         </nav>
 
-        {/* Theme + Install + Logout */}
+        {/* Install + Logout */}
         <div className="flex-shrink-0 px-2 lg:px-3 py-3 space-y-2" style={{ borderTop: "1px solid var(--border)" }}>
-          <div className="hidden lg:flex justify-center">
-            <ThemeToggle />
-          </div>
-
           {/* Bouton installer — visible si pas encore installée */}
           {!installed && installPrompt && (
             <button
@@ -243,10 +219,10 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
               bottom: 0,
               left: 0,
               right: 0,
-              background: isDark ? "rgba(22,22,24,0.96)" : "rgba(255,255,255,0.92)",
+              background: "rgba(255,255,255,0.92)",
               backdropFilter: "blur(48px) saturate(180%)",
               WebkitBackdropFilter: "blur(48px) saturate(180%)",
-              borderTop: isDark ? "0.5px solid rgba(255,255,255,0.10)" : "0.5px solid rgba(0,0,0,0.08)",
+              borderTop: "0.5px solid rgba(0,0,0,0.08)",
               paddingBottom: isNative ? "calc(env(safe-area-inset-bottom, 34px) + 10px)" : "10px",
               position: "fixed",
             }}
@@ -260,9 +236,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
                   height: TAB_H,
                   width: `${100 / n}%`,
                   left: `${(activeIdx / n) * 100}%`,
-                  background: isDark
-                    ? "linear-gradient(135deg, rgba(0,122,255,0.13), rgba(139,92,246,0.08))"
-                    : "linear-gradient(135deg, rgba(0,122,255,0.09), rgba(139,92,246,0.05))",
+                  background: "linear-gradient(135deg, rgba(0,122,255,0.09), rgba(139,92,246,0.05))",
                   transition: "left 0.28s cubic-bezier(.4,0,.2,1)",
                   pointerEvents: "none",
                   borderRadius: 10,
@@ -282,8 +256,8 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
                     flex: 1,
                     height: TAB_H,
                     color: isActive
-                      ? (isDark ? "white" : "#007AFF")
-                      : (isDark ? "rgba(255,255,255,0.38)" : "rgba(0,0,0,0.30)"),
+                      ? "#007AFF"
+                      : "rgba(0,0,0,0.30)",
                     transition: "color 0.22s cubic-bezier(.4,0,.2,1)",
                     position: "relative",
                     zIndex: 1,

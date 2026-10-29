@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useState, useEffect, useCallback } from "react";
-import ThemeToggle from "@/components/ThemeToggle";
 import { saveMarchandFields } from "@/lib/save-marchand";
 import { useLang } from "@/lib/lang-context";
 import CustomSelect from "@/components/CustomSelect";
@@ -561,10 +560,6 @@ export default function ReglagesPage() {
           <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>
             {t.settings_appearance}
           </p>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_display_mode}</p>
-            <ThemeToggle />
-          </div>
           <div className="flex items-center justify-between">
             <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.settings_language}</p>
             <div className="flex gap-2">

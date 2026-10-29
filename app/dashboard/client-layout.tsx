@@ -41,32 +41,12 @@ function SplashScreen({ exiting }: { exiting: boolean }) {
   );
 }
 
-function useIsDark() {
-  const [isDark, setIsDark] = useState(true);
-  const check = useCallback(() => {
-    const root = document.documentElement;
-    if (root.classList.contains("dark")) { setIsDark(true); return; }
-    if (root.classList.contains("light")) { setIsDark(false); return; }
-    setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-  }, []);
-  useEffect(() => {
-    check();
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    mq.addEventListener("change", check);
-    const obs = new MutationObserver(check);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => { mq.removeEventListener("change", check); obs.disconnect(); };
-  }, [check]);
-  return isDark;
-}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, marchand, loading } = useAuth();
   const { t, setLang } = useLang();
   const router = useRouter();
   const pathname = usePathname();
-  const isDark = useIsDark();
-
   // Page de connexion dans le scope dashboard — pas de vérification auth
   if (pathname === "/dashboard/auth") return <>{children}</>;
 
@@ -145,9 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               overflowY: "auto",
               overflowX: "hidden",
               WebkitOverflowScrolling: "touch",
-              background: isDark
-                ? "var(--bg)"
-                : "radial-gradient(ellipse at 50% -10%, #ECF2FF 0%, #F5F5F7 52%)",
+              background: "radial-gradient(ellipse at 50% -10%, #ECF2FF 0%, #F5F5F7 52%)",
               animation: "page-in 0.2s ease",
             } as React.CSSProperties}
             onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
