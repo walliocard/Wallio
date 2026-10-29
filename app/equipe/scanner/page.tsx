@@ -107,16 +107,14 @@ export default function EquipeScannerPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
       streamRef.current = stream;
+      // Assigne et démarre la vidéo pendant qu'elle est encore cachée
+      // → quand setScanning(true) s'exécute, la vidéo a déjà des frames
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
       setScanning(true);
-      // Le video est dans le DOM — on attend le prochain frame pour assigner
-      requestAnimationFrame(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().then(() => {
-            animRef.current = requestAnimationFrame(scan);
-          }).catch(() => {});
-        }
-      });
+      animRef.current = requestAnimationFrame(scan);
     } catch {
       setResult({ type: "not_found" });
     }
