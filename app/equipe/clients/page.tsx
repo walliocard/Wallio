@@ -146,7 +146,7 @@ export default function EquipeClientsPage() {
 
   return (
     <main style={{
-      position: "fixed" as const, inset: 0, display: "flex", flexDirection: "column", background: "#F5F5F7",
+      height: "100svh", display: "flex", flexDirection: "column", background: "#F5F5F7",
       paddingTop: "env(safe-area-inset-top)",
     }}>
       {/* Header */}

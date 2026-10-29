@@ -187,8 +187,7 @@ export default function EquipeScannerPage() {
 
   return (
     <main style={{
-      position: "fixed",
-      inset: 0,
+      height: "100svh",
       display: "flex",
       flexDirection: "column",
       background: "#F0F4FF",
