@@ -57,16 +57,6 @@ export default function EquipeClientsPage() {
   const [validatingId, setValidatingId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TamponResult>>({});
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-      document.documentElement.style.overflow = "";
-    };
-  }, []);
-
-  useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
     if (!raw) { router.replace("/equipe/auth"); return; }
     try {

@@ -143,7 +143,7 @@ function ConnexionInner() {
           return;
         }
       }
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (e: unknown) {
       signOut(auth).catch(() => {});
       const msg = e instanceof Error ? e.message : "";
@@ -183,7 +183,7 @@ function ConnexionInner() {
         return;
       }
       await signInWithCustomToken(auth, result.customToken);
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch {
       try { localStorage.removeItem("wallio_pk_gerant"); } catch {}
       setPasskeyAvailable(false);
@@ -199,7 +199,7 @@ function ConnexionInner() {
       const result = await authenticateMembreWithPasskey();
       if (!result) { setPasskeyError("Authentification annulée ou échouée."); return; }
       localStorage.setItem("equipe_session", JSON.stringify({ token: result.token, prenom: result.prenom, marchandId: result.marchandId, marchandNom: result.marchandNom, logo_url: result.logo_url || null, permissions: result.permissions }));
-      router.push("/equipe/scanner");
+      window.location.href = "/equipe/scanner";
     } catch { setPasskeyError("Erreur Face ID. Utilisez votre PIN."); }
     finally { setPasskeyLoading(false); }
   }
@@ -220,7 +220,7 @@ function ConnexionInner() {
           if (!already) { setMembrePasskeyBanner({ marchandId: equipeData.marchandId, membreId: membreSelectionne.id }); return; }
         }
       }
-      router.push("/equipe/scanner");
+      window.location.href = "/equipe/scanner";
     } catch { setEquipeError("Erreur de connexion. Réessayez."); }
     finally { setEquipeLoading(false); }
   }
@@ -277,13 +277,13 @@ function ConnexionInner() {
               <button onClick={async () => {
                 const ok = await registerPasskeyForGerant(gerantPasskeyBanner);
                 try { if (ok) localStorage.setItem("wallio_pk_gerant", "1"); else localStorage.removeItem("wallio_pk_gerant"); } catch {}
-                router.push("/dashboard");
+                window.location.href = "/dashboard";
               }}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
                 style={{ background: "var(--accent)" }}>
                 Activer Face ID
               </button>
-              <button onClick={() => router.push("/dashboard")} className="w-full text-[13px] py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <button onClick={() => { window.location.href = "/dashboard"; }} className="w-full text-[13px] py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
                 Plus tard
               </button>
             </div>
@@ -316,14 +316,14 @@ function ConnexionInner() {
                   }
                 } catch { /* annulé par l'utilisateur */ }
                 setPasskeyLoading(false);
-                router.push("/equipe/scanner");
+                window.location.href = "/equipe/scanner";
               }}
                 disabled={passkeyLoading}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
                 style={{ background: "var(--accent)", opacity: passkeyLoading ? 0.7 : 1 }}>
                 {passkeyLoading ? "Enregistrement…" : "Activer Face ID"}
               </button>
-              <button onClick={() => router.push("/equipe/scanner")} className="w-full text-[13px] py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <button onClick={() => { window.location.href = "/equipe/scanner"; }} className="w-full text-[13px] py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
                 Plus tard
               </button>
             </div>

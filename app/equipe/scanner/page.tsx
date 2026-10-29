@@ -50,16 +50,6 @@ export default function EquipeScannerPage() {
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-      document.documentElement.style.overflow = "";
-    };
-  }, []);
-
-  useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
     if (!raw) { router.replace("/equipe/auth"); return; }
     try {

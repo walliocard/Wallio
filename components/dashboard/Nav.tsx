@@ -233,7 +233,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
       {(() => {
         const mobileNav = NAV.filter(n => n.mobile);
         const activeIdx = mobileNav.findIndex(n => active(pathname, n.href));
-        const TAB_H = 60;
+        const TAB_H = 72;
         const n = mobileNav.length;
         return (
           <>
@@ -291,10 +291,10 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
                   onClick={() => { setSpringTab(href); setTimeout(() => setSpringTab(null), 380); }}
                 >
                   <span style={{ animation: isSpring ? "tab-bounce 0.38s cubic-bezier(.34,1.56,.64,1)" : undefined, display: "flex" }}>
-                    {isActive && FilledIconFn ? FilledIconFn(22) : <Icon size={22} />}
+                    {isActive && FilledIconFn ? FilledIconFn(24) : <Icon size={24} />}
                   </span>
                   <span style={{
-                    fontSize: isActive ? 10 : 9,
+                    fontSize: isActive ? 12 : 11,
                     fontWeight: isActive ? 700 : 500,
                     letterSpacing: "0.02em",
                     lineHeight: 1,
