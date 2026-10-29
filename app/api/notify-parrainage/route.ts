@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         data: { title, body, url: `${APP_URL}/mes-cartes`, link: `${APP_URL}/mes-cartes` },
         webpush: {
           fcmOptions: { link: `${APP_URL}/mes-cartes` },
-          notification: { title, body, icon: `${APP_URL}/icon-192.png` },
+          notification: { title, body, icon: `${APP_URL}/wallio-instagram-profil.png` },
         },
       });
       return NextResponse.json({ ok: true, fcm: true });

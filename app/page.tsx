@@ -313,7 +313,7 @@ function IPhoneFrame({ mode, phase }: { mode:"tap"|"scan"; phase:number }) {
               <div style={{ textAlign:"center",marginTop:16 }}>
                 {/* Vrai logo Wallio */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/icon-192.png" alt="Wallio" style={{ width:52,height:52,borderRadius:14,margin:"0 auto 10px",display:"block",boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }} />
+                <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width:52,height:52,borderRadius:14,margin:"0 auto 10px",display:"block",boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }} />
                 <div style={{ fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.75)",letterSpacing:2.5 }}>WALLIO</div>
                 {phase>=1 && (
                   <div style={{ marginTop:14,fontSize:8,color:"rgba(255,255,255,0.35)",animation:"sceneFadeIn 0.4s ease both" }}>

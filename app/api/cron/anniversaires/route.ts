@@ -81,7 +81,7 @@ export async function GET(req: Request) {
         tokens,
         notification: { title: `Joyeux anniversaire !`, body: message },
         webpush: {
-          notification: { icon: logoUrl || "/icon-192.png", badge: "/favicon-32.png" },
+          notification: { icon: logoUrl || "/wallio-instagram-profil.png", badge: "/favicon-32.png" },
           fcmOptions: { link: "https://app.walliocard.com" },
         },
       });

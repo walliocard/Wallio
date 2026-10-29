@@ -10,7 +10,7 @@ self.addEventListener("push", event => {
   const d = payload.data || {};
   const title = n.title || d.title || "Wallio";
   const body  = n.body  || d.body  || "";
-  const icon  = n.icon  || d.icon  || "/icon-192.png";
+  const icon  = n.icon  || d.icon  || "/wallio-instagram-profil.png";
   const url   = d.url   || "/mes-cartes";
 
   event.waitUntil(

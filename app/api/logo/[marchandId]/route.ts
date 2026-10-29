@@ -46,7 +46,7 @@ export async function GET(
     const data = snap.data()!;
     const logoUrl = data.logo_url as string | undefined;
     if (!logoUrl) {
-      return NextResponse.redirect("https://app.walliocard.com/icon-192.png");
+      return NextResponse.redirect("https://app.walliocard.com/wallio-instagram-profil.png");
     }
 
     // Fond = couleur de fond de la carte Apple Wallet, puis couleur principale, puis blanc
@@ -62,6 +62,6 @@ export async function GET(
       },
     });
   } catch {
-    return NextResponse.redirect("https://app.walliocard.com/icon-192.png");
+    return NextResponse.redirect("https://app.walliocard.com/wallio-instagram-profil.png");
   }
 }
