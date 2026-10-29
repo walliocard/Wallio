@@ -35,7 +35,6 @@ export const metadata: Metadata = {
     images: ["https://app.walliocard.com/og-image.png"],
   },
   icons: {
-    icon: "/wallio-instagram-profil.png",
     apple: "/wallio-instagram-profil.png",
   },
 };
