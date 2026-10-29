@@ -295,7 +295,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
                   </span>
                   <span style={{
                     fontSize: isActive ? 13 : 12,
-                    fontWeight: isActive ? 700 : 500,
+                    fontWeight: isActive ? 600 : 400,
                     letterSpacing: "0.02em",
                     lineHeight: 1,
                     transition: "font-size 0.2s ease",

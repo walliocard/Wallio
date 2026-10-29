@@ -1,5 +1,5 @@
 type P = { size?: number };
-const S = { fill: "none", stroke: "currentColor", strokeWidth: "1.7", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+const S = { fill: "none", stroke: "currentColor", strokeWidth: "1.4", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 
 export const Icons = {
   Home: ({ size = 20 }: P) => (
