@@ -1,3 +1,9 @@
+// Précharge le module dès que passkey-client est importé
+// → startRegistration/startAuthentication sont disponibles instantanément au clic
+if (typeof window !== "undefined") {
+  import("@simplewebauthn/browser").catch(() => {});
+}
+
 export async function isPasskeySupported(): Promise<boolean> {
   if (typeof window === "undefined" || !window.PublicKeyCredential) return false;
   try {

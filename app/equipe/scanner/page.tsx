@@ -50,6 +50,7 @@ export default function EquipeScannerPage() {
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     const raw = localStorage.getItem("equipe_session");
     if (!raw) { router.replace("/auth/connexion"); return; }
     try {
