@@ -56,6 +56,21 @@ export default function EquipeClientsPage() {
   const [stampingId, setStampingId] = useState<string | null>(null);
   const [validatingId, setValidatingId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, TamponResult>>({});
+  const [pageHeight, setPageHeight] = useState("100dvh");
+
+  useEffect(() => {
+    const updateHeight = () => {
+      const h = window.visualViewport?.height ?? window.innerHeight;
+      setPageHeight(`${h}px`);
+    };
+    updateHeight();
+    window.visualViewport?.addEventListener("resize", updateHeight);
+    window.addEventListener("resize", updateHeight);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateHeight);
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
 
   useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
@@ -131,7 +146,7 @@ export default function EquipeClientsPage() {
 
   return (
     <main style={{
-      height: "100dvh", overflow: "hidden", display: "flex", flexDirection: "column", background: "#F5F5F7",
+      height: pageHeight, overflow: "hidden", display: "flex", flexDirection: "column", background: "#F5F5F7",
       paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(env(safe-area-inset-bottom) + 72px)",
     }}>
       {/* Header */}

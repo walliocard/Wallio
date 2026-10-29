@@ -297,23 +297,31 @@ function ConnexionInner() {
                 Activer Face ID / Empreinte pour vous connecter sans PIN la prochaine fois ?
               </p>
               <button onClick={async () => {
+                setPasskeyLoading(true);
                 try {
+                  let ok = false;
                   if (membrePasskeyOpts) {
                     const { startRegistration } = await import("@simplewebauthn/browser");
                     const response = await startRegistration({ optionsJSON: membrePasskeyOpts.options as Parameters<typeof startRegistration>[0]["optionsJSON"] });
-                    await fetch("/api/passkey/register-verify", {
+                    const verRes = await fetch("/api/passkey/register-verify", {
                       method: "POST", headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ sessionId: membrePasskeyOpts.sessionId, response }),
                     });
+                    ok = verRes.ok;
                   } else {
-                    await registerPasskeyForMembre(membrePasskeyBanner.marchandId, membrePasskeyBanner.membreId);
+                    ok = await registerPasskeyForMembre(membrePasskeyBanner.marchandId, membrePasskeyBanner.membreId);
                   }
-                } catch { /* silencieux */ }
+                  if (ok) {
+                    try { localStorage.setItem(`wallio_pk_membre_${membrePasskeyBanner.marchandId}_${membrePasskeyBanner.membreId}`, "1"); } catch {}
+                  }
+                } catch { /* annulé par l'utilisateur */ }
+                setPasskeyLoading(false);
                 router.push("/equipe/scanner");
               }}
+                disabled={passkeyLoading}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
-                style={{ background: "var(--accent)" }}>
-                Activer Face ID
+                style={{ background: "var(--accent)", opacity: passkeyLoading ? 0.7 : 1 }}>
+                {passkeyLoading ? "Enregistrement…" : "Activer Face ID"}
               </button>
               <button onClick={() => router.push("/equipe/scanner")} className="w-full text-[13px] py-2" style={{ color: "rgba(255,255,255,0.35)" }}>
                 Plus tard

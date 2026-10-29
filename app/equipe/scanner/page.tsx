@@ -44,13 +44,27 @@ export default function EquipeScannerPage() {
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [pageHeight, setPageHeight] = useState("100dvh");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    const updateHeight = () => {
+      const h = window.visualViewport?.height ?? window.innerHeight;
+      setPageHeight(`${h}px`);
+    };
+    updateHeight();
+    window.visualViewport?.addEventListener("resize", updateHeight);
+    window.addEventListener("resize", updateHeight);
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateHeight);
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
+
+  useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
     if (!raw) { router.replace("/auth/connexion"); return; }
     try {
@@ -173,7 +187,7 @@ export default function EquipeScannerPage() {
 
   return (
     <main style={{
-      height: "100dvh",
+      height: pageHeight,
       overflow: "hidden",
       display: "flex",
       flexDirection: "column",
