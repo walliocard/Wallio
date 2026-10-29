@@ -173,7 +173,8 @@ export default function EquipeScannerPage() {
 
   return (
     <main style={{
-      minHeight: "100dvh",
+      height: "100dvh",
+      overflow: "hidden",
       display: "flex",
       flexDirection: "column",
       background: "#F0F4FF",

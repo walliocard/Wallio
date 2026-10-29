@@ -64,6 +64,7 @@ function ConnexionInner() {
   const [passkeyAvailable, setPasskeyAvailable] = useState(false);
   const [gerantPasskeyBanner, setGerantPasskeyBanner] = useState<string | null>(null); // uid après login
   const [membrePasskeyBanner, setMembrePasskeyBanner] = useState<{ marchandId: string; membreId: string } | null>(null);
+  const [membrePasskeyOpts, setMembrePasskeyOpts] = useState<{ sessionId: string; options: unknown } | null>(null);
   const [membrePasskeyOk, setMembrePasskeyOk] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [passkeyError, setPasskeyError] = useState("");
@@ -80,6 +81,17 @@ function ConnexionInner() {
       }
     });
   }, []);
+
+  // Pré-fetch des options WebAuthn dès que le banner membre apparaît
+  // → au clic, startRegistration est appelé immédiatement sans délai réseau
+  useEffect(() => {
+    if (!membrePasskeyBanner) { setMembrePasskeyOpts(null); return; }
+    fetch("/api/passkey/register-options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: `membre:${membrePasskeyBanner.marchandId}:${membrePasskeyBanner.membreId}` }),
+    }).then(r => r.ok ? r.json() : null).then(d => { if (d) setMembrePasskeyOpts(d); }).catch(() => {});
+  }, [membrePasskeyBanner]);
 
   async function handleReset() {
     if (!form.email) { setError(t.auth_error_email); return; }
@@ -284,7 +296,21 @@ function ConnexionInner() {
               <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>
                 Activer Face ID / Empreinte pour vous connecter sans PIN la prochaine fois ?
               </p>
-              <button onClick={async () => { try { await registerPasskeyForMembre(membrePasskeyBanner.marchandId, membrePasskeyBanner.membreId); } catch { /* silencieux */ } router.push("/equipe/scanner"); }}
+              <button onClick={async () => {
+                try {
+                  if (membrePasskeyOpts) {
+                    const { startRegistration } = await import("@simplewebauthn/browser");
+                    const response = await startRegistration({ optionsJSON: membrePasskeyOpts.options as Parameters<typeof startRegistration>[0]["optionsJSON"] });
+                    await fetch("/api/passkey/register-verify", {
+                      method: "POST", headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ sessionId: membrePasskeyOpts.sessionId, response }),
+                    });
+                  } else {
+                    await registerPasskeyForMembre(membrePasskeyBanner.marchandId, membrePasskeyBanner.membreId);
+                  }
+                } catch { /* silencieux */ }
+                router.push("/equipe/scanner");
+              }}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
                 style={{ background: "var(--accent)" }}>
                 Activer Face ID
