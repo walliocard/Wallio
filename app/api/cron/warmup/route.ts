@@ -12,11 +12,13 @@ export async function GET(req: Request) {
   initAdmin();
   await adminDb().collection("marchands").limit(1).get();
 
-  // 2. Chauffe la page NFC (même conteneur que /nfc/[marchandId])
-  //    La page retourne juste le shell HTML sans données → très rapide
+  // 2. Chauffe la page NFC
   fetch(`${origin}/nfc/warmup-ping`).catch(() => {});
 
-  // 3. Chauffe les routes API critiques (Apple + Google Wallet push)
+  // 3. Chauffe la page de connexion marchand
+  fetch(`${origin}/auth/connexion`).catch(() => {});
+
+  // 4. Chauffe les routes API critiques (Apple + Google Wallet push)
   fetch(`${origin}/api/apple-wallet/push-update`, { method: "POST", body: "{}", headers: { "Content-Type": "application/json" } }).catch(() => {});
 
   return NextResponse.json({ ok: true, ts: Date.now() });
