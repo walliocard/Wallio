@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
-import { headers } from "next/headers";
 import { AuthProvider } from "@/lib/auth-context";
 import { LangProvider } from "@/lib/lang-context";
-import { Region } from "@/lib/regions";
 import "./globals.css";
 
 const geist = Geist({
@@ -61,21 +59,18 @@ const jsonLd = {
   contactPoint: { "@type": "ContactPoint", contactType: "customer support", availableLanguage: ["French", "Arabic"] },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const region = (headersList.get("x-wallio-region") ?? "ma") as Region;
-
   return (
     <html lang="fr" className={`${geist.variable} h-full antialiased`}>
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
       <body className="min-h-full font-[family-name:var(--font-geist)]">
-        <LangProvider defaultRegion={region}>
+        <LangProvider>
           <AuthProvider>{children}</AuthProvider>
         </LangProvider>
       </body>
