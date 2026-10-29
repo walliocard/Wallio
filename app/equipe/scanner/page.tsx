@@ -59,6 +59,14 @@ export default function EquipeScannerPage() {
     } catch { router.replace("/equipe/auth"); }
   }, [router]);
 
+  useEffect(() => {
+    const resetScroll = () => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; };
+    resetScroll();
+    const onVisible = () => { if (document.visibilityState === "visible") resetScroll(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(animRef.current);
     streamRef.current?.getTracks().forEach(t => t.stop());

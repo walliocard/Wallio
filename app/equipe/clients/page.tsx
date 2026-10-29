@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface EquipeSession {
   token: string;
@@ -231,19 +232,19 @@ export default function EquipeClientsPage() {
 }
 
 export function EquipeNav({ active, session }: { active: "scanner" | "clients"; session: EquipeSession }) {
-  const router = useRouter();
   const tabs = [
     { key: "scanner" as const, label: "Scanner", path: "/equipe/scanner", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3m0 4h4v-4m-4 0h-3v4"/></svg> },
     { key: "clients" as const, label: "Clients", path: "/equipe/clients", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
   ];
+  void session;
   return (
     <div style={{ display: "flex", padding: "8px 16px", gap: 8, borderTop: "1px solid rgba(0,0,0,0.06)", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)", flexShrink: 0, paddingBottom: "calc(8px + env(safe-area-inset-bottom))" }}>
       {tabs.map(tab => (
-        <button key={tab.key} onClick={() => router.push(tab.path)}
-          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 0", borderRadius: 12, border: "none", cursor: "pointer", background: active === tab.key ? "rgba(0,122,255,0.08)" : "transparent", color: active === tab.key ? "#007AFF" : "#8E8E93" }}>
+        <Link key={tab.key} href={tab.path}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 0", borderRadius: 12, textDecoration: "none", background: active === tab.key ? "rgba(0,122,255,0.08)" : "transparent", color: active === tab.key ? "#007AFF" : "#8E8E93" }}>
           {tab.icon}
           <span style={{ fontSize: 10, fontWeight: 600 }}>{tab.label}</span>
-        </button>
+        </Link>
       ))}
     </div>
   );
