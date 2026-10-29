@@ -132,7 +132,7 @@ export default function EquipeClientsPage() {
   return (
     <main style={{
       minHeight: "100dvh", display: "flex", flexDirection: "column", background: "#F5F5F7",
-      paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)",
+      paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(env(safe-area-inset-bottom) + 72px)",
     }}>
       {/* Header */}
       <div style={{ padding: "16px 20px 12px", display: "flex", alignItems: "center", gap: 12 }}>

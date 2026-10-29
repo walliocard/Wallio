@@ -284,7 +284,7 @@ function ConnexionInner() {
               <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>
                 Activer Face ID / Empreinte pour vous connecter sans PIN la prochaine fois ?
               </p>
-              <button onClick={async () => { await registerPasskeyForMembre(membrePasskeyBanner.marchandId, membrePasskeyBanner.membreId); router.push("/equipe/scanner"); }}
+              <button onClick={async () => { try { await registerPasskeyForMembre(membrePasskeyBanner.marchandId, membrePasskeyBanner.membreId); } catch { /* silencieux */ } router.push("/equipe/scanner"); }}
                 className="w-full py-3.5 rounded-2xl text-[15px] font-semibold text-white"
                 style={{ background: "var(--accent)" }}>
                 Activer Face ID
