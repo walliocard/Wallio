@@ -61,7 +61,7 @@ export default function CarteComptoirPage() {
   const [downloading, setDownloading] = useState<"nfc"|"qr"|null>(null);
 
   useEffect(() => {
-    if (!loading && (!user || !marchand?.actif)) router.push("/auth/connexion");
+    if (!loading && (!user || !marchand?.actif)) router.push("/dashboard/auth");
   }, [user, marchand, loading, router]);
 
   if (loading || !marchand || !user) return (

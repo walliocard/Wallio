@@ -78,7 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [marchand, setLang]);
 
   useEffect(() => {
-    if (!loading && !user) router.push("/auth/connexion");
+    if (!loading && !user) router.push("/dashboard/auth");
   }, [user, loading, router]);
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user && !loading) return null;
   if (user && !marchand && !loading) {
     try { localStorage.removeItem("wallio_pk_gerant"); } catch {}
-    router.push("/auth/connexion");
+    router.push("/dashboard/auth");
     return null;
   }
 
