@@ -25,7 +25,7 @@ export async function GET(req: Request) {
           derniere_visite: data.derniere_visite ? { seconds: data.derniere_visite.seconds } : null,
         };
       })
-      .sort((a, b) => b.tampons - a.tampons);
+      .sort((a, b) => ((b.derniere_visite?.seconds || 0) - (a.derniere_visite?.seconds || 0)));
 
     return Response.json({ clients });
   } catch (e) {

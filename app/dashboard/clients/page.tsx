@@ -34,7 +34,7 @@ export default function ClientsPage() {
   const { t } = useLang();
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<Sort>("recent");
+  const [sort, setSort] = useState<Sort>("visite");
   const [filterRecompense, setFilterRecompense] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
