@@ -25,6 +25,7 @@ interface TamponResult {
   clientId?: string;
   double?: boolean;
   birthday?: boolean;
+  birthday_offre?: string;
   palier_index?: number;
   mode_recompense?: string;
   paliers_valides?: boolean[];
@@ -44,6 +45,7 @@ export default function EquipeScannerPage() {
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [validatingAnniv, setValidatingAnniv] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
@@ -164,6 +166,21 @@ export default function EquipeScannerPage() {
       }
     } catch { /* silent */ }
     finally { setValidating(false); }
+  }
+
+  async function handleValiderAnniv() {
+    const s = sessionRef.current;
+    if (!s || !result?.clientId) return;
+    setValidatingAnniv(true);
+    try {
+      await fetch("/api/valider-anniv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-equipe-token": s.token },
+        body: JSON.stringify({ clientId: result.clientId }),
+      });
+      setResult(prev => prev ? { ...prev, birthday: false } : prev);
+    } catch { /* silent */ }
+    finally { setValidatingAnniv(false); }
   }
 
   async function handleLogout() {
@@ -301,7 +318,19 @@ export default function EquipeScannerPage() {
                   </p>
                   <p style={{ fontSize: 16, color: "#6E6E73" }}>Bonjour {result.prenom}</p>
                   {result.birthday && (
-                    <p style={{ fontSize: 13, color: "#FF2D55", fontWeight: 600, marginTop: 4 }}>Bonus anniversaire — 2 tampons offerts</p>
+                    <div style={{ width: "100%", marginTop: 4 }}>
+                      {result.birthday_offre ? (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "10px 14px", borderRadius: 14, background: "rgba(255,45,85,0.08)", marginTop: 4 }}>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: "#FF2D55" }}>{result.birthday_offre}</p>
+                          <button onClick={handleValiderAnniv} disabled={validatingAnniv}
+                            style={{ padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, background: "#FF2D55", color: "white", border: "none", cursor: "pointer", opacity: validatingAnniv ? 0.6 : 1, flexShrink: 0 }}>
+                            {validatingAnniv ? "…" : "Cadeau donné"}
+                          </button>
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: 13, color: "#FF2D55", fontWeight: 600 }}>Bonus anniversaire — 2 tampons offerts</p>
+                      )}
+                    </div>
                   )}
                   <div style={{ width: "100%", marginTop: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#AEAEB2", marginBottom: 8 }}>

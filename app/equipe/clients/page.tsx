@@ -21,6 +21,7 @@ interface Client {
   telephone: string;
   tampons: number;
   recompense_en_attente?: boolean;
+  birthday_bonus?: boolean;
   derniere_visite?: { seconds: number } | null;
 }
 
@@ -57,6 +58,8 @@ export default function EquipeClientsPage() {
   const [search, setSearch] = useState("");
   const [stampingId, setStampingId] = useState<string | null>(null);
   const [validatingId, setValidatingId] = useState<string | null>(null);
+  const [annivValidatingId, setAnnivValidatingId] = useState<string | null>(null);
+  const [annivCustom, setAnnivCustom] = useState(false);
   const [results, setResults] = useState<Record<string, TamponResult>>({});
   useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
@@ -75,7 +78,7 @@ export default function EquipeClientsPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/equipe/clients", { headers: { "x-equipe-token": token } });
-      if (res.ok) { const data = await res.json(); setClients(data.clients || []); }
+      if (res.ok) { const data = await res.json(); setClients(data.clients || []); setAnnivCustom(data.anniv_custom || false); }
     } catch { /* silent */ }
     finally { setLoading(false); }
   }
@@ -97,6 +100,20 @@ export default function EquipeClientsPage() {
       }
     } catch { /* silent */ }
     finally { setStampingId(null); }
+  }
+
+  async function handleValiderAnniv(clientId: string) {
+    if (!session || annivValidatingId) return;
+    setAnnivValidatingId(clientId);
+    try {
+      await fetch("/api/valider-anniv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
+        body: JSON.stringify({ clientId }),
+      });
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, birthday_bonus: false } : c));
+    } catch { /* silent */ }
+    finally { setAnnivValidatingId(null); }
   }
 
   async function handleValiderRecompenseExistante(clientId: string) {
@@ -190,7 +207,12 @@ export default function EquipeClientsPage() {
                   <span style={{ fontSize: 15, fontWeight: 700, color: "white" }}>{(c.prenom?.[0] || "?").toUpperCase()}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: "#1D1D1F" }}>{c.prenom} {c.nom}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: "#1D1D1F" }}>{c.prenom} {c.nom}</p>
+                    {annivCustom && c.birthday_bonus && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99, background: "rgba(255,45,85,0.10)", color: "#FF2D55" }}>Anniversaire !</span>
+                    )}
+                  </div>
                   <p style={{ fontSize: 12, color: "#AEAEB2" }}>Dernière visite : {formatDate(c.derniere_visite)}</p>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
@@ -222,6 +244,19 @@ export default function EquipeClientsPage() {
                   )}
                 </div>
               </div>
+
+              {/* Badge anniversaire + validation cadeau */}
+              {annivCustom && c.birthday_bonus && (
+                <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 12, background: "rgba(255,45,85,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#FF2D55" }}>Cadeau anniversaire a offrir</p>
+                  <button
+                    onClick={() => handleValiderAnniv(c.id)}
+                    disabled={annivValidatingId === c.id}
+                    style={{ padding: "5px 12px", borderRadius: 9, fontSize: 12, fontWeight: 600, background: "#FF2D55", color: "white", border: "none", cursor: "pointer", opacity: annivValidatingId === c.id ? 0.6 : 1, flexShrink: 0 }}>
+                    {annivValidatingId === c.id ? "…" : "Valider cadeau"}
+                  </button>
+                </div>
+              )}
 
               {/* Résultat du tampon */}
               {result && (

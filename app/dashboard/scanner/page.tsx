@@ -18,7 +18,7 @@ interface TamponResult {
   prenom?: string; tampons?: number; objectif?: number;
   nom_recompense?: string; prochain_recompense?: string;
   secondes_restantes?: number; clientId?: string; walletId?: string;
-  double?: boolean; birthday?: boolean;
+  double?: boolean; birthday?: boolean; birthday_offre?: string;
   palier_index?: number; mode_recompense?: string;
   paliers_valides?: boolean[]; total_paliers?: number;
 }
@@ -37,6 +37,7 @@ export default function ScannerPage() {
   const [result, setResult] = useState<TamponResult | null>(null);
   const [loadingTampon, setLoadingTampon] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [validatingAnniv, setValidatingAnniv] = useState(false);
 
   // Téléphone
   const [phone, setPhone] = useState("");
@@ -130,6 +131,21 @@ export default function ScannerPage() {
       setResult(prev => prev ? { ...prev, type: "ok", tampons: 0, nom_recompense: undefined } : prev);
     } catch { /**/ }
     finally { setValidating(false); }
+  }
+
+  async function handleValiderAnniv() {
+    if (!result?.clientId || !auth.currentUser) return;
+    setValidatingAnniv(true);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      await fetch("/api/valider-anniv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ clientId: result.clientId }),
+      });
+      setResult(prev => prev ? { ...prev, birthday: false } : prev);
+    } catch { /**/ }
+    finally { setValidatingAnniv(false); }
   }
 
   async function rechercherParTelephone() {
@@ -250,7 +266,19 @@ export default function ScannerPage() {
                     </div>
                     <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Bonjour, {result.prenom}</p>
                     {result.birthday && (
-                      <p className="text-[13px] font-semibold" style={{ color: "#FF9F0A" }}>Bon anniversaire !</p>
+                      <div className="w-full">
+                        <p className="text-[13px] font-semibold text-center" style={{ color: "#FF2D55" }}>Bon anniversaire !</p>
+                        {result.birthday_offre && (
+                          <div className="flex items-center justify-between mt-2 px-3 py-2 rounded-xl" style={{ background: "rgba(255,45,85,0.08)" }}>
+                            <p className="text-[13px] font-semibold" style={{ color: "#FF2D55" }}>{result.birthday_offre}</p>
+                            <button onClick={handleValiderAnniv} disabled={validatingAnniv}
+                              className="text-[12px] font-bold px-3 py-1.5 rounded-xl text-white flex-shrink-0 ml-2"
+                              style={{ background: validatingAnniv ? "rgba(255,45,85,0.4)" : "#FF2D55", border: "none", cursor: "pointer" }}>
+                              {validatingAnniv ? "…" : "Cadeau donné"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                     <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>{result.tampons} / {result.objectif} tampons</p>
                     <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>

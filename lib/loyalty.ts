@@ -38,6 +38,7 @@ export type Client = {
   date_inscription?: Timestamp;
   derniere_visite?: Timestamp;
   recompense_en_attente?: boolean;
+  birthday_bonus?: boolean;
   apns_push_token?: string;
   apns_device_lib_id?: string;
   wallet_type?: "apple" | "google";
@@ -201,7 +202,8 @@ export async function ajouterTampon(
 
   // Flags à nettoyer : birthday_bonus consommé + relance_pending réinitialisé
   const extraUpdate: Record<string, unknown> = {};
-  if (birthdayBonus) extraUpdate.birthday_bonus = false;
+  // Mode "double" : auto-consommé au scan. Mode "custom" : reste true jusqu'à validation manuelle du marchand.
+  if (birthdayBonus && birthdayType === "double") extraUpdate.birthday_bonus = false;
   if (c.relance_pending) extraUpdate.relance_pending = false;
   const nouveauxTampons = client.tampons + increment;
 

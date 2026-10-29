@@ -43,6 +43,26 @@ export default function ClientsPage() {
   const [formError, setFormError] = useState("");
   const [fetchError, setFetchError] = useState("");
   const [validatingId, setValidatingId] = useState<string | null>(null);
+  const [annivValidatingId, setAnnivValidatingId] = useState<string | null>(null);
+
+  const mn = marchand as Record<string, unknown> | null;
+  const annivCustom = (mn?.automatisations as Record<string, unknown> | undefined)
+    ?.anniversaire !== undefined &&
+    ((mn?.automatisations as Record<string, unknown>)?.anniversaire as Record<string, unknown>)?.type === "custom";
+
+  async function handleValiderAnniv(clientId: string) {
+    if (!user || annivValidatingId) return;
+    setAnnivValidatingId(clientId);
+    try {
+      const token = await user.getIdToken();
+      await fetch("/api/valider-anniv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ clientId }),
+      });
+    } catch { /* silent */ }
+    finally { setAnnivValidatingId(null); }
+  }
 
   async function handleValiderRecompense(clientId: string) {
     if (!user || validatingId) return;
@@ -335,6 +355,12 @@ export default function ClientsPage() {
                         {t.dash_rewards}
                       </span>
                     )}
+                    {annivCustom && client.birthday_bonus && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: "rgba(255,45,85,0.12)", color: "#FF2D55" }}>
+                        Anniversaire !
+                      </span>
+                    )}
                     {isAnniversaire && (
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
                         style={{ background: "rgba(255,159,10,0.12)", color: "#FF9F0A" }}>
@@ -375,6 +401,15 @@ export default function ClientsPage() {
                     style={{ background: "#34C759", color: "white", border: "none", cursor: "pointer", opacity: validatingId === client.id ? 0.6 : 1 }}
                   >
                     {validatingId === client.id ? "…" : "Valider"}
+                  </button>
+                ) : annivCustom && client.birthday_bonus ? (
+                  <button
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); handleValiderAnniv(client.id); }}
+                    disabled={annivValidatingId === client.id}
+                    className="flex-shrink-0 text-[12px] font-semibold px-3 py-1.5 rounded-xl"
+                    style={{ background: "#FF2D55", color: "white", border: "none", cursor: "pointer", opacity: annivValidatingId === client.id ? 0.6 : 1 }}
+                  >
+                    {annivValidatingId === client.id ? "…" : "Cadeau"}
                   </button>
                 ) : (
                   <Icons.ChevronRight />
