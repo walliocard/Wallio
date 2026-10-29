@@ -122,16 +122,10 @@ export default function ScannerPage() {
     setValidating(true);
     try {
       const token = await auth.currentUser.getIdToken();
-      const isProgressif = result.mode_recompense === "progressif" && result.palier_index !== undefined;
-      await fetch("/api/equipe/valider-recompense", {
+      await fetch("/api/valider-recompense", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({
-          clientId: result.clientId, mode: result.mode_recompense || "cyclique",
-          palierIndex: isProgressif ? result.palier_index : undefined,
-          paliersValides: isProgressif ? (result.paliers_valides || []) : undefined,
-          totalPaliers: isProgressif ? result.total_paliers : undefined,
-        }),
+        body: JSON.stringify({ clientId: result.clientId }),
       });
       setResult(prev => prev ? { ...prev, type: "ok", tampons: 0, nom_recompense: undefined } : prev);
     } catch { /**/ }

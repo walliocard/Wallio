@@ -42,6 +42,21 @@ export default function ClientsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [fetchError, setFetchError] = useState("");
+  const [validatingId, setValidatingId] = useState<string | null>(null);
+
+  async function handleValiderRecompense(clientId: string) {
+    if (!user || validatingId) return;
+    setValidatingId(clientId);
+    try {
+      const token = await user.getIdToken();
+      await fetch("/api/valider-recompense", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ clientId }),
+      });
+    } catch { /* silent */ }
+    finally { setValidatingId(null); }
+  }
 
   useEffect(() => {
     const uid = user?.uid;
@@ -352,7 +367,18 @@ export default function ClientsPage() {
                   </p>
                 </div>
 
-                <Icons.ChevronRight />
+                {client.recompense_en_attente ? (
+                  <button
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); handleValiderRecompense(client.id); }}
+                    disabled={validatingId === client.id}
+                    className="flex-shrink-0 text-[12px] font-semibold px-3 py-1.5 rounded-xl"
+                    style={{ background: "#34C759", color: "white", border: "none", cursor: "pointer", opacity: validatingId === client.id ? 0.6 : 1 }}
+                  >
+                    {validatingId === client.id ? "…" : "Valider"}
+                  </button>
+                ) : (
+                  <Icons.ChevronRight />
+                )}
               </Link>
             );
           })}

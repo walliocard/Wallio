@@ -20,6 +20,7 @@ interface Client {
   nom: string;
   telephone: string;
   tampons: number;
+  recompense_en_attente?: boolean;
   derniere_visite?: { seconds: number } | null;
 }
 
@@ -96,6 +97,20 @@ export default function EquipeClientsPage() {
       }
     } catch { /* silent */ }
     finally { setStampingId(null); }
+  }
+
+  async function handleValiderRecompenseExistante(clientId: string) {
+    if (!session || validatingId) return;
+    setValidatingId(clientId);
+    try {
+      await fetch("/api/valider-recompense", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
+        body: JSON.stringify({ clientId }),
+      });
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, recompense_en_attente: false, tampons: 0 } : c));
+    } catch { /* silent */ }
+    finally { setValidatingId(null); }
   }
 
   async function handleValiderRecompense(clientId: string, result: TamponResult) {
@@ -180,18 +195,31 @@ export default function EquipeClientsPage() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
                   <p style={{ fontSize: 17, fontWeight: 700, color: "#007AFF" }}>{c.tampons}</p>
-                  <button
-                    onClick={() => handleTampon(c)}
-                    disabled={stampingId === c.id}
-                    style={{
-                      padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                      background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white",
-                      border: "none", cursor: "pointer", opacity: stampingId === c.id ? 0.6 : 1,
-                    }}>
-                    {stampingId === c.id
-                      ? <span style={{ display:"flex", alignItems:"center", gap:5 }}><span style={{ width:11, height:11, borderRadius:"50%", border:"2px solid rgba(255,255,255,0.4)", borderTopColor:"white", display:"inline-block", animation:"spin 0.7s linear infinite" }} /><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></span>
-                      : "+ Tampon"}
-                  </button>
+                  {c.recompense_en_attente ? (
+                    <button
+                      onClick={() => handleValiderRecompenseExistante(c.id)}
+                      disabled={validatingId === c.id}
+                      style={{
+                        padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                        background: "#34C759", color: "white",
+                        border: "none", cursor: "pointer", opacity: validatingId === c.id ? 0.6 : 1,
+                      }}>
+                      {validatingId === c.id ? "…" : "Valider"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleTampon(c)}
+                      disabled={stampingId === c.id}
+                      style={{
+                        padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                        background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white",
+                        border: "none", cursor: "pointer", opacity: stampingId === c.id ? 0.6 : 1,
+                      }}>
+                      {stampingId === c.id
+                        ? <span style={{ display:"flex", alignItems:"center", gap:5 }}><span style={{ width:11, height:11, borderRadius:"50%", border:"2px solid rgba(255,255,255,0.4)", borderTopColor:"white", display:"inline-block", animation:"spin 0.7s linear infinite" }} /><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></span>
+                        : "+ Tampon"}
+                    </button>
+                  )}
                 </div>
               </div>
 

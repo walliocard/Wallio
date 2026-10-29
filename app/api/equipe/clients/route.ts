@@ -21,6 +21,7 @@ export async function GET(req: Request) {
           nom: data.nom,
           telephone: data.telephone,
           tampons: data.tampons || 0,
+          recompense_en_attente: data.recompense_en_attente || false,
           derniere_visite: data.derniere_visite ? { seconds: data.derniere_visite.seconds } : null,
         };
       })
