@@ -103,9 +103,10 @@ export async function GET(
   const validLinks = links.filter(l => l.uri && l.description);
   const palierInfo = prochainPalierInfo(m as Record<string, unknown>, client as Record<string, unknown>);
   const isProgressif = m.mode_recompense === "progressif" && !!(m.paliers as unknown[])?.length;
-  // En progressif : reward dans l'objet per-client (pas dans la classe partagée)
+  const isFlex = m.mode_recompense === "flex";
+  // En progressif/flex : reward per-client dans l'objet (pas dans la classe partagée)
   const classTextModules = [
-    ...(!isProgressif ? [{ header: ld.reward, body: (m.nom_recompense as string) || ld.reward, id: "recompense" }] : []),
+    ...(!isProgressif && !isFlex ? [{ header: ld.reward, body: (m.nom_recompense as string) || ld.reward, id: "recompense" }] : []),
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
@@ -178,8 +179,8 @@ export async function GET(
       alternateText: " ",
     },
     accountName: `${client.prenom} ${client.nom}`,
-    // En progressif : reward per-client dans l'objet (la classe est partagée)
-    ...(isProgressif ? {
+    // En progressif/flex : reward per-client dans l'objet (la classe est partagée)
+    ...(isProgressif || isFlex ? {
       textModulesData: [{ header: ld.reward, body: palierInfo.recompense || ld.reward, id: "recompense_client" }],
     } : {}),
   };
