@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Timestamp, FieldValue, DocumentReference } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
-import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
+import { adminDb, adminMessaging } from "@/lib/admin";
 import { pushPassUpdate } from "@/lib/apple-wallet/apns";
 
 export async function GET(req: Request) {

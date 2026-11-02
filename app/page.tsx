@@ -57,9 +57,6 @@ function WalletCardMock({
   const s = s1x * scale;
   const gap = gap1x * scale;
   const thick = Math.max(0.5, s * 0.06);
-  const gridW = perRow * s + (perRow - 1) * gap;
-  const gridH = rows * s + (rows - 1) * gap;
-
   return (
     <div style={{
       width: 260, flexShrink: 0, background: bg, borderRadius: 14,

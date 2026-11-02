@@ -30,7 +30,7 @@ const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 type Sort = "recent" | "visite" | "tampons" | "alpha";
 
 export default function ClientsPage() {
-  const { user, marchand, loading: authLoading } = useAuth();
+  const { user, marchand } = useAuth();
   const { t } = useLang();
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");

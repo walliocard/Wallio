@@ -1244,8 +1244,6 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const selectStyle: React.CSSProperties = { ...inputStyle, backgroundImage: "none" };
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -1445,7 +1443,6 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
   const notifMessage = (m.notif_message as string) ||
     `Pour ne manquer aucune de vos récompenses chez ${marchand.nom}, activez les notifications !`;
   const couleur = marchand.couleur_principale || "#007AFF";
-  const couleur2 = (m.couleur_secondaire as string) || marchand.couleur_principale || "#005EC4";
   const logo = m.logo_url as string | undefined;
 
   async function activerNotifications() {

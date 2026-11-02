@@ -4,7 +4,6 @@ import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { saveMarchandFields } from "@/lib/save-marchand";
-import { Timestamp } from "firebase/firestore";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
 

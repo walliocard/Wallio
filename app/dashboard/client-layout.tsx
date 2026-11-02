@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import DashboardNav from "@/components/dashboard/Nav";
 import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
 import { useLang } from "@/lib/lang-context";

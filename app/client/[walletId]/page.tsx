@@ -241,7 +241,6 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     nomRecompense = marchand?.nom_recompense || "";
   }
   const pct = Math.min((client.tampons / objectif) * 100, 100);
-  const restants = objectif - client.tampons;
 
   if (deleted) return (
     <main className="min-h-screen pb-10" style={{ background: "var(--bg)" }}>

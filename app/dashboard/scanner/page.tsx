@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
 import { getClientByTelephone, formatTemps, type Client } from "@/lib/loyalty";
@@ -28,7 +27,6 @@ interface TamponResult {
 export default function ScannerPage() {
   const { user } = useAuth();
   const { t } = useLang();
-  const router = useRouter();
   const showToast = useToast();
   const [tab, setTab] = useState<Tab>("qr");
 

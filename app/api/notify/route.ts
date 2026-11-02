@@ -7,7 +7,7 @@ import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const { title, body, segment, marchandId, idToken, logoUrl, expiresAt } = await req.json();
+    const { title, body, segment, marchandId, idToken, expiresAt } = await req.json();
 
     if (!title || !body || !marchandId || !idToken) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });

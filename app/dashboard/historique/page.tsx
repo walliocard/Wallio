@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getAuth } from "firebase/auth";
@@ -17,13 +16,6 @@ interface Entry {
   created_at: string | null;
 }
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) + " · " +
-    d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-}
-
 function TypeBadge({ type }: { type: string }) {
   if (type === "manuel_equipe") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(255,159,10,0.12)", color: "#FF9F0A" }}>Manuel</span>;
   if (type === "qr_equipe") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(0,122,255,0.10)", color: "#007AFF" }}>QR Équipe</span>;
@@ -33,7 +25,6 @@ function TypeBadge({ type }: { type: string }) {
 
 export default function HistoriquePage() {
   const { user, marchand } = useAuth();
-  const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"tout" | "manuel_equipe" | "qr_equipe" | "qr_gerant">("tout");

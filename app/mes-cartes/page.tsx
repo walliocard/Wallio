@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone } from "@/lib/loyalty";
 import InstallBanner from "@/components/InstallBanner";
@@ -522,7 +522,6 @@ export default function MesCartesPage() {
             const grouped: Record<string, typeof merchants> = {};
             merchants.forEach(m => { const k = m.ville || "Autres"; grouped[k] = grouped[k] || []; grouped[k].push(m); });
             const sortedVilles = Object.keys(grouped).sort((a, b) => a === "Autres" ? 1 : b === "Autres" ? -1 : a.localeCompare(b, "fr"));
-            let idx = 0;
             return sortedVilles.map(ville => (
               <div key={ville}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: "#8E9BB5", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 8, marginTop: 4, paddingLeft: 2 }}>{ville}</p>

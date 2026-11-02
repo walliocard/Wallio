@@ -3,7 +3,6 @@ import { useRef } from "react";
 
 const SIZE = 1080;
 const DISPLAY = 480;
-const SCALE = DISPLAY / SIZE;
 
 function useDownload(ref: React.RefObject<HTMLDivElement | null>, name: string) {
   return async () => {
@@ -34,8 +33,6 @@ function Post({ name, children }: { name: string; children: React.ReactNode }) {
     </div>
   );
 }
-
-const WA = "https://wa.me/40749056483?text=Bonjour%2C%20je%20souhaite%20d%C3%A9couvrir%20Wallio%20pour%20mon%20commerce.";
 
 export default function InstagramPage() {
   const posts = [

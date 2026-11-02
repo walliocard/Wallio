@@ -184,7 +184,6 @@ export default function CartePage() {
 
   // Setters sync : changer un champ commun met à jour les deux wallets
   function setLabelSync(v: string) { setPrimaryLabel(v); setGooglePrimaryLabel(v); }
-  function setBgColorSync(v: string) { setBgColor(v); setGoogleBgColor(v); }
 
   // Sync des infos partagées vers les états Apple et Google
   function updateSharedInfos(infos: {label: string; value: string}[]) {
@@ -1920,97 +1919,6 @@ const BG_PRESETS = [
   "#E0E8FF","#D0DCFF","#D0E4FF","#C0D8FF","#B0CCFF","#E8E0FF","#D8D0FF","#D0C8FF","#C8C0FF",
   "#D0F5EA","#B8EDD8","#A0E4C4","#E8F5E8","#D4ECD4","#C8DCC4","#B8CDB8","#E8F4E4","#D4E8D0",
   "#FFE0EE","#FFD0E4","#FFC0D8","#F5D0E0","#EEC0D0","#FFD4C0","#FFCCB0","#FFC4A0","#FFB890",
-];
-
-// ── Gradient themes ──────────────────────────────────
-
-const GRADIENT_THEMES = [
-  // Wallio DA — liquid glass iOS 26
-  { name: "Wallio",      from: "#007AFF", to: "#8B5CF6",   bg: "#1A0A3A",   angle: 135, glass: true  },
-  // Noir / Gris (5)
-  { name: "Minuit",      from: "#1A1A2E", to: "#0A0A0A",   bg: "#0A0A0A",   angle: 160 },
-  { name: "Charbon",     from: "#2C2C2E", to: "#0A0A0A",   bg: "#0A0A0A",   angle: 140 },
-  { name: "Anthracite",  from: "#3A3A3C", to: "#1C1C1E",   bg: "#1C1C1E",   angle: 150 },
-  { name: "Ardoise",     from: "#3A4A5A", to: "#1A2A3A",   bg: "#1A2A3A",   angle: 155 },
-  { name: "Graphite",    from: "#4A4A4C", to: "#2C2C2E",   bg: "#2C2C2E",   angle: 145 },
-  // Bleu nuit (5)
-  { name: "Cosmos",      from: "#2A1654", to: "#0A0A1A",   bg: "#0A0A1A",   angle: 135 },
-  { name: "Saphir",      from: "#1A4A8A", to: "#0A1A3A",   bg: "#0A1A3A",   angle: 150 },
-  { name: "Cobalt",      from: "#0047AB", to: "#001A4A",   bg: "#001A4A",   angle: 155 },
-  { name: "Ocean nuit",  from: "#0F3460", to: "#0A0A1A",   bg: "#0A0A1A",   angle: 145 },
-  { name: "Denim",       from: "#2C5F8A", to: "#162E44",   bg: "#162E44",   angle: 140 },
-  // Bleu vif (5)
-  { name: "Glacial",     from: "#0099CC", to: "#005577",   bg: "#005577",   angle: 135 },
-  { name: "Aqua",        from: "#00B4D8", to: "#0077B6",   bg: "#0077B6",   angle: 145 },
-  { name: "Azur",        from: "#007AFF", to: "#003A88",   bg: "#003A88",   angle: 140 },
-  { name: "Pacifique",   from: "#0096C7", to: "#003A55",   bg: "#003A55",   angle: 150 },
-  { name: "Ciel elec.",  from: "#64B5F6", to: "#1565C0",   bg: "#1565C0",   angle: 135 },
-  // Teal (5)
-  { name: "Teal nuit",   from: "#006666", to: "#001A1A",   bg: "#001A1A",   angle: 145 },
-  { name: "Turquoise",   from: "#00CED1", to: "#005577",   bg: "#005577",   angle: 135 },
-  { name: "Lagon",       from: "#00AAA0", to: "#004444",   bg: "#004444",   angle: 140 },
-  { name: "Em. eau",     from: "#00897B", to: "#00332C",   bg: "#00332C",   angle: 145 },
-  { name: "Cyan",        from: "#00BCD4", to: "#006A70",   bg: "#00606A",   angle: 135 },
-  // Vert (5)
-  { name: "Foret",       from: "#1A3A1A", to: "#0A1A0A",   bg: "#0A1A0A",   angle: 150 },
-  { name: "Matcha",      from: "#4A6741", to: "#2D3A2D",   bg: "#2D3A2D",   angle: 135 },
-  { name: "Jade",        from: "#00A878", to: "#00503A",   bg: "#00503A",   angle: 135 },
-  { name: "Emeraude",    from: "#00695C", to: "#00332C",   bg: "#00332C",   angle: 145 },
-  { name: "Menthe",      from: "#2ECC71", to: "#0A5C30",   bg: "#0A5C30",   angle: 140 },
-  // Kaki / Olive (5)
-  { name: "Kaki",        from: "#5C6B3A", to: "#2C3418",   bg: "#2C3418",   angle: 150 },
-  { name: "Olive",       from: "#6B7030", to: "#30340A",   bg: "#30340A",   angle: 145 },
-  { name: "Militaire",   from: "#4B5320", to: "#1A1E00",   bg: "#1A1E00",   angle: 155 },
-  { name: "Mousse",      from: "#6B7C45", to: "#2A3010",   bg: "#2A3010",   angle: 140 },
-  { name: "Savane",      from: "#8A9A50", to: "#3A4018",   bg: "#3A4018",   angle: 135 },
-  // Bordeaux / Rouge (5)
-  { name: "Bordeaux",    from: "#6B1A30", to: "#2A0A14",   bg: "#2A0A14",   angle: 135 },
-  { name: "Cramoisi",    from: "#8B0000", to: "#3A0000",   bg: "#3A0000",   angle: 140 },
-  { name: "Grenat",      from: "#7B0028", to: "#320010",   bg: "#320010",   angle: 135 },
-  { name: "Cerise",      from: "#CC0033", to: "#660011",   bg: "#660011",   angle: 135 },
-  { name: "Aurore",      from: "#6B2A4A", to: "#2A0A1A",   bg: "#2A0A1A",   angle: 125 },
-  // Corail / Orange (5)
-  { name: "Corail",      from: "#E8553A", to: "#7A1A0A",   bg: "#7A1A0A",   angle: 130 },
-  { name: "Sunset",      from: "#FF6B35", to: "#C0392B",   bg: "#7A1A0A",   angle: 125 },
-  { name: "Feu",         from: "#FF4500", to: "#8B0000",   bg: "#5A0000",   angle: 130 },
-  { name: "Amber",       from: "#CC7700", to: "#663300",   bg: "#663300",   angle: 135 },
-  { name: "Caramel",     from: "#A0522D", to: "#4A1A0A",   bg: "#4A1A0A",   angle: 140 },
-  // Or / Cuivre (5)
-  { name: "Or",          from: "#D4AF37", to: "#6B5500",   bg: "#3A2E00",   angle: 140 },
-  { name: "Champagne",   from: "#E8D5A3", to: "#B89A50",   bg: "#5A4400",   angle: 135 },
-  { name: "Bronze",      from: "#CD7F32", to: "#5A3000",   bg: "#3A1A00",   angle: 145 },
-  { name: "Cuivre",      from: "#B87333", to: "#5A300A",   bg: "#3A1A00",   angle: 145 },
-  { name: "Safran",      from: "#F4A300", to: "#884400",   bg: "#5A2A00",   angle: 135 },
-  // Rose / Magenta (5)
-  { name: "Rose nuit",   from: "#8B1A4A", to: "#2A0A1A",   bg: "#2A0A1A",   angle: 130 },
-  { name: "Magenta",     from: "#CC0066", to: "#660033",   bg: "#440022",   angle: 135 },
-  { name: "Fuchsia",     from: "#FF0080", to: "#880040",   bg: "#440020",   angle: 140 },
-  { name: "Orchidee",    from: "#DA70D6", to: "#8B008B",   bg: "#3A003A",   angle: 135 },
-  { name: "Flamant",     from: "#FF69B4", to: "#C2185B",   bg: "#6A0033",   angle: 130 },
-  // Violet (5)
-  { name: "Prune",       from: "#4A1A6B", to: "#1A0A2E",   bg: "#1A0A2E",   angle: 135 },
-  { name: "Amethyste",   from: "#9B59B6", to: "#4A1A6B",   bg: "#2A0A3A",   angle: 140 },
-  { name: "Mauve",       from: "#8B5E8B", to: "#3A1A3A",   bg: "#2A0A2A",   angle: 135 },
-  { name: "Indigo",      from: "#3F51B5", to: "#1A1A6B",   bg: "#0A0A3A",   angle: 150 },
-  { name: "Lavande s.",  from: "#7B68EE", to: "#3A2A8B",   bg: "#1A0A5A",   angle: 140 },
-  // Electriques (5)
-  { name: "Neon vert",   from: "#00F5A0", to: "#005533",   bg: "#0A1A10",   angle: 135 },
-  { name: "Electrique",  from: "#007AFF", to: "#0A1A3A",   bg: "#0A1A3A",   angle: 145 },
-  { name: "Cyber",       from: "#00FFCC", to: "#003344",   bg: "#001A22",   angle: 140 },
-  { name: "Aurora",      from: "#00F5A0", to: "#007AFF",   bg: "#001A3A",   angle: 135 },
-  { name: "Neon violet", from: "#BF5FFF", to: "#6600CC",   bg: "#2A0055",   angle: 140 },
-  // Clairs doux (5)
-  { name: "Ivoire",      from: "#FFFFFF", to: "#F0EBE3",   bg: "#F0EBE3",   angle: 160 },
-  { name: "Creme",       from: "#FFFBF0", to: "#F4EDD8",   bg: "#F4EDD8",   angle: 135 },
-  { name: "Blush",       from: "#FFE8E0", to: "#F0D8D0",   bg: "#F0D8D0",   angle: 135 },
-  { name: "Sage clair",  from: "#E8F4E4", to: "#D4E8D0",   bg: "#D4E8D0",   angle: 145 },
-  { name: "Ciel pale",   from: "#EDF5FF", to: "#D4E4F0",   bg: "#D4E4F0",   angle: 150 },
-  // Pastels doux (5)
-  { name: "Lavande",     from: "#EDE8F8", to: "#D8D0E8",   bg: "#D8D0E8",   angle: 135 },
-  { name: "Rose pale",   from: "#FFE0EE", to: "#F0C4DA",   bg: "#F0C4DA",   angle: 135 },
-  { name: "Peche",       from: "#FFD4B2", to: "#F0B8A0",   bg: "#F0B8A0",   angle: 130 },
-  { name: "Menthe pale", from: "#D0F5EA", to: "#B0E8D4",   bg: "#B0E8D4",   angle: 135 },
-  { name: "Baby blue",   from: "#D0E8FF", to: "#B0CCEE",   bg: "#B0CCEE",   angle: 145 },
 ];
 
 // Feature 4+5 — buildStrip async with logo + text2
