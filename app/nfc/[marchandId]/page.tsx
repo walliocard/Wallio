@@ -577,8 +577,8 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
         )}
         {isRecompense && (
           <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#34C759,#30D158)", boxShadow: "0 8px 24px rgba(52,199,89,0.28)", animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
-            <span className="text-[22px] font-bold text-white">+1</span>
+            style={{ background: couleur, boxShadow: `0 8px 24px ${hexToRgba(couleur, 0.35)}`, animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
+            <span className="text-[22px] font-bold" style={{ color: badgeTextColor }}>+1</span>
           </div>
         )}
         {isAntiDoublon && (
