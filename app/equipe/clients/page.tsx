@@ -396,15 +396,15 @@ export function EquipeNav({ active, session, clientsBadge }: { active: "scanner"
               {tab.icon}
               {badge > 0 && (
                 <span style={{
-                  position: "absolute", top: -6, right: -10,
-                  minWidth: 18, height: 18, borderRadius: 99,
-                  background: "linear-gradient(135deg, #007AFF, #8B5CF6)",
-                  color: "white", fontSize: 10, fontWeight: 700,
+                  position: "absolute", top: -4, right: -6,
+                  minWidth: 16, height: 16, borderRadius: 5,
+                  background: "#FF3B30",
+                  color: "white", fontSize: 10, fontWeight: 800,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  padding: "0 5px", lineHeight: 1,
-                  boxShadow: "0 2px 8px rgba(91,124,250,0.45)",
+                  padding: "0 4px", lineHeight: 1,
+                  boxShadow: "0 1px 4px rgba(255,59,48,0.5)",
                   border: "1.5px solid white",
-                  letterSpacing: -0.3,
+                  letterSpacing: -0.5,
                 }}>
                   {badge > 9 ? "9+" : badge}
                 </span>
