@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { collection, onSnapshot, query, where, getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
-import { drawPrintCard, drawPrintCardQROnly } from "@/lib/print-card-draw";
+import { drawPrintCard, drawPrintCardQROnly, drawPrintCardNFCOnly } from "@/lib/print-card-draw";
 
 type AboType = "mensuel" | "6mois" | "annuel";
 type Paiement = { date: number; type: AboType; montant: number };
@@ -118,6 +118,7 @@ export default function AdminPage() {
   const [copied, setCopied] = useState(false);
   const [downloadingCard, setDownloadingCard] = useState(false);
   const [downloadingQR, setDownloadingQR] = useState(false);
+  const [downloadingNFC, setDownloadingNFC] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createNom, setCreateNom] = useState("");
   const [createEmail, setCreateEmail] = useState("");
@@ -321,6 +322,17 @@ export default function AdminPage() {
     a.download = `wallio-qr-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
     a.href = canvas.toDataURL("image/png"); a.click();
     setDownloadingQR(false);
+  }
+  async function telechargerCarteNFC(m: Marchand) {
+    setDownloadingNFC(true);
+    const canvas = document.createElement("canvas");
+    const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
+    const scale = cardFormat === "A6" ? 2.1 : 3;
+    await drawPrintCardNFCOnly(canvas, scale, lang);
+    const a = document.createElement("a");
+    a.download = `wallio-nfc-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
+    a.href = canvas.toDataURL("image/png"); a.click();
+    setDownloadingNFC(false);
   }
   async function creerMarchand() {
     if (!createNom || !createEmail || !createPassword || !createVille) return;
@@ -1160,13 +1172,17 @@ export default function AdminPage() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => telechargerCarte(selected)} disabled={!selected.nfc_id || downloadingCard || downloadingQR}
+                <button onClick={() => telechargerCarte(selected)} disabled={!selected.nfc_id || downloadingCard || downloadingQR || downloadingNFC}
                   style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: T.surfCard, color: selected.nfc_id ? T.label : T.tert, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: selected.nfc_id ? "pointer" : "not-allowed" }}>
                   {downloadingCard ? "…" : "NFC + QR"}
                 </button>
-                <button onClick={() => telechargerCarteQR(selected)} disabled={downloadingCard || downloadingQR}
+                <button onClick={() => telechargerCarteQR(selected)} disabled={downloadingCard || downloadingQR || downloadingNFC}
                   style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: T.surfCard, color: T.label, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: "pointer" }}>
                   {downloadingQR ? "…" : "QR seul"}
+                </button>
+                <button onClick={() => telechargerCarteNFC(selected)} disabled={downloadingCard || downloadingQR || downloadingNFC}
+                  style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: T.surfCard, color: T.label, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: "pointer" }}>
+                  {downloadingNFC ? "…" : "NFC seul"}
                 </button>
               </div>
               <p style={{ fontSize: 11, color: T.tert, marginTop: 5 }}>4K · prêt imprimeur</p>
@@ -1332,6 +1348,10 @@ export default function AdminPage() {
                           <button onClick={async e => { e.stopPropagation(); const b = e.currentTarget; b.textContent = "…"; b.setAttribute("disabled","true"); await telechargerCarteQR(m); b.textContent = "QR"; b.removeAttribute("disabled"); }}
                             style={{ fontSize: 12, fontWeight: 500, padding: "6px 10px", borderRadius: 8, background: T.surfCard, color: T.label, border: `1px solid ${T.border}`, cursor: "pointer" }}>
                             QR
+                          </button>
+                          <button onClick={async e => { e.stopPropagation(); const b = e.currentTarget; b.textContent = "…"; b.setAttribute("disabled","true"); await telechargerCarteNFC(m); b.textContent = "NFC"; b.removeAttribute("disabled"); }}
+                            style={{ fontSize: 12, fontWeight: 500, padding: "6px 10px", borderRadius: 8, background: T.surfCard, color: T.label, border: `1px solid ${T.border}`, cursor: "pointer" }}>
+                            NFC
                           </button>
                         </div>
                       </td>

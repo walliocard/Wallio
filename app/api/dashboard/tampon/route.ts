@@ -20,7 +20,9 @@ export async function POST(req: Request) {
 
     const result = await ajouterTampon(client, marchand, forceOverride === true);
 
-    if (result.type === "ok" || result.type === "recompense") {
+    // choix_requis en bypass (choix_en_attente déjà true) = aucun tampon ajouté → pas d'historique
+    const choixBypass = result.type === "choix_requis" && !!client.choix_en_attente;
+    if ((result.type === "ok" || result.type === "recompense" || result.type === "choix_requis") && !choixBypass) {
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.walliocard.com";
@@ -52,6 +54,11 @@ export async function POST(req: Request) {
       mode_recompense: (mn.mode_recompense as string) || "cyclique",
       paliers_valides: client.paliers_valides || [],
       total_paliers: ((mn.paliers as unknown[]) || []).length,
+      palier_intermediaire: (mn.palier_intermediaire as number | undefined) ?? null,
+      nom_recompense_petit: (mn.nom_recompense_petit as string | undefined) ?? "",
+      nom_recompense_grand: (mn.nom_recompense_grand as string | undefined) ?? "",
+      choix_en_attente: result.type === "choix_requis" ? true : (client.choix_en_attente ?? false),
+      choix_fait: client.choix_fait ?? null,
     });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });

@@ -24,7 +24,7 @@ interface CardData {
   parrainageActif?: boolean;
   ville?: string;
   mapsUrl?: string;
-  modeRecompense?: "cyclique" | "progressif";
+  modeRecompense?: "cyclique" | "progressif" | "flex";
   paliers?: { tampons: number; recompense: string }[];
   paliersValides?: boolean[];
 }
@@ -167,15 +167,31 @@ export default function MesCartesPage() {
             logoUrl: (m.logo_url as string) || undefined,
             couleur: (m.apple_bg_color as string) || (m.couleur_principale as string) || "#1C1C1E",
             stampsCurrent: client.tampons || 0,
-            stampsObjective: (m.objectif_tampons as number) || 10,
-            rewardName: (m.nom_recompense as string) || "Récompense",
+            stampsObjective: (() => {
+              if ((m.mode_recompense as string) === "flex") {
+                const choixFait = (client as Record<string,unknown>).choix_fait as string | undefined;
+                return choixFait === "grand"
+                  ? ((m.objectif_tampons as number) || 10)
+                  : ((m.palier_intermediaire as number) || 5);
+              }
+              return (m.objectif_tampons as number) || 10;
+            })(),
+            rewardName: (() => {
+              if ((m.mode_recompense as string) === "flex") {
+                const choixFait = (client as Record<string,unknown>).choix_fait as string | undefined;
+                return choixFait === "grand"
+                  ? ((m.nom_recompense_grand as string) || "Récompense")
+                  : ((m.nom_recompense_petit as string) || "Récompense");
+              }
+              return (m.nom_recompense as string) || "Récompense";
+            })(),
             hasPushToken: !!client.apns_push_token,
             hasFcmToken: !!client.fcm_token,
             nfcId: (m.nfc_id as string) || undefined,
             parrainageActif: !!(m.parrainage_actif as boolean),
             ville: (m.ville as string) || undefined,
             mapsUrl: (m.maps_url as string) || undefined,
-            modeRecompense: (m.mode_recompense as "cyclique" | "progressif") || undefined,
+            modeRecompense: (m.mode_recompense as "cyclique" | "progressif" | "flex") || undefined,
             paliers: (m.paliers as { tampons: number; recompense: string }[]) || undefined,
             paliersValides: (client.paliers_valides as boolean[]) || undefined,
           });
@@ -242,8 +258,14 @@ export default function MesCartesPage() {
       setCards(prev => [...prev, {
         clientId, walletId, marchandId: marchand.id,
         marchandNom: marchand.nom, logoUrl: marchand.logoUrl, couleur: marchand.couleur,
-        stampsCurrent: existing?.tampons ?? 0, stampsObjective: (m.objectif_tampons as number) || 10,
-        rewardName: (m.nom_recompense as string) || "Récompense", hasPushToken: false, hasFcmToken: false,
+        stampsCurrent: existing?.tampons ?? 0,
+        stampsObjective: (m.mode_recompense as string) === "flex"
+          ? ((m.palier_intermediaire as number) || 5)
+          : ((m.objectif_tampons as number) || 10),
+        rewardName: (m.mode_recompense as string) === "flex"
+          ? ((m.nom_recompense_petit as string) || "Récompense")
+          : ((m.nom_recompense as string) || "Récompense"),
+        hasPushToken: false, hasFcmToken: false,
       }]);
       setMerchants(prev => prev.filter(m => m.id !== marchand.id));
       setJoined(prev => new Set(prev).add(marchand.id));

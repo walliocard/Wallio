@@ -22,6 +22,16 @@ function prochainPalierInfo(m: Record<string, unknown>, client: Record<string, u
       : (paliers.find(x => x.tampons > tampons) ?? paliers[paliers.length - 1]);
     return { objectif: p.tampons, recompense: p.recompense };
   }
+  if (m.mode_recompense === "flex") {
+    const choixFait = client.choix_fait as string | undefined;
+    const objectif = choixFait === "grand"
+      ? ((m.objectif_tampons as number) || 10)
+      : ((m.palier_intermediaire as number) || 5);
+    const recompense = choixFait === "grand"
+      ? ((m.nom_recompense_grand as string) || "")
+      : ((m.nom_recompense_petit as string) || "");
+    return { objectif, recompense };
+  }
   return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
 }
 
@@ -52,6 +62,7 @@ export async function POST(req: Request) {
   const { objectif, recompense } = palierInfo;
   const isProgressif = (m as Record<string, unknown>).mode_recompense === "progressif"
     && !!((m as Record<string, unknown>).paliers as unknown[] | undefined)?.length;
+  const isFlex = (m as Record<string, unknown>).mode_recompense === "flex";
   const marchandNom = (m.nom as string) || "Wallio";
   const logoUrl = `${BASE_URL}/api/logo/${client.marchand_id}`;
   const isRecompense = client.recompense_en_attente === true;
@@ -67,8 +78,14 @@ export async function POST(req: Request) {
     };
     if (isProgressif) {
       patchBody.textModulesData = [{ header: ld.reward, body: recompense || ld.reward, id: "recompense_client" }];
+    } else if (isFlex && client.choix_en_attente) {
+      const petit = (m as Record<string,unknown>).nom_recompense_petit as string || "";
+      const grand = (m as Record<string,unknown>).nom_recompense_grand as string || "";
+      patchBody.textModulesData = [{ header: "Choix", body: `${petit} ou ${grand} ?`, id: "choix_flex" }];
+    } else if (isFlex) {
+      patchBody.textModulesData = [{ header: ld.reward, body: recompense || ld.reward, id: "recompense_client" }];
     }
-    const updateMask = isProgressif ? "loyaltyPoints,textModulesData" : "loyaltyPoints";
+    const updateMask = (isProgressif || isFlex) ? "loyaltyPoints,textModulesData" : "loyaltyPoints";
     const res = await fetch(
       `${API}/loyaltyObject/${encodeURIComponent(objectId(walletId))}?updateMask=${updateMask}`,
       {

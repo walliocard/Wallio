@@ -34,6 +34,8 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   const [adjusting, setAdjusting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const [enregistrantChoix, setEnregistrantChoix] = useState(false);
+  const [reinitialisantChoix, setReinitialisantChoix] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -54,16 +56,16 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     setAjoutEnCours(true);
     const r = await ajouterTampon(client, marchand, forceOverride);
     setResult(r);
-    if (r.type === "ok" || r.type === "recompense") {
+    if (r.type === "ok" || r.type === "recompense" || r.type === "choix_requis") {
       setClient(prev => prev ? {
         ...prev,
-        // Progressif avec palier atteint → garde les tampons. Tout autre cas → remet à 0.
         tampons: r.type === "ok" ? r.tampons
           : r.type === "recompense" && r.palier_index !== undefined ? r.tampons
+          : r.type === "choix_requis" ? r.tampons
           : 0,
         recompense_en_attente: r.type === "recompense" ? true : prev.recompense_en_attente,
+        choix_en_attente: r.type === "choix_requis" ? true : prev.choix_en_attente,
         derniere_visite: { seconds: Date.now() / 1000 } as never,
-        // Inscription progressive au premier scan (prochainRecompense = indicateur progressif "ok")
         ...(!prev.paliers_valides && (
           (r.type === "ok" && r.prochainRecompense !== undefined) ||
           (r.type === "recompense" && r.palier_index !== undefined)
@@ -121,6 +123,17 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         await validerRecompense(client.id);
         setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
       }
+    } else if (mode === "flex") {
+      const choixFait = client.choix_fait;
+      if (!choixFait) { setValidationEnCours(false); return; }
+      const seuilReset = choixFait === "petit"
+        ? (m?.palier_intermediaire as number | undefined)
+        : marchand?.objectif_tampons;
+      if (seuilReset !== undefined && seuilReset !== null) {
+        await validerRecompense(client.id, "flex", undefined, undefined, undefined, client.tampons, seuilReset);
+        const nouveauxTampons = Math.max(0, client.tampons - seuilReset);
+        setClient(prev => prev ? { ...prev, tampons: nouveauxTampons, recompense_en_attente: false, choix_fait: undefined } : prev);
+      }
     } else {
       await validerRecompense(client.id);
       setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
@@ -134,6 +147,43 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     setValidationEnCours(false);
   }
 
+  async function handleEnregistrerChoix(choix: "petit" | "grand") {
+    if (!client || !user || enregistrantChoix) return;
+    setEnregistrantChoix(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/dashboard/enregistrer-choix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ clientId: client.id, choix }),
+      });
+      const data = await res.json();
+      if (data.ok || data.already_done) {
+        setClient(prev => prev ? {
+          ...prev,
+          choix_en_attente: undefined,
+          choix_fait: choix,
+          ...(choix === "petit" ? { recompense_en_attente: true } : {}),
+        } : prev);
+      }
+    } catch { /* silent */ }
+    finally { setEnregistrantChoix(false); }
+  }
+
+  async function handleReinitialiserChoix() {
+    if (!client || reinitialisantChoix) return;
+    setReinitialisantChoix(true);
+    const { updateDoc, doc, deleteField } = await import("firebase/firestore");
+    const { db: db2 } = await import("@/lib/firebase");
+    await updateDoc(doc(db2, "clients", client.id), {
+      choix_en_attente: true,
+      choix_fait: deleteField(),
+      recompense_en_attente: false,
+    });
+    setClient(prev => prev ? { ...prev, choix_en_attente: true, choix_fait: undefined, recompense_en_attente: false } : prev);
+    setReinitialisantChoix(false);
+  }
+
   async function handleAjuster(delta: number) {
     if (!client || !marchand || adjusting) return;
     const maxTampons = modeRecompense === "progressif" && paliersDef.length > 0
@@ -141,13 +191,19 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
       : marchand.objectif_tampons;
     const next = Math.max(0, Math.min(client.tampons + delta, maxTampons));
     setAdjusting(true);
-    // En mode progressif, recalcule paliers_valides selon le nouveau nombre de tampons
     let newPaliersValides: boolean[] | undefined = undefined;
     if (modeRecompense === "progressif" && paliersDef.length > 0) {
       newPaliersValides = paliersDef.map(p => next >= p.tampons);
     }
-    await setTampons(client.id, next, newPaliersValides);
-    setClient(prev => prev ? { ...prev, tampons: next, ...(newPaliersValides !== undefined ? { paliers_valides: newPaliersValides } : {}) } : prev);
+    // Mode flex : nettoyer choix_en_attente/choix_fait si la correction manuelle sort de la zone de choix
+    const flexClearChoix = modeRecompense === "flex" && !!(client.choix_en_attente || client.choix_fait);
+    await setTampons(client.id, next, newPaliersValides, flexClearChoix);
+    setClient(prev => prev ? {
+      ...prev,
+      tampons: next,
+      ...(newPaliersValides !== undefined ? { paliers_valides: newPaliersValides } : {}),
+      ...(flexClearChoix ? { choix_en_attente: undefined, choix_fait: undefined, recompense_en_attente: false } : {}),
+    } : prev);
     setResult(null);
     const body = JSON.stringify({ walletId: client.wallet_id });
     const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
@@ -171,6 +227,15 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     const prochain = paliersDef.find((p, i) => !paliersValides[i]) ?? paliersDef[paliersDef.length - 1];
     objectif = prochain.tampons;
     nomRecompense = prochain.recompense;
+  } else if (modeRecompense === "flex") {
+    const palierInter = (m?.palier_intermediaire as number) || 5;
+    const choixFait = client.choix_fait;
+    objectif = choixFait === "grand" ? (marchand?.objectif_tampons || 10) : palierInter;
+    nomRecompense = choixFait === "grand"
+      ? ((m?.nom_recompense_grand as string) || "")
+      : choixFait === "petit"
+        ? ((m?.nom_recompense_petit as string) || "")
+        : ((m?.nom_recompense_petit as string) || "Choix en attente");
   } else {
     objectif = marchand?.objectif_tampons || 10;
     nomRecompense = marchand?.nom_recompense || "";
@@ -336,7 +401,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         </div>
 
         {/* Résultat */}
-        {result && (
+        {result && result.type !== "choix_requis" && (
           <div
             className="rounded-2xl p-4 mb-4"
             style={{
@@ -381,6 +446,47 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           </div>
         )}
 
+        {/* Bloc choix Flex — visible si choix_en_attente */}
+        {modeRecompense === "flex" && client.choix_en_attente && (
+          <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.22)" }}>
+            {result?.type === "choix_requis" && result.birthday && (
+              <p className="text-[12px] font-semibold mb-2" style={{ color: "#FF2D55" }}>
+                Joyeux anniversaire {client.prenom} !{result.birthday_offre ? ` — ${result.birthday_offre}` : ""}
+              </p>
+            )}
+            <p className="text-[14px] font-semibold mb-1" style={{ color: "var(--accent)" }}>Choix en attente</p>
+            <p className="text-[12px] mb-3" style={{ color: "var(--fg-secondary)" }}>
+              {client.prenom} a atteint le palier. Quel est son choix ?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => handleEnregistrerChoix("petit")} disabled={enregistrantChoix}
+                className="w-full py-3 rounded-xl text-[14px] font-semibold text-white"
+                style={{ background: enregistrantChoix ? "var(--border)" : "linear-gradient(135deg,#007AFF,#8B5CF6)", border: "none" }}>
+                {enregistrantChoix ? "…" : `Prendre : ${(m?.nom_recompense_petit as string) || "Petite récompense"}`}
+              </button>
+              <button onClick={() => handleEnregistrerChoix("grand")} disabled={enregistrantChoix}
+                className="w-full py-2.5 rounded-xl text-[13px] font-semibold"
+                style={{ background: "var(--glass-bg)", color: "var(--fg)", border: "1px solid var(--border)" }}>
+                {`Continuer vers : ${(m?.nom_recompense_grand as string) || "Grande récompense"}`}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Réinitialiser le choix (patron uniquement, si choix_fait défini) */}
+        {modeRecompense === "flex" && client.choix_fait && (
+          <div className="mb-4 px-1">
+            <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
+              Choix enregistré : <strong>{client.choix_fait === "petit" ? (m?.nom_recompense_petit as string) || "Petite" : (m?.nom_recompense_grand as string) || "Grande"}</strong>
+            </p>
+            <button onClick={handleReinitialiserChoix} disabled={reinitialisantChoix}
+              className="text-[12px] font-medium mt-1"
+              style={{ color: "#FF9F0A", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+              {reinitialisantChoix ? "…" : "Réinitialiser le choix"}
+            </button>
+          </div>
+        )}
+
         {/* CTA principal */}
         {client.recompense_en_attente ? (
           <button
@@ -391,7 +497,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           >
             {validationEnCours ? "Validation…" : "Valider la récompense"}
           </button>
-        ) : (
+        ) : !client.choix_en_attente ? (
           <button
             onClick={() => handleAjouterTampon()}
             disabled={ajoutEnCours}
@@ -400,7 +506,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           >
             {ajoutEnCours ? "Enregistrement…" : "+ Ajouter un tampon"}
           </button>
-        )}
+        ) : null}
 
         {/* Correction manuelle */}
         <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>

@@ -26,8 +26,12 @@ async function patchGoogleWalletClass(uid: string) {
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
 
   // Modules texte au niveau classe (identiques pour tous les clients)
+  const flexMode = (m.mode_recompense as string) === "flex";
+  const classRewardName = flexMode
+    ? ((m.nom_recompense_petit as string) || (m.nom_recompense_grand as string) || ld.reward)
+    : ((m.nom_recompense as string) || ld.reward);
   const classTextModules = [
-    { header: ld.reward, body: (m.nom_recompense as string) || ld.reward, id: "recompense" },
+    { header: ld.reward, body: classRewardName, id: "recompense" },
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
@@ -123,6 +127,7 @@ export async function POST(req: Request) {
     // Réglages marchand
     "nom", "email",
     "objectif_tampons", "nom_recompense", "mode_recompense", "paliers",
+    "palier_intermediaire", "nom_recompense_petit", "nom_recompense_grand",
     "icone_tampons", "couleur_principale", "couleur_secondaire",
     "anti_doublon_delai", "fuseau_horaire",
     "notif_actif", "notif_message",
@@ -147,6 +152,32 @@ export async function POST(req: Request) {
   }
 
   await ref.set(data, { merge: true });
+
+  // Batch reset clients si le mode_recompense a changé
+  if ("mode_recompense" in body && snap.exists) {
+    const ancienMode = (snap.data()?.mode_recompense as string | undefined) ?? "cyclique";
+    const nouveauMode = body.mode_recompense as string;
+    if (ancienMode !== nouveauMode) {
+      const clientsSnap = await adminDb().collection("clients")
+        .where("marchand_id", "==", uid)
+        .get();
+      const batchSize = 500;
+      const docs = clientsSnap.docs;
+      for (let i = 0; i < docs.length; i += batchSize) {
+        const batch = adminDb().batch();
+        docs.slice(i, i + batchSize).forEach(d => {
+          const update: Record<string, unknown> = {
+            choix_en_attente: FieldValue.delete(),
+            choix_fait: FieldValue.delete(),
+            recompense_en_attente: false,
+          };
+          if (ancienMode === "progressif") update.paliers_valides = FieldValue.delete();
+          batch.update(d.ref, update);
+        });
+        await batch.commit();
+      }
+    }
+  }
 
   // Sync Google Wallet class si des champs visuels ont changé
   const triggerGW = ["google_bg_color", "google_hero_url", "logo_url", "google_primary_label", "nom"].some(f => f in body);

@@ -17,6 +17,16 @@ function prochainPalierInfo(m: Record<string, unknown>, client: Record<string, u
       : (paliers.find(x => x.tampons > tampons) ?? paliers[paliers.length - 1]);
     return { objectif: p.tampons, recompense: p.recompense };
   }
+  if (m.mode_recompense === "flex") {
+    const choixFait = client.choix_fait as string | undefined;
+    const objectif = choixFait === "grand"
+      ? ((m.objectif_tampons as number) || 10)
+      : ((m.palier_intermediaire as number) || 5);
+    const recompense = choixFait === "grand"
+      ? ((m.nom_recompense_grand as string) || "")
+      : ((m.nom_recompense_petit as string) || "");
+    return { objectif, recompense };
+  }
   return { objectif: (m.objectif_tampons as number) || 10, recompense: (m.nom_recompense as string) || "" };
 }
 

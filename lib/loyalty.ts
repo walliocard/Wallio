@@ -1,7 +1,7 @@
 import { db } from "./firebase";
 import {
   collection, doc, getDoc, getDocs, setDoc,
-  updateDoc, query, where, limit, serverTimestamp, Timestamp,
+  updateDoc, query, where, limit, serverTimestamp, Timestamp, deleteField,
 } from "firebase/firestore";
 import { v4 as uuid } from "uuid";
 
@@ -22,8 +22,11 @@ export type Marchand = {
   template_id?: string;
   palette_id?: string;
   parrainage_actif?: boolean;
-  mode_recompense?: "cyclique" | "progressif";
+  mode_recompense?: "cyclique" | "progressif" | "flex";
   paliers?: { tampons: number; recompense: string }[];
+  palier_intermediaire?: number;
+  nom_recompense_petit?: string;
+  nom_recompense_grand?: string;
 };
 
 export type Client = {
@@ -46,11 +49,15 @@ export type Client = {
   parrain_id?: string;
   parrain_recompense?: boolean;
   paliers_valides?: boolean[];
+  choix_en_attente?: boolean;
+  choix_fait?: "petit" | "grand";
+  derniere_visite_force?: Timestamp;
 };
 
 export type TamponResult =
   | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean; birthday?: boolean; birthday_offre?: string; prochainRecompense?: string }
   | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number; birthday?: boolean; birthday_offre?: string }
+  | { type: "choix_requis"; prenom: string; tampons: number; palier_intermediaire: number; nom_recompense_petit: string; nom_recompense_grand: string; birthday?: boolean; birthday_offre?: string }
   | { type: "anti_doublon"; prenom: string; secondes_restantes: number }
   | { type: "not_found" };
 
@@ -163,6 +170,18 @@ export async function ajouterTampon(
   marchand: Marchand,
   forceOverride = false
 ): Promise<TamponResult> {
+  // ── Mode flex : si choix en attente, on bypasse tout et on retourne choix_requis ─
+  if (marchand.mode_recompense === "flex" && client.choix_en_attente) {
+    return {
+      type: "choix_requis",
+      prenom: client.prenom,
+      tampons: client.tampons,
+      palier_intermediaire: marchand.palier_intermediaire!,
+      nom_recompense_petit: marchand.nom_recompense_petit!,
+      nom_recompense_grand: marchand.nom_recompense_grand!,
+    };
+  }
+
   // Anti-doublon — ignoré si le marchand force manuellement
   if (!forceOverride && client.derniere_visite) {
     const maintenant = Date.now() / 1000;
@@ -269,6 +288,72 @@ export async function ajouterTampon(
     };
   }
 
+  // ── Mode flex ──────────────────────────────────────────────────────────────
+  if (marchand.mode_recompense === "flex") {
+    const palier = marchand.palier_intermediaire!;
+    const objectif = marchand.objectif_tampons;
+    const nomPetit = marchand.nom_recompense_petit!;
+    const nomGrand = marchand.nom_recompense_grand!;
+    const offreCustom = birthdayBonus && birthdayType === "custom" && birthdayOffre ? { birthday_offre: birthdayOffre } : {};
+
+    // Chemin "grand" : client a choisi de continuer, vérifie l'objectif final
+    if (client.choix_fait === "grand" && nouveauxTampons >= objectif) {
+      await updateDoc(doc(db, "clients", client.id), {
+        tampons: nouveauxTampons,
+        recompense_en_attente: true,
+        choix_en_attente: deleteField(),
+        derniere_visite: serverTimestamp(),
+        ...extraUpdate,
+      });
+      return {
+        type: "recompense",
+        prenom: client.prenom,
+        nom_recompense: nomGrand,
+        tampons: nouveauxTampons,
+        birthday: birthdayBonus,
+        ...offreCustom,
+      };
+    }
+
+    // Palier intermédiaire atteint (pas encore choisi)
+    if (nouveauxTampons >= palier && !client.choix_fait) {
+      await updateDoc(doc(db, "clients", client.id), {
+        tampons: nouveauxTampons,
+        choix_en_attente: true,
+        derniere_visite: serverTimestamp(),
+        ...extraUpdate,
+      });
+      return {
+        type: "choix_requis",
+        prenom: client.prenom,
+        tampons: nouveauxTampons,
+        palier_intermediaire: palier,
+        nom_recompense_petit: nomPetit,
+        nom_recompense_grand: nomGrand,
+        birthday: birthdayBonus,
+        ...(birthdayBonus && birthdayType === "custom" && birthdayOffre ? { birthday_offre: birthdayOffre } : {}),
+      };
+    }
+
+    // Progression normale
+    const objectifAffiche = client.choix_fait === "grand" ? objectif : palier;
+    await updateDoc(doc(db, "clients", client.id), {
+      tampons: nouveauxTampons,
+      derniere_visite: serverTimestamp(),
+      choix_en_attente: deleteField(),
+      ...extraUpdate,
+    });
+    return {
+      type: "ok",
+      tampons: nouveauxTampons,
+      objectif: objectifAffiche,
+      prenom: client.prenom,
+      double: doubleActif && !birthdayBonus,
+      birthday: birthdayBonus,
+      ...offreCustom,
+    };
+  }
+
   // ── Mode cyclique (défaut) ─────────────────────────────────────────────────
   const objectif = marchand.objectif_tampons;
   if (nouveauxTampons >= objectif) {
@@ -289,11 +374,24 @@ export async function ajouterTampon(
 
 export async function validerRecompense(
   clientId: string,
-  mode?: "cyclique" | "progressif",
+  mode?: "cyclique" | "progressif" | "flex",
   palierIndex?: number,
   paliersValides?: boolean[],
   totalPaliers?: number,
+  tamponsActuels?: number,
+  seuilReset?: number,
 ) {
+  if (mode === "flex" && seuilReset !== undefined && tamponsActuels !== undefined) {
+    const nouveauxTampons = Math.max(0, tamponsActuels - seuilReset);
+    await updateDoc(doc(db, "clients", clientId), {
+      recompense_en_attente: false,
+      choix_fait: deleteField(),
+      choix_en_attente: deleteField(),
+      tampons: nouveauxTampons,
+    });
+    return;
+  }
+
   if (mode === "progressif" && palierIndex !== undefined) {
     const nouveauxPV = [...(paliersValides || [])];
     nouveauxPV[palierIndex] = true;
@@ -333,13 +431,14 @@ export function formatTempsDepuis(ts?: { seconds: number } | null): string {
   return `il y a ${Math.floor(j / 365)} an(s)`;
 }
 
-export async function setTampons(clientId: string, tampons: number, paliersValides?: boolean[]): Promise<void> {
+export async function setTampons(clientId: string, tampons: number, paliersValides?: boolean[], clearChoix = false): Promise<void> {
   const val = Math.max(0, tampons);
   await updateDoc(doc(db, "clients", clientId), {
     tampons: val,
     ...(paliersValides !== undefined
       ? { paliers_valides: paliersValides }
       : val === 0 ? { paliers_valides: [] } : {}),
+    ...(clearChoix ? { choix_en_attente: deleteField(), choix_fait: deleteField(), recompense_en_attente: false } : {}),
   });
 }
 
@@ -395,6 +494,23 @@ export async function traiterParrainage(
       tampons: nouveaux,
       paliers_valides: pv,
     });
+    return { walletId: parrainWalletId, recompense: false };
+  }
+
+  // ── Mode flex ────────────────────────────────────────────────────────────────
+  if (marchand.mode_recompense === "flex" && marchand.palier_intermediaire) {
+    const palier = marchand.palier_intermediaire;
+    // Chemin "grand" : parrain avait déjà choisi de continuer, atteint l'objectif
+    if (parrain.choix_fait === "grand" && nouveaux >= marchand.objectif_tampons) {
+      await updateDoc(doc(db, "clients", parrain.id), { tampons: nouveaux, recompense_en_attente: true });
+      return { walletId: parrainWalletId, recompense: true };
+    }
+    // Palier intermédiaire atteint via parrainage (silencieux)
+    if (nouveaux >= palier && !parrain.choix_fait && !parrain.choix_en_attente) {
+      await updateDoc(doc(db, "clients", parrain.id), { tampons: nouveaux, choix_en_attente: true });
+      return { walletId: parrainWalletId, recompense: false };
+    }
+    await updateDoc(doc(db, "clients", parrain.id), { tampons: nouveaux });
     return { walletId: parrainWalletId, recompense: false };
   }
 

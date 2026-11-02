@@ -436,3 +436,152 @@ export async function drawPrintCardQROnly(
 
   ctx.restore();
 }
+
+// ── NFC seul (A5 paysage) ────────────────────────────────────────────────────
+
+export async function drawPrintCardNFCOnly(
+  canvas: HTMLCanvasElement,
+  scale = 1,
+  lang: CardLang = "fr",
+) {
+  const W = PRINT_W * scale;
+  const H = PRINT_H * scale;
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+  const p = (v: number) => v * scale;
+
+  const T      = TEXTS[lang] ?? TEXTS.fr;
+  const font   = `-apple-system, 'Helvetica Neue', Arial, sans-serif`;
+  const blue   = "#4472F5";
+  const indigo = "#6A5AF9";
+  const violet = "#8A5CF6";
+
+  const CARD_H = PRINT_H - 100;
+
+  ctx.fillStyle = "#F0F0F5";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = p(40); ctx.shadowOffsetY = p(8);
+  rr(ctx, p(50), p(50), p(1400), p(CARD_H), p(55));
+  ctx.fillStyle = "#F8F8FA"; ctx.fill();
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+  ctx.save();
+  rr(ctx, p(50), p(50), p(1400), p(CARD_H), p(55));
+  ctx.clip();
+
+  const CARD_BOTTOM = 50 + CARD_H;
+  const waves = [
+    { dy: 0,   opa: 0.10, c: "100,140,255" },
+    { dy: 35,  opa: 0.08, c: "130,110,250" },
+    { dy: -25, opa: 0.06, c: "165,110,245" },
+  ];
+  waves.forEach(({ dy, opa, c }) => {
+    const y0 = p(700 + dy);
+    ctx.beginPath();
+    ctx.moveTo(p(50),   y0 + p(60));
+    ctx.bezierCurveTo(p(350), y0 - p(30), p(600), y0 + p(70), p(750), y0 + p(20));
+    ctx.bezierCurveTo(p(900), y0 - p(20), p(1150), y0 + p(50), p(1450), y0 + p(30));
+    ctx.lineTo(p(1450), p(CARD_BOTTOM)); ctx.lineTo(p(50), p(CARD_BOTTOM)); ctx.closePath();
+    ctx.fillStyle = `rgba(${c},${opa})`; ctx.fill();
+  });
+
+  // Titre
+  ctx.font = `600 ${p(62)}px ${font}`;
+  ctx.textBaseline = "top"; ctx.textAlign = "left";
+  const fullW = ctx.measureText(T.title1 + T.title2).width;
+  const t1W   = ctx.measureText(T.title1).width;
+  const t2W   = ctx.measureText(T.title2).width;
+  const startX = p(750) - fullW / 2;
+  ctx.fillStyle = "#15171A";
+  ctx.fillText(T.title1, startX, p(90));
+  const gTitle = ctx.createLinearGradient(startX + t1W, 0, startX + t1W + t2W, 0);
+  gTitle.addColorStop(0, blue); gTitle.addColorStop(0.5, indigo); gTitle.addColorStop(1, violet);
+  ctx.fillStyle = gTitle;
+  ctx.fillText(T.title2, startX + t1W, p(90));
+
+  // Sous-titre
+  ctx.font = `400 ${p(22)}px ${font}`; ctx.fillStyle = "#596170";
+  ctx.textAlign = "center";
+  ctx.fillText(T.subtitle, p(750), p(185));
+
+  // Bloc NFC
+  const blockY = p(270);
+  const blockH = p(398);
+  const ncx    = p(330);
+  const ncy    = blockY + blockH / 2;
+
+  ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
+  rr(ctx, p(100), blockY, p(1300), blockH, p(36));
+  ctx.fillStyle = "#FFFFFF"; ctx.fill();
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
+
+  // Cercle NFC Liquid Glass
+  ctx.save();
+  ctx.beginPath(); ctx.arc(ncx, ncy, p(130), 0, Math.PI * 2); ctx.clip();
+  const glassBase = ctx.createRadialGradient(ncx, ncy - p(20), 0, ncx, ncy, p(130));
+  glassBase.addColorStop(0,   "rgba(255,255,255,0.92)");
+  glassBase.addColorStop(0.5, "rgba(252,252,255,0.78)");
+  glassBase.addColorStop(1,   "rgba(245,245,250,0.60)");
+  ctx.fillStyle = glassBase; ctx.fillRect(ncx - p(130), ncy - p(130), p(260), p(260));
+  const specGrad = ctx.createLinearGradient(ncx - p(130), ncy - p(130), ncx + p(20), ncy + p(10));
+  specGrad.addColorStop(0,    "rgba(255,255,255,0.65)");
+  specGrad.addColorStop(0.30, "rgba(255,255,255,0.18)");
+  specGrad.addColorStop(1,    "rgba(255,255,255,0.00)");
+  ctx.fillStyle = specGrad; ctx.fillRect(ncx - p(130), ncy - p(130), p(260), p(260));
+  ctx.restore();
+  const rimGrad = ctx.createLinearGradient(ncx, ncy - p(130), ncx, ncy + p(130));
+  rimGrad.addColorStop(0,   "rgba(255,255,255,0.90)");
+  rimGrad.addColorStop(0.5, "rgba(210,215,230,0.30)");
+  rimGrad.addColorStop(1,   "rgba(190,200,220,0.15)");
+  ctx.beginPath(); ctx.arc(ncx, ncy, p(130), 0, Math.PI * 2);
+  ctx.strokeStyle = rimGrad; ctx.lineWidth = p(1.5); ctx.stroke();
+
+  const nfcImg = await loadImg("/nfc-icon.svg");
+  if (nfcImg) ctx.drawImage(nfcImg, ncx - p(68), ncy - p(68), p(136), p(136));
+
+  // Texte NFC
+  const titleF  = p(56);
+  const descF   = p(24);
+  const lineGap = p(12);
+  const sectGap = p(28);
+  const groupH  = titleF + sectGap + descF + lineGap + descF;
+  const textX   = p(510);
+  const textY   = blockY + (blockH - groupH) / 2;
+
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.font = `700 ${titleF}px ${font}`;
+  const verbW = ctx.measureText(T.nfc_verb).width;
+  ctx.fillStyle = "#15171A"; ctx.fillText(T.nfc_verb, textX, textY);
+  const gNfc = ctx.createLinearGradient(textX + verbW, 0, textX + verbW + ctx.measureText("NFC").width, 0);
+  gNfc.addColorStop(0, blue); gNfc.addColorStop(1, violet);
+  ctx.fillStyle = gNfc; ctx.fillText("NFC", textX + verbW, textY);
+
+  ctx.font = `400 ${descF}px ${font}`; ctx.fillStyle = "#596170";
+  ctx.fillText(T.nfc_desc1, textX, textY + titleF + sectGap);
+  ctx.fillText(T.nfc_desc2, textX, textY + titleF + sectGap + descF + lineGap);
+
+  // "Ajoutez à votre portefeuille"
+  const afterBlock = blockY + blockH + p(44);
+  ctx.font = `400 ${p(19)}px ${font}`; ctx.fillStyle = "#596170";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText(T.add_wallet, p(750), afterBlock);
+
+  // Badges
+  const appleImg2  = await loadImg("/apple-wallet-badge.svg");
+  const googleImg2 = await loadImg("/google-wallet-badge.svg");
+  const badgeY2 = afterBlock + p(52);
+  drawBadgeCentered(ctx, appleImg2,  p(435),  badgeY2, 300, 78, p);
+  drawBadgeCentered(ctx, googleImg2, p(1065), badgeY2, 300, 78, p);
+
+  // WALLIO
+  ctx.font = `500 ${p(22)}px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillStyle = indigo;
+  ctx.letterSpacing = `${p(8)}px`;
+  ctx.fillText("WALLIO", p(750), badgeY2 + p(110));
+  ctx.letterSpacing = "0px";
+
+  ctx.restore();
+}

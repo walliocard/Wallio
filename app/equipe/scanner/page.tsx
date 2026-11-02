@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import jsQR from "jsqr";
 import { EquipeNav } from "@/app/equipe/clients/page";
+import { useToast } from "@/components/Toast";
 
 interface EquipeSession {
   token: string;
@@ -15,7 +16,7 @@ interface EquipeSession {
 }
 
 interface TamponResult {
-  type: "ok" | "recompense" | "anti_doublon" | "not_found";
+  type: "ok" | "recompense" | "choix_requis" | "anti_doublon" | "anti_doublon_limite" | "not_found";
   prenom?: string;
   tampons?: number;
   objectif?: number;
@@ -23,6 +24,7 @@ interface TamponResult {
   prochain_recompense?: string;
   secondes_restantes?: number;
   clientId?: string;
+  walletId?: string;
   double?: boolean;
   birthday?: boolean;
   birthday_offre?: string;
@@ -30,6 +32,9 @@ interface TamponResult {
   mode_recompense?: string;
   paliers_valides?: boolean[];
   total_paliers?: number;
+  palier_intermediaire?: number;
+  nom_recompense_petit?: string;
+  nom_recompense_grand?: string;
 }
 
 function formatTemps(sec: number): string {
@@ -44,8 +49,10 @@ export default function EquipeScannerPage() {
   const [result, setResult] = useState<TamponResult | null>(null);
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
+  const showToast = useToast();
   const [validating, setValidating] = useState(false);
   const [validatingAnniv, setValidatingAnniv] = useState(false);
+  const [enregistrantChoix, setEnregistrantChoix] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
@@ -132,11 +139,57 @@ export default function EquipeScannerPage() {
       });
       const data = await res.json();
       setResult(data);
+      if (data.type === "recompense") showToast(`Récompense — ${data.nom_recompense}`, "success");
+      if (data.type === "choix_requis") showToast(`Choix disponible — ${data.prenom}${data.birthday ? " · Joyeux anniversaire !" : ""}`, "info");
     } catch {
       setResult({ type: "not_found" });
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleForceVisite(walletId: string) {
+    const s = sessionRef.current;
+    if (!s) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/equipe/tampon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-equipe-token": s.token },
+        body: JSON.stringify({ walletId, forceVisite: true }),
+      });
+      const data = await res.json();
+      setResult(data);
+      if (data.type === "anti_doublon_limite") showToast("Limite atteinte — 2 tampons max par période", "error");
+      else if (data.type === "recompense") showToast(`Récompense — ${data.nom_recompense}`, "success");
+    } catch {
+      setResult({ type: "not_found" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleEnregistrerChoix(choix: "petit" | "grand") {
+    const s = sessionRef.current;
+    if (!s || !result?.clientId) return;
+    setEnregistrantChoix(true);
+    try {
+      const res = await fetch("/api/equipe/enregistrer-choix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-equipe-token": s.token },
+        body: JSON.stringify({ clientId: result.clientId, choix }),
+      });
+      const data = await res.json();
+      if (data.already_done) { showToast("Choix déjà enregistré", "info"); setResult(null); return; }
+      if (choix === "petit") {
+        showToast(`Récompense : ${result.nom_recompense_petit}`, "success");
+        setResult(prev => prev ? { ...prev, type: "recompense", nom_recompense: prev.nom_recompense_petit } : prev);
+      } else {
+        showToast(`Continue vers : ${result.nom_recompense_grand}`, "info");
+        setResult(prev => prev ? { ...prev, type: "ok" } : prev);
+      }
+    } catch { showToast("Erreur", "error"); }
+    finally { setEnregistrantChoix(false); }
   }
 
   async function handleValiderRecompense() {
@@ -145,7 +198,7 @@ export default function EquipeScannerPage() {
     setValidating(true);
     try {
       const isProgressif = result.mode_recompense === "progressif" && result.palier_index !== undefined;
-      await fetch("/api/equipe/valider-recompense", {
+      const valRes = await fetch("/api/equipe/valider-recompense", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-equipe-token": s.token },
         body: JSON.stringify({
@@ -156,13 +209,16 @@ export default function EquipeScannerPage() {
           totalPaliers: isProgressif ? result.total_paliers : undefined,
         }),
       });
+      const valData = await valRes.json().catch(() => ({}));
+      showToast("Récompense validée", "success");
       if (isProgressif && result.total_paliers) {
         const pv = [...(result.paliers_valides || [])];
         pv[result.palier_index!] = true;
         const cycleTermine = pv.filter(Boolean).length >= result.total_paliers;
         setResult(prev => prev ? { ...prev, type: "ok", tampons: cycleTermine ? 0 : (prev.tampons ?? 0), nom_recompense: undefined } : prev);
       } else {
-        setResult(prev => prev ? { ...prev, type: "ok", tampons: 0, nom_recompense: undefined } : prev);
+        const nvt = typeof valData.nouveauxTampons === "number" ? valData.nouveauxTampons : 0;
+        setResult(prev => prev ? { ...prev, type: "ok", tampons: nvt, nom_recompense: undefined } : prev);
       }
     } catch { /* silent */ }
     finally { setValidating(false); }
@@ -366,6 +422,40 @@ export default function EquipeScannerPage() {
                 </>
               )}
 
+              {result.type === "choix_requis" && (
+                <>
+                  {result.birthday && (
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#FF2D55", marginBottom: 8 }}>
+                      Joyeux anniversaire {result.prenom} !{result.birthday_offre ? ` — ${result.birthday_offre}` : ""}
+                    </p>
+                  )}
+                  <div style={{ width: 72, height: 72, borderRadius: 22, background: "linear-gradient(135deg,rgba(0,122,255,0.12),rgba(139,92,246,0.12))", boxShadow: "0 10px 30px rgba(91,124,250,0.20)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" stroke="url(#cg2)">
+                      <defs><linearGradient id="cg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#007AFF"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient></defs>
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  </div>
+                  <p style={{ fontSize: 26, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.4 }}>Palier atteint !</p>
+                  <p style={{ fontSize: 16, color: "#6E6E73" }}>Bonjour {result.prenom} — {result.tampons} tampons</p>
+                  <p style={{ fontSize: 14, color: "#6E6E73", marginTop: 4 }}>Quel est son choix ?</p>
+                  <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+                    <button onClick={() => handleEnregistrerChoix("petit")} disabled={enregistrantChoix} style={{
+                      width: "100%", padding: "16px 0", borderRadius: 18, fontSize: 16, fontWeight: 700, color: "white", border: "none", cursor: "pointer",
+                      background: enregistrantChoix ? "#C7C7CC" : "linear-gradient(135deg,#007AFF,#8B5CF6)",
+                      boxShadow: enregistrantChoix ? "none" : "0 8px 24px rgba(91,124,250,0.35)",
+                    }}>
+                      {enregistrantChoix ? "…" : `Prendre : ${result.nom_recompense_petit}`}
+                    </button>
+                    <button onClick={() => handleEnregistrerChoix("grand")} disabled={enregistrantChoix} style={{
+                      width: "100%", padding: "14px 0", borderRadius: 18, fontSize: 15, fontWeight: 600,
+                      background: "rgba(0,0,0,0.04)", color: "#3C3C43", border: "1px solid rgba(0,0,0,0.08)", cursor: "pointer",
+                    }}>
+                      {`Continuer vers : ${result.nom_recompense_grand}`}
+                    </button>
+                  </div>
+                </>
+              )}
+
               {result.type === "anti_doublon" && (
                 <>
                   <div style={{ width: 72, height: 72, borderRadius: 22, background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
@@ -378,6 +468,24 @@ export default function EquipeScannerPage() {
                       <p style={{ fontSize: 14, fontWeight: 600, color: "#FF9F0A" }}>Prochain tampon dans {formatTemps(result.secondes_restantes ?? 0)}</p>
                     </div>
                   )}
+                  {result.walletId && (
+                    <button onClick={() => handleForceVisite(result.walletId!)} style={{
+                      marginTop: 12, padding: "12px 24px", borderRadius: 14, fontSize: 14, fontWeight: 600,
+                      background: "rgba(255,159,10,0.10)", color: "#FF9F0A", border: "1px solid rgba(255,159,10,0.25)", cursor: "pointer",
+                    }}>
+                      2ème visite aujourd&apos;hui
+                    </button>
+                  )}
+                </>
+              )}
+
+              {result.type === "anti_doublon_limite" && (
+                <>
+                  <div style={{ width: 72, height: 72, borderRadius: 22, background: "rgba(255,59,48,0.10)", border: "1.5px solid rgba(255,59,48,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 32, fontWeight: 800, color: "#FF3B30" }}>!</span>
+                  </div>
+                  <p style={{ fontSize: 26, fontWeight: 700, color: "#1D1D1F", letterSpacing: -0.4 }}>Limite atteinte</p>
+                  <p style={{ fontSize: 15, color: "#6E6E73", marginTop: 4 }}>2 tampons maximum par période pour {result.prenom}</p>
                 </>
               )}
 

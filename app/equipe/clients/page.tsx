@@ -21,12 +21,14 @@ interface Client {
   telephone: string;
   tampons: number;
   recompense_en_attente?: boolean;
+  choix_en_attente?: boolean;
+  choix_fait?: "petit" | "grand";
   birthday_bonus?: boolean;
   derniere_visite?: { seconds: number } | null;
 }
 
 interface TamponResult {
-  type: "ok" | "recompense" | "anti_doublon" | "not_found";
+  type: "ok" | "recompense" | "choix_requis" | "anti_doublon" | "not_found";
   prenom?: string;
   tampons?: number;
   objectif?: number;
@@ -34,10 +36,16 @@ interface TamponResult {
   prochain_recompense?: string;
   secondes_restantes?: number;
   clientId?: string;
+  walletId?: string;
   mode_recompense?: string;
   palier_index?: number;
   paliers_valides?: boolean[];
   total_paliers?: number;
+  palier_intermediaire?: number;
+  nom_recompense_petit?: string;
+  nom_recompense_grand?: string;
+  birthday?: boolean;
+  birthday_offre?: string;
 }
 
 function formatDate(ts?: { seconds: number } | null): string {
@@ -95,8 +103,13 @@ export default function EquipeClientsPage() {
       const data = await res.json();
       setResults(prev => ({ ...prev, [client.id]: data }));
       // Mettre à jour le nombre de tampons localement
-      if (data.type === "ok" || data.type === "recompense") {
-        setClients(prev => prev.map(c => c.id === client.id ? { ...c, tampons: data.tampons ?? c.tampons } : c));
+      if (data.type === "ok" || data.type === "recompense" || data.type === "choix_requis") {
+        setClients(prev => prev.map(c => c.id === client.id ? {
+          ...c,
+          tampons: data.tampons ?? c.tampons,
+          ...(data.type === "choix_requis" ? { choix_en_attente: true } : {}),
+          ...(data.type === "recompense" ? { recompense_en_attente: true } : {}),
+        } : c));
       }
     } catch { /* silent */ }
     finally { setStampingId(null); }
@@ -120,12 +133,14 @@ export default function EquipeClientsPage() {
     if (!session || validatingId) return;
     setValidatingId(clientId);
     try {
-      await fetch("/api/valider-recompense", {
+      const valRes = await fetch("/api/valider-recompense", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
         body: JSON.stringify({ clientId }),
       });
-      setClients(prev => prev.map(c => c.id === clientId ? { ...c, recompense_en_attente: false, tampons: 0 } : c));
+      const valData = await valRes.json().catch(() => ({}));
+      const nvt = typeof valData.nouveauxTampons === "number" ? valData.nouveauxTampons : 0;
+      setClients(prev => prev.map(c => c.id === clientId ? { ...c, recompense_en_attente: false, tampons: nvt, choix_fait: undefined, choix_en_attente: false } : c));
     } catch { /* silent */ }
     finally { setValidatingId(null); }
   }
@@ -135,7 +150,7 @@ export default function EquipeClientsPage() {
     setValidatingId(clientId);
     try {
       const isProgressif = result.mode_recompense === "progressif" && result.palier_index !== undefined;
-      await fetch("/api/equipe/valider-recompense", {
+      const valRes = await fetch("/api/equipe/valider-recompense", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
         body: JSON.stringify({
@@ -146,8 +161,12 @@ export default function EquipeClientsPage() {
           totalPaliers: isProgressif ? result.total_paliers : undefined,
         }),
       });
-      setResults(prev => ({ ...prev, [clientId]: { ...prev[clientId], type: "ok", nom_recompense: undefined, tampons: isProgressif ? (result.tampons ?? 0) : 0 } }));
-      setClients(prev => prev.map(c => c.id === clientId ? { ...c, tampons: isProgressif ? (result.tampons ?? 0) : 0 } : c));
+      const valData = await valRes.json().catch(() => ({}));
+      const nvt = typeof valData.nouveauxTampons === "number" ? valData.nouveauxTampons : (isProgressif ? (result.tampons ?? 0) : 0);
+      setResults(prev => ({ ...prev, [clientId]: { ...prev[clientId], type: "ok", nom_recompense: undefined, tampons: nvt } }));
+      setClients(prev => prev.map(c => c.id === clientId
+        ? { ...c, tampons: nvt, recompense_en_attente: false, choix_fait: undefined, choix_en_attente: false }
+        : c));
     } catch { /* silent */ }
     finally { setValidatingId(null); }
   }
@@ -209,6 +228,9 @@ export default function EquipeClientsPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                     <p style={{ fontSize: 15, fontWeight: 600, color: "#1D1D1F" }}>{c.prenom} {c.nom}</p>
+                    {c.choix_en_attente && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99, background: "rgba(0,122,255,0.10)", color: "#007AFF" }}>Choix</span>
+                    )}
                     {annivCustom && c.birthday_bonus && (
                       <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 99, background: "rgba(255,45,85,0.10)", color: "#FF2D55" }}>Anniversaire !</span>
                     )}
@@ -260,7 +282,7 @@ export default function EquipeClientsPage() {
 
               {/* Résultat du tampon */}
               {result && (
-                <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 12, background: result.type === "ok" ? "rgba(0,122,255,0.06)" : result.type === "recompense" ? "rgba(52,199,89,0.08)" : result.type === "anti_doublon" ? "rgba(255,159,10,0.08)" : "rgba(255,59,48,0.06)" }}>
+                <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 12, background: result.type === "ok" ? "rgba(0,122,255,0.06)" : result.type === "recompense" ? "rgba(52,199,89,0.08)" : result.type === "choix_requis" ? "rgba(0,122,255,0.08)" : result.type === "anti_doublon" ? "rgba(255,159,10,0.08)" : "rgba(255,59,48,0.06)" }}>
                   {result.type === "ok" && (
                     <>
                       <p style={{ fontSize: 13, fontWeight: 600, color: "#007AFF" }}>Tampon ajouté — {result.tampons}/{result.objectif}</p>
@@ -278,6 +300,21 @@ export default function EquipeClientsPage() {
                         style={{ padding: "5px 12px", borderRadius: 9, fontSize: 12, fontWeight: 600, background: "#34C759", color: "white", border: "none", cursor: "pointer", opacity: validatingId === c.id ? 0.6 : 1, flexShrink: 0 }}>
                         {validatingId === c.id ? "…" : "Valider"}
                       </button>
+                    </div>
+                  )}
+                  {result.type === "choix_requis" && (
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: "#007AFF", marginBottom: 6 }}>Palier atteint — {result.prenom} doit choisir</p>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button onClick={() => { if (result.clientId) { const s = session; if (!s) return; fetch("/api/equipe/enregistrer-choix", { method: "POST", headers: { "Content-Type": "application/json", "x-equipe-token": s.token }, body: JSON.stringify({ clientId: result.clientId, choix: "petit" }) }).then(() => { setResults(prev => ({ ...prev, [c.id]: { ...prev[c.id], type: "recompense", nom_recompense: result.nom_recompense_petit } })); setClients(prev => prev.map(cl => cl.id === c.id ? { ...cl, choix_en_attente: false, choix_fait: "petit", recompense_en_attente: true } : cl)); }).catch(() => {}); } }}
+                          style={{ flex: 1, padding: "5px 8px", borderRadius: 9, fontSize: 11, fontWeight: 600, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", cursor: "pointer" }}>
+                          {result.nom_recompense_petit || "Petit"}
+                        </button>
+                        <button onClick={() => { if (result.clientId) { const s = session; if (!s) return; fetch("/api/equipe/enregistrer-choix", { method: "POST", headers: { "Content-Type": "application/json", "x-equipe-token": s.token }, body: JSON.stringify({ clientId: result.clientId, choix: "grand" }) }).then(() => { setResults(prev => ({ ...prev, [c.id]: { ...prev[c.id], type: "ok", nom_recompense: undefined } })); setClients(prev => prev.map(cl => cl.id === c.id ? { ...cl, choix_en_attente: false, choix_fait: "grand" } : cl)); }).catch(() => {}); } }}
+                          style={{ flex: 1, padding: "5px 8px", borderRadius: 9, fontSize: 11, fontWeight: 600, background: "rgba(0,0,0,0.06)", color: "#3C3C43", border: "none", cursor: "pointer" }}>
+                          {result.nom_recompense_grand || "Grand"}
+                        </button>
+                      </div>
                     </div>
                   )}
                   {result.type === "anti_doublon" && <p style={{ fontSize: 13, fontWeight: 600, color: "#FF9F0A" }}>Déjà enregistré — prochain dans {formatTemps(result.secondes_restantes ?? 0)}</p>}

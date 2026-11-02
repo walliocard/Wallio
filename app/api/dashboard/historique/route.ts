@@ -13,19 +13,21 @@ export async function GET(req: Request) {
       .limit(200)
       .get();
 
-    const entries = snap.docs.map(d => {
-      const data = d.data();
-      return {
-        id: d.id,
-        client_prenom: data.client_prenom,
-        client_nom: data.client_nom,
-        tampons_apres: data.tampons_apres,
-        recompense: data.recompense || false,
-        type: data.type,
-        added_by: data.added_by,
-        created_at: data.created_at?.toDate?.()?.toISOString() || null,
-      };
-    });
+    const entries = snap.docs
+      .filter(d => !String(d.data().type || "").startsWith("choix_"))
+      .map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          client_prenom: data.client_prenom,
+          client_nom: data.client_nom,
+          tampons_apres: data.tampons_apres,
+          recompense: data.recompense || false,
+          type: data.type,
+          added_by: data.added_by,
+          created_at: data.created_at?.toDate?.()?.toISOString() || null,
+        };
+      });
 
     return Response.json({ entries });
   } catch (e) {

@@ -42,6 +42,7 @@ type Stats = {
   semaine: number[];
   semaine_precedente: number[];
   recompenses: number;
+  choix_en_attente: number;
   top_client: TopClient | null;
   taux_fidelite: number;
   nouvelles_semaine: number;
@@ -96,11 +97,12 @@ export default function AccueilPage() {
   const [stats, setStats] = useState<Stats>({
     total: 0, aujourd_hui: 0, tampons_total: 0, ce_mois: 0,
     semaine: [0,0,0,0,0,0,0], semaine_precedente: [0,0,0,0,0,0,0],
-    recompenses: 0, top_client: null,
+    recompenses: 0, choix_en_attente: 0, top_client: null,
     taux_fidelite: 0, nouvelles_semaine: 0, proches_recompense: 0,
     anniversaires_today: 0, inactifs_30j: 0,
   });
   const [membres, setMembres] = useState<MembreEquipe[]>([]);
+  const [flexStats, setFlexStats] = useState<{ petit: number; grand: number; total: number } | null>(null);
 
   const objectifRef = useRef<number>(marchand?.objectif_tampons || 10);
   const marchandModeRef = useRef<string>("cyclique");
@@ -112,6 +114,20 @@ export default function AccueilPage() {
     marchandModeRef.current = (mc?.mode_recompense as string) || "cyclique";
     marchandPaliersRef.current = (mc?.paliers as { tampons: number; recompense: string }[]) || [];
   }, [marchand]);
+
+  useEffect(() => {
+    if (!user) return;
+    const mc = marchand as Record<string, unknown>;
+    if (mc?.mode_recompense !== "flex") return;
+    import("firebase/auth").then(({ getAuth }) => {
+      getAuth().currentUser?.getIdToken().then(token => {
+        fetch("/api/dashboard/flex-stats", { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json())
+          .then(d => { if (d.total !== undefined) setFlexStats(d); })
+          .catch(() => {});
+      });
+    });
+  }, [user, marchand]);
 
   useEffect(() => {
     if (!user || !(marchand as Record<string, unknown>)?.equipe_actif) return;
@@ -140,7 +156,7 @@ export default function AccueilPage() {
       const todayMonth = today.getMonth() + 1;
       const todayDay = today.getDate();
 
-      let aujourd_hui = 0, tampons_total = 0, ce_mois = 0, recompenses = 0;
+      let aujourd_hui = 0, tampons_total = 0, ce_mois = 0, recompenses = 0, choix_en_attente = 0;
       let fideles = 0, nouvelles_semaine = 0, proches_recompense = 0;
       let anniversaires_today = 0, inactifs_30j = 0;
       const semaine = [0,0,0,0,0,0,0];
@@ -152,6 +168,7 @@ export default function AccueilPage() {
         const tp = data.tampons || 0;
         tampons_total += tp;
         if (data.recompense_en_attente) recompenses++;
+        if (data.choix_en_attente) choix_en_attente++;
         if (tp >= 2) fideles++;
         const pv = data.paliers_valides as boolean[] | undefined;
         const paliersDef = marchandPaliersRef.current;
@@ -189,7 +206,7 @@ export default function AccueilPage() {
 
       const total = snap.size;
       const taux_fidelite = total > 0 ? Math.round((fideles / total) * 100) : 0;
-      setStats({ total, aujourd_hui, tampons_total, ce_mois, semaine, semaine_precedente, recompenses, top_client, taux_fidelite, nouvelles_semaine, proches_recompense, anniversaires_today, inactifs_30j });
+      setStats({ total, aujourd_hui, tampons_total, ce_mois, semaine, semaine_precedente, recompenses, choix_en_attente, top_client, taux_fidelite, nouvelles_semaine, proches_recompense, anniversaires_today, inactifs_30j });
     }, err => console.error("[dashboard] Firestore error:", err.code, err.message));
     return unsub;
   }, [user]);
@@ -230,6 +247,7 @@ export default function AccueilPage() {
   const rewardName = (() => {
     const paliers = (m?.paliers as { tampons: number; recompense: string }[]) || [];
     if (m?.mode_recompense === "progressif" && paliers.length > 0) return paliers[0].recompense || t.dash_rewards;
+    if (m?.mode_recompense === "flex") return (m?.nom_recompense_petit as string) || t.dash_rewards;
     return marchand?.nom_recompense || t.dash_rewards;
   })();
 
@@ -307,6 +325,25 @@ export default function AccueilPage() {
               {stats.recompenses} {t.dash_pending_rewards}
             </p>
             <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>{t.dash_clients_reached}</p>
+          </div>
+          <Icons.ChevronRight />
+        </Link>
+      )}
+
+      {/* Alerte choix en attente (mode Flex) */}
+      {stats.choix_en_attente > 0 && (
+        <Link href="/dashboard/clients" className="flex items-center gap-3 rounded-2xl p-4 mb-3 transition-all hover:opacity-90"
+          style={{ background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.22)" }}>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,122,255,0.15)" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" stroke="#007AFF">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-[14px] font-semibold" style={{ color: "var(--accent)" }}>
+              {stats.choix_en_attente} choix en attente
+            </p>
+            <p className="text-[12px]" style={{ color: "var(--fg-secondary)" }}>Des clients doivent encore choisir leur récompense</p>
           </div>
           <Icons.ChevronRight />
         </Link>
@@ -544,6 +581,39 @@ export default function AccueilPage() {
           <p className="text-[11px] mt-2.5" style={{ color: "var(--fg-tertiary)" }}>{t.dash_today} — 7j</p>
         </div>
       </div>
+
+      {/* Stats mode Flex — choix petit vs grand */}
+      {(m?.mode_recompense === "flex") && flexStats && flexStats.total > 0 && (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
+          <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
+            Récompense Flex — Choix clients
+          </p>
+          <div className="flex items-end gap-4 mb-3">
+            <div>
+              <p className="text-[28px] font-bold tracking-tight leading-none" style={{ color: "var(--accent)" }}>
+                {Math.round((flexStats.petit / flexStats.total) * 100)}<span className="text-[16px] font-normal">%</span>
+              </p>
+              <p className="text-[11px] mt-1" style={{ color: "var(--fg-tertiary)" }}>
+                Petite récompense ({flexStats.petit})
+              </p>
+            </div>
+            <div style={{ width: 1, height: 40, background: "var(--border)" }} />
+            <div>
+              <p className="text-[28px] font-bold tracking-tight leading-none" style={{ color: "#8B5CF6" }}>
+                {Math.round((flexStats.grand / flexStats.total) * 100)}<span className="text-[16px] font-normal">%</span>
+              </p>
+              <p className="text-[11px] mt-1" style={{ color: "var(--fg-tertiary)" }}>
+                Grande récompense ({flexStats.grand})
+              </p>
+            </div>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+            <div className="h-full rounded-full"
+              style={{ width: `${Math.round((flexStats.petit / flexStats.total) * 100)}%`, background: "linear-gradient(90deg,var(--accent),#8B5CF6)", transition: "width 0.7s ease" }} />
+          </div>
+          <p className="text-[11px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>{flexStats.total} choix enregistrés</p>
+        </div>
+      )}
 
       {/* Bottom row — top client + voir tous */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -43,13 +43,16 @@ export async function POST(req: Request) {
     const nomComplet = [prenom, nom].filter(Boolean).join(" ");
 
     const isVisite = type === "visite";
+    const choixEnAttente = isVisite && !recompense && parrain.choix_en_attente === true;
     const title = isVisite
-      ? (recompense ? "! Récompense + parrainage !" : "! Tampon parrainage reçu !")
+      ? (recompense ? "! Récompense + parrainage !" : choixEnAttente ? "! Palier atteint — votre choix vous attend !" : "! Tampon parrainage reçu !")
       : "! Ami(e) inscrit(e)";
     const body  = isVisite
       ? (recompense
           ? `${nomComplet} a visité le restaurant — vous recevez 1 tampon et déverrouillez votre récompense !`
-          : `${nomComplet} a visité le restaurant — vous recevez 1 tampon bonus !`)
+          : choixEnAttente
+            ? `${nomComplet} a visité le restaurant — vous avez atteint votre palier ! Venez choisir votre récompense au comptoir.`
+            : `${nomComplet} a visité le restaurant — vous recevez 1 tampon bonus !`)
       : `${nomComplet} a rejoint via votre lien — il/elle doit venir au restaurant pour que vous receviez votre tampon.`;
 
     // Toujours stocker dans l'onglet Messages, même sans FCM token

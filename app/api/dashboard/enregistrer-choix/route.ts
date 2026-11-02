@@ -1,0 +1,54 @@
+import { adminAuth, adminDb } from "@/lib/admin";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
+
+export async function POST(req: Request) {
+  try {
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    if (!token) return Response.json({ error: "Non autorisé" }, { status: 401 });
+
+    const decoded = await adminAuth().verifyIdToken(token);
+    const marchandId = decoded.uid;
+
+    const { clientId, choix } = await req.json();
+    if (!clientId || !choix) return Response.json({ error: "Paramètres manquants" }, { status: 400 });
+    if (choix !== "petit" && choix !== "grand") return Response.json({ error: "Choix invalide" }, { status: 400 });
+
+    const clientRef = adminDb().collection("clients").doc(clientId);
+    const clientDoc = await clientRef.get();
+    if (!clientDoc.exists) return Response.json({ error: "Client introuvable" }, { status: 404 });
+
+    const clientData = clientDoc.data()!;
+    if (clientData.marchand_id !== marchandId) return Response.json({ error: "Non autorisé" }, { status: 403 });
+
+    // Vérification optimiste : choix déjà enregistré
+    if (!clientData.choix_en_attente) return Response.json({ already_done: true });
+
+    const update: Record<string, unknown> = {
+      choix_en_attente: FieldValue.delete(),
+      choix_fait: choix,
+      ...(choix === "petit" ? { recompense_en_attente: true } : {}),
+    };
+    await clientRef.update(update);
+
+    // Historique
+    adminDb().collection("marchands").doc(marchandId).collection("historique").add({
+      client_id: clientId,
+      client_prenom: clientData.prenom,
+      client_nom: clientData.nom || "",
+      type: "choix_gerant",
+      choix,
+      created_at: Timestamp.now(),
+    }).catch(() => {});
+
+    // Push wallet
+    const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.walliocard.com";
+    const body = JSON.stringify({ walletId: clientData.wallet_id });
+    const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+    fetch(`${base}/api/apple-wallet/push-update`, opts).catch(() => {});
+    fetch(`${base}/api/google-wallet/push-update`, opts).catch(() => {});
+
+    return Response.json({ ok: true });
+  } catch (e) {
+    return Response.json({ error: String(e) }, { status: 500 });
+  }
+}

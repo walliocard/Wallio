@@ -32,6 +32,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ marchandId
     parrainage_actif: data.parrainage_actif ?? false,
     mode_recompense: data.mode_recompense ?? "cyclique",
     paliers: data.paliers ?? [],
+    palier_intermediaire: data.palier_intermediaire ?? null,
+    nom_recompense_petit: data.nom_recompense_petit ?? null,
+    nom_recompense_grand: data.nom_recompense_grand ?? null,
     fuseau_horaire: data.fuseau_horaire ?? "UTC",
     // Champs wallet
     apple_bg_color: data.apple_bg_color,

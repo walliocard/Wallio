@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   getMarchandByNfcId,
   getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
-  creerClient, ajouterTampon, validerRecompense, checkEtRecompenseParrain,
+  creerClient, ajouterTampon, checkEtRecompenseParrain,
   formatTemps, WALLET_KEY,
   type Marchand, type Client, type TamponResult,
 } from "@/lib/loyalty";
@@ -53,8 +53,8 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     setScreen({ type: "result", result, client, marchand });
     try { sessionStorage.setItem(`nfc_result_${marchand.id}`, JSON.stringify({ result, client })); } catch {}
     try { localStorage.setItem(`nfc_dead_${marchand.id}`, JSON.stringify({ ts: Date.now(), type: "result", result, client })); } catch {}
-    if (result.type === "ok" || result.type === "recompense") {
-      try { navigator.vibrate(result.type === "recompense" ? [80, 60, 120] : 40); } catch {}
+    if (result.type === "ok" || result.type === "recompense" || result.type === "choix_requis") {
+      try { navigator.vibrate(result.type === "recompense" ? [80, 60, 120] : result.type === "choix_requis" ? [60, 40, 60] : 40); } catch {}
       const body = JSON.stringify({ walletId: client.wallet_id });
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       fetch("/api/apple-wallet/push-update", opts).catch(() => {});
@@ -255,47 +255,26 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       paliersValides={screen.client.paliers_valides || []}
       hasWallet={!!(screen.client.wallet_type || screen.client.apns_push_token)}
       hasFcmToken={!!screen.client.fcm_token}
-      onValiderRecompense={async () => {
-        const mn = screen.marchand as Record<string, unknown>;
-        const mode = (mn.mode_recompense as string) || "cyclique";
-        const paliers = (mn.paliers as { tampons: number; recompense: string }[]) || [];
-        const paliersValides = screen.client.paliers_valides || [];
-
-        // Récompense progressive : palier_index défini (mid-cycle retourne toujours sans palier_index)
-        const isProgressiveReward = mode === "progressif" && paliers.length > 0
-          && screen.result.type === "recompense" && screen.result.palier_index !== undefined;
-
-        if (isProgressiveReward && screen.result.type === "recompense") {
-          const palierIndex = screen.result.palier_index!;
-          await validerRecompense(screen.client.id, "progressif", palierIndex, paliersValides, paliers.length);
-          const nouveauxPV = [...paliersValides];
-          nouveauxPV[palierIndex] = true;
-          const cycleTermine = nouveauxPV.filter(Boolean).length >= paliers.length;
-          const nvPV = cycleTermine ? [] : nouveauxPV;
-          const nvTampons = cycleTermine ? 0 : screen.result.tampons;
-          const prochainPalier = paliers.find((p, i) => !nvPV[i]);
-          setScreen({
-            type: "result",
-            result: {
-              type: "ok",
-              tampons: nvTampons,
-              objectif: prochainPalier?.tampons ?? paliers[paliers.length - 1].tampons,
-              prenom: screen.client.prenom,
-              prochainRecompense: prochainPalier?.recompense,
-            },
-            client: { ...screen.client, paliers_valides: nvPV, recompense_en_attente: false, tampons: nvTampons },
-            marchand: screen.marchand,
-          });
-        } else {
-          await validerRecompense(screen.client.id);
-          setScreen({ type: "result", result: { type: "ok", tampons: 0, objectif: screen.marchand.objectif_tampons, prenom: screen.client.prenom }, client: screen.client, marchand: screen.marchand });
+      onEnregistrerChoix={async (choix) => {
+        const res = await fetch("/api/nfc/enregistrer-choix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ walletId: screen.client.wallet_id, marchandId: screen.marchand.id, choix }),
+        });
+        const data = await res.json();
+        if (data.already_done) {
+          // Un autre côté a déjà enregistré le choix — ne rien afficher, le screen se mettra à jour via le prochain scan
+          return;
         }
-        // Push Wallet après validation
-        const wid = screen.client.wallet_id;
-        const pb = JSON.stringify({ walletId: wid });
-        const po = { method: "POST", headers: { "Content-Type": "application/json" }, body: pb };
-        fetch("/api/apple-wallet/push-update", po).catch(() => {});
-        fetch("/api/google-wallet/push-update", po).catch(() => {});
+        if (data.ok) {
+          const mn = screen.marchand as Record<string, unknown>;
+          const tampons = screen.result.type === "choix_requis" ? screen.result.tampons : 0;
+          if (choix === "petit") {
+            setScreen({ type: "result", result: { type: "recompense", prenom: screen.client.prenom, nom_recompense: (mn.nom_recompense_petit as string) || "", tampons }, client: { ...screen.client, choix_fait: "petit" }, marchand: screen.marchand });
+          } else {
+            setScreen({ type: "result", result: { type: "ok", tampons, objectif: (mn.objectif_tampons as number) || 0, prenom: screen.client.prenom }, client: { ...screen.client, choix_fait: "grand" }, marchand: screen.marchand });
+          }
+        }
       }}
     />
   );
@@ -348,7 +327,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           try { localStorage.setItem(`nfc_dead_${screen.marchand.id}`, JSON.stringify({ ts: Date.now(), type: "carte", client: parrainClient, parraine: true })); } catch {}
         } else {
           const result = await ajouterTampon(client, screen.marchand);
-          if (result.type === "ok" || result.type === "recompense") {
+          if (result.type === "ok" || result.type === "recompense" || result.type === "choix_requis") {
             const body = JSON.stringify({ walletId: client.wallet_id });
             const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
             fetch("/api/apple-wallet/push-update", opts).catch(() => {});
@@ -487,7 +466,7 @@ function Erreur({ message }: { message: string }) {
 
 // ─── Résultat tampon ──────────────────────────────────────────────────────────
 
-function ResultScreen({ result, marchand, walletId, telephone, paliersValides, hasWallet, hasFcmToken, onValiderRecompense }: {
+function ResultScreen({ result, marchand, walletId, telephone, paliersValides, hasWallet, hasFcmToken, onEnregistrerChoix }: {
   result: TamponResult;
   marchand: Marchand;
   walletId: string;
@@ -495,7 +474,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
   paliersValides: boolean[];
   hasWallet: boolean;
   hasFcmToken: boolean;
-  onValiderRecompense: () => void;
+  onEnregistrerChoix?: (choix: "petit" | "grand") => Promise<void>;
 }) {
   const mn = marchand as Record<string, unknown>;
   const paliersDef = (mn.paliers as { tampons: number; recompense: string }[]) || [];
@@ -506,6 +485,9 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
   const badgeTextColor = isLight ? "#1D1D1F" : "#FFFFFF";
   const [isAndroid, setIsAndroid] = useState(false);
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
+  const [enregistrantChoix, setEnregistrantChoix] = useState(false);
+
+  const isChoixRequis = result.type === "choix_requis";
 
   useEffect(() => {
     setIsAndroid(/android/i.test(navigator.userAgent));
@@ -582,12 +564,22 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
             <span className="text-[28px] font-bold leading-none" style={{ color: "#FF9F0A" }}>!</span>
           </div>
         )}
+        {isChoixRequis && (
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.12),rgba(139,92,246,0.12))", animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" stroke="url(#ncg)">
+              <defs><linearGradient id="ncg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#007AFF"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient></defs>
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </div>
+        )}
 
         {/* Titre */}
         <h1 className="text-[26px] font-semibold tracking-tight mb-2" style={{ color: "#1D1D1F" }}>
           {isOk && (result.birthday ? "Joyeux anniversaire !" : result.double ? "2 tampons ajoutés" : "Tampon ajouté")}
           {isRecompense && "Récompense débloquée"}
           {isAntiDoublon && "Déjà enregistré"}
+          {isChoixRequis && "À vous de choisir !"}
         </h1>
 
         {/* Sous-titre */}
@@ -595,7 +587,52 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
           {isOk && `Bonjour ${result.prenom}`}
           {isRecompense && `Bonjour ${result.prenom} — ${result.nom_recompense}`}
           {isAntiDoublon && `Bonjour ${result.prenom}`}
+          {isChoixRequis && `Bonjour ${result.prenom} — ${result.tampons} tampons`}
         </p>
+
+        {/* Message anniversaire sur choix_requis */}
+        {isChoixRequis && result.type === "choix_requis" && result.birthday && (
+          <div className="mb-4 px-4 py-3 rounded-2xl text-center"
+            style={{ background: "rgba(255,45,85,0.07)", border: "1px solid rgba(255,45,85,0.18)" }}>
+            <p className="text-[13px] font-semibold" style={{ color: "#FF2D55" }}>
+              Joyeux anniversaire !{result.birthday_offre ? ` — ${result.birthday_offre}` : ""}
+            </p>
+          </div>
+        )}
+
+        {/* Bloc de choix Flex */}
+        {isChoixRequis && result.type === "choix_requis" && (
+          <div className="mb-6 rounded-2xl p-5 text-left" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(12px)", border: "1px solid rgba(0,0,0,0.07)" }}>
+            <p className="text-[13px] font-semibold uppercase tracking-widest mb-4" style={{ color: "#AEAEB2" }}>Votre choix</p>
+            <div className="flex flex-col gap-3">
+              <button
+                disabled={enregistrantChoix}
+                onClick={async () => {
+                  if (!onEnregistrerChoix) return;
+                  setEnregistrantChoix(true);
+                  try { await onEnregistrerChoix("petit"); } finally { setEnregistrantChoix(false); }
+                }}
+                className="w-full py-4 rounded-2xl font-bold text-white text-[16px]"
+                style={{ background: enregistrantChoix ? "#C7C7CC" : "linear-gradient(135deg,#007AFF,#8B5CF6)", border: "none", cursor: "pointer", boxShadow: enregistrantChoix ? "none" : "0 6px 20px rgba(0,122,255,0.25)" }}
+              >
+                {enregistrantChoix ? "…" : `Prendre : ${result.nom_recompense_petit}`}
+              </button>
+              <button
+                disabled={enregistrantChoix}
+                onClick={async () => {
+                  if (!onEnregistrerChoix) return;
+                  setEnregistrantChoix(true);
+                  try { await onEnregistrerChoix("grand"); } finally { setEnregistrantChoix(false); }
+                }}
+                className="w-full py-3.5 rounded-2xl font-semibold text-[15px]"
+                style={{ background: "rgba(0,0,0,0.04)", color: "#3C3C43", border: "1px solid rgba(0,0,0,0.08)", cursor: "pointer" }}
+              >
+                {`Continuer vers : ${result.nom_recompense_grand}`}
+              </button>
+            </div>
+            <p className="text-[11px] mt-3 text-center" style={{ color: "#AEAEB2" }}>Ce choix est définitif</p>
+          </div>
+        )}
 
         {/* Offre anniversaire personnalisée */}
         {(isOk || isRecompense) && result.birthday && result.birthday_offre && (
@@ -1317,8 +1354,19 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
   const prochainPalier = mn.mode_recompense === "progressif" && paliersDef.length > 0
     ? (paliersDef.find((p, i) => !paliersValides[i]) ?? paliersDef[paliersDef.length - 1])
     : null;
-  const displayObjectif = prochainPalier ? prochainPalier.tampons : marchand.objectif_tampons;
-  const displayReward = prochainPalier ? prochainPalier.recompense : ((mn.nom_recompense as string) || ld.reward);
+  const flexObjectif = mn.mode_recompense === "flex"
+    ? ((client as Record<string,unknown>).choix_fait === "grand"
+      ? ((mn.objectif_tampons as number) || 10)
+      : ((mn.palier_intermediaire as number) || 5))
+    : null;
+  const displayObjectif = prochainPalier ? prochainPalier.tampons : (flexObjectif ?? marchand.objectif_tampons);
+  const displayReward = prochainPalier
+    ? prochainPalier.recompense
+    : mn.mode_recompense === "flex"
+      ? ((client as Record<string,unknown>).choix_fait === "grand"
+        ? ((mn.nom_recompense_grand as string) || ld.reward)
+        : ((mn.nom_recompense_petit as string) || ld.reward))
+      : ((mn.nom_recompense as string) || ld.reward);
 
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">(() => {
     if (typeof window === "undefined") return "idle";

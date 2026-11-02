@@ -23,9 +23,10 @@ function formatDate(iso: string | null): string {
     d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
-function TypeBadge({ type, manual }: { type: string; manual?: boolean }) {
+function TypeBadge({ type }: { type: string }) {
   if (type === "manuel_equipe") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(255,159,10,0.12)", color: "#FF9F0A" }}>Manuel</span>;
   if (type === "qr_equipe") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(0,122,255,0.10)", color: "#007AFF" }}>QR Équipe</span>;
+  if (type === "qr_gerant") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(139,92,246,0.10)", color: "#8B5CF6" }}>QR Patron</span>;
   return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(52,199,89,0.10)", color: "#34C759" }}>Patron</span>;
 }
 
@@ -34,7 +35,7 @@ export default function HistoriquePage() {
   const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"tout" | "manuel_equipe" | "qr_equipe">("tout");
+  const [filter, setFilter] = useState<"tout" | "manuel_equipe" | "qr_equipe" | "qr_gerant">("tout");
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export default function HistoriquePage() {
 
       {/* Filtres */}
       <div className="flex gap-2 mb-5 no-print">
-        {([["tout", "Tout"], ["qr_equipe", "QR Équipe"], ["manuel_equipe", "Manuels"]] as const).map(([val, label]) => (
+        {([["tout", "Tout"], ["qr_equipe", "QR Équipe"], ["qr_gerant", "QR Patron"], ["manuel_equipe", "Manuels"]] as const).map(([val, label]) => (
           <button key={val} onClick={() => setFilter(val)}
             className="px-3 py-1.5 rounded-xl text-[13px] font-semibold transition-all"
             style={{ background: filter === val ? "var(--accent)" : "var(--glass-bg)", color: filter === val ? "white" : "var(--fg-secondary)", border: `1px solid ${filter === val ? "var(--accent)" : "var(--border)"}` }}>

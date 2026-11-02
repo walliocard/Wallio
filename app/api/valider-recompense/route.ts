@@ -31,15 +31,26 @@ export async function POST(req: Request) {
     if (clientData.marchand_id !== marchandId)
       return Response.json({ error: "Non autorisé" }, { status: 403 });
 
+    if (!clientData.recompense_en_attente) return Response.json({ error: "Aucune récompense en attente" }, { status: 400 });
+
     const marchandDoc = await adminDb().collection("marchands").doc(marchandId).get();
     const marchandData = marchandDoc.data() || {};
-    const mode = ((marchandData.mode_recompense as string) || "cyclique") as "cyclique" | "progressif";
+    const mode = ((marchandData.mode_recompense as string) || "cyclique") as "cyclique" | "progressif" | "flex";
 
     let palierIndex: number | undefined;
     let paliersValides: boolean[] | undefined;
     let totalPaliers: number | undefined;
+    let tamponsActuels: number | undefined;
+    let seuilReset: number | undefined;
 
-    if (mode === "progressif") {
+    if (mode === "flex") {
+      const choixFait = clientData.choix_fait as "petit" | "grand" | undefined;
+      if (!choixFait) return Response.json({ error: "Choix client manquant" }, { status: 400 });
+      tamponsActuels = clientData.tampons as number;
+      seuilReset = choixFait === "petit"
+        ? (marchandData.palier_intermediaire as number | undefined)
+        : (marchandData.objectif_tampons as number | undefined);
+    } else if (mode === "progressif") {
       const paliers = (marchandData.paliers as { tampons: number; recompense: string }[]) || [];
       totalPaliers = paliers.length;
       const rawPV = clientData.paliers_valides as boolean[] | undefined;
@@ -50,8 +61,16 @@ export async function POST(req: Request) {
       if (palierIndex === -1) palierIndex = undefined;
     }
 
-    await validerRecompense(clientId, mode, palierIndex, paliersValides, totalPaliers);
-    return Response.json({ ok: true });
+    await validerRecompense(clientId, mode, palierIndex, paliersValides, totalPaliers, tamponsActuels, seuilReset);
+    let nouveauxTampons: number;
+    if (mode === "flex" && seuilReset !== undefined && tamponsActuels !== undefined) {
+      nouveauxTampons = Math.max(0, tamponsActuels - seuilReset);
+    } else if (mode === "progressif") {
+      nouveauxTampons = clientData.tampons as number;
+    } else {
+      nouveauxTampons = 0;
+    }
+    return Response.json({ ok: true, nouveauxTampons });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });
   }

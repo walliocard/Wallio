@@ -11,22 +11,25 @@ import { auth } from "@/lib/firebase";
 import Link from "next/link";
 import jsQR from "jsqr";
 import { useLang } from "@/lib/lang-context";
+import { useToast } from "@/components/Toast";
 
 type Tab = "qr" | "telephone" | "nom";
 interface TamponResult {
-  type: "ok" | "recompense" | "anti_doublon" | "not_found";
+  type: "ok" | "recompense" | "choix_requis" | "anti_doublon" | "not_found";
   prenom?: string; tampons?: number; objectif?: number;
   nom_recompense?: string; prochain_recompense?: string;
   secondes_restantes?: number; clientId?: string; walletId?: string;
   double?: boolean; birthday?: boolean; birthday_offre?: string;
   palier_index?: number; mode_recompense?: string;
   paliers_valides?: boolean[]; total_paliers?: number;
+  palier_intermediaire?: number; nom_recompense_petit?: string; nom_recompense_grand?: string;
 }
 
 export default function ScannerPage() {
   const { user } = useAuth();
   const { t } = useLang();
   const router = useRouter();
+  const showToast = useToast();
   const [tab, setTab] = useState<Tab>("qr");
 
   // QR
@@ -38,6 +41,7 @@ export default function ScannerPage() {
   const [loadingTampon, setLoadingTampon] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validatingAnniv, setValidatingAnniv] = useState(false);
+  const [enregistrantChoix, setEnregistrantChoix] = useState(false);
 
   // Téléphone
   const [phone, setPhone] = useState("");
@@ -114,6 +118,8 @@ export default function ScannerPage() {
       });
       const data = await res.json();
       setResult(data);
+      if (data.type === "recompense") showToast(`Récompense débloquée — ${data.nom_recompense}`, "success");
+      if (data.type === "choix_requis") showToast(`Choix disponible — ${data.prenom}${data.birthday ? " · Joyeux anniversaire !" : ""}`, "info");
     } catch { setResult({ type: "not_found" }); }
     finally { setLoadingTampon(false); }
   }
@@ -123,14 +129,44 @@ export default function ScannerPage() {
     setValidating(true);
     try {
       const token = await auth.currentUser.getIdToken();
-      await fetch("/api/valider-recompense", {
+      const valRes = await fetch("/api/valider-recompense", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ clientId: result.clientId }),
       });
-      setResult(prev => prev ? { ...prev, type: "ok", tampons: 0, nom_recompense: undefined } : prev);
+      const valData = await valRes.json().catch(() => ({}));
+      showToast("Récompense validée", "success");
+      const nvt = typeof valData.nouveauxTampons === "number" ? valData.nouveauxTampons : 0;
+      setResult(prev => prev ? { ...prev, type: "ok", tampons: nvt, nom_recompense: undefined } : prev);
     } catch { /**/ }
     finally { setValidating(false); }
+  }
+
+  async function handleEnregistrerChoix(choix: "petit" | "grand") {
+    if (!result?.clientId || !auth.currentUser) return;
+    setEnregistrantChoix(true);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/dashboard/enregistrer-choix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ clientId: result.clientId, choix }),
+      });
+      const data = await res.json();
+      if (data.already_done) {
+        showToast("Choix déjà enregistré", "info");
+        setResult(null);
+        return;
+      }
+      if (choix === "petit") {
+        showToast(`Récompense : ${result.nom_recompense_petit}`, "success");
+        setResult(prev => prev ? { ...prev, type: "recompense", nom_recompense: prev.nom_recompense_petit } : prev);
+      } else {
+        showToast(`Continue vers : ${result.nom_recompense_grand}`, "info");
+        setResult(prev => prev ? { ...prev, type: "ok", tampons: prev.tampons, objectif: prev.objectif } : prev);
+      }
+    } catch { showToast("Erreur lors de l'enregistrement", "error"); }
+    finally { setEnregistrantChoix(false); }
   }
 
   async function handleValiderAnniv() {
@@ -305,6 +341,43 @@ export default function ScannerPage() {
                       style={{ background: validating ? "var(--border)" : "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: validating ? "none" : "0 6px 20px rgba(0,122,255,0.28)" }}>
                       {validating ? "Validation…" : "Valider"}
                     </button>
+                    <Link href={`/client/${result.walletId}`} className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>Voir le profil</Link>
+                  </>)}
+                  {result.type === "choix_requis" && (<>
+                    {result.birthday && (
+                      <p className="text-[13px] font-semibold mb-2" style={{ color: "#FF2D55" }}>
+                        Joyeux anniversaire {result.prenom} !
+                        {result.birthday_offre && ` — ${result.birthday_offre}`}
+                      </p>
+                    )}
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-1"
+                      style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.10),rgba(139,92,246,0.10))", animation: "success-pop 0.45s cubic-bezier(0.34,1.56,0.64,1)" }}>
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" stroke="url(#cg)">
+                        <defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#007AFF"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient></defs>
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                    <p className="text-[13px] font-medium" style={{ color: "var(--fg-secondary)" }}>{result.prenom}</p>
+                    <p className="text-[16px] font-bold" style={{ color: "var(--fg)" }}>Palier atteint — {result.tampons} tampons</p>
+                    <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>Quel est son choix ?</p>
+                    <div className="w-full flex flex-col gap-2 mt-1">
+                      <button
+                        onClick={() => handleEnregistrerChoix("petit")}
+                        disabled={enregistrantChoix}
+                        className="w-full py-4 rounded-2xl font-bold text-white text-[15px]"
+                        style={{ background: enregistrantChoix ? "var(--border)" : "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: enregistrantChoix ? "none" : "0 6px 20px rgba(0,122,255,0.28)" }}
+                      >
+                        {enregistrantChoix ? "…" : `Prendre : ${result.nom_recompense_petit}`}
+                      </button>
+                      <button
+                        onClick={() => handleEnregistrerChoix("grand")}
+                        disabled={enregistrantChoix}
+                        className="w-full py-3 rounded-2xl font-semibold text-[14px]"
+                        style={{ background: "var(--glass-bg)", color: "var(--fg)", border: "1px solid var(--border)" }}
+                      >
+                        {`Continuer vers : ${result.nom_recompense_grand}`}
+                      </button>
+                    </div>
                     <Link href={`/client/${result.walletId}`} className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>Voir le profil</Link>
                   </>)}
                   {result.type === "anti_doublon" && (<>

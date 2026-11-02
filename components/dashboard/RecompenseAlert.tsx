@@ -40,7 +40,16 @@ export default function RecompenseAlert({ marchand, marchandId }: { marchand: Ma
   async function handleValider() {
     if (!alerte) return;
     setValidating(true);
-    await validerRecompense(alerte.id);
+    const m = marchand as Record<string, unknown>;
+    if (m.mode_recompense === "flex") {
+      const choixFait = (alerte as Record<string, unknown>).choix_fait as "petit" | "grand" | undefined;
+      const seuilReset = choixFait === "petit"
+        ? (m.palier_intermediaire as number)
+        : (marchand.objectif_tampons);
+      await validerRecompense(alerte.id, "flex", undefined, undefined, undefined, alerte.tampons, seuilReset);
+    } else {
+      await validerRecompense(alerte.id);
+    }
     setValidating(false);
     setAlerte(null);
   }
@@ -71,7 +80,16 @@ export default function RecompenseAlert({ marchand, marchandId }: { marchand: Ma
           {alerte.prenom} {alerte.nom}
         </h2>
         <p className="text-[15px] mb-6" style={{ color: "var(--fg-secondary)" }}>
-          {marchand.nom_recompense}
+          {(() => {
+            const m = marchand as Record<string, unknown>;
+            if (m.mode_recompense === "flex") {
+              const choixFait = (alerte as Record<string, unknown>).choix_fait as string | undefined;
+              return choixFait === "grand"
+                ? (m.nom_recompense_grand as string) || marchand.nom_recompense
+                : (m.nom_recompense_petit as string) || marchand.nom_recompense;
+            }
+            return marchand.nom_recompense;
+          })()}
         </p>
 
         <div className="flex gap-2.5">

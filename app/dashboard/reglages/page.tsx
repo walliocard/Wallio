@@ -40,9 +40,19 @@ export default function ReglagesPage() {
   const [nomEtablissement, setNomEtablissement] = useState<string>(marchand?.nom || "");
   const [objectif, setObjectif] = useState<number>(marchand?.objectif_tampons || 10);
   const [nomRecompense, setNomRecompense] = useState<string>(marchand?.nom_recompense || "");
-  const [modeRecompense, setModeRecompense] = useState<"cyclique" | "progressif">(
-    ((marchand as Record<string, unknown>)?.mode_recompense as "cyclique" | "progressif") || "cyclique"
+  const [modeRecompense, setModeRecompense] = useState<"cyclique" | "progressif" | "flex">(
+    ((marchand as Record<string, unknown>)?.mode_recompense as "cyclique" | "progressif" | "flex") || "cyclique"
   );
+  const [palierIntermediaire, setPalierIntermediaire] = useState<number>(
+    ((marchand as Record<string, unknown>)?.palier_intermediaire as number) || 5
+  );
+  const [nomRecompensePetit, setNomRecompensePetit] = useState<string>(
+    ((marchand as Record<string, unknown>)?.nom_recompense_petit as string) || ""
+  );
+  const [nomRecompenseGrand, setNomRecompenseGrand] = useState<string>(
+    ((marchand as Record<string, unknown>)?.nom_recompense_grand as string) || ""
+  );
+  const [confirmModeChange, setConfirmModeChange] = useState<"cyclique" | "progressif" | "flex" | null>(null);
   const [paliers, setPaliers] = useState<{ tampons: number; recompense: string }[]>(
     ((marchand as Record<string, unknown>)?.paliers as { tampons: number; recompense: string }[]) ||
     [{ tampons: 5, recompense: "" }, { tampons: 10, recompense: "" }]
@@ -96,6 +106,16 @@ export default function ReglagesPage() {
         return;
       }
     }
+    if (modeRecompense === "flex") {
+      if (palierIntermediaire < 2 || palierIntermediaire >= objectif) {
+        alert(`Le palier intermédiaire doit être entre 2 et ${objectif - 1}.`);
+        return;
+      }
+      if (!nomRecompensePetit.trim() || !nomRecompenseGrand.trim()) {
+        alert("Renseignez les deux récompenses (petite et grande).");
+        return;
+      }
+    }
     setSaving(true);
     try {
       await saveMarchandFields(user!, {
@@ -106,6 +126,11 @@ export default function ReglagesPage() {
         paliers: modeRecompense === "progressif"
           ? paliers.filter(p => p.recompense.trim()).map(p => ({ ...p, tampons: Math.min(p.tampons, objectif) }))
           : [],
+        ...(modeRecompense === "flex" ? {
+          palier_intermediaire: palierIntermediaire,
+          nom_recompense_petit: nomRecompensePetit.trim(),
+          nom_recompense_grand: nomRecompenseGrand.trim(),
+        } : {}),
         ...config,
         automatisations: {
           anniversaire: { actif: auto.anniversaire_actif, jours_avant: 0, message: auto.anniversaire_message, type: auto.anniversaire_type, offre: auto.anniversaire_offre },
@@ -185,7 +210,7 @@ export default function ReglagesPage() {
                 onBlur={e => (e.target.style.borderColor = "var(--border)")}
               />
             </div>
-            {modeRecompense === "cyclique" && (
+            {(modeRecompense === "cyclique") && (
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
                   {t.settings_reward}
@@ -204,11 +229,11 @@ export default function ReglagesPage() {
             )}
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-                {modeRecompense === "progressif" ? "Tampons total — cycle" : t.settings_stamps_needed} — <span style={{ color: "var(--accent)" }}>{objectif}</span>
+                {modeRecompense === "progressif" ? "Tampons total — cycle" : modeRecompense === "flex" ? "Tampons pour la grande récompense" : t.settings_stamps_needed} — <span style={{ color: "var(--accent)" }}>{objectif}</span>
               </p>
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                 {[5, 6, 8, 10, 12, 15, 20].map(n => (
-                  <button key={n} onClick={() => setObjectif(n)}
+                  <button key={n} onClick={() => { setObjectif(n); if (modeRecompense === "flex" && palierIntermediaire >= n) setPalierIntermediaire(Math.max(2, n - 1)); }}
                     className="flex-shrink-0 text-[13px] font-medium rounded-xl transition-all"
                     style={{
                       minWidth: 44, height: 36,
@@ -233,19 +258,45 @@ export default function ReglagesPage() {
             <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
               Mode récompense
             </p>
-            <div className="flex gap-2 mb-4">
-              {(["cyclique", "progressif"] as const).map(mode => (
-                <button key={mode} onClick={() => setModeRecompense(mode)}
+            <div className="flex gap-2 mb-4 flex-wrap">
+              {(["cyclique", "progressif", "flex"] as const).map(mode => (
+                <button key={mode} onClick={() => {
+                  if (mode === modeRecompense) return;
+                  const ancienMode = (marchand as Record<string,unknown>)?.mode_recompense as string || "cyclique";
+                  if (ancienMode !== mode) { setConfirmModeChange(mode); } else { setModeRecompense(mode); }
+                }}
                   className="px-4 py-2 rounded-2xl text-[13px] font-medium transition-all"
                   style={{
                     background: modeRecompense === mode ? "var(--accent)" : "var(--bg)",
                     color: modeRecompense === mode ? "white" : "var(--fg-secondary)",
                     border: `1px solid ${modeRecompense === mode ? "var(--accent)" : "var(--border)"}`,
                   }}>
-                  {mode === "cyclique" ? "Cyclique" : "Progressif"}
+                  {mode === "cyclique" ? "Cyclique" : mode === "progressif" ? "Progressif" : "Flex"}
                 </button>
               ))}
             </div>
+
+            {/* Modale confirmation changement de mode */}
+            {confirmModeChange && (
+              <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.25)" }}>
+                <p className="text-[13px] font-semibold mb-1" style={{ color: "#FF9F0A" }}>Changer de mode de fidélité ?</p>
+                <p className="text-[12px] mb-3" style={{ color: "var(--fg-secondary)" }}>
+                  Vos clients conservent leurs tampons et récompenses en attente. Les choix en cours et paliers validés seront réinitialisés.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => { setModeRecompense(confirmModeChange); setConfirmModeChange(null); }}
+                    className="flex-1 py-2 rounded-xl text-[13px] font-semibold text-white"
+                    style={{ background: "#FF9F0A", border: "none" }}>
+                    Confirmer
+                  </button>
+                  <button onClick={() => setConfirmModeChange(null)}
+                    className="flex-1 py-2 rounded-xl text-[13px] font-semibold"
+                    style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg-secondary)" }}>
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
 
             {modeRecompense === "cyclique" && (
               <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
@@ -308,6 +359,61 @@ export default function ReglagesPage() {
                   style={{ background: "var(--bg)", border: "1px dashed var(--border)", color: "var(--fg-secondary)", opacity: (paliers.at(-1)?.tampons ?? 0) >= objectif ? 0.4 : 1 }}>
                   + Ajouter un palier
                 </button>
+              </div>
+            )}
+
+            {/* Config mode Flex */}
+            {modeRecompense === "flex" && (
+              <div className="space-y-4 mt-2">
+                <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
+                  À mi-parcours, le client choisit entre une petite récompense immédiate ou continue pour la grande.
+                </p>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                    Palier intermédiaire — <span style={{ color: "var(--accent)" }}>{palierIntermediaire}</span>
+                  </p>
+                  <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+                    {Array.from({ length: objectif - 2 }, (_, i) => i + 2).filter(n => n < objectif).map(n => (
+                      <button key={n} onClick={() => setPalierIntermediaire(n)}
+                        className="flex-shrink-0 text-[13px] font-medium rounded-xl transition-all"
+                        style={{ minWidth: 44, height: 36, background: palierIntermediaire === n ? "var(--accent)" : "var(--bg)", border: `1px solid ${palierIntermediaire === n ? "var(--accent)" : "var(--border)"}`, color: palierIntermediaire === n ? "white" : "var(--fg-tertiary)" }}>
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                      Petite récompense ({palierIntermediaire} tampons)
+                    </p>
+                    <input
+                      type="text"
+                      value={nomRecompensePetit}
+                      onChange={e => setNomRecompensePetit(e.target.value)}
+                      placeholder="ex: Cookie"
+                      className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                      onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                      onBlur={e => (e.target.style.borderColor = "var(--border)")}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+                      Grande récompense ({objectif} tampons)
+                    </p>
+                    <input
+                      type="text"
+                      value={nomRecompenseGrand}
+                      onChange={e => setNomRecompenseGrand(e.target.value)}
+                      placeholder="ex: Matcha"
+                      className="w-full px-3 py-2.5 rounded-xl text-[13px] outline-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
+                      onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                      onBlur={e => (e.target.style.borderColor = "var(--border)")}
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </div>

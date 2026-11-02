@@ -27,6 +27,8 @@ export async function GET(req: Request) {
           telephone: data.telephone,
           tampons: data.tampons || 0,
           recompense_en_attente: data.recompense_en_attente || false,
+          choix_en_attente: data.choix_en_attente || false,
+          choix_fait: data.choix_fait ?? null,
           birthday_bonus: data.birthday_bonus || false,
           derniere_visite: data.derniere_visite ? { seconds: data.derniere_visite.seconds } : null,
         };

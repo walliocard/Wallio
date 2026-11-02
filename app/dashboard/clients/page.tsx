@@ -315,7 +315,13 @@ export default function ClientsPage() {
             const pv = client.paliers_valides || [];
             const enProgressif = mn?.mode_recompense === "progressif" && paliersDef.length > 0;
             const prochainPalier = enProgressif ? (paliersDef.find((p, i) => !pv[i]) ?? paliersDef[paliersDef.length - 1]) : null;
-            const objectifActuel = prochainPalier ? prochainPalier.tampons : (marchand?.objectif_tampons ?? 10);
+            const enFlex = mn?.mode_recompense === "flex";
+            const flexObjectif = enFlex
+              ? ((client as Record<string,unknown>).choix_fait === "grand"
+                ? (mn?.objectif_tampons as number ?? 10)
+                : (mn?.palier_intermediaire as number ?? 5))
+              : null;
+            const objectifActuel = prochainPalier ? prochainPalier.tampons : (flexObjectif ?? (marchand?.objectif_tampons ?? 10));
             const pct = Math.min(100, Math.round((client.tampons / objectifActuel) * 100));
             const dvSeconds = (client.derniere_visite as { seconds?: number })?.seconds;
             const isInactif = dvSeconds ? (dvSeconds * 1000) < trenteJoursAgo.getTime() : false;
@@ -353,6 +359,12 @@ export default function ClientsPage() {
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
                         style={{ background: "rgba(52,199,89,0.12)", color: "#34C759" }}>
                         {t.dash_rewards}
+                      </span>
+                    )}
+                    {!!(client as Record<string,unknown>).choix_en_attente && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: "rgba(0,122,255,0.10)", color: "#007AFF" }}>
+                        Choix
                       </span>
                     )}
                     {annivCustom && client.birthday_bonus && (

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import EquipeClientLayout from "./client-layout";
 
 export const metadata: Metadata = {
   title: "Wallio Dashboard",
@@ -19,5 +20,5 @@ export const viewport: Viewport = {
 };
 
 export default function EquipeLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <EquipeClientLayout>{children}</EquipeClientLayout>;
 }

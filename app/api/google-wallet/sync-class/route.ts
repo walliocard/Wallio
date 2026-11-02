@@ -44,8 +44,12 @@ export async function POST(req: Request) {
   const textModules = (m.google_text_modules as { header: string; body: string; id: string }[] | undefined) || [];
   const links = (m.google_links as { uri: string; description: string }[] | undefined) || [];
   const validLinks = links.filter(l => l.uri && l.description);
+  const flexMode = (m.mode_recompense as string) === "flex";
+  const classRewardName = flexMode
+    ? ((m.nom_recompense_petit as string) || (m.nom_recompense_grand as string) || ld.reward)
+    : ((m.nom_recompense as string) || ld.reward);
   const classTextModules = [
-    { header: ld.reward, body: (m.nom_recompense as string) || ld.reward, id: "recompense" },
+    { header: ld.reward, body: classRewardName, id: "recompense" },
     ...textModules.filter(mod => mod.header && mod.body),
   ];
 
@@ -99,10 +103,16 @@ export async function POST(req: Request) {
         .limit(100)
         .get();
 
-      const objectif = (m.objectif_tampons as number) || 10;
+      const objectifDefaut = (m.objectif_tampons as number) || 10;
       const patches = clientsSnap.docs.map(doc => {
         const c = doc.data();
         const oid = `${ISSUER_ID}.${(c.wallet_id as string).replace(/[^a-zA-Z0-9_]/g, "_")}`;
+        let objectif = objectifDefaut;
+        if (flexMode) {
+          objectif = (c.choix_fait as string) === "grand"
+            ? objectifDefaut
+            : ((m.palier_intermediaire as number) || objectifDefaut);
+        }
         return fetch(`${API}/loyaltyObject/${encodeURIComponent(oid)}?updateMask=loyaltyPoints`, {
           method: "PATCH",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
