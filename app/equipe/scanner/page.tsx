@@ -303,7 +303,7 @@ export default function EquipeScannerPage() {
         {/* ── Caméra — toujours dans le DOM pour que videoRef soit disponible ── */}
         <div style={{ flex: 1, display: scanning ? "flex" : "none", flexDirection: "column", gap: 12 }}>
           <div style={{ flex: 1, position: "relative", borderRadius: 24, overflow: "hidden", background: "#000" }}>
-            <video ref={videoRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} playsInline muted />
+            <video ref={videoRef} style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", minWidth: "100%", minHeight: "100%", width: "auto", height: "auto", display: "block" }} playsInline muted />
             <canvas ref={canvasRef} style={{ display: "none" }} />
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
               <div style={{ width: 220, height: 220, borderRadius: 20, border: "2.5px solid white", boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)" }} />
