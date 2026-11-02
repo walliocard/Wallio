@@ -69,6 +69,7 @@ export default function EquipeClientsPage() {
   const [annivValidatingId, setAnnivValidatingId] = useState<string | null>(null);
   const [annivCustom, setAnnivCustom] = useState(false);
   const [results, setResults] = useState<Record<string, TamponResult>>({});
+  const [marchandConfig, setMarchandConfig] = useState<{ mode_recompense: string; nom_recompense_petit: string; nom_recompense_grand: string } | null>(null);
   useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
     if (!raw) { router.replace("/equipe/auth"); return; }
@@ -76,6 +77,8 @@ export default function EquipeClientsPage() {
       const s: EquipeSession = JSON.parse(raw);
       setSession(s);
       loadClients(s.token);
+      fetch("/api/equipe/marchand", { headers: { "x-equipe-token": s.token } })
+        .then(r => r.ok ? r.json() : null).then(d => { if (d) setMarchandConfig(d); }).catch(() => {});
       const onVisible = () => { if (document.visibilityState === "visible") loadClients(s.token); };
       document.addEventListener("visibilitychange", onVisible);
       return () => document.removeEventListener("visibilitychange", onVisible);
@@ -127,6 +130,26 @@ export default function EquipeClientsPage() {
       setClients(prev => prev.map(c => c.id === clientId ? { ...c, birthday_bonus: false } : c));
     } catch { /* silent */ }
     finally { setAnnivValidatingId(null); }
+  }
+
+  async function handleEnregistrerChoixClient(clientId: string, choix: "petit" | "grand") {
+    if (!session) return;
+    try {
+      const res = await fetch("/api/equipe/enregistrer-choix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-equipe-token": session.token },
+        body: JSON.stringify({ clientId, choix }),
+      });
+      const data = await res.json();
+      if (data.ok || data.already_done) {
+        setClients(prev => prev.map(c => c.id === clientId ? {
+          ...c,
+          choix_en_attente: false,
+          choix_fait: choix,
+          recompense_en_attente: choix === "petit" ? true : c.recompense_en_attente,
+        } : c));
+      }
+    } catch { /* silent */ }
   }
 
   async function handleValiderRecompenseExistante(clientId: string) {
@@ -250,6 +273,17 @@ export default function EquipeClientsPage() {
                       }}>
                       {validatingId === c.id ? "…" : "Valider"}
                     </button>
+                  ) : c.choix_en_attente && marchandConfig?.mode_recompense === "flex" ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <button onClick={() => handleEnregistrerChoixClient(c.id, "petit")}
+                        style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", cursor: "pointer" }}>
+                        {marchandConfig.nom_recompense_petit || "Petit"}
+                      </button>
+                      <button onClick={() => handleEnregistrerChoixClient(c.id, "grand")}
+                        style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600, background: "rgba(0,0,0,0.06)", color: "#3C3C43", border: "none", cursor: "pointer" }}>
+                        {marchandConfig.nom_recompense_grand || "Grand"}
+                      </button>
+                    </div>
                   ) : (
                     <button
                       onClick={() => handleTampon(c)}

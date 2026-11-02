@@ -48,6 +48,29 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   useTimeTheme("light"); // page NFC toujours en mode clair
   useAutoRefresh(screen.type === "loading");
 
+  // Polling quand le client attend un choix — se met à jour si le barista choisit pour lui
+  const choixRequisKey = screen.type === "result" && screen.result.type === "choix_requis"
+    ? screen.client.wallet_id : null;
+  useEffect(() => {
+    if (!choixRequisKey || screen.type !== "result" || screen.result.type !== "choix_requis") return;
+    const wId = screen.client.wallet_id;
+    const mId = screen.marchand.id;
+    const mn = screen.marchand as Record<string, unknown>;
+    const id = setInterval(async () => {
+      try {
+        const fresh = await getClientByWalletId(wId, mId);
+        if (!fresh || fresh.choix_en_attente) return;
+        clearInterval(id);
+        if (fresh.choix_fait === "petit") {
+          setScreen({ type: "result", result: { type: "recompense", prenom: fresh.prenom, nom_recompense: (mn.nom_recompense_petit as string) || "", tampons: fresh.tampons }, client: { ...fresh, choix_fait: "petit" }, marchand: screen.marchand });
+        } else if (fresh.choix_fait === "grand") {
+          setScreen({ type: "result", result: { type: "ok", prenom: fresh.prenom, tampons: fresh.tampons, objectif: (mn.objectif_tampons as number) || 10, prochainRecompense: (mn.nom_recompense_grand as string) || "" }, client: { ...fresh, choix_fait: "grand" }, marchand: screen.marchand });
+        }
+      } catch { /* silent */ }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [choixRequisKey]); // eslint-disable-line
+
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
     setScreen({ type: "result", result, client, marchand });
@@ -793,8 +816,9 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
 
         {/* QR récompense */}
         {isRecompense && (mn.mode_recompense === "flex" ? (
-          <div className="rounded-2xl px-5 py-5 mb-2" style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.2)" }}>
-            <p className="text-[15px] font-semibold mb-1" style={{ color: "#34C759" }}>Récompense prête</p>
+          <div className="rounded-2xl px-5 py-5 mb-2" style={{ background: hexToRgba(couleur, 0.08), border: `1px solid ${hexToRgba(couleur, 0.25)}` }}>
+            <p className="text-[28px] font-bold mb-1" style={{ color: couleur }}>{result.nom_recompense}</p>
+            <p className="text-[14px] font-semibold mb-1" style={{ color: couleur }}>Récompense prête</p>
             <p className="text-[13px]" style={{ color: "#6E6E73" }}>Montrez cet écran au barista pour la récupérer.</p>
           </div>
         ) : (
