@@ -85,17 +85,19 @@ export default function EquipeClientsPage() {
     } catch { router.replace("/equipe/auth"); }
   }, [router]);
 
+  useEffect(() => {
+    const pending = clients.filter(c => c.recompense_en_attente || c.choix_en_attente).length;
+    try { localStorage.setItem("equipe_pending", String(pending)); } catch {}
+  }, [clients]);
+
   async function loadClients(token: string) {
     setLoading(true);
     try {
       const res = await fetch("/api/equipe/clients", { headers: { "x-equipe-token": token } });
       if (res.ok) {
         const data = await res.json();
-        const liste = data.clients || [];
-        setClients(liste);
+        setClients(data.clients || []);
         setAnnivCustom(data.anniv_custom || false);
-        const pending = liste.filter((c: Client) => c.recompense_en_attente || c.choix_en_attente).length;
-        try { localStorage.setItem("equipe_pending", String(pending)); } catch {}
       }
     } catch { /* silent */ }
     finally { setLoading(false); }
