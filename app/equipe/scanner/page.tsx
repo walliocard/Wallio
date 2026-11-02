@@ -52,6 +52,7 @@ export default function EquipeScannerPage() {
   const showToast = useToast();
   const [validating, setValidating] = useState(false);
   const [validatingAnniv, setValidatingAnniv] = useState(false);
+  const [clientsBadge, setClientsBadge] = useState(0);
   const [enregistrantChoix, setEnregistrantChoix] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -65,6 +66,8 @@ export default function EquipeScannerPage() {
       const s = JSON.parse(raw) as EquipeSession;
       setSession(s);
       sessionRef.current = s;
+      const stored = parseInt(localStorage.getItem("equipe_pending") || "0", 10);
+      if (!isNaN(stored)) setClientsBadge(stored);
     } catch { router.replace("/equipe/auth"); }
   }, [router]);
 
@@ -511,7 +514,7 @@ export default function EquipeScannerPage() {
         )}
       </div>
 
-      <EquipeNav active="scanner" session={session} />
+      <EquipeNav active="scanner" session={session} clientsBadge={clientsBadge} />
     </main>
   );
 }
