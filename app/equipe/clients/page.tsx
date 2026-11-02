@@ -89,7 +89,6 @@ export default function EquipeClientsPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/equipe/clients", { headers: { "x-equipe-token": token } });
-      if (res.status === 401) { localStorage.removeItem("equipe_session"); router.replace("/equipe/auth"); return; }
       if (res.ok) { const data = await res.json(); setClients(data.clients || []); setAnnivCustom(data.anniv_custom || false); }
     } catch { /* silent */ }
     finally { setLoading(false); }

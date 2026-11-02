@@ -24,6 +24,9 @@ export async function verifierTokenEquipe(token: string): Promise<EquipeSession 
     await doc.ref.delete();
     return null;
   }
+  // Rolling expiry : repousse de 30 jours à chaque usage
+  const { Timestamp } = await import("firebase-admin/firestore");
+  doc.ref.update({ expires_at: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) }).catch(() => {});
   return {
     token,
     marchand_id: data.marchand_id,
@@ -42,7 +45,7 @@ export async function creerSession(marchandId: string, membreId: string, prenom:
     prenom,
     permissions,
     created_at: Timestamp.now(),
-    expires_at: Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000)),
+    expires_at: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)),
   });
   return token;
 }
