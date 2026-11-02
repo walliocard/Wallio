@@ -9,7 +9,7 @@ import {
   formatTemps, WALLET_KEY,
   type Marchand, type Client, type TamponResult,
 } from "@/lib/loyalty";
-import { doc, updateDoc, getDocs, collection, query, where } from "firebase/firestore";
+import { doc, updateDoc, getDocs, getDocsFromServer, collection, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -58,7 +58,8 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     const mn = screen.marchand as Record<string, unknown>;
     const id = setInterval(async () => {
       try {
-        const fresh = await getClientByWalletId(wId, mId);
+        const snap = await getDocsFromServer(query(collection(db, "clients"), where("wallet_id", "==", wId), where("marchand_id", "==", mId)));
+        const fresh = snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() } as import("@/lib/loyalty").Client;
         if (!fresh || fresh.choix_en_attente) return;
         clearInterval(id);
         if (fresh.choix_fait === "petit") {
@@ -711,7 +712,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
                 <p className="text-[13px] font-medium mb-2" style={{ color: "#1D1D1F" }}>
                   À {mn.palier_intermediaire as number} tampons, vous choisissez :
                 </p>
-                <p className="text-[12px] mb-1" style={{ color: "#6E6E73" }}>· Prendre votre {mn.nom_recompense_petit as string}</p>
+                <p className="text-[12px] mb-1" style={{ color: "#6E6E73" }}>· Prendre {mn.nom_recompense_petit as string}</p>
                 <p className="text-[12px]" style={{ color: "#6E6E73" }}>· Ou continuer jusqu&apos;à {marchand.objectif_tampons} tampons pour {mn.nom_recompense_grand as string}</p>
               </>
             ) : (
