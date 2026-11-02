@@ -350,6 +350,7 @@ export async function ajouterTampon(
       prenom: client.prenom,
       double: doubleActif && !birthdayBonus,
       birthday: birthdayBonus,
+      prochainRecompense: client.choix_fait === "grand" ? nomGrand : nomPetit,
       ...offreCustom,
     };
   }

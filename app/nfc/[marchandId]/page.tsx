@@ -569,7 +569,11 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
             style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.12),rgba(139,92,246,0.12))", animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" stroke="url(#ncg)">
               <defs><linearGradient id="ncg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#007AFF"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient></defs>
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              <polyline points="20 12 20 22 4 22 4 12"/>
+              <rect x="2" y="7" width="20" height="5"/>
+              <line x1="12" y1="22" x2="12" y2="7"/>
+              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
             </svg>
           </div>
         )}
@@ -675,6 +679,26 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
           </div>
         )}
 
+        {/* Explication programme Flex */}
+        {isOk && mn.mode_recompense === "flex" && (
+          <div className="rounded-2xl p-4 mb-5 text-left" style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(0,0,0,0.06)" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#AEAEB2" }}>Programme Flex</p>
+            {result.objectif === (mn.palier_intermediaire as number) ? (
+              <>
+                <p className="text-[13px] font-medium mb-2" style={{ color: "#1D1D1F" }}>
+                  À {mn.palier_intermediaire as number} tampons, vous choisissez :
+                </p>
+                <p className="text-[12px] mb-1" style={{ color: "#6E6E73" }}>· Prendre votre {mn.nom_recompense_petit as string}</p>
+                <p className="text-[12px]" style={{ color: "#6E6E73" }}>· Ou continuer jusqu&apos;à {marchand.objectif_tampons} tampons pour {mn.nom_recompense_grand as string}</p>
+              </>
+            ) : (
+              <p className="text-[13px] font-medium" style={{ color: "#1D1D1F" }}>
+                Vous visez {mn.nom_recompense_grand as string} — encore {result.objectif - result.tampons} tampon{result.objectif - result.tampons > 1 ? "s" : ""}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Paliers progressifs */}
         {isProgressif && (result.type === "ok" || result.type === "recompense") && (
           <div className="rounded-2xl p-4 mb-5 text-left" style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(0,0,0,0.06)" }}>
@@ -768,7 +792,14 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
         )}
 
         {/* QR récompense */}
-        {isRecompense && <RecompenseQR walletId={walletId} />}
+        {isRecompense && (mn.mode_recompense === "flex" ? (
+          <div className="rounded-2xl px-5 py-5 mb-2" style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.2)" }}>
+            <p className="text-[15px] font-semibold mb-1" style={{ color: "#34C759" }}>Récompense prête</p>
+            <p className="text-[13px]" style={{ color: "#6E6E73" }}>Montrez cet écran au barista pour la récupérer.</p>
+          </div>
+        ) : (
+          <RecompenseQR walletId={walletId} />
+        ))}
 
         {/* Installer la PWA si pas encore fait */}
         <div className="mt-8"><InstallBanner /></div>
