@@ -261,12 +261,12 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
         {/* Retour */}
         <Link
-          href="/dashboard"
+          href="/dashboard/clients"
           className="inline-flex items-center gap-1.5 mb-6 text-[14px]"
           style={{ color: "var(--accent)" }}
         >
           <Icons.ArrowLeft size={15} />
-          Dashboard
+          Clients
         </Link>
 
         {/* Header client */}
