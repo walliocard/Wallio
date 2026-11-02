@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getAuth } from "firebase/auth";
 
@@ -67,11 +68,10 @@ export default function HistoriquePage() {
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 no-print">
-        <button onClick={() => router.back()}
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+        <Link href="/dashboard" className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-secondary)" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
+        </Link>
         <div className="flex-1">
           <h1 className="text-[32px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>Historique</h1>
           <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{marchand?.nom}</p>

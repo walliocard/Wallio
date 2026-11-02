@@ -318,7 +318,7 @@ export default function EquipeClientsPage() {
               {/* Badge anniversaire + validation cadeau */}
               {annivCustom && c.birthday_bonus && (
                 <div style={{ marginTop: 10, padding: "10px 12px", borderRadius: 12, background: "rgba(255,45,85,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#FF2D55" }}>Cadeau anniversaire a offrir</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#FF2D55" }}>Cadeau anniversaire à offrir</p>
                   <button
                     onClick={() => handleValiderAnniv(c.id)}
                     disabled={annivValidatingId === c.id}
