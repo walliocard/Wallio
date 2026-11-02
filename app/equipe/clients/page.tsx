@@ -274,16 +274,7 @@ export default function EquipeClientsPage() {
                       {validatingId === c.id ? "…" : "Valider"}
                     </button>
                   ) : c.choix_en_attente && marchandConfig?.mode_recompense === "flex" ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <button onClick={() => handleEnregistrerChoixClient(c.id, "petit")}
-                        style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", cursor: "pointer" }}>
-                        {marchandConfig.nom_recompense_petit || "Petit"}
-                      </button>
-                      <button onClick={() => handleEnregistrerChoixClient(c.id, "grand")}
-                        style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600, background: "rgba(0,0,0,0.06)", color: "#3C3C43", border: "none", cursor: "pointer" }}>
-                        {marchandConfig.nom_recompense_grand || "Grand"}
-                      </button>
-                    </div>
+                    <span style={{ fontSize: 12, color: "#007AFF", fontWeight: 600 }}>{c.tampons} tampons</span>
                   ) : (
                     <button
                       onClick={() => handleTampon(c)}
@@ -300,6 +291,20 @@ export default function EquipeClientsPage() {
                   )}
                 </div>
               </div>
+
+              {/* Choix flex — pleine largeur */}
+              {c.choix_en_attente && marchandConfig?.mode_recompense === "flex" && (
+                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                  <button onClick={() => handleEnregistrerChoixClient(c.id, "petit")}
+                    style={{ flex: 1, padding: "11px 0", borderRadius: 12, fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", cursor: "pointer" }}>
+                    {marchandConfig.nom_recompense_petit || "Petit"}
+                  </button>
+                  <button onClick={() => handleEnregistrerChoixClient(c.id, "grand")}
+                    style={{ flex: 1, padding: "11px 0", borderRadius: 12, fontSize: 14, fontWeight: 600, background: "rgba(0,0,0,0.05)", color: "#3C3C43", border: "1px solid rgba(0,0,0,0.08)", cursor: "pointer" }}>
+                    {marchandConfig.nom_recompense_grand || "Grand"}
+                  </button>
+                </div>
+              )}
 
               {/* Badge anniversaire + validation cadeau */}
               {annivCustom && c.birthday_bonus && (
