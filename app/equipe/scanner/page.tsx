@@ -137,6 +137,7 @@ export default function EquipeScannerPage() {
         headers: { "Content-Type": "application/json", "x-equipe-token": s.token },
         body: JSON.stringify({ walletId }),
       });
+      if (res.status === 401) { localStorage.removeItem("equipe_session"); router.replace("/equipe/auth"); return; }
       const data = await res.json();
       setResult(data);
       if (data.type === "recompense") showToast(`Récompense — ${data.nom_recompense}`, "success");
