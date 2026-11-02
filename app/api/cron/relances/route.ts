@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Timestamp, FieldValue, DocumentReference } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
 import { adminDb, adminMessaging, initAdmin } from "@/lib/admin";
+import { pushPassUpdate } from "@/lib/apple-wallet/apns";
 
 export async function GET(req: Request) {
   if (!process.env.CRON_SECRET || req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -53,6 +54,20 @@ export async function GET(req: Request) {
       if (client.fcm_token) {
         tokens.push(client.fcm_token);
         clientRefs.push(clientDoc.ref);
+      }
+      // Apple Wallet — push APNS pour afficher le message de relance au dos de la carte
+      if (client.apns_push_token) {
+        pushPassUpdate(client.apns_push_token).catch(() => {});
+        await clientDoc.ref.update({ apns_last_updated: new Date().toISOString() });
+      }
+      // Google Wallet — push pour synchroniser la carte
+      const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
+      if (client.wallet_type === "google" && client.wallet_id) {
+        fetch(`${BASE}/api/google-wallet/push-update`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ walletId: client.wallet_id }),
+        }).catch(() => {});
       }
       traites++;
     }

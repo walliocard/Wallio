@@ -102,7 +102,13 @@ export async function GET(
         const annivMsg = (m.automatisations as Record<string, unknown> | undefined)?.anniversaire as Record<string, unknown> | undefined;
         return (annivMsg?.message as string | undefined) || "Joyeux anniversaire !";
       }
-      // Priorité 2 : message custom du marchand (non expiré)
+      // Priorité 2 : message de relance si relance_pending actif
+      if (client.relance_pending === true) {
+        const relanceMsg = (m.automatisations as Record<string, unknown> | undefined)?.relance as Record<string, unknown> | undefined;
+        const msg = relanceMsg?.message as string | undefined;
+        if (msg) return msg;
+      }
+      // Priorité 3 : message custom du marchand (non expiré)
       const msg = m.current_message as string | undefined;
       const exp = m.message_expires_at as string | undefined;
       if (!msg) return undefined;
