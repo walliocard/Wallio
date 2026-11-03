@@ -1,6 +1,6 @@
 import { db } from "./firebase";
 import {
-  collection, doc, getDoc, getDocs, setDoc,
+  collection, doc, getDoc, getDocs, setDoc, addDoc,
   updateDoc, query, where, limit, serverTimestamp, Timestamp, deleteField,
 } from "firebase/firestore";
 import { v4 as uuid } from "uuid";
@@ -193,6 +193,55 @@ export async function ajouterTampon(
         secondes_restantes: Math.ceil(marchand.anti_doublon_delai - ecoulee),
       };
     }
+  }
+
+  // ── Auto-validation récompense non réclamée ──────────────────────────────
+  // Si le client a une récompense en attente non validée depuis la visite
+  // précédente, on la considère perdue et on repart proprement.
+  if (client.recompense_en_attente) {
+    const autoUpdate: Record<string, unknown> = { recompense_en_attente: false };
+    let newTampons = client.tampons;
+    let newPaliersValides = client.paliers_valides;
+
+    if (marchand.mode_recompense === "flex") {
+      const seuil = client.choix_fait === "grand"
+        ? marchand.objectif_tampons
+        : (marchand.palier_intermediaire ?? 0);
+      newTampons = Math.max(0, client.tampons - seuil);
+      autoUpdate.tampons = newTampons;
+      autoUpdate.choix_fait = deleteField();
+      autoUpdate.choix_en_attente = deleteField();
+    } else if (marchand.mode_recompense === "progressif" && marchand.paliers?.length) {
+      const paliers = marchand.paliers;
+      const pv = [...(client.paliers_valides || [])];
+      const pidx = paliers.findIndex((p, i) => !pv[i] && client.tampons >= p.tampons);
+      if (pidx !== -1) {
+        pv[pidx] = true;
+        const cycleTermine = pv.filter(Boolean).length >= paliers.length;
+        newPaliersValides = cycleTermine ? [] : pv;
+        autoUpdate.paliers_valides = newPaliersValides;
+        if (cycleTermine) { newTampons = 0; autoUpdate.tampons = 0; }
+      }
+    }
+    // Cyclique : tampons déjà à 0 quand récompense déclenchée, rien à changer
+
+    await updateDoc(doc(db, "clients", client.id), autoUpdate);
+    addDoc(collection(db, "marchands", marchand.id, "historique"), {
+      client_id: client.id,
+      client_prenom: client.prenom,
+      client_nom: client.nom || "",
+      type: "auto_validation",
+      created_at: serverTimestamp(),
+    }).catch(() => {});
+
+    client = {
+      ...client,
+      tampons: newTampons,
+      recompense_en_attente: false,
+      choix_fait: undefined,
+      choix_en_attente: undefined,
+      paliers_valides: newPaliersValides,
+    };
   }
 
   const c = client as Record<string, unknown>;
