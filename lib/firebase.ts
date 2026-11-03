@@ -34,11 +34,18 @@ function isPublicClientPage(): boolean {
   );
 }
 
+// Capacitor (WKWebView iOS) : IndexedDB se bloque au premier lancement froid
+// → memoryLocalCache évite le blocage. Pas de perte fonctionnelle car l'app
+// pointe vers une URL live (pas de besoin offline).
+function isCapacitor(): boolean {
+  return typeof window !== "undefined" && "Capacitor" in window;
+}
+
 const isNew = getApps().length === 0;
 const app = isNew ? initializeApp(firebaseConfig) : getApps()[0];
 
 const localCache =
-  typeof window === "undefined" || isPrivateMode() || isPublicClientPage()
+  typeof window === "undefined" || isPrivateMode() || isPublicClientPage() || isCapacitor()
     ? memoryLocalCache()
     : persistentLocalCache();
 
