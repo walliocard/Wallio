@@ -100,7 +100,7 @@ export async function POST(req: Request) {
       objectif: (r.objectif as number | undefined) ?? (mn.objectif_tampons as number),
       prochain_recompense: (r.prochainRecompense as string) || (mn.nom_recompense as string) || "",
       mode_recompense: (mn.mode_recompense as string) || "cyclique",
-      paliers_valides: client.paliers_valides || [],
+      paliers_valides: (r.paliers_valides as boolean[] | undefined) ?? client.paliers_valides ?? [],
       total_paliers: ((mn.paliers as unknown[]) || []).length,
       palier_intermediaire: (mn.palier_intermediaire as number | undefined) ?? null,
       nom_recompense_petit: (mn.nom_recompense_petit as string | undefined) ?? "",

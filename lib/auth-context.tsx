@@ -56,16 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (u) {
           const marchandRef = doc(db, "marchands", u.uid);
 
+          // Filet de sécurité : si getDoc et onSnapshot bloquent tous les deux
+          // (WKWebView + IndexedDB froid au premier lancement), on débloque après 6s
+          const marchandFallback = setTimeout(() => setLoading(false), 6000);
+
           // getDoc immédiat — charge le marchand dès que possible sans attendre onSnapshot
           const tryGetMarchand = (attempt = 1) =>
             getDoc(marchandRef).then(snap => {
+              clearTimeout(marchandFallback);
               if (snap.exists()) {
                 setMarchand(prev => prev ?? ({ id: snap.id, actif: false, ...snap.data() } as MarchandData));
               }
               setLoading(false);
             }).catch(() => {
               if (attempt < 3) setTimeout(() => tryGetMarchand(attempt + 1), 800 * attempt);
-              else setLoading(false);
+              else { clearTimeout(marchandFallback); setLoading(false); }
             });
           tryGetMarchand();
 
@@ -73,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           unsubSnap = onSnapshot(
             marchandRef,
             (snap) => {
+              clearTimeout(marchandFallback);
               if (snap.exists()) {
                 setMarchand({ id: snap.id, actif: false, ...snap.data() } as MarchandData);
               } else {
@@ -80,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
               setLoading(false);
             },
-            () => {}
+            () => { clearTimeout(marchandFallback); setLoading(false); }
           );
         } else {
           setMarchand(null);

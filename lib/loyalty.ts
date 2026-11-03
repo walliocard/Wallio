@@ -56,7 +56,7 @@ export type Client = {
 
 export type TamponResult =
   | { type: "ok"; tampons: number; objectif: number; prenom: string; double?: boolean; birthday?: boolean; birthday_offre?: string; prochainRecompense?: string }
-  | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number; birthday?: boolean; birthday_offre?: string }
+  | { type: "recompense"; prenom: string; nom_recompense: string; tampons: number; palier_index?: number; paliers_valides?: boolean[]; birthday?: boolean; birthday_offre?: string }
   | { type: "choix_requis"; prenom: string; tampons: number; palier_intermediaire: number; nom_recompense_petit: string; nom_recompense_grand: string; birthday?: boolean; birthday_offre?: string }
   | { type: "anti_doublon"; prenom: string; secondes_restantes: number }
   | { type: "not_found" };
@@ -311,6 +311,7 @@ export async function ajouterTampon(
         nom_recompense: paliers[palierIndex].recompense,
         tampons: tamponsAEcrire,
         palier_index: palierIndex,
+        paliers_valides: pv,
         birthday: birthdayBonus,
         ...(birthdayBonus && birthdayType === "custom" && birthdayOffre ? { birthday_offre: birthdayOffre } : {}),
       };
