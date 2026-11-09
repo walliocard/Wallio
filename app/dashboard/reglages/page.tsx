@@ -34,6 +34,9 @@ export default function ReglagesPage() {
     { label: t.settings_anti_doublon_4h,  value: 14400 },
     { label: t.settings_anti_doublon_8h,  value: 28800 },
     { label: t.settings_anti_doublon_1d,  value: 86400 },
+    { label: t.settings_anti_doublon_7d,  value: 86400 * 7 },
+    { label: t.settings_anti_doublon_10d, value: 86400 * 10 },
+    { label: t.settings_anti_doublon_14d, value: 86400 * 14 },
   ];
   const autoRaw = (marchand as Record<string, unknown>)?.automatisations as Record<string, Record<string, unknown>> | undefined;
 
