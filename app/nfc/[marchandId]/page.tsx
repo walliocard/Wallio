@@ -606,7 +606,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
         <h1 className="text-[26px] font-semibold tracking-tight mb-2" style={{ color: "#1D1D1F" }}>
           {isOk && (result.birthday ? "Joyeux anniversaire !" : result.double ? "2 tampons ajoutés" : "Tampon ajouté")}
           {isRecompense && "Récompense débloquée"}
-          {isAntiDoublon && "Déjà enregistré"}
+          {isAntiDoublon && "Votre passage a déjà été enregistré"}
           {isChoixRequis && "À vous de choisir !"}
         </h1>
 
@@ -614,7 +614,7 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
         <p className="text-[16px] mb-6" style={{ color: "#6E6E73" }}>
           {isOk && `Bonjour ${result.prenom}`}
           {isRecompense && `Bonjour ${result.prenom} — ${result.nom_recompense}`}
-          {isAntiDoublon && `Bonjour ${result.prenom}`}
+          {isAntiDoublon && `À bientôt chez ${marchand.nom} !`}
           {isChoixRequis && `Bonjour ${result.prenom} — ${result.tampons} tampons`}
         </p>
 
@@ -802,14 +802,6 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
                   </svg>
                   <span className="text-[14px] font-semibold text-white">Ajouter à Apple Wallet</span>
                 </a>
-              </div>
-            )}
-            {/* Countdown */}
-            {result.secondes_restantes > 0 && (
-              <div className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl"
-                style={{ background: "rgba(255,159,10,0.10)", border: "1px solid rgba(255,159,10,0.22)" }}>
-                <span className="text-[13px] font-medium" style={{ color: "#FF9F0A" }}>Prochain tampon dans</span>
-                <span className="text-[15px] font-bold" style={{ color: "#FF9F0A" }}>{formatTemps(result.secondes_restantes)}</span>
               </div>
             )}
           </div>
