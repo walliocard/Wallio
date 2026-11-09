@@ -20,6 +20,9 @@ const TEXTS: Record<CardLang, {
   qr_verb: string; qr_pre: string; qr_grad: string;
   qr_desc1: string; qr_desc2: string; qr_desc3: string;
   add_wallet: string; ou: string;
+  // variante inscription
+  qr_verb_ins: string; qr_pre_ins: string; qr_grad_ins: string;
+  qr_desc1_ins: string; qr_desc2_ins: string; qr_desc3_ins: string;
 }> = {
   fr: {
     title1: "Votre fidélité. ", title2: "Simplifiée.",
@@ -28,6 +31,8 @@ const TEXTS: Record<CardLang, {
     qr_verb: "SCANNEZ", qr_pre: "LE ", qr_grad: "CODE",
     qr_desc1: "Ouvrez l'appareil photo", qr_desc2: "de votre téléphone et", qr_desc3: "ajoutez la carte",
     add_wallet: "Ajoutez à votre portefeuille", ou: "OU",
+    qr_verb_ins: "CRÉEZ", qr_pre_ins: "VOTRE ", qr_grad_ins: "COMPTE",
+    qr_desc1_ins: "Scannez pour vous", qr_desc2_ins: "inscrire et recevoir", qr_desc3_ins: "votre carte fidélité",
   },
   ro: {
     title1: "Fidelitatea ta. ", title2: "Simplificată.",
@@ -36,6 +41,8 @@ const TEXTS: Record<CardLang, {
     qr_verb: "SCANEAZĂ", qr_pre: "", qr_grad: "CODUL",
     qr_desc1: "Deschide camera", qr_desc2: "telefonului și", qr_desc3: "adaugă cardul",
     add_wallet: "Adaugă la portofel", ou: "SAU",
+    qr_verb_ins: "CREEAZĂ", qr_pre_ins: "CONTUL ", qr_grad_ins: "TĂU",
+    qr_desc1_ins: "Scanează pentru", qr_desc2_ins: "a te înregistra și", qr_desc3_ins: "primi cardul",
   },
   es: {
     title1: "Tu fidelidad. ", title2: "Simplificada.",
@@ -44,6 +51,8 @@ const TEXTS: Record<CardLang, {
     qr_verb: "ESCANEA", qr_pre: "EL ", qr_grad: "CÓDIGO",
     qr_desc1: "Abre la cámara", qr_desc2: "de tu teléfono y", qr_desc3: "añade la tarjeta",
     add_wallet: "Añadir al monedero", ou: "O",
+    qr_verb_ins: "CREA", qr_pre_ins: "TU ", qr_grad_ins: "CUENTA",
+    qr_desc1_ins: "Escanea para", qr_desc2_ins: "registrarte y recibir", qr_desc3_ins: "tu tarjeta fidelidad",
   },
 };
 
@@ -112,6 +121,7 @@ export async function drawPrintCard(
   qrUrl: string,
   scale = 1,
   lang: CardLang = "fr",
+  inscription = false,
 ) {
   const W = PRINT_W * scale;
   const H = PRINT_H * scale;
@@ -237,25 +247,32 @@ export async function drawPrintCard(
   }
 
   // Texte QR
+  const qrVerb = inscription ? T.qr_verb_ins : T.qr_verb;
+  const qrPre  = inscription ? T.qr_pre_ins  : T.qr_pre;
+  const qrGrad = inscription ? T.qr_grad_ins : T.qr_grad;
+  const qrD1   = inscription ? T.qr_desc1_ins : T.qr_desc1;
+  const qrD2   = inscription ? T.qr_desc2_ins : T.qr_desc2;
+  const qrD3   = inscription ? T.qr_desc3_ins : T.qr_desc3;
+
   ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.font = `600 ${p(30)}px ${font}`;
-  ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_verb, p(1130), p(375));
-  if (T.qr_pre) {
-    const preW = ctx.measureText(T.qr_pre).width;
-    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre, p(1130), p(375 + 34));
-    const gCode = ctx.createLinearGradient(p(1130) + preW, 0, p(1130) + preW + ctx.measureText(T.qr_grad).width, 0);
+  ctx.fillStyle = "#15171A"; ctx.fillText(qrVerb, p(1130), p(375));
+  if (qrPre) {
+    const preW = ctx.measureText(qrPre).width;
+    ctx.fillStyle = "#15171A"; ctx.fillText(qrPre, p(1130), p(375 + 34));
+    const gCode = ctx.createLinearGradient(p(1130) + preW, 0, p(1130) + preW + ctx.measureText(qrGrad).width, 0);
     gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, p(1130) + preW, p(375 + 34));
+    ctx.fillStyle = gCode; ctx.fillText(qrGrad, p(1130) + preW, p(375 + 34));
   } else {
-    const gCode = ctx.createLinearGradient(p(1130), 0, p(1130) + ctx.measureText(T.qr_grad).width, 0);
+    const gCode = ctx.createLinearGradient(p(1130), 0, p(1130) + ctx.measureText(qrGrad).width, 0);
     gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, p(1130), p(375 + 34));
+    ctx.fillStyle = gCode; ctx.fillText(qrGrad, p(1130), p(375 + 34));
   }
   ctx.font = `400 ${p(17)}px ${font}`; ctx.fillStyle = "#596170";
   const descY = p(375 + 34 + 34 + 18);
-  ctx.fillText(T.qr_desc1, p(1130), descY);
-  ctx.fillText(T.qr_desc2, p(1130), descY + p(24));
-  ctx.fillText(T.qr_desc3, p(1130), descY + p(48));
+  ctx.fillText(qrD1, p(1130), descY);
+  ctx.fillText(qrD2, p(1130), descY + p(24));
+  ctx.fillText(qrD3, p(1130), descY + p(48));
 
   // Séparateur "OU"
   ctx.strokeStyle = "rgba(0,0,0,0.10)"; ctx.lineWidth = p(1);

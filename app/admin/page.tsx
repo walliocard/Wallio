@@ -119,6 +119,7 @@ export default function AdminPage() {
   const [downloadingCard, setDownloadingCard] = useState(false);
   const [downloadingQR, setDownloadingQR] = useState(false);
   const [downloadingNFC, setDownloadingNFC] = useState(false);
+  const [downloadingIns, setDownloadingIns] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createNom, setCreateNom] = useState("");
   const [createEmail, setCreateEmail] = useState("");
@@ -333,6 +334,18 @@ export default function AdminPage() {
     a.download = `wallio-nfc-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
     a.href = canvas.toDataURL("image/png"); a.click();
     setDownloadingNFC(false);
+  }
+  async function telechargerCarteInscription(m: Marchand) {
+    if (!m.nfc_id) return;
+    setDownloadingIns(true);
+    const canvas = document.createElement("canvas");
+    const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
+    const scale = cardFormat === "A6" ? 2.1 : 3;
+    await drawPrintCard(canvas, `https://app.walliocard.com/cartes/${m.nfc_id}`, scale, lang, true);
+    const a = document.createElement("a");
+    a.download = `wallio-carte-inscription-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
+    a.href = canvas.toDataURL("image/png"); a.click();
+    setDownloadingIns(false);
   }
   async function creerMarchand() {
     if (!createNom || !createEmail || !createPassword || !createVille) return;
@@ -1171,16 +1184,20 @@ export default function AdminPage() {
                   </button>
                 ))}
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => telechargerCarte(selected)} disabled={!selected.nfc_id || downloadingCard || downloadingQR || downloadingNFC}
-                  style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: T.surfCard, color: selected.nfc_id ? T.label : T.tert, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: selected.nfc_id ? "pointer" : "not-allowed" }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => telechargerCarte(selected)} disabled={!selected.nfc_id || downloadingCard || downloadingQR || downloadingNFC || downloadingIns}
+                  style={{ flex: 1, minWidth: "calc(50% - 4px)", padding: "12px 0", borderRadius: 12, background: T.surfCard, color: selected.nfc_id ? T.label : T.tert, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: selected.nfc_id ? "pointer" : "not-allowed" }}>
                   {downloadingCard ? "…" : "NFC + QR"}
                 </button>
-                <button onClick={() => telechargerCarteQR(selected)} disabled={downloadingCard || downloadingQR || downloadingNFC}
+                <button onClick={() => telechargerCarteInscription(selected)} disabled={!selected.nfc_id || downloadingCard || downloadingQR || downloadingNFC || downloadingIns}
+                  style={{ flex: 1, minWidth: "calc(50% - 4px)", padding: "12px 0", borderRadius: 12, background: T.surfCard, color: selected.nfc_id ? T.label : T.tert, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: selected.nfc_id ? "pointer" : "not-allowed" }}>
+                  {downloadingIns ? "…" : "NFC + QR inscription"}
+                </button>
+                <button onClick={() => telechargerCarteQR(selected)} disabled={downloadingCard || downloadingQR || downloadingNFC || downloadingIns}
                   style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: T.surfCard, color: T.label, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: "pointer" }}>
                   {downloadingQR ? "…" : "QR seul"}
                 </button>
-                <button onClick={() => telechargerCarteNFC(selected)} disabled={downloadingCard || downloadingQR || downloadingNFC}
+                <button onClick={() => telechargerCarteNFC(selected)} disabled={downloadingCard || downloadingQR || downloadingNFC || downloadingIns}
                   style={{ flex: 1, padding: "12px 0", borderRadius: 12, background: T.surfCard, color: T.label, fontSize: 13, fontWeight: 500, border: `1px solid ${T.border}`, cursor: "pointer" }}>
                   {downloadingNFC ? "…" : "NFC seul"}
                 </button>
