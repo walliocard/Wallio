@@ -767,7 +767,21 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
           </div>
         )}
 
-        {/* Anti-doublon : bouton Wallet en priorité + countdown */}
+        {/* Anti-doublon : tampons actuels */}
+        {isAntiDoublon && result.type === "anti_doublon" && (
+          <div className="mb-6">
+            <div className="flex justify-between text-[12px] mb-2" style={{ color: "#AEAEB2" }}>
+              <span>{result.tampons} tampon{result.tampons > 1 ? "s" : ""}</span>
+              <span>Objectif {result.objectif}</span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#E5E5EA" }}>
+              <div className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.min((result.tampons / result.objectif) * 100, 100)}%`, background: couleur }} />
+            </div>
+          </div>
+        )}
+
+        {/* Anti-doublon : bouton Wallet en priorité */}
         {isAntiDoublon && (
           <div className="flex flex-col gap-3 mb-6">
             {/* Bouton Google Wallet mis en avant */}
