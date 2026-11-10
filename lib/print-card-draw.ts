@@ -379,16 +379,32 @@ export async function drawPrintCardQROnly(
   if (inscription) {
     // ── Layout INSCRIPTION : QR centré, texte en dessous ────────────────────
 
-    // Sous-titre spécifique
-    ctx.font = `400 ${p(22)}px ${font}`; ctx.fillStyle = "#596170";
-    ctx.textAlign = "center";
-    ctx.fillText("Rejoignez notre programme de fidélité en quelques secondes", p(750), p(185));
+    // Texte CRÉEZ VOTRE COMPTE — au-dessus du QR
+    ctx.textBaseline = "top"; ctx.textAlign = "center";
+    ctx.font = `700 ${p(64)}px ${font}`; ctx.fillStyle = "#15171A";
+    ctx.fillText(T.qr_verb_ins, p(750), p(185));
 
-    // Bloc QR centré pleine largeur
-    const qrSz   = p(400);
-    const qrPad  = p(36);
+    // "VOTRE COMPTE" avec dégradé
+    const line2  = `${T.qr_pre_ins}${T.qr_grad_ins}`;
+    const l2W    = ctx.measureText(line2).width;
+    const preW2  = ctx.measureText(T.qr_pre_ins).width;
+    const l2X    = p(750) - l2W / 2;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre_ins, l2X, p(260));
+    const gCode = ctx.createLinearGradient(l2X + preW2, 0, l2X + l2W, 0);
+    gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
+    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad_ins, l2X + preW2, p(260));
+
+    // Description
+    ctx.font = `400 ${p(20)}px ${font}`; ctx.fillStyle = "#596170";
+    ctx.textAlign = "center";
+    ctx.fillText("Scannez pour vous inscrire et recevoir votre carte fidélité", p(750), p(342));
+
+    // Bloc QR centré
+    const qrSz   = p(380);
+    const qrPad  = p(28);
     const blockH = qrSz + qrPad * 2;
-    const blockY = p(240);
+    const blockY = p(390);
     const qrImg  = await loadQRImage(qrUrl, Math.round(qrSz));
 
     ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
@@ -397,44 +413,20 @@ export async function drawPrintCardQROnly(
     ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
     ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
 
-    // QR centré dans le bloc
     if (qrImg) ctx.drawImage(qrImg, p(750) - qrSz / 2, blockY + qrPad, qrSz, qrSz);
-
-    // Texte CRÉEZ VOTRE COMPTE — centré, en dessous du bloc
-    const textY = blockY + blockH + p(32);
-    ctx.textBaseline = "top"; ctx.textAlign = "center";
-    ctx.font = `700 ${p(66)}px ${font}`; ctx.fillStyle = "#15171A";
-    ctx.fillText(T.qr_verb_ins, p(750), textY);
-
-    // "VOTRE COMPTE" avec dégradé
-    ctx.font = `700 ${p(66)}px ${font}`;
-    const line2 = `${T.qr_pre_ins}${T.qr_grad_ins}`;
-    const l2W  = ctx.measureText(line2).width;
-    const preW2 = ctx.measureText(T.qr_pre_ins).width;
-    const l2X  = p(750) - l2W / 2;
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre_ins, l2X, textY + p(76));
-    const gCode = ctx.createLinearGradient(l2X + preW2, 0, l2X + l2W, 0);
-    gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad_ins, l2X + preW2, textY + p(76));
-
-    // Description
-    ctx.font = `400 ${p(20)}px ${font}`; ctx.fillStyle = "#596170";
-    ctx.textAlign = "center";
-    ctx.fillText("Scannez pour vous inscrire et recevoir votre carte fidélité", p(750), textY + p(76 + 72));
 
     // Badges rapprochés
     const appleImg  = await loadImg("/apple-wallet-badge.svg");
     const googleImg = await loadImg("/google-wallet-badge.svg");
-    const badgeY = textY + p(76 + 72 + 48);
-    drawBadgeCentered(ctx, appleImg,  p(530),  badgeY, 280, 72, p);
-    drawBadgeCentered(ctx, googleImg, p(970),  badgeY, 280, 72, p);
+    const badgeY = blockY + blockH + p(36);
+    drawBadgeCentered(ctx, appleImg,  p(530), badgeY, 280, 72, p);
+    drawBadgeCentered(ctx, googleImg, p(970), badgeY, 280, 72, p);
 
     // WALLIO
     ctx.font = `500 ${p(22)}px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
     ctx.fillStyle = indigo;
     ctx.letterSpacing = `${p(8)}px`;
-    ctx.fillText("WALLIO", p(750), badgeY + p(96));
+    ctx.fillText("WALLIO", p(750), badgeY + p(90));
     ctx.letterSpacing = "0px";
 
   } else {
