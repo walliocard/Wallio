@@ -1,5 +1,5 @@
 import { verifierTokenEquipe, getTokenFromRequest } from "@/lib/equipe";
-import { getMarchandById, getClientByWalletId, ajouterTampon } from "@/lib/loyalty";
+import { getMarchandById, getClientByWalletId, ajouterTampon, checkEtRecompenseParrain } from "@/lib/loyalty";
 import { adminDb } from "@/lib/admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
@@ -68,6 +68,20 @@ export async function POST(req: Request) {
         added_by: session.prenom,
         membre_id: session.membre_id,
         created_at: Timestamp.now(),
+      }).catch(() => {});
+
+      // Parrainage — récompense parrain si filleul a un parrain non encore récompensé
+      checkEtRecompenseParrain(client, session.marchand_id).then(res => {
+        if (!res) return;
+        const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.walliocard.com";
+        const b = JSON.stringify({ walletId: res.walletId });
+        const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body: b };
+        fetch(`${APP_URL}/api/apple-wallet/push-update`, opts).catch(() => {});
+        fetch(`${APP_URL}/api/google-wallet/push-update`, opts).catch(() => {});
+        fetch(`${APP_URL}/api/notify-parrainage`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ parrainWalletId: res.walletId, filleulPrenom: client.prenom, filleulNom: client.nom, type: "visite", recompense: res.recompense, marchandId: session.marchand_id, marchandNom: marchand.nom }),
+        }).catch(() => {});
       }).catch(() => {});
 
       // Mise à jour compteurs du membre (fire-and-forget)
