@@ -362,12 +362,9 @@ export async function drawPrintCardQROnly(
     ctx.fillStyle = `rgba(${c},${opa})`; ctx.fill();
   });
 
-  // Titre
+  // Titre — fix double-draw : on dessine title1 (noir) puis title2 (dégradé) directement
   ctx.font = `600 ${p(62)}px ${font}`;
-  ctx.textBaseline = "top"; ctx.textAlign = "center";
-  ctx.fillStyle = "#15171A";
-  ctx.fillText(T.title1 + T.title2, p(750), p(90));
-  // Gradient sur title2
+  ctx.textBaseline = "top"; ctx.textAlign = "left";
   const fullW = ctx.measureText(T.title1 + T.title2).width;
   const t1W   = ctx.measureText(T.title1).width;
   const t2W   = ctx.measureText(T.title2).width;
@@ -377,87 +374,137 @@ export async function drawPrintCardQROnly(
   const gTitle = ctx.createLinearGradient(startX + t1W, 0, startX + t1W + t2W, 0);
   gTitle.addColorStop(0, blue); gTitle.addColorStop(0.5, indigo); gTitle.addColorStop(1, violet);
   ctx.fillStyle = gTitle;
-  ctx.textAlign = "left";
   ctx.fillText(T.title2, startX + t1W, p(90));
 
-  // Sous-titre
-  ctx.font = `400 ${p(22)}px ${font}`; ctx.fillStyle = "#596170";
-  ctx.textAlign = "center";
-  ctx.fillText(T.subtitle, p(750), p(185));
+  if (inscription) {
+    // ── Layout INSCRIPTION : QR centré, texte en dessous ────────────────────
 
-  // Bloc QR
-  const blockY  = p(270);
-  const qrSz    = p(310);
-  const qrPad   = p(44);
-  const blockH  = qrSz + qrPad * 2;
-  const qrSize  = Math.round(qrSz);
-  const qrImg   = await loadQRImage(qrUrl, qrSize);
+    // Sous-titre spécifique
+    ctx.font = `400 ${p(22)}px ${font}`; ctx.fillStyle = "#596170";
+    ctx.textAlign = "center";
+    ctx.fillText("Rejoignez notre programme de fidélité en quelques secondes", p(750), p(185));
 
-  ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
-  rr(ctx, p(100), blockY, p(1300), blockH, p(36));
-  ctx.fillStyle = "#FFFFFF"; ctx.fill();
-  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-  ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
+    // Bloc QR centré pleine largeur
+    const qrSz   = p(400);
+    const qrPad  = p(36);
+    const blockH = qrSz + qrPad * 2;
+    const blockY = p(240);
+    const qrImg  = await loadQRImage(qrUrl, Math.round(qrSz));
 
-  if (qrImg) ctx.drawImage(qrImg, p(150), blockY + qrPad, qrSz, qrSz);
+    ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
+    rr(ctx, p(100), blockY, p(1300), blockH, p(36));
+    ctx.fillStyle = "#FFFFFF"; ctx.fill();
+    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
 
-  // Texte SCANNEZ LE CODE
-  const titleF  = p(56);
-  const descF   = p(24);
-  const lineGap = p(10);
-  const sectGap = p(24);
-  const groupH  = titleF + lineGap + titleF + sectGap + descF + lineGap + descF + lineGap + descF;
-  const textX   = p(150) + qrSz + p(60);
-  const textY   = blockY + (blockH - groupH) / 2;
+    // QR centré dans le bloc
+    if (qrImg) ctx.drawImage(qrImg, p(750) - qrSz / 2, blockY + qrPad, qrSz, qrSz);
 
-  const qrVerb = inscription ? T.qr_verb_ins : T.qr_verb;
-  const qrPre  = inscription ? T.qr_pre_ins  : T.qr_pre;
-  const qrGrad = inscription ? T.qr_grad_ins : T.qr_grad;
-  const qrD1   = inscription ? T.qr_desc1_ins : T.qr_desc1;
-  const qrD2   = inscription ? T.qr_desc2_ins : T.qr_desc2;
-  const qrD3   = inscription ? T.qr_desc3_ins : T.qr_desc3;
+    // Texte CRÉEZ VOTRE COMPTE — centré, en dessous du bloc
+    const textY = blockY + blockH + p(32);
+    ctx.textBaseline = "top"; ctx.textAlign = "center";
+    ctx.font = `700 ${p(66)}px ${font}`; ctx.fillStyle = "#15171A";
+    ctx.fillText(T.qr_verb_ins, p(750), textY);
 
-  ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.font = `700 ${titleF}px ${font}`; ctx.fillStyle = "#15171A";
-  ctx.fillText(qrVerb, textX, textY);
-
-  if (qrPre) {
-    const preW = ctx.measureText(qrPre).width;
-    ctx.fillStyle = "#15171A"; ctx.fillText(qrPre, textX, textY + titleF + lineGap);
-    const gCode = ctx.createLinearGradient(textX + preW, 0, textX + preW + ctx.measureText(qrGrad).width, 0);
+    // "VOTRE COMPTE" avec dégradé
+    ctx.font = `700 ${p(66)}px ${font}`;
+    const line2 = `${T.qr_pre_ins}${T.qr_grad_ins}`;
+    const l2W  = ctx.measureText(line2).width;
+    const preW2 = ctx.measureText(T.qr_pre_ins).width;
+    const l2X  = p(750) - l2W / 2;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre_ins, l2X, textY + p(76));
+    const gCode = ctx.createLinearGradient(l2X + preW2, 0, l2X + l2W, 0);
     gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(qrGrad, textX + preW, textY + titleF + lineGap);
+    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad_ins, l2X + preW2, textY + p(76));
+
+    // Description
+    ctx.font = `400 ${p(20)}px ${font}`; ctx.fillStyle = "#596170";
+    ctx.textAlign = "center";
+    ctx.fillText("Scannez pour vous inscrire et recevoir votre carte fidélité", p(750), textY + p(76 + 72));
+
+    // Badges rapprochés
+    const appleImg  = await loadImg("/apple-wallet-badge.svg");
+    const googleImg = await loadImg("/google-wallet-badge.svg");
+    const badgeY = textY + p(76 + 72 + 48);
+    drawBadgeCentered(ctx, appleImg,  p(530),  badgeY, 280, 72, p);
+    drawBadgeCentered(ctx, googleImg, p(970),  badgeY, 280, 72, p);
+
+    // WALLIO
+    ctx.font = `500 ${p(22)}px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillStyle = indigo;
+    ctx.letterSpacing = `${p(8)}px`;
+    ctx.fillText("WALLIO", p(750), badgeY + p(96));
+    ctx.letterSpacing = "0px";
+
   } else {
-    const gCode = ctx.createLinearGradient(textX, 0, textX + ctx.measureText(qrGrad).width, 0);
-    gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(qrGrad, textX, textY + titleF + lineGap);
+    // ── Layout STANDARD : QR à gauche, texte à droite ───────────────────────
+
+    // Sous-titre
+    ctx.font = `400 ${p(22)}px ${font}`; ctx.fillStyle = "#596170";
+    ctx.textAlign = "center";
+    ctx.fillText(T.subtitle, p(750), p(185));
+
+    // Bloc QR
+    const blockY  = p(270);
+    const qrSz    = p(310);
+    const qrPad   = p(44);
+    const blockH  = qrSz + qrPad * 2;
+    const qrImg   = await loadQRImage(qrUrl, Math.round(qrSz));
+
+    ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
+    rr(ctx, p(100), blockY, p(1300), blockH, p(36));
+    ctx.fillStyle = "#FFFFFF"; ctx.fill();
+    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
+
+    if (qrImg) ctx.drawImage(qrImg, p(150), blockY + qrPad, qrSz, qrSz);
+
+    const titleF  = p(56);
+    const descF   = p(24);
+    const lineGap = p(10);
+    const sectGap = p(24);
+    const groupH  = titleF + lineGap + titleF + sectGap + descF + lineGap + descF + lineGap + descF;
+    const textX   = p(150) + qrSz + p(60);
+    const textY   = blockY + (blockH - groupH) / 2;
+
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.font = `700 ${titleF}px ${font}`; ctx.fillStyle = "#15171A";
+    ctx.fillText(T.qr_verb, textX, textY);
+    if (T.qr_pre) {
+      const preW = ctx.measureText(T.qr_pre).width;
+      ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre, textX, textY + titleF + lineGap);
+      const gCode = ctx.createLinearGradient(textX + preW, 0, textX + preW + ctx.measureText(T.qr_grad).width, 0);
+      gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
+      ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, textX + preW, textY + titleF + lineGap);
+    } else {
+      const gCode = ctx.createLinearGradient(textX, 0, textX + ctx.measureText(T.qr_grad).width, 0);
+      gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
+      ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, textX, textY + titleF + lineGap);
+    }
+    ctx.font = `400 ${descF}px ${font}`; ctx.fillStyle = "#596170";
+    const dY = textY + titleF + lineGap + titleF + sectGap;
+    ctx.fillText(T.qr_desc1, textX, dY);
+    ctx.fillText(T.qr_desc2, textX, dY + descF + lineGap);
+    ctx.fillText(T.qr_desc3, textX, dY + (descF + lineGap) * 2);
+
+    const afterBlock = blockY + blockH + p(44);
+    ctx.font = `400 ${p(19)}px ${font}`; ctx.fillStyle = "#596170";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(T.add_wallet, p(750), afterBlock);
+
+    const appleImg  = await loadImg("/apple-wallet-badge.svg");
+    const googleImg = await loadImg("/google-wallet-badge.svg");
+    const badgeY = afterBlock + p(52);
+    drawBadgeCentered(ctx, appleImg,  p(435),  badgeY, 300, 78, p);
+    drawBadgeCentered(ctx, googleImg, p(1065), badgeY, 300, 78, p);
+
+    ctx.font = `500 ${p(22)}px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillStyle = indigo;
+    ctx.letterSpacing = `${p(8)}px`;
+    ctx.fillText("WALLIO", p(750), badgeY + p(110));
+    ctx.letterSpacing = "0px";
   }
-
-  ctx.font = `400 ${descF}px ${font}`; ctx.fillStyle = "#596170";
-  const dY = textY + titleF + lineGap + titleF + sectGap;
-  ctx.fillText(qrD1, textX, dY);
-  ctx.fillText(qrD2, textX, dY + descF + lineGap);
-  ctx.fillText(qrD3, textX, dY + (descF + lineGap) * 2);
-
-  // "Ajoutez à votre portefeuille"
-  const afterBlock = blockY + blockH + p(44);
-  ctx.font = `400 ${p(19)}px ${font}`; ctx.fillStyle = "#596170";
-  ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText(T.add_wallet, p(750), afterBlock);
-
-  // Badges
-  const appleImg  = await loadImg("/apple-wallet-badge.svg");
-  const googleImg = await loadImg("/google-wallet-badge.svg");
-  const badgeY = afterBlock + p(52);
-  drawBadgeCentered(ctx, appleImg,  p(435),  badgeY, 300, 78, p);
-  drawBadgeCentered(ctx, googleImg, p(1065), badgeY, 300, 78, p);
-
-  // WALLIO
-  ctx.font = `500 ${p(22)}px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillStyle = indigo;
-  ctx.letterSpacing = `${p(8)}px`;
-  ctx.fillText("WALLIO", p(750), badgeY + p(110));
-  ctx.letterSpacing = "0px";
 
   ctx.restore();
 }
