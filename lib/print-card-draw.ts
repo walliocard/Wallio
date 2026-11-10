@@ -449,10 +449,15 @@ export async function drawPrintCardQROnly(
     ctx.fillText(T.qr_desc1_ins, cX, dY2);
     ctx.fillText(T.qr_desc2_ins, cX, dY2 + dF + lGap);
 
+    // "Ajoutez à votre portefeuille"
+    ctx.font = `400 ${p(18)}px ${font}`; ctx.fillStyle = "#596170";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(T.add_wallet, p(750), blockY + blockH + p(28));
+
     // Badges — même espacement que la carte standard
     const appleImg  = await loadImg("/apple-wallet-badge.svg");
     const googleImg = await loadImg("/google-wallet-badge.svg");
-    const badgeY = blockY + blockH + p(36);
+    const badgeY = blockY + blockH + p(90);
     drawBadgeCentered(ctx, appleImg,  p(580), badgeY, 300, 78, p);
     drawBadgeCentered(ctx, googleImg, p(920), badgeY, 300, 78, p);
 
