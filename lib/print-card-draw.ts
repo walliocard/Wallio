@@ -379,43 +379,50 @@ export async function drawPrintCardQROnly(
   if (inscription) {
     // ── Layout INSCRIPTION : QR centré, texte en dessous ────────────────────
 
-    // Texte CRÉEZ VOTRE COMPTE — au-dessus du QR
-    ctx.textBaseline = "top"; ctx.textAlign = "center";
-    ctx.font = `700 ${p(64)}px ${font}`; ctx.fillStyle = "#15171A";
-    ctx.fillText(T.qr_verb_ins, p(750), p(185));
-
-    // "VOTRE COMPTE" avec dégradé
-    const line2  = `${T.qr_pre_ins}${T.qr_grad_ins}`;
-    const l2W    = ctx.measureText(line2).width;
-    const preW2  = ctx.measureText(T.qr_pre_ins).width;
-    const l2X    = p(750) - l2W / 2;
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre_ins, l2X, p(260));
-    const gCode = ctx.createLinearGradient(l2X + preW2, 0, l2X + l2W, 0);
-    gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad_ins, l2X + preW2, p(260));
-
-    // Description
-    ctx.font = `400 ${p(20)}px ${font}`; ctx.fillStyle = "#596170";
+    // Sous-titre
+    ctx.font = `400 ${p(22)}px ${font}`; ctx.fillStyle = "#596170";
     ctx.textAlign = "center";
-    ctx.fillText("Scannez pour vous inscrire et recevoir votre carte fidélité", p(750), p(342));
+    ctx.fillText("Rejoignez notre programme de fidélité en quelques secondes", p(750), p(185));
 
-    // Bloc QR compact carré — taille du QR + petits paddings
-    const qrSz   = p(380);
-    const qrPad  = p(32);
-    const blockSz = qrSz + qrPad * 2;
-    const blockX  = p(750) - blockSz / 2;
-    const blockY  = p(385);
-    const blockH  = blockSz;
-    const qrImg   = await loadQRImage(qrUrl, Math.round(qrSz));
+    // Bloc QR + texte (QR à gauche, texte à droite)
+    const qrSz  = p(360);
+    const qrPad = p(40);
+    const blockH = qrSz + qrPad * 2;
+    const blockY = p(370);
+    const qrImg  = await loadQRImage(qrUrl, Math.round(qrSz));
 
-    ctx.shadowColor = "rgba(0,0,0,0.08)"; ctx.shadowBlur = p(24); ctx.shadowOffsetY = p(6);
-    rr(ctx, blockX, blockY, blockSz, blockSz, p(28));
+    ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
+    rr(ctx, p(100), blockY, p(1300), blockH, p(36));
     ctx.fillStyle = "#FFFFFF"; ctx.fill();
     ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-    ctx.strokeStyle = "rgba(68,114,245,0.35)"; ctx.lineWidth = p(1.5); ctx.stroke();
+    ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
 
-    if (qrImg) ctx.drawImage(qrImg, blockX + qrPad, blockY + qrPad, qrSz, qrSz);
+    if (qrImg) ctx.drawImage(qrImg, p(130), blockY + qrPad, qrSz, qrSz);
+
+    // Texte à droite — centré verticalement
+    const tF    = p(52);
+    const dF    = p(21);
+    const lGap  = p(10);
+    const sGap  = p(22);
+    const tH    = tF + lGap + tF + sGap + dF + lGap + dF + lGap + dF;
+    const tX    = p(130) + qrSz + p(55);
+    const tY    = blockY + (blockH - tH) / 2;
+
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.font = `700 ${tF}px ${font}`; ctx.fillStyle = "#15171A";
+    ctx.fillText(T.qr_verb_ins, tX, tY);
+
+    const preW2 = ctx.measureText(T.qr_pre_ins).width;
+    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre_ins, tX, tY + tF + lGap);
+    const gCode = ctx.createLinearGradient(tX + preW2, 0, tX + preW2 + ctx.measureText(T.qr_grad_ins).width, 0);
+    gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
+    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad_ins, tX + preW2, tY + tF + lGap);
+
+    ctx.font = `400 ${dF}px ${font}`; ctx.fillStyle = "#596170";
+    const dY2 = tY + tF + lGap + tF + sGap;
+    ctx.fillText(T.qr_desc1_ins, tX, dY2);
+    ctx.fillText(T.qr_desc2_ins, tX, dY2 + dF + lGap);
+    ctx.fillText(T.qr_desc3_ins, tX, dY2 + (dF + lGap) * 2);
 
     // Badges rapprochés
     const appleImg  = await loadImg("/apple-wallet-badge.svg");
