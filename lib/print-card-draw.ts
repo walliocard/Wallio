@@ -411,6 +411,13 @@ export async function drawPrintCardQROnly(
 
     if (qrImg) ctx.drawImage(qrImg, qrLeft, blockY + qrPad, qrSz, qrSz);
 
+    // Séparateur vertical
+    ctx.strokeStyle = "rgba(0,0,0,0.10)"; ctx.lineWidth = p(1);
+    ctx.beginPath();
+    ctx.moveTo(p(750), blockY + p(40));
+    ctx.lineTo(p(750), blockY + blockH - p(40));
+    ctx.stroke();
+
     // Texte à droite — centré horizontalement et verticalement dans la zone droite
     const cX   = (tX + blkRight) / 2;
     const tF   = p(50);
