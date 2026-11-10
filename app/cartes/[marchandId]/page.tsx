@@ -349,6 +349,57 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
   );
 }
 
+// ─── PWA Install Banner ───────────────────────────────────────────────────────
+
+function InstallBanner() {
+  const [show, setShow] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+
+  useEffect(() => {
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as unknown as Record<string, unknown>).standalone === true;
+    if (standalone) return;
+    setIsIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
+    setShow(true);
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <div style={{ borderRadius: 20, marginBottom: 16, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(91,124,250,0.2)", backdropFilter: "blur(20px)" }}>
+      <div style={{ padding: "12px 14px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.2 }}>Installez Wallio sur votre écran d&apos;accueil</p>
+            <p style={{ fontSize: 11, color: "var(--fg-secondary)" }}>Gratuit · accès rapide à vos cartes</p>
+          </div>
+        </div>
+        <button onClick={() => setShow(false)} style={{ background: "rgba(0,0,0,0.06)", border: "none", borderRadius: 8, padding: "4px 8px", cursor: "pointer", color: "var(--fg-secondary)", fontSize: 11, flexShrink: 0, marginLeft: 8 }}>
+          Plus tard
+        </button>
+      </div>
+      <div style={{ margin: "0 10px 10px", padding: "10px 12px", borderRadius: 12, background: "rgba(91,124,250,0.06)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          {(isIos ? [
+            { n: "1", t: "Appuyez sur le bouton Partager" },
+            { n: "2", t: "« Sur l’écran d’accueil » → Ajouter" },
+          ] : [
+            { n: "1", t: "Appuyez sur ⋮ (menu du navigateur)" },
+            { n: "2", t: "« Ajouter à l’écran d’accueil »" },
+          ]).map(s => (
+            <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+              <div style={{ width: 18, height: 18, borderRadius: 5, background: "linear-gradient(135deg,#5B7CFA,#7C5BFA)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "white" }}>{s.n}</span>
+              </div>
+              <span style={{ fontSize: 12, color: "var(--fg-secondary)" }}>{s.t}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Récupération ─────────────────────────────────────────────────────────────
 
 function RecuperationForm({ marchand, onSuccess, onBack }: { marchand: Marchand; onSuccess: (c: Client) => void; onBack: () => void }) {
@@ -552,6 +603,8 @@ function CarteView({ client, marchand, isNew }: { client: Client; marchand: Marc
         )}
 
         <PasskeyRegisterBanner telephone={client.telephone || ""} />
+
+        <InstallBanner />
 
         {/* Boutons Wallet */}
         <div className="flex flex-col gap-2.5 mt-2">
