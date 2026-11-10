@@ -32,7 +32,7 @@ const TEXTS: Record<CardLang, {
     qr_desc1: "Ouvrez l'appareil photo", qr_desc2: "de votre téléphone et", qr_desc3: "ajoutez la carte",
     add_wallet: "Ajoutez à votre portefeuille", ou: "OU",
     qr_verb_ins: "CRÉEZ", qr_pre_ins: "VOTRE ", qr_grad_ins: "COMPTE",
-    qr_desc1_ins: "Scannez pour vous", qr_desc2_ins: "inscrire et recevoir", qr_desc3_ins: "votre carte fidélité",
+    qr_desc1_ins: "Scannez pour vous inscrire", qr_desc2_ins: "et recevoir votre carte", qr_desc3_ins: "",
   },
   ro: {
     title1: "Fidelitatea ta. ", title2: "Simplificată.",
@@ -42,7 +42,7 @@ const TEXTS: Record<CardLang, {
     qr_desc1: "Deschide camera", qr_desc2: "telefonului și", qr_desc3: "adaugă cardul",
     add_wallet: "Adaugă la portofel", ou: "SAU",
     qr_verb_ins: "CREEAZĂ", qr_pre_ins: "CONTUL ", qr_grad_ins: "TĂU",
-    qr_desc1_ins: "Scanează pentru", qr_desc2_ins: "a te înregistra și", qr_desc3_ins: "primi cardul",
+    qr_desc1_ins: "Scanează pentru a te înregistra", qr_desc2_ins: "și a primi cardul tău", qr_desc3_ins: "",
   },
   es: {
     title1: "Tu fidelidad. ", title2: "Simplificada.",
@@ -52,7 +52,7 @@ const TEXTS: Record<CardLang, {
     qr_desc1: "Abre la cámara", qr_desc2: "de tu teléfono y", qr_desc3: "añade la tarjeta",
     add_wallet: "Añadir al monedero", ou: "O",
     qr_verb_ins: "CREA", qr_pre_ins: "TU ", qr_grad_ins: "CUENTA",
-    qr_desc1_ins: "Escanea para", qr_desc2_ins: "registrarte y recibir", qr_desc3_ins: "tu tarjeta fidelidad",
+    qr_desc1_ins: "Escanea para registrarte", qr_desc2_ins: "y recibir tu tarjeta", qr_desc3_ins: "",
   },
 };
 
@@ -384,45 +384,63 @@ export async function drawPrintCardQROnly(
     ctx.textAlign = "center";
     ctx.fillText("Rejoignez notre programme de fidélité en quelques secondes", p(750), p(185));
 
-    // Bloc QR + texte (QR à gauche, texte à droite)
-    const qrSz  = p(360);
-    const qrPad = p(40);
+    // ── Bloc : séparation pile au centre (x=750) ──────────────────────────────
+    // QR zone : centre-gauche  |  Texte zone : centre-droite
+    const qrSz   = p(410);   // QR agrandi
+    const gap    = p(60);    // espace entre QR et texte (30px de chaque côté du centre)
+    const pad    = p(40);    // padding interne bloc
+    // QR : se termine à x=750-gap/2=720, commence à 720-410=310, bloc gauche=310-40=270
+    const qrRight  = p(750) - gap / 2;    // p(720)
+    const qrLeft   = qrRight - qrSz;       // p(310)
+    const blkLeft  = qrLeft - pad;         // p(270)
+    // Texte : commence à x=750+gap/2=780, bloc droit=780+largeur texte+40
+    const tX       = p(750) + gap / 2;     // p(780)
+    const blkRight = p(1230);              // symétrique : 1500-270=1230
+    const blkW     = blkRight - blkLeft;
+
+    const qrPad = pad;
     const blockH = qrSz + qrPad * 2;
-    const blockY = p(370);
+    const blockY = p(255);
     const qrImg  = await loadQRImage(qrUrl, Math.round(qrSz));
 
     ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
-    rr(ctx, p(100), blockY, p(1300), blockH, p(36));
+    rr(ctx, blkLeft, blockY, blkW, blockH, p(36));
     ctx.fillStyle = "#FFFFFF"; ctx.fill();
     ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
     ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
 
-    if (qrImg) ctx.drawImage(qrImg, p(130), blockY + qrPad, qrSz, qrSz);
+    if (qrImg) ctx.drawImage(qrImg, qrLeft, blockY + qrPad, qrSz, qrSz);
 
-    // Texte à droite — centré verticalement
-    const tF    = p(52);
-    const dF    = p(21);
-    const lGap  = p(10);
-    const sGap  = p(22);
-    const tH    = tF + lGap + tF + sGap + dF + lGap + dF + lGap + dF;
-    const tX    = p(130) + qrSz + p(55);
-    const tY    = blockY + (blockH - tH) / 2;
+    // Texte à droite — centré horizontalement et verticalement dans la zone droite
+    const cX   = (tX + blkRight) / 2;
+    const tF   = p(50);
+    const dF   = p(27);
+    const lGap = p(10);
+    const sGap = p(24);
+    const tH   = tF + lGap + tF + sGap + dF + lGap + dF;
+    const tY   = blockY + (blockH - tH) / 2;
 
-    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    // Ligne 1 : verbe — centré
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
     ctx.font = `700 ${tF}px ${font}`; ctx.fillStyle = "#15171A";
-    ctx.fillText(T.qr_verb_ins, tX, tY);
+    ctx.fillText(T.qr_verb_ins, cX, tY);
 
-    const preW2 = ctx.measureText(T.qr_pre_ins).width;
-    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre_ins, tX, tY + tF + lGap);
-    const gCode = ctx.createLinearGradient(tX + preW2, 0, tX + preW2 + ctx.measureText(T.qr_grad_ins).width, 0);
+    // Ligne 2 : pre + gradient — centrés en tant qu'unité
+    const preW2  = T.qr_pre_ins ? ctx.measureText(T.qr_pre_ins).width : 0;
+    const gradW2 = ctx.measureText(T.qr_grad_ins).width;
+    const line2X = cX - (preW2 + gradW2) / 2;
+    const gCode  = ctx.createLinearGradient(line2X + preW2, 0, line2X + preW2 + gradW2, 0);
     gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad_ins, tX + preW2, tY + tF + lGap);
+    ctx.textAlign = "left";
+    if (T.qr_pre_ins) { ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre_ins, line2X, tY + tF + lGap); }
+    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad_ins, line2X + preW2, tY + tF + lGap);
 
+    // Description — 2 lignes, centrées
     ctx.font = `400 ${dF}px ${font}`; ctx.fillStyle = "#596170";
+    ctx.textAlign = "center";
     const dY2 = tY + tF + lGap + tF + sGap;
-    ctx.fillText(T.qr_desc1_ins, tX, dY2);
-    ctx.fillText(T.qr_desc2_ins, tX, dY2 + dF + lGap);
-    ctx.fillText(T.qr_desc3_ins, tX, dY2 + (dF + lGap) * 2);
+    ctx.fillText(T.qr_desc1_ins, cX, dY2);
+    ctx.fillText(T.qr_desc2_ins, cX, dY2 + dF + lGap);
 
     // Badges rapprochés
     const appleImg  = await loadImg("/apple-wallet-badge.svg");
