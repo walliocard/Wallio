@@ -400,20 +400,12 @@ export async function drawPrintCardQROnly(
     ctx.textAlign = "center";
     ctx.fillText("Scannez pour vous inscrire et recevoir votre carte fidélité", p(750), p(342));
 
-    // Bloc QR centré
-    const qrSz   = p(380);
-    const qrPad  = p(28);
-    const blockH = qrSz + qrPad * 2;
-    const blockY = p(390);
+    // QR seul — sans rectangle, directement sur le fond
+    const qrSz  = p(400);
+    const blockY = p(385);
     const qrImg  = await loadQRImage(qrUrl, Math.round(qrSz));
-
-    ctx.shadowColor = "rgba(0,0,0,0.06)"; ctx.shadowBlur = p(20); ctx.shadowOffsetY = p(4);
-    rr(ctx, p(100), blockY, p(1300), blockH, p(36));
-    ctx.fillStyle = "#FFFFFF"; ctx.fill();
-    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-    ctx.strokeStyle = "rgba(68,114,245,0.45)"; ctx.lineWidth = p(1.5); ctx.stroke();
-
-    if (qrImg) ctx.drawImage(qrImg, p(750) - qrSz / 2, blockY + qrPad, qrSz, qrSz);
+    if (qrImg) ctx.drawImage(qrImg, p(750) - qrSz / 2, blockY, qrSz, qrSz);
+    const blockH = qrSz;
 
     // Badges rapprochés
     const appleImg  = await loadImg("/apple-wallet-badge.svg");
