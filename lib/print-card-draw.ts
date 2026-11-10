@@ -449,18 +449,18 @@ export async function drawPrintCardQROnly(
     ctx.fillText(T.qr_desc1_ins, cX, dY2);
     ctx.fillText(T.qr_desc2_ins, cX, dY2 + dF + lGap);
 
-    // Badges rapprochés
+    // Badges — même espacement que la carte standard
     const appleImg  = await loadImg("/apple-wallet-badge.svg");
     const googleImg = await loadImg("/google-wallet-badge.svg");
     const badgeY = blockY + blockH + p(36);
-    drawBadgeCentered(ctx, appleImg,  p(530), badgeY, 280, 72, p);
-    drawBadgeCentered(ctx, googleImg, p(970), badgeY, 280, 72, p);
+    drawBadgeCentered(ctx, appleImg,  p(580), badgeY, 300, 78, p);
+    drawBadgeCentered(ctx, googleImg, p(920), badgeY, 300, 78, p);
 
-    // WALLIO
+    // WALLIO — ancré en bas de carte
     ctx.font = `500 ${p(22)}px ${font}`; ctx.textAlign = "center"; ctx.textBaseline = "top";
     ctx.fillStyle = indigo;
     ctx.letterSpacing = `${p(8)}px`;
-    ctx.fillText("WALLIO", p(750), badgeY + p(90));
+    ctx.fillText("WALLIO", p(750), p(CARD_BOTTOM) - p(55));
     ctx.letterSpacing = "0px";
 
   } else {
