@@ -313,6 +313,7 @@ export async function drawPrintCardQROnly(
   qrUrl: string,
   scale = 1,
   lang: CardLang = "fr",
+  inscription = false,
 ) {
   const W = QR_W * scale;
   const H = QR_H * scale;
@@ -409,27 +410,34 @@ export async function drawPrintCardQROnly(
   const textX   = p(150) + qrSz + p(60);
   const textY   = blockY + (blockH - groupH) / 2;
 
+  const qrVerb = inscription ? T.qr_verb_ins : T.qr_verb;
+  const qrPre  = inscription ? T.qr_pre_ins  : T.qr_pre;
+  const qrGrad = inscription ? T.qr_grad_ins : T.qr_grad;
+  const qrD1   = inscription ? T.qr_desc1_ins : T.qr_desc1;
+  const qrD2   = inscription ? T.qr_desc2_ins : T.qr_desc2;
+  const qrD3   = inscription ? T.qr_desc3_ins : T.qr_desc3;
+
   ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.font = `700 ${titleF}px ${font}`; ctx.fillStyle = "#15171A";
-  ctx.fillText(T.qr_verb, textX, textY);
+  ctx.fillText(qrVerb, textX, textY);
 
-  if (T.qr_pre) {
-    const preW = ctx.measureText(T.qr_pre).width;
-    ctx.fillStyle = "#15171A"; ctx.fillText(T.qr_pre, textX, textY + titleF + lineGap);
-    const gCode = ctx.createLinearGradient(textX + preW, 0, textX + preW + ctx.measureText(T.qr_grad).width, 0);
+  if (qrPre) {
+    const preW = ctx.measureText(qrPre).width;
+    ctx.fillStyle = "#15171A"; ctx.fillText(qrPre, textX, textY + titleF + lineGap);
+    const gCode = ctx.createLinearGradient(textX + preW, 0, textX + preW + ctx.measureText(qrGrad).width, 0);
     gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, textX + preW, textY + titleF + lineGap);
+    ctx.fillStyle = gCode; ctx.fillText(qrGrad, textX + preW, textY + titleF + lineGap);
   } else {
-    const gCode = ctx.createLinearGradient(textX, 0, textX + ctx.measureText(T.qr_grad).width, 0);
+    const gCode = ctx.createLinearGradient(textX, 0, textX + ctx.measureText(qrGrad).width, 0);
     gCode.addColorStop(0, blue); gCode.addColorStop(1, violet);
-    ctx.fillStyle = gCode; ctx.fillText(T.qr_grad, textX, textY + titleF + lineGap);
+    ctx.fillStyle = gCode; ctx.fillText(qrGrad, textX, textY + titleF + lineGap);
   }
 
   ctx.font = `400 ${descF}px ${font}`; ctx.fillStyle = "#596170";
   const dY = textY + titleF + lineGap + titleF + sectGap;
-  ctx.fillText(T.qr_desc1, textX, dY);
-  ctx.fillText(T.qr_desc2, textX, dY + descF + lineGap);
-  ctx.fillText(T.qr_desc3, textX, dY + (descF + lineGap) * 2);
+  ctx.fillText(qrD1, textX, dY);
+  ctx.fillText(qrD2, textX, dY + descF + lineGap);
+  ctx.fillText(qrD3, textX, dY + (descF + lineGap) * 2);
 
   // "Ajoutez à votre portefeuille"
   const afterBlock = blockY + blockH + p(44);
