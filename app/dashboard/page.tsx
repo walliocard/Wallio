@@ -211,7 +211,9 @@ export default function AccueilPage() {
     return unsub;
   }, [user]);
 
-  if (!user || !marchand) { if (!loading) router.replace("/choisir"); }
+  useEffect(() => {
+    if (!loading && !user) router.replace("/choisir");
+  }, [loading, user, router]);
 
   if (loading || !marchand) return (
     <div className="px-5 md:px-8 pt-8 pb-44 max-w-5xl">
