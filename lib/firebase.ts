@@ -34,18 +34,22 @@ function isPublicClientPage(): boolean {
   );
 }
 
-// Capacitor (WKWebView iOS) : IndexedDB se bloque au premier lancement froid
-// → memoryLocalCache évite le blocage. Pas de perte fonctionnelle car l'app
-// pointe vers une URL live (pas de besoin offline).
 function isCapacitor(): boolean {
   return typeof window !== "undefined" && "Capacitor" in window;
+}
+
+// iOS (web Safari + Capacitor WKWebView) : IndexedDB freeze au chargement
+// → memoryLocalCache + browserSessionPersistence évitent le blocage.
+function isIOS(): boolean {
+  if (typeof window === "undefined") return false;
+  return /iP(hone|ad|od)/i.test(navigator.userAgent) || isCapacitor();
 }
 
 const isNew = getApps().length === 0;
 const app = isNew ? initializeApp(firebaseConfig) : getApps()[0];
 
 const localCache =
-  typeof window === "undefined" || isPrivateMode() || isPublicClientPage() || isCapacitor()
+  typeof window === "undefined" || isPrivateMode() || isPublicClientPage() || isIOS()
     ? memoryLocalCache()
     : persistentLocalCache();
 
@@ -57,14 +61,6 @@ export const db = isNew
       experimentalAutoDetectLongPolling: true,
     })
   : getFirestore(app);
-
-// iOS (Safari web + Capacitor WKWebView) : IndexedDB freeze au chargement
-// → browserSessionPersistence (sessionStorage) évite le blocage.
-// Survit aux navigations dans le même onglet/session, perdu à la fermeture.
-function isIOS(): boolean {
-  if (typeof window === "undefined") return false;
-  return /iP(hone|ad|od)/i.test(navigator.userAgent) || isCapacitor();
-}
 
 // initializeAuth sans popupRedirectResolver évite l'iframe __/auth/iframe
 // qui n'existe pas sur Vercel et bloque Firebase Auth init en Safari
