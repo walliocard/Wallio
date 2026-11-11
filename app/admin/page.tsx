@@ -881,6 +881,9 @@ export default function AdminPage() {
   const actifs = marchands.filter(m => m.actif).length;
   const aboActifs = marchands.filter(m => m.abonnement_statut === "actif").length;
   const revenus = aboActifs * 349;
+  const revenuTotal = marchands.reduce((sum, m) =>
+    sum + (m.abonnement_paiements ?? []).reduce((s, p) => s + (p.montant || 0), 0), 0);
+  const totalClients = Object.values(clientCounts).reduce((sum, c) => sum + c, 0);
   const filtered = marchands.filter(m =>
     !search || m.nom?.toLowerCase().includes(search.toLowerCase()) || m.email?.toLowerCase().includes(search.toLowerCase())
   );
@@ -1275,12 +1278,14 @@ export default function AdminPage() {
 
         {tab === "marchands" && <>
           {/* Stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }} className="md:grid-cols-4">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }} className="md:grid-cols-3">
             {[
-              { label: "Total",          value: String(marchands.length),              color: T.label },
-              { label: "Actifs",         value: String(actifs),                        color: T.actifFg },
-              { label: "En attente",     value: String(marchands.length - actifs),     color: "#7A4A00" },
-              { label: "Revenus / mois", value: `${revenus.toLocaleString("fr-FR")} DH`, color: T.label },
+              { label: "Marchands total",  value: String(marchands.length),                        color: T.label },
+              { label: "Actifs",           value: String(actifs),                                  color: T.actifFg },
+              { label: "En attente",       value: String(marchands.length - actifs),               color: "#7A4A00" },
+              { label: "Clients total",    value: totalClients > 0 ? totalClients.toLocaleString("fr-FR") : "…", color: T.label },
+              { label: "Revenus / mois",   value: `${revenus.toLocaleString("fr-FR")} DH`,         color: T.label },
+              { label: "Revenu total",     value: `${revenuTotal.toLocaleString("fr-FR")} DH`,     color: T.actifFg },
             ].map(s => (
               <div key={s.label} style={{ ...G, borderRadius: 18, padding: "18px 20px" }}>
                 <p style={{ fontSize: 26, fontWeight: 600, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.value}</p>
