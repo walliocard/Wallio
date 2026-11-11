@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore, initializeFirestore, memoryLocalCache, persistentLocalCache } from "firebase/firestore";
-import { getAuth, initializeAuth, browserLocalPersistence, inMemoryPersistence } from "firebase/auth";
+import { getAuth, initializeAuth, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -58,10 +58,20 @@ export const db = isNew
     })
   : getFirestore(app);
 
+// iOS (Safari web + Capacitor WKWebView) : IndexedDB freeze au chargement
+// → browserSessionPersistence (sessionStorage) évite le blocage.
+// Survit aux navigations dans le même onglet/session, perdu à la fermeture.
+function isIOS(): boolean {
+  if (typeof window === "undefined") return false;
+  return /iP(hone|ad|od)/i.test(navigator.userAgent) || isCapacitor();
+}
+
 // initializeAuth sans popupRedirectResolver évite l'iframe __/auth/iframe
 // qui n'existe pas sur Vercel et bloque Firebase Auth init en Safari
 const _persistence = typeof window !== "undefined" && isPrivateMode()
   ? inMemoryPersistence
+  : typeof window !== "undefined" && isIOS()
+  ? browserSessionPersistence
   : browserLocalPersistence;
 
 export const auth = isNew
