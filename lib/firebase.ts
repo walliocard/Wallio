@@ -40,9 +40,13 @@ function isCapacitor(): boolean {
 
 // iOS (web Safari + Capacitor WKWebView) : IndexedDB freeze au chargement
 // → memoryLocalCache + browserSessionPersistence évitent le blocage.
+// iPad iOS ≥13 simule un Mac dans son UA → détecter via maxTouchPoints.
 function isIOS(): boolean {
   if (typeof window === "undefined") return false;
-  return /iP(hone|ad|od)/i.test(navigator.userAgent) || isCapacitor();
+  if (isCapacitor()) return true;
+  const ua = navigator.userAgent;
+  return /iP(hone|od)/i.test(ua) ||
+    (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
 }
 
 const isNew = getApps().length === 0;
