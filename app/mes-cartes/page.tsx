@@ -310,11 +310,13 @@ export default function MesCartesPage() {
   async function handleDeleteAccount() {
     if (!phone) return;
     setDeleting(true);
+    const walletId = cards[0]?.walletId;
+    if (!walletId) { setDeleting(false); return; }
     try {
       await fetch("/api/delete-account", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telephone: phone }),
+        body: JSON.stringify({ telephone: phone, walletId }),
       });
     } catch { /* on nettoie quand même */ }
 
