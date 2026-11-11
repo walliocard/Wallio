@@ -93,9 +93,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
         }
       },
-      // IndexedDB corrompue ou token invalide → purge silencieuse et reset
-      async () => {
-        signOut(auth).catch(() => {});
+      // Erreur transitoire Firebase Auth (IndexedDB froid, ITP Safari) → reset
+      // sans signOut() : le token peut être valide, on ne force pas la déconnexion
+      () => {
         clearTimeout(fallback);
         setUser(null);
         setMarchand(null);

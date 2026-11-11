@@ -98,7 +98,6 @@ function ConnexionInner() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setError(""); setLoading(true);
     try {
-      try { Object.keys(localStorage).forEach(k => { if (k.startsWith("firebase:authUser:")) localStorage.removeItem(k); }); } catch {}
       const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 15000));
       const cred = await Promise.race([signInWithEmailAndPassword(auth, form.email, form.password), timeout]);
       const uid = cred.user.uid;
