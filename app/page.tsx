@@ -1627,10 +1627,18 @@ export default function LandingPage() {
               <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#AEAEB2" }}>
                 {lang === "fr" ? "Ils nous font confiance" : "Trusted by"}
               </span>
-              <div style={{ display:"flex", alignItems:"center", gap:24 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:24, flexWrap:"wrap", justifyContent:"center" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                   <img src="/logo-8am.jpg" alt="8AM Coffeehouse & More" style={{ width:36, height:36, borderRadius:9, objectFit:"cover", border:"0.5px solid rgba(0,0,0,0.08)" }} />
                   <span style={{ fontSize:14, fontWeight:600, color:"#1D1D1F", letterSpacing:-0.2 }}>8AM Coffeehouse & More</span>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <img src="/logo-maison-matcha.png" alt="Maison Matcha" style={{ width:36, height:36, borderRadius:9, objectFit:"contain", background:"white", border:"0.5px solid rgba(0,0,0,0.08)", padding:3 }} />
+                  <span style={{ fontSize:14, fontWeight:600, color:"#1D1D1F", letterSpacing:-0.2 }}>Maison Matcha</span>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <img src="/logo-comptoir-homme.jpg" alt="Comptoir de l'Homme" style={{ width:36, height:36, borderRadius:9, objectFit:"cover", border:"0.5px solid rgba(0,0,0,0.08)" }} />
+                  <span style={{ fontSize:14, fontWeight:600, color:"#1D1D1F", letterSpacing:-0.2 }}>Comptoir de l'Homme</span>
                 </div>
               </div>
             </div>

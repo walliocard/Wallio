@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { collection, query, where, onSnapshot, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { auth } from "@/lib/firebase";
-import { signInWithPhoneNumber, RecaptchaVerifier, type ConfirmationResult, signOut } from "firebase/auth";
 import { creerClient, getClientByTelephone, setClientEmail } from "@/lib/loyalty";
 import InstallBanner from "@/components/InstallBanner";
 import PasskeyRegisterBanner from "@/components/PasskeyRegisterBanner";
@@ -81,11 +79,11 @@ export default function MesCartesPage() {
   const [pinInput, setPinInput]   = useState("");
   const [pinError, setPinError]   = useState("");
   const [pinLoading, setPinLoading] = useState(false);
-  const [smsLoading, setSmsLoading] = useState(false);
-  const [smsError, setSmsError]   = useState("");
-  const [smsCode, setSmsCode]     = useState("");
-  const confirmationRef = useRef<ConfirmationResult | null>(null);
-  const recaptchaRef    = useRef<RecaptchaVerifier | null>(null);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError]   = useState("");
+  const [otpCode, setOtpCode]     = useState("");
+  const [dobInput, setDobInput]   = useState("");
+  const [resetEmailMasked, setResetEmailMasked] = useState("");
   const [tab, setTab]           = useState<"cartes"|"messages"|"decouvrir">("cartes");
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
@@ -303,35 +301,67 @@ export default function MesCartesPage() {
     finally { setPinLoading(false); }
   }
 
-  const initRecaptcha = useCallback(() => {
-    if (recaptchaRef.current) { try { recaptchaRef.current.clear(); } catch { /* silent */ } }
-    recaptchaRef.current = new RecaptchaVerifier(auth, "recaptcha-sms-reset", { size: "invisible" });
-  }, []);
+  // Charge l'email du client si pas encore connu quand on entre dans forgot_pin
+  useEffect(() => {
+    if (step !== "forgot_pin" || clientEmail !== null || !phone) return;
+    getDocs(query(collection(db, "clients"), where("telephone", "==", phone)))
+      .then(snap => {
+        const found = snap.docs.map(d => d.data().email as string | undefined).find(e => !!e) ?? "";
+        setClientEmail2(found);
+      })
+      .catch(() => setClientEmail2(""));
+  }, [step, clientEmail, phone]);
 
-  async function handleSendSms() {
+  async function handleSendOtp() {
     if (!phone) return;
-    setSmsLoading(true); setSmsError("");
+    setOtpLoading(true); setOtpError("");
     try {
-      initRecaptcha();
-      const result = await signInWithPhoneNumber(auth, phone, recaptchaRef.current!);
-      confirmationRef.current = result;
-      setStep("reset_code");
-    } catch {
-      setSmsError("Impossible d'envoyer le SMS. Réessayez.");
-      try { recaptchaRef.current?.clear(); } catch { /* silent */ }
-    } finally { setSmsLoading(false); }
+      const res = await fetch("/api/client/request-pin-reset", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telephone: phone }),
+      });
+      const data = await res.json();
+      if (!data.ok) { setOtpError("Erreur. Réessayez."); return; }
+      if (data.method === "email") {
+        setResetEmailMasked(data.emailMasked ?? "");
+        setOtpCode("");
+        setStep("reset_code");
+      } else if (data.method === "dob") {
+        setClientEmail2(""); // bascule sur le formulaire date de naissance
+      }
+    } catch { setOtpError("Erreur. Réessayez."); }
+    finally { setOtpLoading(false); }
   }
 
-  async function handleVerifySmsCode() {
-    if (!smsCode || !confirmationRef.current) return;
-    setSmsLoading(true); setSmsError("");
+  async function handleVerifyOtp() {
+    if (otpCode.length !== 6 || !phone) return;
+    setOtpLoading(true); setOtpError("");
     try {
-      await confirmationRef.current.confirm(smsCode);
-      await signOut(auth); // on n'a pas besoin de la session Firebase
-      setPinInput(""); setPinError("");
-      setStep("create_pin");
-    } catch { setSmsError("Code incorrect. Réessayez."); }
-    finally { setSmsLoading(false); }
+      const res = await fetch("/api/client/verify-pin-reset", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telephone: phone, code: otpCode }),
+      });
+      const data = await res.json();
+      if (data.ok) { setPinInput(""); setPinError(""); setStep("create_pin"); }
+      else setOtpError(data.error ?? "Code incorrect. Réessayez.");
+    } catch { setOtpError("Erreur. Réessayez."); }
+    finally { setOtpLoading(false); }
+  }
+
+  async function handleVerifyDob(e: React.FormEvent) {
+    e.preventDefault();
+    if (!dobInput || !phone) return;
+    setOtpLoading(true); setOtpError("");
+    try {
+      const res = await fetch("/api/client/verify-pin-reset", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telephone: phone, dob: dobInput }),
+      });
+      const data = await res.json();
+      if (data.ok) { setPinInput(""); setPinError(""); setStep("create_pin"); }
+      else setOtpError("Date de naissance incorrecte. Réessayez.");
+    } catch { setOtpError("Erreur. Réessayez."); }
+    finally { setOtpLoading(false); }
   }
 
   async function rejoindre(marchand: MarchandDiscover) {
@@ -494,9 +524,9 @@ export default function MesCartesPage() {
             {step === "pin" && (
               <p style={{ fontSize: 13, color: "#8E9BB5", textAlign: "center", marginTop: 16 }}>
                 Code oublié ?{" "}
-                <button onClick={() => { setSmsError(""); setSmsCode(""); setStep("forgot_pin"); }}
+                <button onClick={() => { setOtpError(""); setOtpCode(""); setDobInput(""); setStep("forgot_pin"); }}
                   style={{ color: "#5B7CFA", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 13, padding: 0 }}>
-                  Réinitialiser par SMS
+                  Réinitialiser
                 </button>
               </p>
             )}
@@ -517,21 +547,58 @@ export default function MesCartesPage() {
         <div style={{ maxWidth: 390, width: "100%", margin: "0 auto" }}>
           <div style={{ ...glass, padding: "32px 28px", borderRadius: 28, marginBottom: 16 }}>
             <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.4, color: "#1C2333", marginBottom: 8 }}>Réinitialiser le PIN</h1>
-            <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 24, lineHeight: 1.55 }}>
-              Un code de vérification sera envoyé par SMS au <strong style={{ color: "#1C2333" }}>{phone}</strong>.
-            </p>
-            <div id="recaptcha-sms-reset" />
-            {smsError && <p style={{ fontSize: 13, color: "#FF453A", marginBottom: 12 }}>{smsError}</p>}
-            <button onClick={handleSendSms} disabled={smsLoading} style={{
-              width: "100%", padding: "15px", borderRadius: 16, border: "none",
-              background: smsLoading ? "rgba(142,155,181,0.15)" : "linear-gradient(135deg,#5B7CFA,#7C5BFA)",
-              color: smsLoading ? "#8E9BB5" : "white", fontSize: 15, fontWeight: 600, cursor: "pointer",
-              boxShadow: smsLoading ? "none" : "0 8px 24px rgba(91,124,250,0.35)", transition: "all 0.2s",
-            }}>
-              {smsLoading ? "Envoi…" : "Envoyer le code SMS"}
-            </button>
+
+            {clientEmail === null && (
+              <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", border: "3px solid rgba(91,124,250,0.3)", borderTopColor: "#5B7CFA", animation: "spin 0.8s linear infinite" }} />
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+              </div>
+            )}
+
+            {clientEmail !== null && clientEmail !== "" && (
+              <>
+                <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 24, lineHeight: 1.55 }}>
+                  Un code de vérification sera envoyé à <strong style={{ color: "#1C2333" }}>{resetEmailMasked || (clientEmail.split("@")[0][0] + "***@" + clientEmail.split("@")[1])}</strong>.
+                </p>
+                {otpError && <p style={{ fontSize: 13, color: "#FF453A", marginBottom: 12 }}>{otpError}</p>}
+                <button onClick={handleSendOtp} disabled={otpLoading} style={{
+                  width: "100%", padding: "15px", borderRadius: 16, border: "none",
+                  background: otpLoading ? "rgba(142,155,181,0.15)" : "linear-gradient(135deg,#5B7CFA,#7C5BFA)",
+                  color: otpLoading ? "#8E9BB5" : "white", fontSize: 15, fontWeight: 600, cursor: "pointer",
+                  boxShadow: otpLoading ? "none" : "0 8px 24px rgba(91,124,250,0.35)", transition: "all 0.2s",
+                }}>
+                  {otpLoading ? "Envoi…" : "Envoyer le code par email"}
+                </button>
+              </>
+            )}
+
+            {clientEmail !== null && clientEmail === "" && (
+              <form onSubmit={handleVerifyDob} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 8, lineHeight: 1.55 }}>
+                  Entrez votre date de naissance pour vérifier votre identité.
+                </p>
+                <input
+                  type="date" value={dobInput} onChange={e => setDobInput(e.target.value)}
+                  required autoFocus
+                  style={{ ...input, fontSize: 15 }}
+                  onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
+                  onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
+                />
+                {otpError && <p style={{ fontSize: 13, color: "#FF453A" }}>{otpError}</p>}
+                <button type="submit" disabled={!dobInput || otpLoading} style={{
+                  padding: "15px", borderRadius: 16, border: "none",
+                  background: dobInput && !otpLoading ? "linear-gradient(135deg,#5B7CFA,#7C5BFA)" : "rgba(142,155,181,0.15)",
+                  color: dobInput && !otpLoading ? "white" : "#8E9BB5",
+                  fontSize: 15, fontWeight: 600, cursor: "pointer",
+                  boxShadow: dobInput && !otpLoading ? "0 8px 24px rgba(91,124,250,0.35)" : "none",
+                  transition: "all 0.2s",
+                }}>
+                  {otpLoading ? "Vérification…" : "Vérifier"}
+                </button>
+              </form>
+            )}
           </div>
-          <button onClick={() => { setSmsError(""); setStep("pin"); }}
+          <button onClick={() => { setOtpError(""); setStep("pin"); }}
             style={{ display: "block", width: "100%", textAlign: "center", fontSize: 13, color: "#8E9BB5", background: "none", border: "none", cursor: "pointer", padding: "8px 0" }}>
             ← Retour
           </button>
@@ -548,33 +615,37 @@ export default function MesCartesPage() {
           <div style={{ ...glass, padding: "32px 28px", borderRadius: 28, marginBottom: 16 }}>
             <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.4, color: "#1C2333", marginBottom: 8 }}>Code reçu ?</h1>
             <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 24, lineHeight: 1.55 }}>
-              Entrez le code à 6 chiffres envoyé au <strong style={{ color: "#1C2333" }}>{phone}</strong>.
+              Entrez le code à 6 chiffres envoyé à <strong style={{ color: "#1C2333" }}>{resetEmailMasked}</strong>.
             </p>
             <input
               type="tel" inputMode="numeric" pattern="\d{6}" maxLength={6}
-              placeholder="123456" value={smsCode}
-              onChange={e => setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="123456" value={otpCode}
+              onChange={e => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               autoFocus
               style={{ ...input, textAlign: "center", fontSize: 24, letterSpacing: "0.4em", fontWeight: 700, marginBottom: 12 }}
               onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
               onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
             />
-            {smsError && <p style={{ fontSize: 13, color: "#FF453A", marginBottom: 12 }}>{smsError}</p>}
-            <button onClick={handleVerifySmsCode} disabled={smsCode.length !== 6 || smsLoading} style={{
+            {otpError && <p style={{ fontSize: 13, color: "#FF453A", marginBottom: 12 }}>{otpError}</p>}
+            <button onClick={handleVerifyOtp} disabled={otpCode.length !== 6 || otpLoading} style={{
               width: "100%", padding: "15px", borderRadius: 16, border: "none",
-              background: smsCode.length === 6 && !smsLoading ? "linear-gradient(135deg,#5B7CFA,#7C5BFA)" : "rgba(142,155,181,0.15)",
-              color: smsCode.length === 6 && !smsLoading ? "white" : "#8E9BB5",
+              background: otpCode.length === 6 && !otpLoading ? "linear-gradient(135deg,#5B7CFA,#7C5BFA)" : "rgba(142,155,181,0.15)",
+              color: otpCode.length === 6 && !otpLoading ? "white" : "#8E9BB5",
               fontSize: 15, fontWeight: 600, cursor: "pointer",
-              boxShadow: smsCode.length === 6 && !smsLoading ? "0 8px 24px rgba(91,124,250,0.35)" : "none",
+              boxShadow: otpCode.length === 6 && !otpLoading ? "0 8px 24px rgba(91,124,250,0.35)" : "none",
               transition: "all 0.2s",
             }}>
-              {smsLoading ? "Vérification…" : "Vérifier"}
+              {otpLoading ? "Vérification…" : "Vérifier"}
             </button>
-            <button onClick={handleSendSms} disabled={smsLoading}
+            <button onClick={handleSendOtp} disabled={otpLoading}
               style={{ display: "block", width: "100%", textAlign: "center", fontSize: 13, color: "#5B7CFA", background: "none", border: "none", cursor: "pointer", padding: "12px 0 0", fontWeight: 600 }}>
               Renvoyer le code
             </button>
           </div>
+          <button onClick={() => { setOtpError(""); setOtpCode(""); setStep("forgot_pin"); }}
+            style={{ display: "block", width: "100%", textAlign: "center", fontSize: 13, color: "#8E9BB5", background: "none", border: "none", cursor: "pointer", padding: "8px 0" }}>
+            ← Retour
+          </button>
         </div>
       </div>
     </main>
@@ -892,11 +963,12 @@ export default function MesCartesPage() {
       )}
 
       <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 8 }}>{t.mes_cartes_footer}</p>
-      <p style={{ textAlign: "center", fontSize: 11, color: "#C7C7CC", paddingBottom: 24, display: "flex", justifyContent: "center", gap: 16 }}>
+      <p style={{ textAlign: "center", fontSize: 11, color: "#C7C7CC", paddingBottom: 8, display: "flex", justifyContent: "center", gap: 16 }}>
         <a href="/privacy" style={{ color: "#C7C7CC", textDecoration: "none" }}>Confidentialité</a>
         <a href="/terms" style={{ color: "#C7C7CC", textDecoration: "none" }}>CGU</a>
         <a href="/legal" style={{ color: "#C7C7CC", textDecoration: "none" }}>Mentions légales</a>
       </p>
+      <div style={{ height: "max(48px, env(safe-area-inset-bottom, 48px))" }} />
     </main>
   );
 }
