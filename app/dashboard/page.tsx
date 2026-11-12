@@ -176,7 +176,7 @@ export default function AccueilPage() {
         const prochainObjectif = enProgressif
           ? (paliersDef.find((p, i) => !(pv?.[i])) ?? paliersDef[paliersDef.length - 1]).tampons
           : objectif;
-        if (tp >= prochainObjectif - 2 && tp < prochainObjectif) proches_recompense++;
+        if (tp === prochainObjectif - 1) proches_recompense++;
         if (!top_client || tp > top_client.tampons) {
           top_client = { prenom: data.prenom || "", nom: data.nom || "", tampons: tp, id: d.id };
         }
