@@ -155,6 +155,9 @@ export default function MesCartesPage() {
     let firstSnapshot = true;
 
     unsubRef.current = onSnapshot(q, async (snap) => {
+      // Snapshot vide depuis le cache IndexedDB = Firestore pas encore prêt, on attend le serveur
+      if (snap.empty && snap.metadata.fromCache) return;
+
       if (snap.empty) {
         // Nouveau client venant de /inscription — profil en localStorage mais pas encore de carte
         const savedPrenom = localStorage.getItem(PRENOM_KEY);
