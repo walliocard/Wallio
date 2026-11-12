@@ -6,7 +6,7 @@ import {
   getMarchandByNfcId,
   getClientByWalletId, getClientByTelephone, getWalletClientByTelephone,
   creerClient, ajouterTampon, checkEtRecompenseParrain,
-  formatTemps, WALLET_KEY,
+  formatTemps, WALLET_KEY, setClientEmail,
   type Marchand, type Client, type TamponResult,
 } from "@/lib/loyalty";
 import { doc, updateDoc, getDocs, getDocsFromServer, collection, query, where } from "firebase/firestore";
@@ -510,8 +510,22 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
   const [isAndroid, setIsAndroid] = useState(false);
   const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
   const [enregistrantChoix, setEnregistrantChoix] = useState(false);
+  const [emailExists, setEmailExists] = useState<boolean | null>(null);
+  const [emailInput, setEmailInput] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailDone, setEmailDone] = useState(false);
 
   const isChoixRequis = result.type === "choix_requis";
+
+  useEffect(() => {
+    if (telephone) {
+      getDocs(query(collection(db, "clients"), where("telephone", "==", telephone)))
+        .then(snap => {
+          const found = snap.docs.some(d => !!(d.data().email));
+          setEmailExists(found);
+        }).catch(() => setEmailExists(true)); // en cas d'erreur, on masque le prompt
+    }
+  }, [telephone]);
 
   useEffect(() => {
     setIsAndroid(/android/i.test(navigator.userAgent));
@@ -888,6 +902,47 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
           </div>
         )}
 
+        {/* Prompt email — uniquement si client sans email, sur écran ok ou récompense */}
+        {(isOk || isRecompense) && emailExists === false && !emailDone && (
+          <div className="mt-5 rounded-2xl p-4" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.14)" }}>
+            <p className="text-[13px] font-semibold mb-0.5" style={{ color: FG_MAIN }}>Recevez votre carte par email</p>
+            <p className="text-[11px] mb-3" style={{ color: FG_SEC }}>Optionnel — retrouvez vos cartes depuis n'importe quel appareil</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input type="email" placeholder="votre@email.com" value={emailInput}
+                onChange={e => setEmailInput(e.target.value)}
+                style={{ flex: 1, padding: "9px 12px", borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, outline: "none", color: FG_MAIN, background: BG_CARD }} />
+              <button
+                disabled={!emailInput.includes("@") || emailSending}
+                onClick={async () => {
+                  if (!emailInput.includes("@") || !telephone) return;
+                  setEmailSending(true);
+                  try {
+                    await setClientEmail(telephone, emailInput.trim());
+                    const prenom = result.type === "ok" || result.type === "recompense" ? result.prenom : "";
+                    fetch("/api/send-welcome-email", {
+                      method: "POST", headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email: emailInput.trim(), prenom, marchandNom: marchand.nom, walletId, mode: "inscription" }),
+                    }).catch(() => {});
+                    setEmailDone(true);
+                  } catch { /* silent */ }
+                  finally { setEmailSending(false); }
+                }}
+                style={{ padding: "9px 14px", borderRadius: 10, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: !emailInput.includes("@") || emailSending ? 0.5 : 1, flexShrink: 0 }}>
+                {emailSending ? "…" : "OK"}
+              </button>
+            </div>
+          </div>
+        )}
+        {emailDone && (
+          <div className="mt-4 rounded-2xl py-2.5 px-4 flex items-center gap-2"
+            style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.18)" }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <p className="text-[12px] font-medium" style={{ color: "#34C759" }}>Email enregistré !</p>
+          </div>
+        )}
+
         <a href={`/preferences/${walletId}`} className="block mt-6 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
           Gérer mes notifications
         </a>
@@ -1219,7 +1274,7 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
 
             {error && <p className="text-[13px] px-1" style={{ color: "#FF453A" }}>{error}</p>}
 
-            <input type="email" placeholder="Email (optionnel)" value={email}
+            <input type="email" placeholder="Email" required value={email}
               onChange={e => setEmail(e.target.value)}
               autoComplete="email"
               className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-colors"

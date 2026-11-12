@@ -327,7 +327,7 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
               </div>
             </div>
 
-            <input type="email" placeholder="Email (optionnel)" value={email}
+            <input type="email" placeholder="Email" required value={email}
               onChange={e => setEmail(e.target.value)} autoComplete="email"
               className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none"
               style={inputStyle}
