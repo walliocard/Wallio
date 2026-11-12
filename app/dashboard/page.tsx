@@ -277,12 +277,24 @@ export default function AccueilPage() {
   if (stats.inactifs_30j > 0) {
     todos.push({
       type: "inactive",
-      text: `${stats.inactifs_30j} client${stats.inactifs_30j > 1 ? "s inactifs" : " inactif"} depuis +30 jours`,
-      sub: "Envoyer une relance",
+      text: `${stats.inactifs_30j} client${stats.inactifs_30j > 1 ? "s à relancer" : " à relancer"}`,
+      sub: "Envoyer un message de relance",
       color: "#FF3B30",
       href: "/dashboard/notifications",
     });
   }
+
+  const encouragement = (() => {
+    if (tendance !== null && tendance > 0)
+      return { text: `+${tendance}% cette semaine, beau travail !`, color: "#007AFF" };
+    if (stats.aujourd_hui > 0)
+      return { text: `${stats.aujourd_hui} client${stats.aujourd_hui > 1 ? "s" : ""} visité${stats.aujourd_hui > 1 ? "s" : ""} aujourd'hui`, color: "#34C759" };
+    if (stats.nouvelles_semaine > 0)
+      return { text: `+${stats.nouvelles_semaine} nouveau${stats.nouvelles_semaine > 1 ? "x" : ""} client${stats.nouvelles_semaine > 1 ? "s" : ""} cette semaine`, color: "#34C759" };
+    if (stats.total > 0)
+      return { text: `${stats.total} client${stats.total > 1 ? "s" : ""} vous font confiance`, color: "#8B5CF6" };
+    return null;
+  })();
 
   return (
     <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-24 md:pb-10 max-w-5xl">
@@ -388,6 +400,14 @@ export default function AccueilPage() {
           <Icons.Scan size={17} />
         </div>
       </Link>
+
+      {/* Message d'encouragement contextuel */}
+      {encouragement && (
+        <div className="flex items-center gap-2 mb-4 px-1">
+          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: encouragement.color }} />
+          <p className="text-[13px] font-medium" style={{ color: encouragement.color }}>{encouragement.text}</p>
+        </div>
+      )}
 
       {/* Hero Aujourd'hui + stats 2×2 */}
       <div className="flex flex-col lg:flex-row gap-4 mb-4">
@@ -553,6 +573,7 @@ export default function AccueilPage() {
 
       {/* Analytique — Taux de retour + Nouvelles inscriptions */}
       <div className="grid grid-cols-2 gap-3 mb-4">
+        {stats.total >= 5 ? (
         <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
           <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
             Taux de retour
@@ -567,6 +588,17 @@ export default function AccueilPage() {
           </div>
           <p className="text-[11px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>{t.dash_returned}</p>
         </div>
+        ) : (
+        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
+          <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
+            Taux de retour
+          </p>
+          <p className="text-[15px] font-medium" style={{ color: "var(--fg-tertiary)" }}>Disponible dès 5 clients</p>
+          <p className="text-[11px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>
+            {5 - stats.total} client{5 - stats.total > 1 ? "s" : ""} restant{5 - stats.total > 1 ? "s" : ""}
+          </p>
+        </div>
+        )}
 
         <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
           <div className="flex items-center justify-between mb-2">
