@@ -454,11 +454,8 @@ export default function MesCartesPage() {
               </button>
             </form>
             {step === "pin" && (
-              <p style={{ fontSize: 13, color: "#8E9BB5", textAlign: "center", marginTop: 16 }}>
-                Code oublié ?{" "}
-                <a href="mailto:hello@walliocard.com" style={{ color: "#5B7CFA", fontWeight: 600, textDecoration: "none" }}>
-                  Contactez-nous
-                </a>
+              <p style={{ fontSize: 13, color: "#8E9BB5", textAlign: "center", marginTop: 16, lineHeight: 1.5 }}>
+                Code oublié ? Revenez chez votre marchand et scannez votre carte — vous pourrez en créer un nouveau.
               </p>
             )}
           </div>
@@ -473,14 +470,14 @@ export default function MesCartesPage() {
 
   if (step === "pin") return pinScreen(
     "Votre code PIN",
-    `Entrez votre code à 4 chiffres pour accéder à vos cartes.`,
+    "Entrez votre code à 4 chiffres pour accéder à vos cartes.",
     "Continuer",
     handleVerifyPin
   );
 
   if (step === "create_pin") return pinScreen(
     "Créez votre code PIN",
-    "Choisissez un code à 4 chiffres pour sécuriser votre compte.",
+    "Wallio protège votre compte. Choisissez un code à 4 chiffres — vous n'aurez à le saisir qu'une seule fois par appareil.",
     "Créer mon code",
     handleCreatePin
   );
