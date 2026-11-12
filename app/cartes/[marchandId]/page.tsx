@@ -277,7 +277,7 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
         }).catch(() => {});
       }
       if (pin) {
-        fetch("/api/client/set-pin", {
+        await fetch("/api/client/set-pin", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ telephone, pin }),
         }).catch(() => {});
