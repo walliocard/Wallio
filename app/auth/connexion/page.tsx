@@ -17,6 +17,9 @@ import {
 function isPrivateMode(): boolean {
   try { const k = "__w__"; localStorage.setItem(k, "1"); localStorage.removeItem(k); return false; } catch { return true; }
 }
+function isCapacitor(): boolean {
+  return typeof window !== "undefined" && "Capacitor" in window;
+}
 
 type EquipeStep = "code" | "prenom" | "pin";
 
@@ -352,9 +355,11 @@ function ConnexionInner() {
               <button onClick={handleReset} disabled={resetLoading} style={{ fontSize: 13, color: "#6E6E73", background: "transparent", border: "none", cursor: "pointer" }}>
                 {resetLoading ? "…" : t.auth_forgot}
               </button>
-              <Link href="/auth/inscription" style={{ fontSize: 13, fontWeight: 500, color: "var(--accent)", textDecoration: "none" }}>
-                {t.auth_create_account}
-              </Link>
+              {!isCapacitor() && (
+                <Link href="/auth/inscription" style={{ fontSize: 13, fontWeight: 500, color: "var(--accent)", textDecoration: "none" }}>
+                  {t.auth_create_account}
+                </Link>
+              )}
             </div>
           </>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { saveMarchandFields } from "@/lib/save-marchand";
@@ -26,8 +27,15 @@ const inputStyle: React.CSSProperties = {
 
 export default function InscriptionPage() {
   const { t } = useLang();
+  const router = useRouter();
   const [form, setForm] = useState({ nom: "", email: "", password: "", telephone: "", pays: "Maroc", ville: "" });
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Capacitor" in window) {
+      router.replace("/auth/connexion");
+    }
+  }, [router]);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
