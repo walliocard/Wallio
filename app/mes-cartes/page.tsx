@@ -328,9 +328,11 @@ export default function MesCartesPage() {
       });
     } catch { /* on nettoie quand même */ }
 
-    // Vider tout le localStorage wallio_* de ce téléphone
+    // Vider tout le localStorage wallio_*
     const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith("wallio_"));
     keysToRemove.forEach(k => localStorage.removeItem(k));
+    // Vider le cookie partagé PWA↔Safari
+    document.cookie = "wallio_p=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
 
     unsubRef.current?.();
     unsubRef.current = null;
