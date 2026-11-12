@@ -514,6 +514,10 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
   const [emailInput, setEmailInput] = useState("");
   const [emailSending, setEmailSending] = useState(false);
   const [emailDone, setEmailDone] = useState(false);
+  const [pinExists, setPinExists] = useState<boolean | null>(null);
+  const [pinPromptInput, setPinPromptInput] = useState("");
+  const [pinPromptSending, setPinPromptSending] = useState(false);
+  const [pinPromptDone, setPinPromptDone] = useState(false);
 
   const isChoixRequis = result.type === "choix_requis";
 
@@ -521,9 +525,9 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
     if (telephone) {
       getDocs(query(collection(db, "clients"), where("telephone", "==", telephone)))
         .then(snap => {
-          const found = snap.docs.some(d => !!(d.data().email));
-          setEmailExists(found);
-        }).catch(() => setEmailExists(true)); // en cas d'erreur, on masque le prompt
+          setEmailExists(snap.docs.some(d => !!(d.data().email)));
+          setPinExists(snap.docs.some(d => !!(d.data().pin_hash)));
+        }).catch(() => { setEmailExists(true); setPinExists(true); });
     }
   }, [telephone]);
 
@@ -943,6 +947,46 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
           </div>
         )}
 
+        {/* Prompt PIN — uniquement si email déjà renseigné et pas de PIN */}
+        {(isOk || isRecompense) && emailExists !== false && pinExists === false && !pinPromptDone && (
+          <div className="mt-5 rounded-2xl p-4" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.14)" }}>
+            <p className="text-[13px] font-semibold mb-0.5" style={{ color: FG_MAIN }}>Sécurisez votre compte</p>
+            <p className="text-[11px] mb-3" style={{ color: FG_SEC }}>Créez un code PIN à 4 chiffres pour accéder à vos cartes depuis n&apos;importe quel appareil.</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+                placeholder="••••" value={pinPromptInput}
+                onChange={e => setPinPromptInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                style={{ flex: 1, padding: "9px 12px", borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 20, outline: "none", color: FG_MAIN, background: BG_CARD, textAlign: "center", letterSpacing: "0.5em", fontWeight: 700 }} />
+              <button
+                disabled={pinPromptInput.length !== 4 || pinPromptSending}
+                onClick={async () => {
+                  if (pinPromptInput.length !== 4 || !telephone) return;
+                  setPinPromptSending(true);
+                  try {
+                    await fetch("/api/client/set-pin", {
+                      method: "POST", headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ telephone, pin: pinPromptInput }),
+                    });
+                    setPinPromptDone(true);
+                  } catch { /* silent */ }
+                  finally { setPinPromptSending(false); }
+                }}
+                style={{ padding: "9px 14px", borderRadius: 10, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: pinPromptInput.length !== 4 || pinPromptSending ? 0.5 : 1, flexShrink: 0 }}>
+                {pinPromptSending ? "…" : "OK"}
+              </button>
+            </div>
+          </div>
+        )}
+        {pinPromptDone && (
+          <div className="mt-4 rounded-2xl py-2.5 px-4 flex items-center gap-2"
+            style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.18)" }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <p className="text-[12px] font-medium" style={{ color: "#34C759" }}>Code PIN créé !</p>
+          </div>
+        )}
+
         <a href={`/preferences/${walletId}`} className="block mt-6 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
           Gérer mes notifications
         </a>
@@ -1154,6 +1198,7 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
+  const [pin, setPin] = useState("");
   const [indicatif, setIndicatif] = useState(PAYS[0]);
   const [numLocal, setNumLocal] = useState("");
   const [dateJ, setDateJ] = useState("");
@@ -1191,6 +1236,12 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
         fetch("/api/send-welcome-email", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email.trim(), prenom, marchandNom: marchand.nom, walletId, mode: "inscription" }),
+        }).catch(() => {});
+      }
+      if (pin) {
+        fetch("/api/client/set-pin", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telephone, pin }),
         }).catch(() => {});
       }
       onSuccess({
@@ -1279,6 +1330,13 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
               autoComplete="email"
               className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-colors"
               style={inputStyle}
+              onFocus={e => (e.target.style.borderColor = ACCENT)}
+              onBlur={e => (e.target.style.borderColor = BORDER)} />
+            <input type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+              placeholder="Code PIN à 4 chiffres" required value={pin}
+              onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-colors"
+              style={{ ...inputStyle, textAlign: "center", letterSpacing: "0.5em", fontWeight: 700 }}
               onFocus={e => (e.target.style.borderColor = ACCENT)}
               onBlur={e => (e.target.style.borderColor = BORDER)} />
 

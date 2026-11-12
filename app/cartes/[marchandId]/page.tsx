@@ -243,6 +243,7 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
+  const [pin, setPin] = useState("");
   const [indicatif, setIndicatif] = useState(PAYS[0]);
   const [numLocal, setNumLocal] = useState("");
   const [dateJ, setDateJ] = useState("");
@@ -273,6 +274,12 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
         fetch("/api/send-welcome-email", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email.trim(), prenom, marchandNom: marchand.nom, walletId, mode: "inscription" }),
+        }).catch(() => {});
+      }
+      if (pin) {
+        fetch("/api/client/set-pin", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telephone, pin }),
         }).catch(() => {});
       }
       onSuccess({ id: clientId, prenom, nom, telephone, date_naissance, wallet_id: walletId, marchand_id: marchand.id, tampons: 0 }, true);
@@ -331,6 +338,13 @@ function InscriptionForm({ marchand, onSuccess, onRecuperation }: {
               onChange={e => setEmail(e.target.value)} autoComplete="email"
               className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none"
               style={inputStyle}
+              onFocus={e => (e.target.style.borderColor = ACCENT)}
+              onBlur={e => (e.target.style.borderColor = BORDER)} />
+            <input type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+              placeholder="Code PIN à 4 chiffres" required value={pin}
+              onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none"
+              style={{ ...inputStyle, textAlign: "center", letterSpacing: "0.5em", fontWeight: 700 }}
               onFocus={e => (e.target.style.borderColor = ACCENT)}
               onBlur={e => (e.target.style.borderColor = BORDER)} />
 

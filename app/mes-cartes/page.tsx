@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone, setClientEmail } from "@/lib/loyalty";
 import InstallBanner from "@/components/InstallBanner";
@@ -48,10 +48,11 @@ interface MarchandDiscover {
   ville?: string;
 }
 
-const PHONE_KEY   = "wallio_client_phone";
-const PRENOM_KEY  = "wallio_client_prenom";
-const NOM_KEY     = "wallio_client_nom";
-const DOB_KEY     = "wallio_client_dob";
+const PHONE_KEY    = "wallio_client_phone";
+const VERIFIED_KEY = "wallio_client_verified";
+const PRENOM_KEY   = "wallio_client_prenom";
+const NOM_KEY      = "wallio_client_nom";
+const DOB_KEY      = "wallio_client_dob";
 
 const PAYS = [
   { code: "+212", flag: "🇲🇦", label: "Maroc" },
@@ -71,10 +72,13 @@ const PAYS = [
 
 export default function MesCartesPage() {
   const { t } = useLang();
-  const [step, setStep]         = useState<"loading"|"login"|"main">(() => {
+  const [step, setStep]         = useState<"loading"|"login"|"pin"|"create_pin"|"main">(() => {
     if (typeof window !== "undefined" && !localStorage.getItem(PHONE_KEY)) return "login";
     return "loading";
   });
+  const [pinInput, setPinInput]   = useState("");
+  const [pinError, setPinError]   = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
   const [tab, setTab]           = useState<"cartes"|"messages"|"decouvrir">("cartes");
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
@@ -114,11 +118,22 @@ export default function MesCartesPage() {
     });
   }
 
+  async function checkPinStep(telephone: string) {
+    try {
+      const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", telephone)));
+      if (snap.empty) { localStorage.removeItem(PHONE_KEY); setStep("login"); return; }
+      const hasPinHash = snap.docs.some((d: import("firebase/firestore").QueryDocumentSnapshot) => !!(d.data().pin_hash));
+      setStep(hasPinHash ? "pin" : "create_pin");
+    } catch { setStep("pin"); }
+  }
+
   useEffect(() => {
     const forceLogin = new URLSearchParams(window.location.search).get("login") === "1";
     if (forceLogin) { setStep("login"); return; }
     const saved = localStorage.getItem(PHONE_KEY);
-    if (saved) { setPhone(saved); loadCards(saved); }
+    const verified = localStorage.getItem(VERIFIED_KEY);
+    if (saved && verified === "1") { setPhone(saved); loadCards(saved); }
+    else if (saved) { setPhone(saved); checkPinStep(saved); }
     else setStep("login");
     const timeout = setTimeout(() => setStep(s => s === "loading" ? "login" : s), 8000);
     return () => { clearTimeout(timeout); unsubRef.current?.(); unsubMerchantsRef.current?.(); };
@@ -237,7 +252,48 @@ export default function MesCartesPage() {
     if (!local) return;
     const full = `${countryCode}${local}`;
     setPhone(full); localStorage.setItem(PHONE_KEY, full);
-    await loadCards(full);
+    setPinLoading(true);
+    await checkPinStep(full);
+    setPinLoading(false);
+  }
+
+  async function handleVerifyPin(e: React.FormEvent) {
+    e.preventDefault();
+    if (pinInput.length !== 4 || !phone) return;
+    setPinLoading(true); setPinError("");
+    try {
+      const res = await fetch("/api/client/verify-pin", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telephone: phone, pin: pinInput }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        localStorage.setItem(VERIFIED_KEY, "1");
+        await loadCards(phone);
+      } else {
+        setPinError("Code incorrect. Réessayez.");
+        setPinInput("");
+      }
+    } catch { setPinError("Erreur. Réessayez."); }
+    finally { setPinLoading(false); }
+  }
+
+  async function handleCreatePin(e: React.FormEvent) {
+    e.preventDefault();
+    if (pinInput.length !== 4 || !phone) return;
+    setPinLoading(true); setPinError("");
+    try {
+      const res = await fetch("/api/client/set-pin", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telephone: phone, pin: pinInput }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        localStorage.setItem(VERIFIED_KEY, "1");
+        await loadCards(phone);
+      } else { setPinError("Erreur. Réessayez."); }
+    } catch { setPinError("Erreur. Réessayez."); }
+    finally { setPinLoading(false); }
   }
 
   async function rejoindre(marchand: MarchandDiscover) {
@@ -309,7 +365,8 @@ export default function MesCartesPage() {
     unsubRef.current?.();
     unsubRef.current = null;
     localStorage.removeItem(PHONE_KEY);
-    setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom(""); setPhoneInput(""); setNotFound(false); setStep("login");
+    localStorage.removeItem(VERIFIED_KEY);
+    setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom(""); setPhoneInput(""); setNotFound(false); setPinInput(""); setPinError(""); setStep("login");
   }
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -328,9 +385,10 @@ export default function MesCartesPage() {
       });
     } catch { /* on nettoie quand même */ }
 
-    // Vider tout le localStorage wallio_*
+    // Vider tout le localStorage wallio_* + verified
     const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith("wallio_"));
     keysToRemove.forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem(VERIFIED_KEY);
     // Vider le cookie partagé PWA↔Safari
     document.cookie = "wallio_p=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
 
@@ -354,6 +412,77 @@ export default function MesCartesPage() {
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </main>
+  );
+
+  // ── PIN ────────────────────────────────────────────────────────────
+  const pinScreen = (title: string, subtitle: string, btnLabel: string, onSubmit: (e: React.FormEvent) => void) => (
+    <main style={bg}>
+      <div style={{ padding: "20px 20px 0", maxWidth: 430, margin: "0 auto", width: "100%" }}>
+        <Header />
+      </div>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 24px 48px" }}>
+        <div style={{ maxWidth: 390, width: "100%", margin: "0 auto" }}>
+          <div style={{ ...glass, padding: "32px 28px", borderRadius: 28, marginBottom: 16 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 16, background: "linear-gradient(135deg,rgba(91,124,250,0.12),rgba(124,91,250,0.12))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+            </div>
+            <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.5, color: "#1C2333", marginBottom: 6 }}>{title}</h1>
+            <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 28, lineHeight: 1.55 }}>{subtitle}</p>
+            <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <input
+                type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+                placeholder="••••" value={pinInput}
+                onChange={e => setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                autoFocus
+                style={{ ...input, textAlign: "center", fontSize: 28, letterSpacing: "0.6em", fontWeight: 700 }}
+                onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
+                onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
+              />
+              {pinError && <p style={{ fontSize: 13, color: "#FF453A", textAlign: "center" }}>{pinError}</p>}
+              <button type="submit" disabled={pinInput.length !== 4 || pinLoading} style={{
+                padding: "15px", borderRadius: 16, border: "none",
+                cursor: pinInput.length === 4 && !pinLoading ? "pointer" : "not-allowed",
+                background: pinInput.length === 4 && !pinLoading ? "linear-gradient(135deg,#5B7CFA,#7C5BFA)" : "rgba(142,155,181,0.15)",
+                color: pinInput.length === 4 && !pinLoading ? "white" : "#8E9BB5",
+                fontSize: 15, fontWeight: 600,
+                boxShadow: pinInput.length === 4 && !pinLoading ? "0 8px 24px rgba(91,124,250,0.35)" : "none",
+                transition: "all 0.2s",
+              }}>
+                {pinLoading ? "…" : btnLabel}
+              </button>
+            </form>
+            {step === "pin" && (
+              <p style={{ fontSize: 13, color: "#8E9BB5", textAlign: "center", marginTop: 16 }}>
+                Code oublié ?{" "}
+                <a href="mailto:hello@walliocard.com" style={{ color: "#5B7CFA", fontWeight: 600, textDecoration: "none" }}>
+                  Contactez-nous
+                </a>
+              </p>
+            )}
+          </div>
+          <button onClick={() => { setPhone(""); setPinInput(""); setPinError(""); localStorage.removeItem(PHONE_KEY); setStep("login"); }}
+            style={{ display: "block", width: "100%", textAlign: "center", fontSize: 13, color: "#8E9BB5", background: "none", border: "none", cursor: "pointer", padding: "8px 0" }}>
+            ← Changer de numéro
+          </button>
+        </div>
+      </div>
+    </main>
+  );
+
+  if (step === "pin") return pinScreen(
+    "Votre code PIN",
+    `Entrez votre code à 4 chiffres pour accéder à vos cartes.`,
+    "Continuer",
+    handleVerifyPin
+  );
+
+  if (step === "create_pin") return pinScreen(
+    "Créez votre code PIN",
+    "Choisissez un code à 4 chiffres pour sécuriser votre compte.",
+    "Créer mon code",
+    handleCreatePin
   );
 
   // ── Login ──────────────────────────────────────────────────────────
