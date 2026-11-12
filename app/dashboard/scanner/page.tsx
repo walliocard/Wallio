@@ -3,8 +3,8 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
-import { getClientByTelephone, formatTemps, type Client } from "@/lib/loyalty";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { getClientByTelephone, formatTemps, setClientEmail, type Client } from "@/lib/loyalty";
+import { collection, query, where, getDocs, getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
@@ -40,6 +40,12 @@ export default function ScannerPage() {
   const [validating, setValidating] = useState(false);
   const [validatingAnniv, setValidatingAnniv] = useState(false);
   const [enregistrantChoix, setEnregistrantChoix] = useState(false);
+  const [clientHasNoEmail, setClientHasNoEmail] = useState<boolean | null>(null);
+  const [clientEmailInput, setClientEmailInput] = useState("");
+  const [clientEmailSaving, setClientEmailSaving] = useState(false);
+  const [clientEmailSaved, setClientEmailSaved] = useState(false);
+  const [clientTelForEmail, setClientTelForEmail] = useState("");
+  const [clientPrenomForEmail, setClientPrenomForEmail] = useState("");
 
   // Téléphone
   const [phone, setPhone] = useState("");
@@ -116,6 +122,17 @@ export default function ScannerPage() {
       });
       const data = await res.json();
       setResult(data);
+      setClientHasNoEmail(null); setClientEmailInput(""); setClientEmailSaved(false);
+      if (data.clientId && (data.type === "ok" || data.type === "recompense")) {
+        getDoc(doc(db, "clients", data.clientId)).then(snap => {
+          if (snap.exists()) {
+            const d = snap.data();
+            setClientHasNoEmail(!d.email);
+            setClientTelForEmail(d.telephone || "");
+            setClientPrenomForEmail(d.prenom || "");
+          }
+        }).catch(() => {});
+      }
       if (data.type === "recompense") showToast(`Récompense débloquée — ${data.nom_recompense}`, "success");
       if (data.type === "choix_requis") showToast(`Choix disponible — ${data.prenom}${data.birthday ? " · Joyeux anniversaire !" : ""}`, "info");
     } catch { setResult({ type: "not_found" }); }
@@ -396,6 +413,46 @@ export default function ScannerPage() {
                     </div>
                     <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Client non reconnu</p>
                   </>)}
+                  {/* Prompt email si client sans email */}
+                  {(result.type === "ok" || result.type === "recompense") && clientHasNoEmail === true && !clientEmailSaved && (
+                    <div className="w-full mt-1 p-3 rounded-2xl" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+                      <p className="text-[12px] font-semibold mb-2 text-left" style={{ color: "var(--fg-secondary)" }}>
+                        {clientPrenomForEmail} n&apos;a pas d&apos;email — ajouter ?
+                      </p>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <input type="email" placeholder="email@exemple.com" value={clientEmailInput}
+                          onChange={e => setClientEmailInput(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-xl text-[13px] outline-none"
+                          style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }} />
+                        <button disabled={!clientEmailInput.includes("@") || clientEmailSaving}
+                          onClick={async () => {
+                            if (!clientEmailInput.includes("@")) return;
+                            setClientEmailSaving(true);
+                            try {
+                              if (clientTelForEmail) await setClientEmail(clientTelForEmail, clientEmailInput.trim());
+                              fetch("/api/send-welcome-email", {
+                                method: "POST", headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ email: clientEmailInput.trim(), prenom: clientPrenomForEmail, walletId: result.walletId, mode: "inscription" }),
+                              }).catch(() => {});
+                              setClientEmailSaved(true);
+                            } catch { /* silent */ }
+                            finally { setClientEmailSaving(false); }
+                          }}
+                          className="px-3 py-2 rounded-xl text-[12px] font-semibold text-white flex-shrink-0"
+                          style={{ background: clientEmailInput.includes("@") && !clientEmailSaving ? "var(--accent)" : "var(--border)", border: "none", cursor: "pointer", opacity: clientEmailInput.includes("@") && !clientEmailSaving ? 1 : 0.5 }}>
+                          {clientEmailSaving ? "…" : "OK"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {clientEmailSaved && (
+                    <div className="w-full mt-1 py-2 px-3 rounded-xl flex items-center gap-2"
+                      style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.2)" }}>
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <p className="text-[12px] font-medium" style={{ color: "#34C759" }}>Email ajouté !</p>
+                    </div>
+                  )}
+
                   <button onClick={() => { setResult(null); startCamera(); }} className="w-full py-3 rounded-2xl font-semibold text-white mt-1" style={{ background: "var(--accent)" }}>
                     Scanner un autre client
                   </button>
