@@ -70,8 +70,6 @@ export const db = isNew
 // qui n'existe pas sur Vercel et bloque Firebase Auth init en Safari
 const _persistence = typeof window !== "undefined" && isPrivateMode()
   ? inMemoryPersistence
-  : typeof window !== "undefined" && isIOS()
-  ? browserSessionPersistence
   : browserLocalPersistence;
 
 export const auth = isNew
