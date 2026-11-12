@@ -240,7 +240,10 @@ export async function ajouterTampon(
       client_id: client.id,
       client_prenom: client.prenom,
       client_nom: client.nom || "",
+      tampons_apres: newTampons,
+      recompense: true,
       type: "auto_validation",
+      added_by: "Client",
       created_at: serverTimestamp(),
     }).catch(() => {});
 

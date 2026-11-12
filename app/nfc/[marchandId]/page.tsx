@@ -9,7 +9,7 @@ import {
   formatTemps, WALLET_KEY, setClientEmail,
   type Marchand, type Client, type TamponResult,
 } from "@/lib/loyalty";
-import { doc, updateDoc, getDocs, getDocsFromServer, collection, query, where } from "firebase/firestore";
+import { doc, updateDoc, getDocs, getDocsFromServer, collection, query, where, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -73,11 +73,26 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     return () => clearInterval(id);
   }, [choixRequisKey]); // eslint-disable-line
 
+  function logNfcClient(client: Client, marchand: Marchand, result: TamponResult) {
+    if (result.type !== "ok" && result.type !== "recompense") return;
+    addDoc(collection(db, "marchands", marchand.id, "historique"), {
+      client_id: client.id,
+      client_prenom: client.prenom,
+      client_nom: client.nom || "",
+      tampons_apres: (result as Record<string, unknown>).tampons ?? client.tampons,
+      recompense: result.type === "recompense",
+      type: "nfc_client",
+      added_by: "Client",
+      created_at: serverTimestamp(),
+    }).catch(() => {});
+  }
+
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
     setScreen({ type: "result", result, client, marchand });
     try { sessionStorage.setItem(`nfc_result_${marchand.id}`, JSON.stringify({ result, client })); } catch {}
     try { localStorage.setItem(`nfc_dead_${marchand.id}`, JSON.stringify({ ts: Date.now(), type: "result", result, client })); } catch {}
+    logNfcClient(client, marchand, result);
     if (result.type === "ok" || result.type === "recompense" || result.type === "choix_requis") {
       try { navigator.vibrate(result.type === "recompense" ? [80, 60, 120] : result.type === "choix_requis" ? [60, 40, 60] : 40); } catch {}
       const body = JSON.stringify({ walletId: client.wallet_id });
@@ -226,6 +241,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             setScreen({ type: "carte", client: { ...newClient, tampons: 1 }, marchand, parraine: true });
           } else {
             const result = await ajouterTampon(newClient, marchand);
+            logNfcClient(newClient, marchand, result);
             if (result.type === "ok" || result.type === "recompense") {
               const body = JSON.stringify({ walletId: newWalletId });
               const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
@@ -352,6 +368,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           try { localStorage.setItem(`nfc_dead_${screen.marchand.id}`, JSON.stringify({ ts: Date.now(), type: "carte", client: parrainClient, parraine: true })); } catch {}
         } else {
           const result = await ajouterTampon(client, screen.marchand);
+          logNfcClient(client, screen.marchand, result);
           if (result.type === "ok" || result.type === "recompense" || result.type === "choix_requis") {
             const body = JSON.stringify({ walletId: client.wallet_id });
             const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
