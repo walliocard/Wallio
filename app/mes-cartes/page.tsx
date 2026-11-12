@@ -142,7 +142,8 @@ export default function MesCartesPage() {
     else setStep("login");
     const timeout = setTimeout(() => setStep(s => s === "loading" ? "login" : s), 8000);
     document.body.style.overscrollBehavior = "auto";
-    return () => { clearTimeout(timeout); unsubRef.current?.(); unsubMerchantsRef.current?.(); document.body.style.overscrollBehavior = ""; };
+    document.documentElement.style.overscrollBehavior = "auto";
+    return () => { clearTimeout(timeout); unsubRef.current?.(); unsubMerchantsRef.current?.(); document.body.style.overscrollBehavior = ""; document.documentElement.style.overscrollBehavior = ""; };
   }, []);
 
   async function loadCards(fullPhone: string) {
