@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { collection, query, where, onSnapshot, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { creerClient, getClientByTelephone } from "@/lib/loyalty";
+import { creerClient, getClientByTelephone, setClientEmail } from "@/lib/loyalty";
 import InstallBanner from "@/components/InstallBanner";
 import PasskeyRegisterBanner from "@/components/PasskeyRegisterBanner";
 import { useLang } from "@/lib/lang-context";
@@ -83,6 +83,10 @@ export default function MesCartesPage() {
   const [nom, setNom]           = useState("");
   const [dob, setDob]           = useState("");
   const [cards, setCards]       = useState<CardData[]>([]);
+  const [clientEmail, setClientEmail2] = useState<string | null>(null); // null = pas encore chargé, "" = pas d'email
+  const [emailInput, setEmailInput] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailDone, setEmailDone] = useState(false);
   const [merchants, setMerchants] = useState<MarchandDiscover[]>([]);
   const [fetching, setFetching] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -201,6 +205,10 @@ export default function MesCartesPage() {
       setPrenom(p); setNom(n); setDob(d);
       if (p) { localStorage.setItem(PRENOM_KEY, p); localStorage.setItem(NOM_KEY, n); if (d) localStorage.setItem(DOB_KEY, d); }
       setCards(results);
+
+      // Détecter si un email existe déjà sur l'un des docs client
+      const foundEmail = snap.docs.map(d => d.data().email as string | undefined).find(e => !!e) ?? "";
+      setClientEmail2(foundEmail);
 
       // Agrège toutes les notifs de tous les marchands, triées par date desc
       const allNotifs: ClientNotif[] = [];
@@ -445,6 +453,43 @@ export default function MesCartesPage() {
       <div style={{ padding: "0 20px 48px", maxWidth: 430, margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", gap: 14 }}>
         <InstallBanner />
         {phone && <PasskeyRegisterBanner telephone={phone} />}
+
+        {/* ── Prompt email — affiché une seule fois si pas d'email ── */}
+        {phone && clientEmail === "" && cards.length > 0 && !emailDone && (
+          <div style={{ background: "white", borderRadius: 20, padding: "16px 18px", border: "1px solid rgba(99,102,241,0.14)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "#1C2333", marginBottom: 4 }}>Recevez votre carte par email</p>
+            <p style={{ fontSize: 12, color: "#6E7A95", marginBottom: 12 }}>Entrez votre email pour recevoir un lien vers vos cartes.</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="email" placeholder="votre@email.com" value={emailInput}
+                onChange={e => setEmailInput(e.target.value)}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(99,102,241,0.2)", fontSize: 14, outline: "none", color: "#1C2333", background: "#F8F9FF" }} />
+              <button
+                disabled={!emailInput.includes("@") || emailSending}
+                onClick={async () => {
+                  if (!emailInput.includes("@") || !phone) return;
+                  setEmailSending(true);
+                  try {
+                    await setClientEmail(phone, emailInput.trim());
+                    fetch("/api/send-welcome-email", {
+                      method: "POST", headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ email: emailInput.trim(), prenom, walletId: cards[0]?.walletId, mode: "mes-cartes" }),
+                    }).catch(() => {});
+                    setEmailDone(true);
+                  } catch { /* silent */ }
+                  finally { setEmailSending(false); }
+                }}
+                style={{ padding: "10px 16px", borderRadius: 12, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: !emailInput.includes("@") || emailSending ? 0.5 : 1 }}>
+                {emailSending ? "…" : "Envoyer"}
+              </button>
+            </div>
+          </div>
+        )}
+        {emailDone && (
+          <div style={{ background: "rgba(52,199,89,0.08)", borderRadius: 16, padding: "12px 16px", border: "1px solid rgba(52,199,89,0.2)" }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#1C7A37" }}>Email envoyé !</p>
+          </div>
+        )}
 
         {/* ── Tab Mes cartes ── */}
         {tab === "cartes" && (

@@ -1098,6 +1098,7 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
 }) {
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
+  const [email, setEmail] = useState("");
   const [indicatif, setIndicatif] = useState(PAYS[0]);
   const [numLocal, setNumLocal] = useState("");
   const [dateJ, setDateJ] = useState("");
@@ -1129,7 +1130,14 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
       const { clientId, walletId } = await creerClient({
         prenom, nom, telephone, date_naissance, marchand_id: marchand.id,
         parrain_wallet_id: parrainWalletId,
+        email: email.trim() || undefined,
       });
+      if (email.trim()) {
+        fetch("/api/send-welcome-email", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), prenom, marchandNom: marchand.nom, walletId, mode: "inscription" }),
+        }).catch(() => {});
+      }
       onSuccess({
         id: clientId, prenom, nom, telephone: `${indicatif.code}${numPropre}`,
         date_naissance, wallet_id: walletId, marchand_id: marchand.id,
@@ -1210,6 +1218,14 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
             </div>
 
             {error && <p className="text-[13px] px-1" style={{ color: "#FF453A" }}>{error}</p>}
+
+            <input type="email" placeholder="Email (optionnel)" value={email}
+              onChange={e => setEmail(e.target.value)}
+              autoComplete="email"
+              className="w-full px-4 py-3.5 rounded-2xl text-[15px] outline-none transition-colors"
+              style={inputStyle}
+              onFocus={e => (e.target.style.borderColor = ACCENT)}
+              onBlur={e => (e.target.style.borderColor = BORDER)} />
 
             <label className="flex items-center gap-3 px-1 py-1 cursor-pointer select-none">
               <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)}

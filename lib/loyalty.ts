@@ -132,6 +132,12 @@ export async function getWalletClientByTelephone(telephone: string, marchandId: 
   return clients.find(c => c.apns_push_token || c.wallet_type) ?? null;
 }
 
+export async function setClientEmail(telephone: string, email: string): Promise<void> {
+  const q = query(collection(db, "clients"), where("telephone", "==", telephone));
+  const snap = await getDocs(q);
+  await Promise.all(snap.docs.map(d => updateDoc(d.ref, { email })));
+}
+
 export async function creerClient(data: {
   prenom: string;
   nom: string;
@@ -139,8 +145,9 @@ export async function creerClient(data: {
   date_naissance: string;
   marchand_id: string;
   parrain_wallet_id?: string;
+  email?: string;
 }): Promise<{ clientId: string; walletId: string }> {
-  const { parrain_wallet_id, ...clientData } = data;
+  const { parrain_wallet_id, email, ...clientData } = data;
   const walletId = uuid();
   const ref = doc(collection(db, "clients"));
   const docData: Record<string, unknown> = {
@@ -151,6 +158,7 @@ export async function creerClient(data: {
     date_inscription: serverTimestamp(),
     // derniere_visite intentionnellement absent : posé par ajouterTampon() au 1er vrai scan
   };
+  if (email) docData.email = email;
   if (parrain_wallet_id) {
     docData.tampons = 1;          // tampon de bienvenue pour le filleul
     docData.parrain_id = parrain_wallet_id;
