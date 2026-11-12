@@ -11,7 +11,7 @@ interface Entry {
   client_nom: string;
   tampons_apres: number;
   recompense: boolean;
-  type: "qr_gerant" | "qr_equipe" | "manuel_equipe" | "nfc_client" | "auto_validation";
+  type: "qr_gerant" | "qr_equipe" | "manuel_equipe" | "nfc_client" | "auto_validation" | "anti_doublon";
   added_by: string;
   created_at: string | null;
 }
@@ -22,6 +22,7 @@ function TypeBadge({ type }: { type: string }) {
   if (type === "qr_gerant") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(139,92,246,0.10)", color: "#8B5CF6" }}>QR Patron</span>;
   if (type === "nfc_client") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(0,199,190,0.10)", color: "#00C7BE" }}>NFC Client</span>;
   if (type === "auto_validation") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(52,199,89,0.10)", color: "#34C759" }}>Auto</span>;
+  if (type === "anti_doublon") return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(255,59,48,0.10)", color: "#FF3B30" }}>Refusé</span>;
   return <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: "rgba(142,142,147,0.10)", color: "#8E8E93" }}>—</span>;
 }
 
@@ -29,7 +30,7 @@ export default function HistoriquePage() {
   const { user, marchand } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"tout" | "qr_gerant" | "qr_equipe" | "manuel_equipe" | "nfc_client" | "auto_validation">("tout");
+  const [filter, setFilter] = useState<"tout" | "qr_gerant" | "qr_equipe" | "manuel_equipe" | "nfc_client" | "auto_validation" | "anti_doublon">("tout");
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,7 +80,7 @@ export default function HistoriquePage() {
 
       {/* Filtres */}
       <div className="flex gap-2 mb-5 no-print">
-        {([["tout", "Tout"], ["qr_gerant", "Patron"], ["qr_equipe", "Équipe"], ["manuel_equipe", "Manuels"], ["nfc_client", "NFC Client"], ["auto_validation", "Auto"]] as const).map(([val, label]) => (
+        {([["tout", "Tout"], ["qr_gerant", "Patron"], ["qr_equipe", "Équipe"], ["manuel_equipe", "Manuels"], ["nfc_client", "NFC Client"], ["auto_validation", "Auto"], ["anti_doublon", "Refusés"]] as const).map(([val, label]) => (
           <button key={val} onClick={() => setFilter(val)}
             className="px-3 py-1.5 rounded-xl text-[13px] font-semibold transition-all"
             style={{ background: filter === val ? "var(--accent)" : "var(--glass-bg)", color: filter === val ? "white" : "var(--fg-secondary)", border: `1px solid ${filter === val ? "var(--accent)" : "var(--border)"}` }}>

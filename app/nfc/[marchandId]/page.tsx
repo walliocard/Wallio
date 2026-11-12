@@ -74,14 +74,14 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   }, [choixRequisKey]); // eslint-disable-line
 
   function logNfcClient(client: Client, marchand: Marchand, result: TamponResult) {
-    if (result.type !== "ok" && result.type !== "recompense") return;
+    if (result.type !== "ok" && result.type !== "recompense" && result.type !== "anti_doublon") return;
     addDoc(collection(db, "marchands", marchand.id, "historique"), {
       client_id: client.id,
       client_prenom: client.prenom,
       client_nom: client.nom || "",
-      tampons_apres: (result as Record<string, unknown>).tampons ?? client.tampons,
+      tampons_apres: result.type === "anti_doublon" ? client.tampons : ((result as Record<string, unknown>).tampons ?? client.tampons),
       recompense: result.type === "recompense",
-      type: "nfc_client",
+      type: result.type === "anti_doublon" ? "anti_doublon" : "nfc_client",
       added_by: "Client",
       created_at: serverTimestamp(),
     }).catch(() => {});

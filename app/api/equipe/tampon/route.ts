@@ -43,6 +43,11 @@ export async function POST(req: Request) {
       const dvf = clientDoc.data()?.derniere_visite_force as { seconds: number } | undefined;
       const periodeSecondes = marchand.anti_doublon_delai ?? 86400;
       if (dvf && (Date.now() / 1000 - dvf.seconds) < periodeSecondes) {
+        adminDb().collection("marchands").doc(session.marchand_id).collection("historique").add({
+          client_id: client.id, client_prenom: client.prenom, client_nom: client.nom || "",
+          tampons_apres: client.tampons, recompense: false,
+          type: "anti_doublon", added_by: session.prenom, created_at: Timestamp.now(),
+        }).catch(() => {});
         return Response.json({ type: "anti_doublon_limite", prenom: client.prenom, secondes_restantes: Math.ceil(periodeSecondes - (Date.now() / 1000 - dvf.seconds)) });
       }
       await adminDb().collection("clients").doc(client.id).update({ derniere_visite_force: Timestamp.now() });
@@ -100,6 +105,14 @@ export async function POST(req: Request) {
           update.scans_manual_total = FieldValue.increment(1);
         }
         membreRef.update(update).catch(() => {});
+      }).catch(() => {});
+    }
+
+    if (result.type === "anti_doublon") {
+      adminDb().collection("marchands").doc(session.marchand_id).collection("historique").add({
+        client_id: client.id, client_prenom: client.prenom, client_nom: client.nom || "",
+        tampons_apres: client.tampons, recompense: false,
+        type: "anti_doublon", added_by: session.prenom, created_at: Timestamp.now(),
       }).catch(() => {});
     }
 

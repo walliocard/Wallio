@@ -42,6 +42,20 @@ export async function POST(req: Request) {
       }).catch(() => {});
     }
 
+    if (result.type === "anti_doublon") {
+      const { Timestamp: TS2 } = await import("firebase-admin/firestore");
+      adminDb().collection("marchands").doc(marchandId).collection("historique").add({
+        client_id: client.id,
+        client_prenom: client.prenom,
+        client_nom: client.nom || "",
+        tampons_apres: client.tampons,
+        recompense: false,
+        type: "anti_doublon",
+        added_by: marchand.nom,
+        created_at: TS2.now(),
+      }).catch(() => {});
+    }
+
     const mn = marchand as Record<string, unknown>;
     const r = result as Record<string, unknown>;
     return Response.json({
