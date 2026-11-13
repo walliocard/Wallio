@@ -1308,7 +1308,7 @@ export default function AdminPage() {
             <div>
               <h1 style={{ fontSize: 21, fontWeight: 600, color: T.label, letterSpacing: "-0.3px", lineHeight: 1 }}>Administration</h1>
               <p style={{ fontSize: 13, color: T.sec, marginTop: 4 }}>
-                <span style={{ color: T.actifFg, fontWeight: 500 }}>{actifs}</span> actif{actifs !== 1 ? "s" : ""} · {marchands.length} au total
+                <span style={{ color: T.actifFg, fontWeight: 500 }}>{actifs}</span> actif{actifs !== 1 ? "s" : ""} · {marchands.filter(reel).length} au total
               </p>
             </div>
           </div>
@@ -1338,7 +1338,7 @@ export default function AdminPage() {
           {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }} className="md:grid-cols-3">
             {[
-              { label: "Marchands total",  value: String(marchands.length),                        color: T.label },
+              { label: "Marchands total",  value: String(marchands.filter(reel).length),           color: T.label },
               { label: "Actifs",           value: String(actifs),                                  color: T.actifFg },
               { label: "En attente",       value: String(marchands.filter(m => m.abonnement_statut === "en_attente" && reel(m)).length), color: "#7A4A00" },
               { label: "Clients total",    value: totalClients > 0 ? totalClients.toLocaleString("fr-FR") : "…", color: T.label },
