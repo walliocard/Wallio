@@ -48,7 +48,7 @@ export default function InscriptionClientPage() {
     router.push("/mes-cartes");
   }
 
-  const ready = form.prenom.trim() && form.phone.trim() && form.email.trim();
+  const ready = form.prenom.trim() && form.phone.trim() && form.email.trim() && /^\d{4}$/.test(form.pin);
 
   return (
     <main style={bg}>
@@ -116,7 +116,7 @@ export default function InscriptionClientPage() {
 
               <input
                 type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
-                placeholder="Code PIN à 4 chiffres (optionnel)" value={form.pin}
+                placeholder="Code PIN à 4 chiffres" required value={form.pin}
                 onChange={e => { setPinError(""); setForm(f => ({ ...f, pin: e.target.value.replace(/\D/g, "").slice(0, 4) })); }}
                 style={{ ...input, letterSpacing: form.pin ? "0.4em" : undefined }}
                 onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
