@@ -278,11 +278,11 @@ export default function AdminPage() {
     const finSec = calcAbonnementFin(debutSec, paiementType);
     const newPaiement: Paiement = { date: Math.floor(Date.now() / 1000), type: paiementType, montant: getMontant(paiementType) };
     const paiements = [...(showPaiement.abonnement_paiements || []), newPaiement];
-    const updated = { ...showPaiement, abonnement_type: paiementType, abonnement_debut: debutSec, abonnement_fin: finSec, abonnement_paiements: paiements };
+    const updated = { ...showPaiement, abonnement_type: paiementType, abonnement_debut: debutSec, abonnement_fin: finSec, abonnement_paiements: paiements, abonnement_statut: "actif" as const };
     setMarchands(prev => prev.map(x => x.id === showPaiement.id ? updated : x));
     if (selected?.id === showPaiement.id) setSelected(updated);
     try {
-      await adminPatch(showPaiement.id, { abonnement_type: paiementType, abonnement_debut: debutSec, abonnement_fin: finSec, abonnement_paiements: paiements });
+      await adminPatch(showPaiement.id, { abonnement_type: paiementType, abonnement_debut: debutSec, abonnement_fin: finSec, abonnement_paiements: paiements, abonnement_statut: "actif" });
     } catch {
       setMarchands(prev => prev.map(x => x.id === showPaiement.id ? showPaiement : x));
       if (selected?.id === showPaiement.id) setSelected(showPaiement);
@@ -1086,10 +1086,34 @@ export default function AdminPage() {
                     {(selected.abonnement_paiements?.length ?? 0) > 0 && (
                       <div style={{ borderTop: `1px solid ${T.sep}`, padding: "10px 16px" }}>
                         <p style={{ fontSize: 11, fontWeight: 600, color: T.tert, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Derniers paiements</p>
-                        {[...(selected.abonnement_paiements || [])].reverse().slice(0, 3).map((p, i) => (
+                        {[...(selected.abonnement_paiements || [])].reverse().slice(0, 3).map((p, i, arr) => (
                           <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
                             <span style={{ fontSize: 12, color: T.sec }}>{formatDateSec(p.date)} · {ABO_LABELS[p.type]}</span>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: T.paidFg }}>{p.montant.toLocaleString("fr-FR")} DH</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: T.paidFg }}>{p.montant.toLocaleString("fr-FR")} DH</span>
+                              {i === 0 && (
+                                <button onClick={async () => {
+                                  if (!confirm("Supprimer ce paiement ?")) return;
+                                  const allPaiements = selected.abonnement_paiements || [];
+                                  const newPaiements = allPaiements.slice(0, allPaiements.length - 1);
+                                  let patch: Record<string, unknown>;
+                                  if (newPaiements.length === 0) {
+                                    patch = { abonnement_paiements: [], abonnement_debut: null, abonnement_fin: null, abonnement_type: null, abonnement_statut: "en_attente" };
+                                  } else {
+                                    const last = newPaiements[newPaiements.length - 1];
+                                    const newFin = calcAbonnementFin(last.date, last.type);
+                                    patch = { abonnement_paiements: newPaiements, abonnement_fin: newFin, abonnement_type: last.type, abonnement_statut: newFin * 1000 > Date.now() ? "actif" : "en_attente" };
+                                  }
+                                  const updated = { ...selected, ...patch };
+                                  setMarchands(prev => prev.map(x => x.id === selected.id ? updated as Marchand : x));
+                                  setSelected(updated as Marchand);
+                                  await adminPatch(selected.id, patch).catch(() => {});
+                                }}
+                                  style={{ background: "none", border: "none", cursor: "pointer", padding: "2px 4px", color: "#FF3B30", fontSize: 12, fontWeight: 600 }}>
+                                  Retirer
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1282,7 +1306,7 @@ export default function AdminPage() {
             {[
               { label: "Marchands total",  value: String(marchands.length),                        color: T.label },
               { label: "Actifs",           value: String(actifs),                                  color: T.actifFg },
-              { label: "En attente",       value: String(marchands.length - actifs),               color: "#7A4A00" },
+              { label: "En attente",       value: String(marchands.filter(m => m.abonnement_statut === "en_attente").length), color: "#7A4A00" },
               { label: "Clients total",    value: totalClients > 0 ? totalClients.toLocaleString("fr-FR") : "…", color: T.label },
               { label: "Revenus / mois",   value: `${revenus.toLocaleString("fr-FR")} DH`,         color: T.label },
               { label: "Revenu total",     value: `${revenuTotal.toLocaleString("fr-FR")} DH`,     color: T.actifFg },
