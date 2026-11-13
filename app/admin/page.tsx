@@ -13,6 +13,7 @@ type Marchand = {
   id: string; nom: string; email: string; actif: boolean;
   date_inscription?: { seconds: number }; nfc_id?: string;
   logo_url?: string; couleur_principale?: string; couleur_secondaire?: string;
+  is_test?: boolean;
   abonnement_statut?: "actif" | "en_attente" | "suspendu";
   abonnement_type?: AboType;
   abonnement_debut?: number;
@@ -878,10 +879,11 @@ export default function AdminPage() {
     </main>
   );
 
-  const actifs = marchands.filter(m => m.actif).length;
-  const aboActifs = marchands.filter(m => m.abonnement_statut === "actif").length;
+  const reel = (m: Marchand) => !m.is_test;
+  const actifs = marchands.filter(m => m.actif && reel(m)).length;
+  const aboActifs = marchands.filter(m => m.abonnement_statut === "actif" && reel(m)).length;
   const revenus = aboActifs * 349;
-  const revenuTotal = marchands.reduce((sum, m) =>
+  const revenuTotal = marchands.filter(reel).reduce((sum, m) =>
     sum + (m.abonnement_paiements ?? []).reduce((s, p) => s + (p.montant || 0), 0), 0);
   const totalClients = Object.values(clientCounts).reduce((sum, c) => sum + c, 0);
   const filtered = marchands.filter(m =>
@@ -1128,6 +1130,23 @@ export default function AdminPage() {
                 );
               })()}
 
+              <SLabel>Compte test</SLabel>
+              <div style={{ background: T.surfCard, borderRadius: 14, padding: "12px 16px", border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: T.label, marginBottom: 2 }}>Marchand test</p>
+                  <p style={{ fontSize: 12, color: T.tert }}>Exclu des stats et revenus</p>
+                </div>
+                <button onClick={async () => {
+                  const val = !selected.is_test;
+                  const updated = { ...selected, is_test: val };
+                  setMarchands(prev => prev.map(x => x.id === selected.id ? updated : x));
+                  setSelected(updated);
+                  await adminPatch(selected.id, { is_test: val }).catch(() => {});
+                }} style={{ padding: "7px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, background: selected.is_test ? "rgba(255,59,48,0.10)" : "rgba(0,122,255,0.10)", color: selected.is_test ? "#FF3B30" : "#007AFF" }}>
+                  {selected.is_test ? "Test activé" : "Marquer comme test"}
+                </button>
+              </div>
+
               <SLabel>Localisation & Contact</SLabel>
               <div style={{ background: T.surfCard, borderRadius: 14, padding: "14px 16px", border: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
                 <select value={locPays} onChange={e => { setLocPays(e.target.value); setLocVille(""); }}
@@ -1306,7 +1325,7 @@ export default function AdminPage() {
             {[
               { label: "Marchands total",  value: String(marchands.length),                        color: T.label },
               { label: "Actifs",           value: String(actifs),                                  color: T.actifFg },
-              { label: "En attente",       value: String(marchands.filter(m => m.abonnement_statut === "en_attente").length), color: "#7A4A00" },
+              { label: "En attente",       value: String(marchands.filter(m => m.abonnement_statut === "en_attente" && reel(m)).length), color: "#7A4A00" },
               { label: "Clients total",    value: totalClients > 0 ? totalClients.toLocaleString("fr-FR") : "…", color: T.label },
               { label: "Revenus / mois",   value: `${revenus.toLocaleString("fr-FR")} DH`,         color: T.label },
               { label: "Revenu total",     value: `${revenuTotal.toLocaleString("fr-FR")} DH`,     color: T.actifFg },
