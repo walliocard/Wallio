@@ -30,7 +30,7 @@ type Screen =
   | { type: "recuperation"; marchand: Marchand }
   | { type: "carte"; client: Client; marchand: Marchand; recuperation?: boolean; parraine?: boolean }
   | { type: "lien_parrainage"; marchand: Marchand }
-  | { type: "erreur"; message: string };
+  | { type: "erreur"; message: string; retryable?: boolean };
 
 function setCookiePhone(phone: string) {
   const exp = new Date();
@@ -132,7 +132,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           if (marchand) try { localStorage.setItem(CACHE_KEY, JSON.stringify({ d: marchand, ts: Date.now() })); } catch {}
         }
         if (!marchand || !marchand.actif) {
-          setScreen({ type: "erreur", message: "Ce service est temporairement indisponible." });
+          setScreen({ type: "erreur", message: "Ce service est temporairement indisponible.", retryable: false });
           return;
         }
 
@@ -279,14 +279,14 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
 
         setScreen({ type: "inscription", marchand, refParam: parrainageActif ? ref : null });
       } catch (e) {
-        setScreen({ type: "erreur", message: `Erreur de connexion. Réessayez. (${String(e).slice(0, 60)})` });
+        setScreen({ type: "erreur", message: "Problème de connexion. Vérifiez votre réseau et réessayez." });
       }
     }
     init();
   }, [marchandId, traiterTampon]);
 
   if (screen.type === "loading") return <Loading />;
-  if (screen.type === "erreur") return <Erreur message={screen.message} />;
+  if (screen.type === "erreur") return <Erreur message={screen.message} retryable={screen.retryable} />;
   if (screen.type === "result") return (
     <ResultScreen
       result={screen.result}
@@ -505,7 +505,7 @@ function Loading() {
 
 // ─── Erreur ───────────────────────────────────────────────────────────────────
 
-function Erreur({ message }: { message: string }) {
+function Erreur({ message, retryable = true }: { message: string; retryable?: boolean }) {
   return (
     <main className="min-h-screen flex items-center justify-center px-6" style={{ background: NFC_BG }}>
       <div className="text-center max-w-sm">
@@ -513,7 +513,15 @@ function Erreur({ message }: { message: string }) {
           style={{ background: "rgba(255,59,48,0.10)", border: "1.5px solid rgba(255,59,48,0.2)" }}>
           <span className="text-[24px] font-bold" style={{ color: "#FF3B30" }}>!</span>
         </div>
-        <p className="text-[17px]" style={{ color: "#3C3C43" }}>{message}</p>
+        <p className="text-[17px] font-semibold mb-2" style={{ color: "#1C1C1E" }}>{message}</p>
+        {retryable && (
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-3 rounded-2xl text-[15px] font-semibold text-white active:opacity-80 transition-opacity"
+            style={{ background: BTN_BG, boxShadow: "0 4px 20px rgba(99,102,241,0.25)" }}>
+            Réessayer
+          </button>
+        )}
       </div>
     </main>
   );
