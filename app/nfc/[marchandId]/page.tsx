@@ -351,6 +351,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     <InscriptionForm
       marchand={screen.marchand}
       parrainWalletId={screen.refParam ?? undefined}
+      onBack={() => setScreen({ type: "passkey_prompt", marchand: screen.marchand, refParam: screen.refParam })}
       onSuccess={async (client, isNew) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
         if (client.telephone)      { localStorage.setItem("wallio_client_phone", client.telephone); setCookiePhone(client.telephone); }
@@ -407,7 +408,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         setScreen({ type: "carte", client, marchand: screen.marchand, recuperation: true });
         try { localStorage.setItem(`nfc_dead_${screen.marchand.id}`, JSON.stringify({ ts: Date.now(), type: "carte", client, recuperation: true })); } catch {}
       }}
-      onBack={() => setScreen({ type: "inscription", marchand: screen.marchand, refParam: null })}
+      onBack={() => setScreen({ type: "passkey_prompt", marchand: screen.marchand, refParam: null })}
     />
   );
   if (screen.type === "lien_parrainage") return <LienParrainage marchand={screen.marchand} />;
@@ -1202,11 +1203,12 @@ function InscriptionButton({ marchand, loading, consent }: { marchand: Marchand;
   );
 }
 
-function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation }: {
+function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation, onBack }: {
   marchand: Marchand;
   parrainWalletId?: string;
   onSuccess: (client: Client, isNew: boolean) => void;
   onRecuperation: () => void;
+  onBack?: () => void;
 }) {
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
@@ -1375,6 +1377,11 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
             Récupérer mon compte
           </button>
         </p>
+        {onBack && (
+          <p className="text-center text-[13px] mt-2">
+            <button onClick={onBack} style={{ color: FG_SEC }} className="font-medium">← Retour</button>
+          </p>
+        )}
       </div>
     </main>
   );
