@@ -126,7 +126,23 @@ export default function MesCartesPage() {
   async function checkPinStep(telephone: string) {
     try {
       const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", telephone)));
-      if (snap.empty) { localStorage.removeItem(PHONE_KEY); setNotFound(true); setStep("login"); return; }
+      if (snap.empty) {
+        // Pas de compte Firestore — vérifie si l'utilisateur s'est pré-inscrit via /inscription
+        const savedPrenom = localStorage.getItem(PRENOM_KEY);
+        if (savedPrenom) {
+          // Pré-inscrit : identité en localStorage, pas encore de marchand
+          // Vérifier le PIN localStorage si présent, sinon connecter directement
+          const savedPin = localStorage.getItem("wallio_client_pin");
+          if (savedPin) {
+            setStep("pin"); // le PIN sera vérifié contre localStorage dans handleVerifyPin
+          } else {
+            localStorage.setItem(VERIFIED_KEY, "1");
+            await loadCards(telephone);
+          }
+          return;
+        }
+        localStorage.removeItem(PHONE_KEY); setNotFound(true); setStep("login"); return;
+      }
       const hasPinHash = snap.docs.some((d: import("firebase/firestore").QueryDocumentSnapshot) => !!(d.data().pin_hash));
       setStep(hasPinHash ? "pin" : "create_pin");
     } catch { setStep("pin"); }
@@ -272,6 +288,17 @@ export default function MesCartesPage() {
     if (pinInput.length !== 4 || !phone) return;
     setPinLoading(true); setPinError("");
     try {
+      // Pré-inscrit (pas encore de compte Firestore) → vérifier PIN localStorage
+      const savedPin = localStorage.getItem("wallio_client_pin");
+      if (savedPin && localStorage.getItem(PRENOM_KEY)) {
+        if (pinInput === savedPin) {
+          localStorage.setItem(VERIFIED_KEY, "1");
+          await loadCards(phone);
+        } else {
+          setPinError("Code incorrect. Réessayez."); setPinInput("");
+        }
+        setPinLoading(false); return;
+      }
       const res = await fetch("/api/client/verify-pin", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telephone: phone, pin: pinInput }),
