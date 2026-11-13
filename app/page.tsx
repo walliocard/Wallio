@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/lang-context";
 import { REGIONS } from "@/lib/regions";
 
-const WA_BASE = "https://wa.me/40749056483";
+const WA_BASE = "https://wa.me/212654768191";
 const WA_MSGS: Record<string, string> = {
   fr: "Bonjour, je souhaite découvrir Wallio pour mon commerce.",
   en: "Hello, I'd like to discover Wallio for my business.",
