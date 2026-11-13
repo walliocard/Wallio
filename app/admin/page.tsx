@@ -1139,15 +1139,27 @@ export default function AdminPage() {
                   <p style={{ fontSize: 13, fontWeight: 600, color: T.label, marginBottom: 2 }}>Marchand test</p>
                   <p style={{ fontSize: 12, color: T.tert }}>Exclu des stats et revenus</p>
                 </div>
-                <button onClick={async () => {
-                  const val = !selected.is_test;
-                  const updated = { ...selected, is_test: val };
-                  setMarchands(prev => prev.map(x => x.id === selected.id ? updated : x));
-                  setSelected(updated);
-                  await adminPatch(selected.id, { is_test: val }).catch(() => {});
-                }} style={{ padding: "7px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, background: selected.is_test ? "rgba(255,59,48,0.10)" : "rgba(0,122,255,0.10)", color: selected.is_test ? "#FF3B30" : "#007AFF" }}>
-                  {selected.is_test ? "Test activé" : "Marquer comme test"}
-                </button>
+                {(() => {
+                  const autreTest = marchands.find(m => m.is_test && m.id !== selected.id);
+                  const disabled = !selected.is_test && !!autreTest;
+                  return (
+                    <button onClick={async () => {
+                      if (disabled) return;
+                      const val = !selected.is_test;
+                      // Si on active, désactiver l'ancien test
+                      if (val && autreTest) {
+                        setMarchands(prev => prev.map(x => x.id === autreTest.id ? { ...x, is_test: false } : x));
+                        await adminPatch(autreTest.id, { is_test: false }).catch(() => {});
+                      }
+                      const updated = { ...selected, is_test: val };
+                      setMarchands(prev => prev.map(x => x.id === selected.id ? updated : x));
+                      setSelected(updated);
+                      await adminPatch(selected.id, { is_test: val }).catch(() => {});
+                    }} style={{ padding: "7px 16px", borderRadius: 10, border: "none", cursor: disabled ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 600, opacity: disabled ? 0.4 : 1, background: selected.is_test ? "rgba(255,59,48,0.10)" : "rgba(0,122,255,0.10)", color: selected.is_test ? "#FF3B30" : "#007AFF" }}>
+                      {selected.is_test ? "Test activé — Désactiver" : disabled ? `Test = ${autreTest!.nom}` : "Marquer comme test"}
+                    </button>
+                  );
+                })()}
               </div>
 
               <SLabel>Localisation & Contact</SLabel>
