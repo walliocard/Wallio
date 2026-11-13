@@ -48,7 +48,7 @@ export default function InscriptionClientPage() {
     router.push("/mes-cartes");
   }
 
-  const ready = form.prenom.trim() && form.phone.trim();
+  const ready = form.prenom.trim() && form.phone.trim() && form.email.trim();
 
   return (
     <main style={bg}>
@@ -107,7 +107,7 @@ export default function InscriptionClientPage() {
               />
 
               <input
-                type="email" placeholder="Email (optionnel)" value={form.email}
+                type="email" placeholder="Email" required value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 style={{ ...input }}
                 onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
