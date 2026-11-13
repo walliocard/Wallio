@@ -204,6 +204,8 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         const cachedPrenom = localStorage.getItem("wallio_client_prenom");
         const cachedNom    = localStorage.getItem("wallio_client_nom");
         const cachedDob    = localStorage.getItem("wallio_client_dob");
+        const cachedEmail  = localStorage.getItem("wallio_client_email");
+        const cachedPin    = localStorage.getItem("wallio_client_pin");
         if (cachedPhone && cachedPrenom && cachedNom && !compteSupprimeIci) {
           // Peut-être déjà inscrit ici (localStorage perdu / nouvel appareil)
           const existing = await getClientByTelephone(cachedPhone, marchand.id);
@@ -224,7 +226,17 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             prenom: cachedPrenom, nom: cachedNom, telephone: cachedPhone,
             date_naissance: cachedDob || "", marchand_id: marchand.id,
             parrain_wallet_id: parrainId,
+            email: cachedEmail || undefined,
           });
+          // Appliquer PIN et envoyer email de bienvenue si saisis sur /inscription
+          if (cachedPin) {
+            fetch("/api/client/set-pin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telephone: cachedPhone, pin: cachedPin }) }).catch(() => {});
+            localStorage.removeItem("wallio_client_pin");
+          }
+          if (cachedEmail) {
+            fetch("/api/send-welcome-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: cachedEmail, prenom: cachedPrenom, marchandNom: marchand.nom, walletId: newWalletId, mode: "inscription" }) }).catch(() => {});
+            localStorage.removeItem("wallio_client_email");
+          }
           localStorage.setItem(WALLET_KEY(marchandId), newWalletId);
           const newClient: Client = {
             id: clientId, prenom: cachedPrenom, nom: cachedNom,

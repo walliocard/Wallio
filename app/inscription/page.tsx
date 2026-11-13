@@ -7,6 +7,8 @@ const PHONE_KEY  = "wallio_client_phone";
 const PRENOM_KEY = "wallio_client_prenom";
 const NOM_KEY    = "wallio_client_nom";
 const DOB_KEY    = "wallio_client_dob";
+const EMAIL_KEY  = "wallio_client_email";
+const PIN_KEY    = "wallio_client_pin";
 
 const PAYS = [
   { code: "+212", flag: "🇲🇦", label: "Maroc" },
@@ -27,18 +29,22 @@ const PAYS = [
 export default function InscriptionClientPage() {
   const router = useRouter();
   const { t } = useLang();
-  const [form, setForm] = useState({ prenom: "", nom: "", phone: "", dob: "" });
+  const [form, setForm] = useState({ prenom: "", nom: "", phone: "", dob: "", email: "", pin: "" });
   const [countryCode, setCountryCode] = useState("+212");
+  const [pinError, setPinError] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (form.pin && !/^\d{4}$/.test(form.pin)) { setPinError("Le PIN doit contenir exactement 4 chiffres."); return; }
     const local = form.phone.replace(/\D/g, "").replace(/^0/, "");
     if (!local || !form.prenom) return;
     const fullPhone = `${countryCode}${local}`;
     localStorage.setItem(PHONE_KEY,  fullPhone);
     localStorage.setItem(PRENOM_KEY, form.prenom.trim());
     localStorage.setItem(NOM_KEY,    form.nom.trim());
-    if (form.dob) localStorage.setItem(DOB_KEY, form.dob);
+    if (form.dob)   localStorage.setItem(DOB_KEY,   form.dob);
+    if (form.email) localStorage.setItem(EMAIL_KEY, form.email.trim());
+    if (form.pin)   localStorage.setItem(PIN_KEY,   form.pin);
     router.push("/mes-cartes");
   }
 
@@ -99,6 +105,24 @@ export default function InscriptionClientPage() {
                 onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
                 onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
               />
+
+              <input
+                type="email" placeholder="Email (optionnel)" value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                style={{ ...input }}
+                onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
+                onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
+              />
+
+              <input
+                type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
+                placeholder="Code PIN à 4 chiffres (optionnel)" value={form.pin}
+                onChange={e => { setPinError(""); setForm(f => ({ ...f, pin: e.target.value.replace(/\D/g, "").slice(0, 4) })); }}
+                style={{ ...input, letterSpacing: form.pin ? "0.4em" : undefined }}
+                onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
+                onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
+              />
+              {pinError && <p style={{ fontSize: 13, color: "#FF453A" }}>{pinError}</p>}
 
               <button type="submit" disabled={!ready} style={{
                 marginTop: 4, padding: "15px", borderRadius: 16, border: "none",
