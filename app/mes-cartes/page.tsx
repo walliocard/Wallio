@@ -126,7 +126,7 @@ export default function MesCartesPage() {
   async function checkPinStep(telephone: string) {
     try {
       const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", telephone)));
-      if (snap.empty) { localStorage.removeItem(PHONE_KEY); setStep("login"); return; }
+      if (snap.empty) { localStorage.removeItem(PHONE_KEY); setNotFound(true); setStep("login"); return; }
       const hasPinHash = snap.docs.some((d: import("firebase/firestore").QueryDocumentSnapshot) => !!(d.data().pin_hash));
       setStep(hasPinHash ? "pin" : "create_pin");
     } catch { setStep("pin"); }

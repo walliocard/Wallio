@@ -50,7 +50,7 @@ const translations = {
     mes_cartes_title: "Mes cartes",
     mes_cartes_subtitle: "Entrez votre numéro pour retrouver toutes vos cartes et découvrir de nouveaux établissements.",
     mes_cartes_see: "Voir mes cartes",
-    mes_cartes_not_found: "Aucune carte trouvée pour ce numéro.",
+    mes_cartes_not_found: "Aucun compte trouvé pour ce numéro. Créez votre carte ci-dessous.",
     mes_cartes_no_card: "Pas encore de carte ?",
     mes_cartes_create: "Créer un compte",
     mes_cartes_tab_cards: "Mes cartes",
