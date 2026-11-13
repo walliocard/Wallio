@@ -1078,45 +1078,35 @@ function PasskeyPromptScreen({ marchand, onPasskey, onInscription, onRecuperatio
         <MarchandHeader marchand={marchand} />
 
         <div className="rounded-[28px] p-6 text-center" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, boxShadow: "0 8px 40px rgba(0,0,0,0.05)" }}>
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: "0 8px 24px rgba(91,124,250,0.28)" }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="4"/>
-              <circle cx="9" cy="10" r="1.5" fill="white" stroke="none"/>
-              <circle cx="15" cy="10" r="1.5" fill="white" stroke="none"/>
-              <path d="M9 15c0 1.66 1.34 3 3 3s3-1.34 3-3"/>
-            </svg>
-          </div>
-
-          <h2 className="text-[20px] font-semibold tracking-tight mb-2" style={{ color: FG_MAIN }}>
-            Déjà inscrit ?
+          <h2 className="text-[22px] font-bold tracking-tight mb-2" style={{ color: FG_MAIN }}>
+            Créer ma carte
           </h2>
           <p className="text-[13px] leading-relaxed mb-6" style={{ color: FG_SEC }}>
-            Identifiez-vous avec {label} pour retrouver vos tampons instantanément.
+            Rejoignez le programme de fidélité et cumulez vos tampons à chaque visite.
           </p>
 
           {error && <p className="text-[13px] mb-4" style={{ color: "#FF453A" }}>{error}</p>}
 
           <button
-            onClick={handlePasskey}
-            disabled={loading}
-            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-3 active:opacity-80 transition-opacity"
-            style={{ background: BTN_BG, boxShadow: "0 4px 24px rgba(99,102,241,0.30)", opacity: loading ? 0.7 : 1 }}>
-            {loading ? "Identification…" : `Me reconnaître avec ${label}`}
-          </button>
-
-          <button
             onClick={onInscription}
-            className="w-full py-3.5 rounded-2xl text-[15px] font-medium active:opacity-80 transition-opacity"
-            style={{ background: "rgba(0,0,0,0.04)", color: FG_SEC }}>
-            Créer un compte
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-3 active:opacity-80 transition-opacity"
+            style={{ background: BTN_BG, boxShadow: "0 4px 24px rgba(99,102,241,0.30)" }}>
+            Créer mon compte
           </button>
 
           <button
             onClick={onRecuperation}
-            className="w-full py-3 text-[13px] font-medium active:opacity-60 transition-opacity mt-1"
-            style={{ background: "none", border: "none", color: FG_SEC, textDecoration: "underline", cursor: "pointer" }}>
-            J&apos;ai déjà un compte → me connecter avec mon numéro
+            className="w-full py-3 text-[13px] font-medium active:opacity-60 transition-opacity"
+            style={{ background: "none", border: "none", color: FG_SEC, cursor: "pointer" }}>
+            Déjà inscrit ? Me connecter avec mon numéro
+          </button>
+
+          <button
+            onClick={handlePasskey}
+            disabled={loading}
+            className="w-full py-2.5 text-[12px] active:opacity-60 transition-opacity mt-1"
+            style={{ background: "none", border: "none", color: "rgba(0,0,0,0.3)", cursor: "pointer", opacity: loading ? 0.5 : 1 }}>
+            {loading ? "Identification…" : `Connexion avec ${label}`}
           </button>
         </div>
       </div>
