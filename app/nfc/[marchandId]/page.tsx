@@ -386,6 +386,18 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   if (screen.type === "recuperation") return (
     <RecuperationForm
       marchand={screen.marchand}
+      onPasskey={async () => {
+        setScreen({ type: "loading" });
+        const { authenticateWithPasskey } = await import("@/lib/passkey-client");
+        const telephone = await authenticateWithPasskey();
+        if (!telephone) { setScreen({ type: "recuperation", marchand: screen.marchand }); return; }
+        const client = await getClientByTelephone(telephone, screen.marchand.id);
+        if (!client) { setScreen({ type: "recuperation", marchand: screen.marchand }); return; }
+        localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
+        localStorage.setItem("wallio_client_phone", telephone);
+        setCookiePhone(telephone);
+        await traiterTampon(client, screen.marchand);
+      }}
       onSuccess={(client) => {
         localStorage.setItem(WALLET_KEY(marchandId), client.wallet_id);
         if (client.telephone)      { localStorage.setItem("wallio_client_phone", client.telephone); setCookiePhone(client.telephone); }
@@ -1101,13 +1113,6 @@ function PasskeyPromptScreen({ marchand, onPasskey, onInscription, onRecuperatio
             Déjà inscrit ? Me connecter avec mon numéro
           </button>
 
-          <button
-            onClick={handlePasskey}
-            disabled={loading}
-            className="w-full py-2.5 text-[12px] active:opacity-60 transition-opacity mt-1"
-            style={{ background: "none", border: "none", color: "rgba(0,0,0,0.3)", cursor: "pointer", opacity: loading ? 0.5 : 1 }}>
-            {loading ? "Identification…" : `Connexion avec ${label}`}
-          </button>
         </div>
       </div>
     </main>
@@ -1377,15 +1382,19 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation 
 
 // ─── Récupération ─────────────────────────────────────────────────────────────
 
-function RecuperationForm({ marchand, onSuccess, onBack }: {
+function RecuperationForm({ marchand, onSuccess, onBack, onPasskey }: {
   marchand: Marchand;
   onSuccess: (client: Client) => void;
   onBack: () => void;
+  onPasskey?: () => Promise<void>;
 }) {
   const [indicatif, setIndicatif] = useState(PAYS[0]);
   const [numLocal, setNumLocal] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isAndroid, setIsAndroid] = useState(false);
+  useEffect(() => { setIsAndroid(/android/i.test(navigator.userAgent)); }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1408,8 +1417,19 @@ function RecuperationForm({ marchand, onSuccess, onBack }: {
         <MarchandHeader marchand={marchand} />
 
         <div className="rounded-[28px] p-6" style={{ background: BG_CARD, border: `1px solid ${BORDER}`, boxShadow: "0 8px 40px rgba(0,0,0,0.06)" }}>
-          <p className="text-[17px] font-semibold mb-0.5" style={{ color: FG_MAIN }}>Récupérer mon compte</p>
+          <p className="text-[17px] font-semibold mb-0.5" style={{ color: FG_MAIN }}>Déjà inscrit ?</p>
           <p className="text-[13px] mb-5" style={{ color: FG_SEC }}>Entre le numéro utilisé lors de ton inscription</p>
+
+          {onPasskey && (
+            <button
+              type="button"
+              onClick={async () => { setPasskeyLoading(true); try { await onPasskey(); } catch { setError("Identification annulée."); } finally { setPasskeyLoading(false); } }}
+              disabled={passkeyLoading || loading}
+              className="w-full py-3.5 rounded-2xl text-[15px] font-semibold mb-4 active:opacity-80 transition-opacity"
+              style={{ background: BTN_BG, color: ACCENT_FG, boxShadow: "0 4px 24px rgba(99,102,241,0.25)", opacity: passkeyLoading ? 0.7 : 1 }}>
+              {passkeyLoading ? "Identification…" : `Me reconnaître avec ${isAndroid ? "Empreinte digitale" : "Face ID"}`}
+            </button>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-2.5">
             <div className="flex rounded-2xl overflow-hidden transition-colors"
