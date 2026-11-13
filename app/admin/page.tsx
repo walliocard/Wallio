@@ -882,7 +882,10 @@ export default function AdminPage() {
   const reel = (m: Marchand) => !m.is_test;
   const actifs = marchands.filter(m => m.actif && reel(m)).length;
   const aboActifs = marchands.filter(m => m.abonnement_statut === "actif" && reel(m)).length;
-  const revenus = aboActifs * 349;
+  const now = new Date();
+  const moisDebut = new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000;
+  const encaisseCeMois = marchands.filter(reel).reduce((sum, m) =>
+    sum + (m.abonnement_paiements ?? []).filter(p => p.date >= moisDebut).reduce((s, p) => s + (p.montant || 0), 0), 0);
   const revenuTotal = marchands.filter(reel).reduce((sum, m) =>
     sum + (m.abonnement_paiements ?? []).reduce((s, p) => s + (p.montant || 0), 0), 0);
   const totalClients = Object.values(clientCounts).reduce((sum, c) => sum + c, 0);
@@ -1327,8 +1330,8 @@ export default function AdminPage() {
               { label: "Actifs",           value: String(actifs),                                  color: T.actifFg },
               { label: "En attente",       value: String(marchands.filter(m => m.abonnement_statut === "en_attente" && reel(m)).length), color: "#7A4A00" },
               { label: "Clients total",    value: totalClients > 0 ? totalClients.toLocaleString("fr-FR") : "…", color: T.label },
-              { label: "Revenus / mois",   value: `${revenus.toLocaleString("fr-FR")} DH`,         color: T.label },
-              { label: "Revenu total",     value: `${revenuTotal.toLocaleString("fr-FR")} DH`,     color: T.actifFg },
+              { label: "Encaissé ce mois", value: `${encaisseCeMois.toLocaleString("fr-FR")} DH`,   color: T.label },
+              { label: "Encaissé total",   value: `${revenuTotal.toLocaleString("fr-FR")} DH`,     color: T.actifFg },
             ].map(s => (
               <div key={s.label} style={{ ...G, borderRadius: 18, padding: "18px 20px" }}>
                 <p style={{ fontSize: 26, fontWeight: 600, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.value}</p>
