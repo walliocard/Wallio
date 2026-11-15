@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { doc, deleteDoc, collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
+import { doc, deleteDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   getClientByWalletId, getMarchandById,
@@ -131,9 +131,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     getDocs(
       query(
         collection(db, "marchands", user.uid, "historique"),
-        where("client_id", "==", client.id),
-        orderBy("created_at", "desc"),
-        limit(50)
+        where("client_id", "==", client.id)
       )
     ).then(snap => {
       const all: VisiteEntry[] = snap.docs
@@ -145,7 +143,8 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           added_by: d.data().added_by,
           tampons_apres: d.data().tampons_apres,
           recompense: d.data().recompense || false,
-        }));
+        }))
+        .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
       setTotalVisites(all.filter(e => e.type !== "anti_doublon" && e.type !== "auto_validation").length);
       setTotalRecompenses(all.filter(e => e.recompense).length);
       setRecentVisits(all.filter(e => e.type !== "anti_doublon").slice(0, 5));
