@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { collection, onSnapshot, query, where, getCountFromServer } from "firebase/firestore";
+import { collection, onSnapshot, query, where, getCountFromServer, orderBy, limit, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
 import { drawPrintCard, drawPrintCardQROnly, drawPrintCardNFCOnly } from "@/lib/print-card-draw";
@@ -130,7 +130,14 @@ export default function AdminPage() {
   const [createVille, setCreateVille] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [tab, setTab] = useState<"marchands" | "comptabilite" | "contrat" | "facture">("marchands");
+  const [tab, setTab] = useState<"marchands" | "comptabilite" | "contrat" | "facture" | "clients">("marchands");
+  type ClientEntry = { id: string; prenom: string; nom: string; telephone: string; marchand_id: string; date_inscription?: { seconds: number }; tampons: number };
+  const [allClients, setAllClients] = useState<ClientEntry[]>([]);
+  const [clientsLoaded, setClientsLoaded] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [newClientNotifs, setNewClientNotifs] = useState<{ prenom: string; nom: string; marchandNom: string }[]>([]);
+  const touchStartY = useRef(0);
+  const [refreshing, setRefreshing] = useState(false);
   // ── Facture ──
   const [faMarchandId, setFaMarchandId] = useState("");
   const [faRef,    setFaRef]    = useState(() => `FAC-${new Date().getFullYear()}-${Math.floor(1000+Math.random()*9000)}`);
@@ -201,8 +208,42 @@ export default function AdminPage() {
       });
     }
     init();
-    return () => { unsub?.(); clearTimeout(timeout); };
+    // Listener nouveaux clients — seulement ceux créés après l'ouverture de l'admin
+    const mountTs = Timestamp.now();
+    const unsubClients = onSnapshot(
+      query(collection(db, "clients"), where("date_inscription", ">=", mountTs)),
+      snap => {
+        snap.docChanges().forEach(change => {
+          if (change.type !== "added") return;
+          const d = change.doc.data();
+          setNewClientNotifs(prev => [...prev, {
+            prenom: d.prenom || "",
+            nom: d.nom || "",
+            marchandNom: "",
+          }]);
+          // Résoudre le nom du marchand
+          import("firebase/firestore").then(({ getDoc, doc: firestoreDoc }) =>
+            getDoc(firestoreDoc(db, "marchands", d.marchand_id)).then(ms => {
+              const nomMarchand = ms.exists() ? (ms.data().nom as string || d.marchand_id) : d.marchand_id;
+              setNewClientNotifs(prev => prev.map((n, i) =>
+                i === prev.length - 1 && n.marchandNom === "" ? { ...n, marchandNom: nomMarchand } : n
+              ));
+            })
+          ).catch(() => {});
+        });
+      }
+    );
+    return () => { unsub?.(); unsubClients(); clearTimeout(timeout); };
   }, [router]);
+
+  useEffect(() => {
+    if (tab !== "clients" || clientsLoaded) return;
+    const q = query(collection(db, "clients"), orderBy("date_inscription", "desc"), limit(500));
+    onSnapshot(q, snap => {
+      setAllClients(snap.docs.map(d => ({ id: d.id, prenom: d.data().prenom || "", nom: d.data().nom || "", telephone: d.data().telephone || "", marchand_id: d.data().marchand_id || "", date_inscription: d.data().date_inscription, tampons: d.data().tampons ?? 0 })));
+      setClientsLoaded(true);
+    });
+  }, [tab, clientsLoaded]);
 
   async function adminPatch(marchandId: string, fields: Record<string, unknown>) {
     const res = await fetch("/api/admin/update-marchand", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ marchandId, fields }) });
@@ -897,7 +938,43 @@ export default function AdminPage() {
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
-    <main style={{ minHeight: "100vh", background: T.bg, color: T.label }}>
+    <main
+      style={{ minHeight: "100vh", background: T.bg, color: T.label }}
+      onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
+      onTouchEnd={e => {
+        const dy = e.changedTouches[0].clientY - touchStartY.current;
+        if (dy > 70 && window.scrollY === 0 && !refreshing) {
+          setRefreshing(true);
+          setTimeout(() => window.location.reload(), 300);
+        }
+      }}
+    >
+
+      {/* Pull-to-refresh spinner */}
+      {refreshing && (
+        <div style={{ display: "flex", justifyContent: "center", padding: "16px 0 0", position: "fixed", top: 0, left: 0, right: 0, zIndex: 99 }}>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${T.border}`, borderTopColor: "#007AFF", animation: "spin 0.7s linear infinite" }} />
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      )}
+
+      {/* Notifications nouveau client */}
+      {newClientNotifs.length > 0 && (
+        <div style={{ position: "fixed", top: 16, right: 16, zIndex: 90, display: "flex", flexDirection: "column", gap: 8, maxWidth: 320 }}>
+          {newClientNotifs.map((n, i) => (
+            <div key={i} style={{ background: "#fff", borderRadius: 14, padding: "12px 14px", boxShadow: T.shadowModal, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, animation: "slide-in 0.3s ease" }}>
+              <style>{`@keyframes slide-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}`}</style>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: T.label, margin: 0 }}>
+                  {n.prenom} {n.nom} a rejoint {n.marchandNom || "…"}
+                </p>
+              </div>
+              <button onClick={() => setNewClientNotifs(prev => prev.filter((_, j) => j !== i))}
+                style={{ background: "none", border: "none", cursor: "pointer", color: T.tert, fontSize: 16, padding: 0, flexShrink: 0 }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Modal nouveau marchand ── */}
       {showCreate && (
@@ -1326,7 +1403,7 @@ export default function AdminPage() {
 
         {/* Onglets */}
         <div style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, width: "fit-content" }}>
-          {([["marchands", "Marchands"], ["comptabilite", "Comptabilité"], ["contrat", "Contrat"], ["facture", "Facture"]] as const).map(([key, label]) => (
+          {([["marchands", "Marchands"], ["clients", "Clients"], ["comptabilite", "Comptabilité"], ["contrat", "Contrat"], ["facture", "Facture"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               style={{ padding: "7px 18px", borderRadius: 8, fontSize: 14, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s" }}>
               {label}
@@ -1479,6 +1556,57 @@ export default function AdminPage() {
           )}
           </>)}
         </>}
+
+        {/* ── Clients ── */}
+        {tab === "clients" && (
+          <div>
+            <div style={{ marginBottom: 16 }}>
+              <input
+                placeholder="Rechercher par nom, prénom ou téléphone…"
+                value={clientSearch}
+                onChange={e => setClientSearch(e.target.value)}
+                style={{ width: "100%", maxWidth: 400, padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfCard, fontSize: 14, color: T.label, outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+            {!clientsLoaded ? (
+              <p style={{ color: T.tert, fontSize: 14 }}>Chargement…</p>
+            ) : (
+              <div style={{ background: T.surfCard, borderRadius: 14, border: `1px solid ${T.border}`, overflow: "hidden" }}>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${T.border}` }}>
+                        {["Prénom", "Nom", "Téléphone", "Marchand", "Inscription", "Tampons"].map(h => (
+                          <th key={h} style={{ textAlign: "left", padding: "10px 14px", color: T.tert, fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allClients
+                        .filter(c => !clientSearch || `${c.prenom} ${c.nom} ${c.telephone}`.toLowerCase().includes(clientSearch.toLowerCase()))
+                        .map((c, i, arr) => {
+                          const marchand = marchands.find(m => m.id === c.marchand_id);
+                          return (
+                            <tr key={c.id} style={{ borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : "none", background: i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.015)" }}>
+                              <td style={{ padding: "10px 14px", color: T.label, fontWeight: 500 }}>{c.prenom}</td>
+                              <td style={{ padding: "10px 14px", color: T.label }}>{c.nom}</td>
+                              <td style={{ padding: "10px 14px", color: T.sec, fontFamily: "monospace" }}>{c.telephone}</td>
+                              <td style={{ padding: "10px 14px", color: T.sec }}>{marchand?.nom || c.marchand_id}</td>
+                              <td style={{ padding: "10px 14px", color: T.tert, whiteSpace: "nowrap" }}>{formatDate(c.date_inscription)}</td>
+                              <td style={{ padding: "10px 14px", color: T.label, textAlign: "center" }}>{c.tampons}</td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+                <p style={{ fontSize: 12, color: T.tert, padding: "10px 14px", borderTop: `1px solid ${T.border}` }}>
+                  {allClients.filter(c => !clientSearch || `${c.prenom} ${c.nom} ${c.telephone}`.toLowerCase().includes(clientSearch.toLowerCase())).length} clients · 500 max affichés
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Comptabilité ── */}
         {tab === "comptabilite" && (() => {
