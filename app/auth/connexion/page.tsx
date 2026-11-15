@@ -338,7 +338,7 @@ function ConnexionInner() {
         }));
       } catch {}
       await haptic("success");
-      router.push("/equipe/scanner");
+      router.push("/equipe/clients");
     } catch { setEquipeError("Erreur de connexion."); }
     finally { setEquipeLoading(false); }
   }
