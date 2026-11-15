@@ -33,20 +33,33 @@ export async function GET(req: Request) {
       message_expires_at: null,
     });
 
-    // Push APNS à tous les clients Apple Wallet du marchand pour nettoyer le backField
+    // Tous les clients du marchand : push APNS + nettoyage notifs expirées
     const clientsSnap = await db.collection("clients")
       .where("marchand_id", "==", marchandId)
-      .where("apns_push_token", "!=", null)
       .get();
 
     const nowStr = new Date().toISOString();
+    const updates: Promise<unknown>[] = [];
+
     for (const clientDoc of clientsSnap.docs) {
-      const token = clientDoc.data().apns_push_token as string;
-      try {
-        await clientDoc.ref.update({ apns_last_updated: nowStr });
-        await pushPassUpdate(token);
-      } catch { /* fire-and-forget */ }
+      const data = clientDoc.data();
+
+      if (data.apns_push_token) {
+        updates.push(
+          clientDoc.ref.update({ apns_last_updated: nowStr })
+            .then(() => pushPassUpdate(data.apns_push_token as string))
+            .catch(() => {})
+        );
+      }
+
+      const notifs = (data.notifs as Array<{ expires_at?: string }>) || [];
+      const filtered = notifs.filter(n => !n.expires_at || n.expires_at > now);
+      if (filtered.length < notifs.length) {
+        updates.push(clientDoc.ref.update({ notifs: filtered }).catch(() => {}));
+      }
     }
+
+    await Promise.all(updates);
 
     cleaned++;
   }

@@ -36,7 +36,7 @@ function prochainPalierInfo(m: Record<string, unknown>, client: Record<string, u
 }
 
 export async function POST(req: Request) {
-  const { walletId } = await req.json().catch(() => ({})) as { walletId?: string };
+  const { walletId, skipFcm } = await req.json().catch(() => ({})) as { walletId?: string; skipFcm?: boolean };
   if (!walletId || !ISSUER_ID || !process.env.GOOGLE_WALLET_KEY_JSON) {
     return NextResponse.json({ pushed: false });
   }
@@ -102,9 +102,9 @@ export async function POST(req: Request) {
     console.error("[GW push-update] PATCH error:", e);
   }
 
-  // 2 — Notif FCM
+  // 2 — Notif FCM (skippé quand appelé depuis /api/notify qui gère déjà son propre FCM)
   const fcmToken = client.fcm_token as string | undefined;
-  if (fcmToken) {
+  if (fcmToken && !skipFcm) {
     try {
       const notifBody = isRecompense
         ? `${recompense} débloquée !`

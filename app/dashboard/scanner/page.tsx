@@ -18,6 +18,7 @@ interface TamponResult {
   prenom?: string; tampons?: number; objectif?: number;
   nom_recompense?: string; prochain_recompense?: string;
   secondes_restantes?: number; clientId?: string; walletId?: string;
+  recompense_en_attente?: boolean;
   double?: boolean; birthday?: boolean; birthday_offre?: string;
   palier_index?: number; mode_recompense?: string;
   paliers_valides?: boolean[]; total_paliers?: number;
@@ -224,7 +225,7 @@ export default function ScannerPage() {
 
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 md:pb-8">
+    <div className="min-h-screen flex flex-col pb-36 md:pb-8">
 
       {/* Header */}
       <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 mb-5">
@@ -402,6 +403,18 @@ export default function ScannerPage() {
                     <p className="text-[18px] font-bold" style={{ color: "var(--fg)" }}>Déjà enregistré — {result.prenom}</p>
                     {(result.secondes_restantes ?? 0) > 0 && (
                       <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>Prochain tampon dans {formatTemps(result.secondes_restantes ?? 0)}</p>
+                    )}
+                    {result.recompense_en_attente && (
+                      <div className="w-full mt-1 p-3 rounded-2xl" style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.06),rgba(139,92,246,0.06))", border: "1px solid rgba(139,92,246,0.2)" }}>
+                        <p className="text-[13px] font-semibold mb-2" style={{ color: "var(--fg)" }}>
+                          Récompense en attente — {result.nom_recompense || result.nom_recompense_grand || ""}
+                        </p>
+                        <button onClick={handleValiderRecompense} disabled={validating}
+                          className="w-full py-3 rounded-xl font-bold text-white text-[14px]"
+                          style={{ background: validating ? "var(--border)" : "linear-gradient(135deg,#007AFF,#8B5CF6)", border: "none", cursor: "pointer" }}>
+                          {validating ? "Validation…" : "Valider la récompense"}
+                        </button>
+                      </div>
                     )}
                     <button onClick={() => result.walletId && handleTampon(result.walletId, true)} className="w-full py-3 rounded-2xl font-semibold mt-1" style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30", border: "1px solid rgba(255,59,48,0.2)" }}>
                       Forcer quand même

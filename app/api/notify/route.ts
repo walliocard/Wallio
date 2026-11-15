@@ -53,6 +53,7 @@ export async function POST(req: Request) {
     const tokenDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
     const allRefs: FirebaseFirestore.DocumentReference[] = [];
     const apnsDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
+    const gwWalletIds: string[] = [];
 
     snap.forEach(doc => {
       allRefs.push(doc.ref);
@@ -64,6 +65,9 @@ export async function POST(req: Request) {
       }
       if (data.apns_push_token) {
         apnsDocs.push({ token: data.apns_push_token, ref: doc.ref });
+      }
+      if (data.wallet_type === "google" && data.wallet_id) {
+        gwWalletIds.push(data.wallet_id as string);
       }
     });
 
@@ -93,7 +97,13 @@ export async function POST(req: Request) {
             await ref.update({ apns_last_updated: now });
             await pushPassUpdate(token);
             return 1;
-          } catch { return 0; }
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            if (msg.includes("410") || msg.includes("400")) {
+              await ref.update({ apns_push_token: null }).catch(() => {});
+            }
+            return 0;
+          }
         })).then(r => r.reduce((a: number, b: number) => a + b, 0))
       : Promise.resolve(0);
 
@@ -135,6 +145,20 @@ export async function POST(req: Request) {
       : Promise.resolve({ sent: 0, failed: 0 });
 
     const [apnsSent, { sent, failed }] = await Promise.all([apnsPromise, fcmPromise]);
+
+    // Google Wallet — PATCH pass (skipFcm=true car FCM déjà géré ci-dessus)
+    if (gwWalletIds.length > 0) {
+      const gwBase = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
+      Promise.all(
+        gwWalletIds.map(walletId =>
+          fetch(`${gwBase}/api/google-wallet/push-update`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ walletId, skipFcm: true }),
+          }).catch(() => {})
+        )
+      ).catch(() => {});
+    }
 
     return NextResponse.json({ sent: sent + apnsSent, failed, total: tokenDocs.length + apnsSent });
   } catch (err) {

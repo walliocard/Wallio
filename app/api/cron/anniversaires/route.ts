@@ -70,8 +70,13 @@ export async function GET(req: Request) {
       }
       // Apple Wallet : push APNS pour que la carte se mette à jour avec le message d'anniv
       if (client.apns_push_token) {
-        pushPassUpdate(client.apns_push_token).catch(() => {});
         await clientDoc.ref.update({ apns_last_updated: new Date().toISOString() });
+        pushPassUpdate(client.apns_push_token).catch((err) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (msg.includes("410") || msg.includes("400")) {
+            clientDoc.ref.update({ apns_push_token: null }).catch(() => {});
+          }
+        });
       }
       traites++;
     }

@@ -69,10 +69,12 @@ export async function POST(req: Request) {
       paliers_valides: (r.paliers_valides as boolean[] | undefined) ?? client.paliers_valides ?? [],
       total_paliers: ((mn.paliers as unknown[]) || []).length,
       palier_intermediaire: (mn.palier_intermediaire as number | undefined) ?? null,
+      nom_recompense: (mn.nom_recompense as string) || "",
       nom_recompense_petit: (mn.nom_recompense_petit as string | undefined) ?? "",
       nom_recompense_grand: (mn.nom_recompense_grand as string | undefined) ?? "",
       choix_en_attente: result.type === "choix_requis" ? true : (client.choix_en_attente ?? false),
       choix_fait: client.choix_fait ?? null,
+      recompense_en_attente: client.recompense_en_attente ?? false,
     });
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 500 });

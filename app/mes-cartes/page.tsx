@@ -53,6 +53,7 @@ const VERIFIED_KEY = "wallio_client_verified";
 const PRENOM_KEY   = "wallio_client_prenom";
 const NOM_KEY      = "wallio_client_nom";
 const DOB_KEY      = "wallio_client_dob";
+const FCM_CACHE_KEY = "wallio_fcm_cache";
 
 const PAYS = [
   { code: "+212", flag: "🇲🇦", label: "Maroc" },
@@ -107,6 +108,8 @@ export default function MesCartesPage() {
   const unsubMerchantsRef = useRef<(() => void) | null>(null);
   const registeredIdsRef = useRef<string[]>([]);
   const allMerchantsRef = useRef<MarchandDiscover[]>([]);
+  const notifsMapRef = useRef<Map<string, ClientNotif[]>>(new Map());
+  const tokenRefreshedRef = useRef(false);
 
   function refreshMerchants() {
     setMerchants(allMerchantsRef.current.filter(m => !registeredIdsRef.current.includes(m.id)));
@@ -254,10 +257,15 @@ export default function MesCartesPage() {
 
       // Agrège toutes les notifs de tous les marchands, triées par date desc
       const allNotifs: ClientNotif[] = [];
+      const newNotifsMap = new Map<string, ClientNotif[]>();
       snap.docs.forEach(d => {
         const raw = d.data().notifs as ClientNotif[] | undefined;
-        if (raw?.length) allNotifs.push(...raw);
+        if (raw?.length) {
+          newNotifsMap.set(d.id, raw);
+          allNotifs.push(...raw);
+        }
       });
+      notifsMapRef.current = newNotifsMap;
       allNotifs.sort((a, b) => b.sentAt.localeCompare(a.sentAt));
       setNotifs(allNotifs.slice(0, 50));
 
@@ -337,6 +345,46 @@ export default function MesCartesPage() {
     } catch { setPinError("Erreur. Réessayez."); }
     finally { setPinLoading(false); }
   }
+
+  // Marque les notifs comme lues quand l'utilisateur ouvre l'onglet Messages
+  useEffect(() => {
+    if (tab !== "messages") return;
+    const unread = notifs.filter(n => !n.read);
+    if (unread.length === 0) return;
+    const unreadIds = new Set(unread.map(n => n.id));
+    Promise.all(
+      [...notifsMapRef.current.entries()].map(async ([clientId, clientNotifs]) => {
+        if (!clientNotifs.some(n => unreadIds.has(n.id))) return;
+        const updated = clientNotifs.map(n => unreadIds.has(n.id) ? { ...n, read: true } : n);
+        await updateDoc(doc(db, "clients", clientId), { notifs: updated });
+      })
+    ).then(() => {
+      setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+    }).catch(() => { /* silent */ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  // Refresh silencieux du token FCM à chaque session (couvre les expirations de token)
+  useEffect(() => {
+    if (tokenRefreshedRef.current) return;
+    if (cards.length === 0) return;
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+    tokenRefreshedRef.current = true;
+    (async () => {
+      try {
+        const { registerFcmToken } = await import("@/lib/fcm");
+        const freshToken = await registerFcmToken();
+        if (!freshToken) return;
+        const cachedToken = localStorage.getItem(FCM_CACHE_KEY);
+        if (freshToken === cachedToken) return;
+        await Promise.all(cards.map(c => updateDoc(doc(db, "clients", c.clientId), { fcm_token: freshToken })));
+        localStorage.setItem(FCM_CACHE_KEY, freshToken);
+        setCards(prev => prev.map(c => ({ ...c, hasFcmToken: true })));
+      } catch { /* silent */ }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
 
   // Charge l'email du client si pas encore connu quand on entre dans forgot_pin
   useEffect(() => {
@@ -421,6 +469,17 @@ export default function MesCartesPage() {
         });
         clientId = result.clientId;
         walletId = result.walletId;
+        // Sync FCM token si les notifs sont déjà activées sur cet appareil
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+          import("@/lib/fcm").then(({ registerFcmToken }) =>
+            registerFcmToken().then(token => {
+              if (token) {
+                updateDoc(doc(db, "clients", result.clientId), { fcm_token: token }).catch(() => {});
+                localStorage.setItem(FCM_CACHE_KEY, token);
+              }
+            })
+          ).catch(() => {});
+        }
         // Sync PIN + email depuis wallio_users vers le nouveau doc client
         fetch("/api/client/sync-user-pin", {
           method: "POST", headers: { "Content-Type": "application/json" },

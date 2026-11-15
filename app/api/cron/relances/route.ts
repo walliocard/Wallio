@@ -57,8 +57,13 @@ export async function GET(req: Request) {
       }
       // Apple Wallet — push APNS pour afficher le message de relance au dos de la carte
       if (client.apns_push_token) {
-        pushPassUpdate(client.apns_push_token).catch(() => {});
         await clientDoc.ref.update({ apns_last_updated: new Date().toISOString() });
+        pushPassUpdate(client.apns_push_token).catch((err) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (msg.includes("410") || msg.includes("400")) {
+            clientDoc.ref.update({ apns_push_token: null }).catch(() => {});
+          }
+        });
       }
       // Google Wallet — push pour synchroniser la carte
       const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
