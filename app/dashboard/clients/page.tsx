@@ -38,7 +38,7 @@ export default function ClientsPage() {
   const [filterRecompense, setFilterRecompense] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ prenom: "", nom: "", telephone: "", date_naissance: "" });
+  const [form, setForm] = useState({ prenom: "", nom: "", telephone: "", date_naissance: "", email: "" });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [fetchError, setFetchError] = useState("");
@@ -116,7 +116,7 @@ export default function ClientsPage() {
     });
 
   async function ajouterClient() {
-    if (!user || !form.prenom.trim() || !form.telephone.trim()) {
+    if (!user || !form.prenom.trim() || !form.telephone.trim() || !form.email.trim()) {
       setFormError(t.clients_error_required_msg);
       return;
     }
@@ -128,17 +128,27 @@ export default function ClientsPage() {
       setSaving(false);
       return;
     }
-    await creerClient({
+    const { walletId } = await creerClient({
       prenom: form.prenom.trim(),
       nom: form.nom.trim(),
       telephone: form.telephone.trim(),
       date_naissance: form.date_naissance,
       marchand_id: user.uid,
+      email: form.email.trim(),
     });
-    setForm({ prenom: "", nom: "", telephone: "", date_naissance: "" });
+    // Créer wallio_users pour que le client puisse se connecter sur /mes-cartes
+    fetch("/api/client/register", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ telephone: form.telephone.trim(), prenom: form.prenom.trim(), nom: form.nom.trim(), dob: form.date_naissance, email: form.email.trim() }),
+    }).catch(() => {});
+    // Email de bienvenue
+    fetch("/api/send-welcome-email", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: form.email.trim(), prenom: form.prenom.trim(), marchandNom: marchand?.nom || "", walletId, mode: "inscription" }),
+    }).catch(() => {});
+    setForm({ prenom: "", nom: "", telephone: "", date_naissance: "", email: "" });
     setShowModal(false);
     setSaving(false);
-    // onSnapshot se met à jour automatiquement après creerClient
   }
 
   const trenteJoursAgo = new Date();
@@ -164,10 +174,11 @@ export default function ClientsPage() {
             <h3 className="text-[18px] font-semibold mb-5" style={{ color: "var(--fg)" }}>{t.clients_add_title}</h3>
             <div className="space-y-3">
               {[
-                { key: "prenom",        label: t.clients_prenom, type: "text", placeholder: "Marie" },
-                { key: "nom",           label: t.clients_nom,    type: "text", placeholder: "Dupont" },
-                { key: "telephone",     label: t.clients_phone,  type: "tel",  placeholder: "+212 6 00 00 00 00" },
-                { key: "date_naissance",label: t.clients_dob,    type: "date", placeholder: "" },
+                { key: "prenom",        label: t.clients_prenom, type: "text",  placeholder: "Marie" },
+                { key: "nom",           label: t.clients_nom,    type: "text",  placeholder: "Dupont" },
+                { key: "telephone",     label: t.clients_phone,  type: "tel",   placeholder: "+212 6 00 00 00 00" },
+                { key: "email",         label: "Email",          type: "email", placeholder: "marie@email.com" },
+                { key: "date_naissance",label: t.clients_dob,    type: "date",  placeholder: "" },
               ].map(f => (
                 <div key={f.key}>
                   <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--fg-tertiary)" }}>
