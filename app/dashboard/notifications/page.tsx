@@ -227,14 +227,12 @@ export default function NotificationsPage() {
           {/* Templates — carrousel horizontal */}
           <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
             <p className="text-[12px] mb-3" style={{ color: "var(--fg-tertiary)" }}>Modèles</p>
-            <div className="flex gap-2 pb-1 overflow-x-auto lg:flex-col lg:overflow-visible" style={{ scrollbarWidth: "none" as never, WebkitOverflowScrolling: "touch" as never }}>
-              <style>{`.tpl-btn::-webkit-scrollbar{display:none}`}</style>
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
               {TEMPLATES.map(tmpl => (
                 <button key={tmpl.label}
                   onClick={() => applyTemplate(tmpl.title, tmpl.body)}
-                  className="tpl-btn text-left rounded-xl transition-all active:scale-95 flex-shrink-0 lg:w-full"
+                  className="text-left rounded-xl transition-all active:scale-95 w-full"
                   style={{
-                    minWidth: 158,
                     padding: "12px",
                     background: title === tmpl.title ? "rgba(47,123,255,0.08)" : "var(--bg)",
                     border: `1px solid ${title === tmpl.title ? "var(--accent)" : "var(--border)"}`,
