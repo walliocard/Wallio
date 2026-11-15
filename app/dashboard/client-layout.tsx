@@ -127,6 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               WebkitOverflowScrolling: "touch",
               background: "radial-gradient(ellipse at 50% -10%, #ECF2FF 0%, #F5F5F7 52%)",
               animation: "page-in 0.2s ease",
+              paddingTop: "env(safe-area-inset-top)",
             } as React.CSSProperties}
             onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
             onTouchEnd={e => {
