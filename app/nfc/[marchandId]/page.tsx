@@ -230,6 +230,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           });
           // Sync PIN + email depuis wallio_users vers le nouveau doc client
           fetch("/api/client/sync-user-pin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telephone: cachedPhone }) }).catch(() => {});
+          fetch("/api/admin/notify-new-client", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prenom: cachedPrenom, nom: cachedNom, marchandNom: marchand.nom }) }).catch(() => {});
           if (cachedEmail) {
             fetch("/api/send-welcome-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: cachedEmail, prenom: cachedPrenom, marchandNom: marchand.nom, walletId: newWalletId, mode: "inscription" }) }).catch(() => {});
           }
@@ -1263,6 +1264,7 @@ function InscriptionForm({ marchand, parrainWalletId, onSuccess, onRecuperation,
         parrain_wallet_id: parrainWalletId,
         email: email.trim() || undefined,
       });
+      fetch("/api/admin/notify-new-client", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prenom, nom, marchandNom: marchand.nom }) }).catch(() => {});
       if (email.trim()) {
         fetch("/api/send-welcome-email", {
           method: "POST", headers: { "Content-Type": "application/json" },

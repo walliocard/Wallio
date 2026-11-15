@@ -469,6 +469,7 @@ export default function MesCartesPage() {
         });
         clientId = result.clientId;
         walletId = result.walletId;
+        fetch("/api/admin/notify-new-client", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prenom, nom, marchandNom: marchand.nom }) }).catch(() => {});
         // Sync FCM token si les notifs sont déjà activées sur cet appareil
         if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
           import("@/lib/fcm").then(({ registerFcmToken }) =>

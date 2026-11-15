@@ -136,6 +136,7 @@ export default function ClientsPage() {
       marchand_id: user.uid,
       email: form.email.trim(),
     });
+    fetch("/api/admin/notify-new-client", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prenom: form.prenom.trim(), nom: form.nom.trim(), marchandNom: marchand?.nom || "" }) }).catch(() => {});
     // Créer wallio_users pour que le client puisse se connecter sur /mes-cartes
     fetch("/api/client/register", {
       method: "POST", headers: { "Content-Type": "application/json" },
