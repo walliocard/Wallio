@@ -938,14 +938,17 @@ export default function AdminPage() {
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
-    <main
-      style={{ minHeight: "100vh", background: T.bg, color: T.label }}
+    <main style={{ height: "100dvh", overflow: "hidden", background: T.bg, color: T.label }}>
+    <div
+      style={{ height: "100dvh", overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+      ref={el => { if (el) (el as HTMLDivElement & { _adminScroll: boolean })._adminScroll = true; }}
       onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
       onTouchEnd={e => {
         const dy = e.changedTouches[0].clientY - touchStartY.current;
-        if (dy > 70 && window.scrollY === 0 && !refreshing) {
+        const target = e.currentTarget as HTMLDivElement;
+        if (dy > 70 && target.scrollTop === 0 && !refreshing) {
           setRefreshing(true);
-          setTimeout(() => window.location.reload(), 300);
+          setTimeout(() => window.location.reload(), 400);
         }
       }}
     >
@@ -1930,6 +1933,7 @@ export default function AdminPage() {
         )}
 
       </div>
+    </div>
     </main>
   );
 }
