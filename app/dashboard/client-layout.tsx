@@ -175,7 +175,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <ToastProvider>
       <OfflineBanner />
       {marchand && user && (
-        <div style={{ height: "100dvh", overflow: "hidden", background: "var(--bg)" }}>
+        <div style={{ height: "100dvh", overflow: "hidden", background: "var(--bg)", position: "relative" }}>
+          {/* Gradient Dynamic Island — enfant direct de l'outer wrapper, hors du scroll container */}
+          <div aria-hidden="true" style={{
+            position: "absolute", top: 0, left: 0, right: 0,
+            height: "calc(env(safe-area-inset-top, 60px) + 30px)",
+            background: "linear-gradient(to bottom, rgba(130,110,250,0.22) 0%, rgba(130,110,250,0.08) 70%, transparent 100%)",
+            pointerEvents: "none", zIndex: 999,
+          }} />
           <DashboardNav marchand={marchand} />
           <div
             ref={scrollRef}
@@ -185,7 +192,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               overflowY: "auto",
               overflowX: "hidden",
               WebkitOverflowScrolling: "touch",
-              background: "linear-gradient(to bottom, rgba(130,110,250,0.18) 0, rgba(130,110,250,0) 80px), var(--bg)",
+              background: "var(--bg)",
               animation: "page-in 0.2s ease",
               paddingTop: "env(safe-area-inset-top)",
             } as React.CSSProperties}
