@@ -144,11 +144,11 @@ export default function NotificationsPage() {
 
         {/* Templates */}
         <div className="rounded-2xl p-4 md:p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-          <div className="flex gap-2 overflow-x-auto pb-1 snap-x md:grid md:grid-cols-2 md:overflow-visible md:pb-0" style={{ scrollbarWidth: "none" }}>
+          <div className="grid grid-cols-2 gap-2">
             {TEMPLATES.map(tmpl => (
               <button key={tmpl.label}
                 onClick={() => { setTitle(tmpl.title); setBody(tmpl.body); }}
-                className="flex-shrink-0 snap-start text-left px-3 py-2.5 rounded-xl transition-all active:scale-95 md:flex-shrink"
+                className="text-left px-3 py-2.5 rounded-xl transition-all active:scale-95"
                 style={{
                   background: title === tmpl.title ? "rgba(0,122,255,0.08)" : "var(--bg)",
                   border: `1px solid ${title === tmpl.title ? "var(--accent)" : "var(--border)"}`,
