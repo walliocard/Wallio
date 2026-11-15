@@ -154,7 +154,7 @@ export default function AmbientBackground({ variant }: { variant: AmbientVariant
       ref={wrapperRef}
       aria-hidden="true"
       style={{
-        position: "fixed",
+        position: "absolute",
         top: 0, left: 0, right: 0,
         height,
         overflow: "hidden", pointerEvents: "none", zIndex: 0,
@@ -190,13 +190,6 @@ export default function AmbientBackground({ variant }: { variant: AmbientVariant
           willChange: "transform, opacity",
         }}
       />
-
-      {/* Top tint — couvre la Dynamic Island indépendamment des blobs */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 100,
-        background: "linear-gradient(to bottom, rgba(130,110,250,0.18) 0%, transparent 100%)",
-        pointerEvents: "none",
-      }} />
 
       {/* Fade-out overlay */}
       <div style={{

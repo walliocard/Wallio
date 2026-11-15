@@ -367,7 +367,7 @@ function ConnexionInner() {
   return (
     <main
       style={{
-        minHeight: "100dvh", background: "#F7F7FA", position: "relative", overflow: "hidden",
+        minHeight: "100dvh", background: "linear-gradient(to bottom, rgba(130,110,250,0.18) 0, rgba(130,110,250,0) 80px), #F7F7FA", position: "relative", overflow: "hidden",
         display: "flex", flexDirection: "column", alignItems: "center",
         padding: "env(safe-area-inset-top, 0px) 20px env(safe-area-inset-bottom, 24px)",
         animation: success ? "connexion-exit 0.35s ease-in forwards" : undefined,

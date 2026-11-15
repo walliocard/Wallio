@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 import { getAuth } from "firebase/auth";
 import { haptic } from "@/lib/haptics";
 
@@ -36,6 +37,7 @@ function IosCard({ children }: { children: React.ReactNode }) {
 
 export default function EquipePage() {
   const { marchand, user } = useAuth();
+  const router = useRouter();
   const m = marchand as Record<string, unknown>;
   const code = (m?.code_etablissement as string) || "";
   const [membres, setMembres] = useState<Membre[]>([]);
@@ -85,6 +87,14 @@ export default function EquipePage() {
 
   return (
     <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-32 md:pb-10 max-w-xl">
+      <button onClick={() => router.back()}
+        className="flex items-center gap-2 mb-6"
+        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--accent)", padding: 0, fontSize: 16, fontWeight: 500 }}>
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Retour
+      </button>
       <h1 className="text-[34px] font-bold tracking-[-1px] mb-8" style={{ color: "var(--fg)" }}>Gestion équipe</h1>
 
       <IosCard>
