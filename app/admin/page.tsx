@@ -1397,19 +1397,6 @@ export default function AdminPage() {
               style={{ padding: "9px 16px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: `1px solid ${T.border}`, boxShadow: T.shadow, cursor: "pointer" }}>
               + Nouveau
             </button>
-            <button onClick={async () => {
-              if (!("Notification" in window)) return alert("Notifications non supportées");
-              const perm = await Notification.requestPermission();
-              if (perm !== "granted") return alert("Permission refusée");
-              const { registerFcmToken } = await import("@/lib/fcm");
-              const token = await registerFcmToken();
-              if (!token) return alert("Impossible d'obtenir le token");
-              const res = await fetch("/api/admin/register-token", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fcm_token: token }) });
-              if (res.ok) alert("Notifications activées sur cet appareil !");
-              else alert("Erreur lors de l'enregistrement");
-            }} style={{ padding: "9px 14px", borderRadius: 12, background: T.btnSecBg, border: `1px solid ${T.btnSecBorder}`, color: T.btnSecFg, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
-              Notifs
-            </button>
             <button onClick={logout}
               style={{ padding: "9px 14px", borderRadius: 12, background: T.btnSecBg, border: `1px solid ${T.btnSecBorder}`, color: T.btnSecFg, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
               Sortir
@@ -1418,7 +1405,7 @@ export default function AdminPage() {
         </div>
 
         {/* Onglets */}
-        <div style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, width: "fit-content" }}>
+        <div style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, overflowX: "auto", scrollbarWidth: "none" }}>
           {([["marchands", "Marchands"], ["clients", "Clients"], ["comptabilite", "Comptabilité"], ["contrat", "Contrat"], ["facture", "Facture"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               style={{ padding: "7px 18px", borderRadius: 8, fontSize: 14, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s" }}>
