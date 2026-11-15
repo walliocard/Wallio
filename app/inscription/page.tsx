@@ -32,23 +32,39 @@ export default function InscriptionClientPage() {
   const [form, setForm] = useState({ prenom: "", nom: "", phone: "", dob: "", email: "", pin: "" });
   const [countryCode, setCountryCode] = useState("+212");
   const [pinError, setPinError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (form.pin && !/^\d{4}$/.test(form.pin)) { setPinError("Le PIN doit contenir exactement 4 chiffres."); return; }
+    if (!/^\d{4}$/.test(form.pin)) { setPinError("Le PIN doit contenir exactement 4 chiffres."); return; }
     const local = form.phone.replace(/\D/g, "").replace(/^0/, "");
     if (!local || !form.prenom) return;
     const fullPhone = `${countryCode}${local}`;
+    setLoading(true); setServerError("");
+    try {
+      const res = await fetch("/api/client/register", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telephone: fullPhone, prenom: form.prenom.trim(), nom: form.nom.trim(), dob: form.dob, email: form.email.trim(), pin: form.pin }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        if (data.error === "already_exists") setServerError("Ce numéro est déjà enregistré. Connectez-vous depuis /mes-cartes.");
+        else setServerError("Erreur. Réessayez.");
+        setLoading(false); return;
+      }
+    } catch { setServerError("Erreur de connexion. Réessayez."); setLoading(false); return; }
+    // Sauvegarder identité en localStorage (utilisée pour l'auto-inscription NFC)
     localStorage.setItem(PHONE_KEY,  fullPhone);
     localStorage.setItem(PRENOM_KEY, form.prenom.trim());
     localStorage.setItem(NOM_KEY,    form.nom.trim());
     if (form.dob)   localStorage.setItem(DOB_KEY,   form.dob);
     if (form.email) localStorage.setItem(EMAIL_KEY, form.email.trim());
-    if (form.pin)   localStorage.setItem(PIN_KEY,   form.pin);
+    // PIN non stocké en localStorage — sécurisé dans wallio_users (Firestore)
     router.push("/mes-cartes");
   }
 
-  const ready = form.prenom.trim() && form.phone.trim() && form.email.trim() && /^\d{4}$/.test(form.pin);
+  const ready = form.prenom.trim() && form.phone.trim() && form.email.trim() && /^\d{4}$/.test(form.pin) && !loading;
 
   return (
     <main style={bg}>
@@ -123,6 +139,7 @@ export default function InscriptionClientPage() {
                 onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
               />
               {pinError && <p style={{ fontSize: 13, color: "#FF453A" }}>{pinError}</p>}
+              {serverError && <p style={{ fontSize: 13, color: "#FF453A" }}>{serverError}</p>}
 
               <button type="submit" disabled={!ready} style={{
                 marginTop: 4, padding: "15px", borderRadius: 16, border: "none",
@@ -133,7 +150,7 @@ export default function InscriptionClientPage() {
                 boxShadow: ready ? "0 8px 24px rgba(91,124,250,0.35)" : "none",
                 transition: "all 0.2s",
               }}>
-                {t.client_signup_submit}
+                {loading ? "Création…" : t.client_signup_submit}
               </button>
             </form>
           </div>

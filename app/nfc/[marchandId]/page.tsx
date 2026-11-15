@@ -228,14 +228,10 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
             parrain_wallet_id: parrainId,
             email: cachedEmail || undefined,
           });
-          // Appliquer PIN et envoyer email de bienvenue si saisis sur /inscription
-          if (cachedPin) {
-            fetch("/api/client/set-pin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telephone: cachedPhone, pin: cachedPin }) }).catch(() => {});
-            localStorage.removeItem("wallio_client_pin");
-          }
+          // Sync PIN + email depuis wallio_users vers le nouveau doc client
+          fetch("/api/client/sync-user-pin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telephone: cachedPhone }) }).catch(() => {});
           if (cachedEmail) {
             fetch("/api/send-welcome-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: cachedEmail, prenom: cachedPrenom, marchandNom: marchand.nom, walletId: newWalletId, mode: "inscription" }) }).catch(() => {});
-            localStorage.removeItem("wallio_client_email");
           }
           localStorage.setItem(WALLET_KEY(marchandId), newWalletId);
           const newClient: Client = {

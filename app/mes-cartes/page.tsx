@@ -84,6 +84,7 @@ export default function MesCartesPage() {
   const [otpCode, setOtpCode]     = useState("");
   const [dobInput, setDobInput]   = useState("");
   const [resetEmailMasked, setResetEmailMasked] = useState("");
+  const [isWallioUser, setIsWallioUser] = useState(false);
   const [tab, setTab]           = useState<"cartes"|"messages"|"decouvrir">("cartes");
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
@@ -127,14 +128,13 @@ export default function MesCartesPage() {
     try {
       const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", telephone)));
       if (snap.empty) {
-        // Pas de compte Firestore — vérifie si l'utilisateur s'est pré-inscrit via /inscription
-        const savedPrenom = localStorage.getItem(PRENOM_KEY);
-        if (savedPrenom) {
-          // Pré-inscrit : identité en localStorage, pas encore de marchand
-          // Vérifier le PIN localStorage si présent, sinon connecter directement
-          const savedPin = localStorage.getItem("wallio_client_pin");
-          if (savedPin) {
-            setStep("pin"); // le PIN sera vérifié contre localStorage dans handleVerifyPin
+        // Pas de clients Firestore — vérifier wallio_users
+        const res = await fetch(`/api/client/check-user?telephone=${encodeURIComponent(telephone)}`);
+        const data = await res.json();
+        if (data.exists) {
+          setIsWallioUser(true);
+          if (data.hasPin) {
+            setStep("pin");
           } else {
             localStorage.setItem(VERIFIED_KEY, "1");
             await loadCards(telephone);
@@ -143,6 +143,7 @@ export default function MesCartesPage() {
         }
         localStorage.removeItem(PHONE_KEY); setNotFound(true); setStep("login"); return;
       }
+      setIsWallioUser(false);
       const hasPinHash = snap.docs.some((d: import("firebase/firestore").QueryDocumentSnapshot) => !!(d.data().pin_hash));
       setStep(hasPinHash ? "pin" : "create_pin");
     } catch { setStep("pin"); }
@@ -288,10 +289,14 @@ export default function MesCartesPage() {
     if (pinInput.length !== 4 || !phone) return;
     setPinLoading(true); setPinError("");
     try {
-      // Pré-inscrit (pas encore de compte Firestore) → vérifier PIN localStorage
-      const savedPin = localStorage.getItem("wallio_client_pin");
-      if (savedPin && localStorage.getItem(PRENOM_KEY)) {
-        if (pinInput === savedPin) {
+      // Wallio user (pré-inscrit, pas encore de clients Firestore) → vérifier via wallio_users
+      if (isWallioUser) {
+        const res = await fetch("/api/client/verify-user-pin", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telephone: phone, pin: pinInput }),
+        });
+        const data = await res.json();
+        if (data.ok) {
           localStorage.setItem(VERIFIED_KEY, "1");
           await loadCards(phone);
         } else {
@@ -407,13 +412,27 @@ export default function MesCartesPage() {
         clientId = existing.id;
         walletId = existing.wallet_id;
       } else {
+        const cachedEmail = localStorage.getItem("wallio_client_email");
         const result = await creerClient({
           prenom, nom, telephone: phone,
           date_naissance: dob || "",
           marchand_id: marchand.id,
+          email: cachedEmail || undefined,
         });
         clientId = result.clientId;
         walletId = result.walletId;
+        // Sync PIN + email depuis wallio_users vers le nouveau doc client
+        fetch("/api/client/sync-user-pin", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telephone: phone }),
+        }).catch(() => {});
+        // Email de bienvenue
+        if (cachedEmail) {
+          fetch("/api/send-welcome-email", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: cachedEmail, prenom, marchandNom: marchand.nom, walletId, mode: "inscription" }),
+          }).catch(() => {});
+        }
       }
       void clientId;
       localStorage.setItem(`wallio_${marchand.id}`, walletId);
@@ -464,9 +483,8 @@ export default function MesCartesPage() {
   function handleLogout() {
     unsubRef.current?.();
     unsubRef.current = null;
-    localStorage.removeItem(PHONE_KEY);
-    localStorage.removeItem(VERIFIED_KEY);
-    setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom(""); setPhoneInput(""); setNotFound(false); setPinInput(""); setPinError(""); setStep("login");
+    [PHONE_KEY, VERIFIED_KEY, PRENOM_KEY, NOM_KEY, DOB_KEY, "wallio_client_email", "wallio_client_pin"].forEach(k => localStorage.removeItem(k));
+    setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom(""); setPhoneInput(""); setNotFound(false); setPinInput(""); setPinError(""); setIsWallioUser(false); setStep("login");
   }
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -898,6 +916,12 @@ export default function MesCartesPage() {
         )}
 
         {/* ── Tab Découvrir ── */}
+        {tab === "decouvrir" && isWallioUser && cards.length === 0 && (
+          <div style={{ background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.2)", borderRadius: 16, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p style={{ fontSize: 13, color: "#007AFF", fontWeight: 500, margin: 0 }}>Rejoignez un prestataire ci-dessous pour activer votre carte.</p>
+          </div>
+        )}
         {tab === "decouvrir" && (
           merchants.length === 0 ? (
             <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
