@@ -95,4 +95,26 @@ export const Icons = {
       <polyline points="12 7 12 12 15 15"/>
     </svg>
   ),
+  MoreCircle: ({ size = 20 }: P) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...S}>
+      <circle cx="12" cy="12" r="10"/>
+      <circle cx="8"  cy="12" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="16" cy="12" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+  QrViewfinder: ({ size = 24 }: P) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+      <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+      <rect x="7" y="7" width="4" height="4" rx="0.5"/>
+      <rect x="13" y="7" width="4" height="4" rx="0.5"/>
+      <rect x="7" y="13" width="4" height="4" rx="0.5"/>
+      <circle cx="15" cy="15" r="1.2" fill="currentColor" stroke="none"/>
+      <line x1="13" y1="17" x2="17" y2="17"/>
+      <line x1="17" y1="13" x2="17" y2="17"/>
+    </svg>
+  ),
 };

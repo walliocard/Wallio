@@ -1,20 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #F5F5F7;
+  --bg: #F7F7FA;
   --bg-secondary: #FFFFFF;
   --fg: #1D1D1F;
   --fg-secondary: #6E6E73;
-  --fg-tertiary: #86868B;
+  --fg-tertiary: #8E8E93;
   --border: rgba(0,0,0,0.08);
-  --glass-bg: #FFFFFF;
+  --separator: #E5E5EA;
+  --glass-bg: rgba(255,255,255,0.75);
   --glass-border: rgba(0,0,0,0.06);
-  --accent: #007AFF;
-  --accent-hover: #0071E3;
-  --wallio-gradient: linear-gradient(135deg, #007AFF 0%, #8B5CF6 100%);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-md: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10), 0 20px 60px rgba(0,0,0,0.08);
+  --accent: #2F7BFF;
+  --accent-hover: #1A6AEE;
+  --accent-violet: #8B5CF6;
+  --lavande: #EEF0FF;
+  --lavande-fg: #4B4FD6;
+  --wallio-gradient: linear-gradient(135deg, #2F7BFF 0%, #8B5CF6 100%);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.07);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.09), 0 20px 60px rgba(0,0,0,0.07);
+  --tab-h: 49px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --bg-secondary: #1C1C1E;
+    --fg: #F5F5F7;
+    --fg-secondary: #8E8E93;
+    --fg-tertiary: #636366;
+    --border: rgba(255,255,255,0.10);
+    --separator: #38383A;
+    --glass-bg: rgba(28,28,30,0.80);
+    --glass-border: rgba(255,255,255,0.08);
+    --lavande: rgba(75,79,214,0.18);
+    --lavande-fg: #9DA3FF;
+  }
 }
 
 
@@ -31,13 +52,13 @@ html {
   overflow-x: hidden;
   overscroll-behavior: none;
   touch-action: pan-y;
-  background-color: #F5F5F7;
+  background-color: #F7F7FA;
   min-height: 100%;
 }
 
 body {
-  background: #F5F5F7;
-  background-color: #F5F5F7;
+  background: #F7F7FA;
+  background-color: #F7F7FA;
   color: var(--fg);
   font-family: var(--font-geist), Inter, system-ui, sans-serif;
   transition: background 0.3s ease;
@@ -250,4 +271,71 @@ input[type="range"].zoom-slider::-moz-range-progress {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Fondu fumé ── */
+.smoky-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 280px;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.smoky-blob {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+.smoky-blob-1 {
+  width: 320px; height: 320px;
+  top: -120px; left: -60px;
+  background: radial-gradient(circle, rgba(47,123,255,0.42) 0%, transparent 70%);
+  animation: blob1 20s ease-in-out infinite;
+}
+.smoky-blob-2 {
+  width: 260px; height: 260px;
+  top: -100px; right: -40px;
+  background: radial-gradient(circle, rgba(139,92,246,0.38) 0%, transparent 70%);
+  animation: blob2 20s ease-in-out infinite;
+  animation-delay: -7s;
+}
+.smoky-blob-3 {
+  width: 220px; height: 220px;
+  top: 30px; left: 35%;
+  background: radial-gradient(circle, rgba(185,168,255,0.32) 0%, transparent 70%);
+  animation: blob3 20s ease-in-out infinite;
+  animation-delay: -13s;
+}
+.smoky-bg.pulsing .smoky-blob-1 { animation: blob1-pulse 1s ease-out forwards, blob1 20s ease-in-out infinite; }
+.smoky-bg.pulsing .smoky-blob-2 { animation: blob2-pulse 1s ease-out forwards, blob2 20s ease-in-out infinite 7s; }
+@keyframes blob1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(28px,18px) scale(1.07); }
+  66%      { transform: translate(-18px,10px) scale(0.94); }
+}
+@keyframes blob2 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(-24px,14px) scale(0.93); }
+  66%      { transform: translate(18px,-10px) scale(1.06); }
+}
+@keyframes blob3 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(14px,-18px) scale(1.05); }
+  66%      { transform: translate(-10px,14px) scale(0.97); }
+}
+@keyframes blob1-pulse {
+  0%   { transform: scale(1); opacity: 1; }
+  50%  { transform: scale(1.3); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes blob2-pulse {
+  0%   { transform: scale(1); opacity: 1; }
+  50%  { transform: scale(1.25); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-color-scheme: dark) {
+  .smoky-blob-1 { background: radial-gradient(circle, rgba(47,123,255,0.30) 0%, transparent 70%); }
+  .smoky-blob-2 { background: radial-gradient(circle, rgba(139,92,246,0.28) 0%, transparent 70%); }
+  .smoky-blob-3 { background: radial-gradient(circle, rgba(185,168,255,0.22) 0%, transparent 70%); }
 }

@@ -125,7 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               overflowY: "auto",
               overflowX: "hidden",
               WebkitOverflowScrolling: "touch",
-              background: "radial-gradient(ellipse at 50% -10%, #ECF2FF 0%, #F5F5F7 52%)",
+              background: "var(--bg)",
               animation: "page-in 0.2s ease",
               paddingTop: "env(safe-area-inset-top)",
             } as React.CSSProperties}
