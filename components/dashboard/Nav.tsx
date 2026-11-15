@@ -201,7 +201,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           backdropFilter: "blur(40px) saturate(180%)",
           WebkitBackdropFilter: "blur(40px) saturate(180%)",
           borderTop: "0.5px solid rgba(0,0,0,0.10)",
-          paddingBottom: isNative ? "env(safe-area-inset-bottom, 0px)" : "0px",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", height: "var(--tab-h, 49px)" }}>
