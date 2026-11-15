@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const WallioSplash = mod.WallioSplash ?? mod.default;
       if (gone) return;
       const splash = WallioSplash.mount({
-        iconSrc: "/icon-dashboard-512.png",
+        iconSrc: "/icon-pro-512.png",
         fallback: "login",
         fallbackTarget: () => document.querySelector("#login-logo"),
       });

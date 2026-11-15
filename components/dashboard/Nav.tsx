@@ -204,7 +204,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
           paddingBottom: isNative ? "env(safe-area-inset-bottom, 0px)" : "0px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "flex-end", height: "var(--tab-h, 49px)" }}>
+        <div style={{ display: "flex", alignItems: "center", height: "var(--tab-h, 49px)" }}>
 
           {/* Onglets gauche */}
           {LEFT_TABS.map(({ href, label }) => {

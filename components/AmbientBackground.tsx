@@ -154,8 +154,11 @@ export default function AmbientBackground({ variant }: { variant: AmbientVariant
       ref={wrapperRef}
       aria-hidden="true"
       style={{
-        position: "absolute", top: 0, left: 0, right: 0,
-        height, overflow: "hidden", pointerEvents: "none", zIndex: 0,
+        position: "absolute",
+        top: "calc(-1 * env(safe-area-inset-top, 0px))",
+        left: 0, right: 0,
+        height: `calc(${height}px + env(safe-area-inset-top, 0px))`,
+        overflow: "hidden", pointerEvents: "none", zIndex: 0,
       }}
     >
       {/* Blobs */}

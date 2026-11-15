@@ -106,7 +106,7 @@ function CodeBoxInput({ value, onChange, disabled }: { value: string; onChange: 
   };
 
   return (
-    <div style={{ display: "flex", gap: 8 }}>
+    <div style={{ display: "flex", gap: 8, width: "100%" }}>
       {Array.from({ length: 6 }).map((_, i) => (
         <input
           key={i}
@@ -120,7 +120,7 @@ function CodeBoxInput({ value, onChange, disabled }: { value: string; onChange: 
           inputMode="text"
           autoCapitalize="characters"
           style={{
-            flex: 1, height: 52, background: "white",
+            flex: 1, minWidth: 0, height: 52, background: "white",
             border: "1px solid #E5E5EA", borderRadius: 14,
             textAlign: "center", fontSize: 20, fontWeight: 700,
             color: "#1D1D1F", outline: "none",
@@ -389,7 +389,7 @@ function ConnexionInner() {
         }}>
           <img
             id="login-logo"
-            src="/icon-dashboard-512.png"
+            src="/icon-pro-512.png"
             width={72} height={72}
             alt="Wallio"
             style={{ borderRadius: 16.5, boxShadow: "0 8px 24px rgba(91,92,240,0.25)", display: "block" }}
