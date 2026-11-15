@@ -11,6 +11,7 @@ import Link from "next/link";
 import jsQR from "jsqr";
 import { useLang } from "@/lib/lang-context";
 import { useToast } from "@/components/Toast";
+import { triggerAmbientPulse } from "@/components/AmbientBackground";
 
 type Tab = "qr" | "telephone" | "nom";
 interface TamponResult {
@@ -134,6 +135,7 @@ export default function ScannerPage() {
           }
         }).catch(() => {});
       }
+      if (data.type === "ok" || data.type === "recompense") triggerAmbientPulse();
       if (data.type === "recompense") showToast(`Récompense débloquée — ${data.nom_recompense}`, "success");
       if (data.type === "choix_requis") showToast(`Choix disponible — ${data.prenom}${data.birthday ? " · Joyeux anniversaire !" : ""}`, "info");
     } catch { setResult({ type: "not_found" }); }
@@ -229,13 +231,10 @@ export default function ScannerPage() {
 
       {/* Header */}
       <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 mb-5">
-        <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
-          {t.scan_subtitle}
-        </p>
-        <h1 className="text-[32px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.scan_title}</h1>
+        <h1 className="text-[34px] font-bold tracking-[-1px] mb-4" style={{ color: "var(--fg)" }}>{t.scan_title}</h1>
 
-        {/* Onglets */}
-        <div className="flex gap-2 mt-4">
+        {/* Sélecteur segmenté */}
+        <div style={{ display: "inline-flex", background: "rgba(0,0,0,0.06)", borderRadius: 10, padding: 3 }}>
           {([["qr", t.scan_tab_qr], ["telephone", t.scan_tab_phone], ["nom", t.scan_tab_name]] as [Tab, string][]).map(([tab_, label]) => (
             <button
               key={tab_}
@@ -245,11 +244,13 @@ export default function ScannerPage() {
                 setNomResults(null); setNom("");
                 if (scanning) stopCamera();
               }}
-              className="px-4 py-2 rounded-2xl text-[13px] font-medium transition-all"
               style={{
-                background: tab === tab_ ? "var(--accent)" : "var(--glass-bg)",
-                color: tab === tab_ ? "white" : "var(--fg-secondary)",
-                border: `1px solid ${tab === tab_ ? "var(--accent)" : "var(--border)"}`,
+                padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: tab === tab_ ? 600 : 400,
+                background: tab === tab_ ? "#FFFFFF" : "transparent",
+                color: tab === tab_ ? "var(--fg)" : "var(--fg-tertiary)",
+                border: "none", cursor: "pointer",
+                boxShadow: tab === tab_ ? "0 1px 4px rgba(0,0,0,0.12)" : "none",
+                transition: "all 0.15s",
               }}
             >
               {label}
@@ -334,7 +335,7 @@ export default function ScannerPage() {
                     )}
                     <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>{result.tampons} / {result.objectif} tampons</p>
                     <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
-                      <div className="h-full rounded-full" style={{ width: `${Math.min(((result.tampons ?? 0) / (result.objectif ?? 1)) * 100, 100)}%`, background: "var(--accent)", transition: "width 0.6s ease" }} />
+                      <div className="h-full rounded-full" style={{ width: `${Math.min(((result.tampons ?? 0) / (result.objectif ?? 1)) * 100, 100)}%`, background: "linear-gradient(90deg,#2F7BFF,#8B5CF6)", transition: "width 0.6s cubic-bezier(0.34,1.06,0.64,1)" }} />
                     </div>
                     <Link href={`/client/${result.walletId}`} className="text-[13px] font-medium mt-1" style={{ color: "var(--accent)" }}>Voir le profil</Link>
                   </>)}
@@ -354,7 +355,7 @@ export default function ScannerPage() {
                     </p>
                     <button onClick={handleValiderRecompense} disabled={validating}
                       className="w-full py-4 rounded-2xl font-bold text-white mt-1 text-[15px]"
-                      style={{ background: validating ? "var(--border)" : "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: validating ? "none" : "0 6px 20px rgba(0,122,255,0.28)" }}>
+                      style={{ background: validating ? "var(--border)" : "linear-gradient(135deg,#2F7BFF,#8B5CF6)", boxShadow: validating ? "none" : "0 6px 20px rgba(47,123,255,0.30)" }}>
                       {validating ? "Validation…" : "Valider"}
                     </button>
                     <Link href={`/client/${result.walletId}`} className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>Voir le profil</Link>
@@ -381,7 +382,7 @@ export default function ScannerPage() {
                         onClick={() => handleEnregistrerChoix("petit")}
                         disabled={enregistrantChoix}
                         className="w-full py-4 rounded-2xl font-bold text-white text-[15px]"
-                        style={{ background: enregistrantChoix ? "var(--border)" : "linear-gradient(135deg,#007AFF,#8B5CF6)", boxShadow: enregistrantChoix ? "none" : "0 6px 20px rgba(0,122,255,0.28)" }}
+                        style={{ background: enregistrantChoix ? "var(--border)" : "linear-gradient(135deg,#2F7BFF,#8B5CF6)", boxShadow: enregistrantChoix ? "none" : "0 6px 20px rgba(47,123,255,0.30)" }}
                       >
                         {enregistrantChoix ? "…" : `Prendre : ${result.nom_recompense_petit}`}
                       </button>
@@ -466,7 +467,7 @@ export default function ScannerPage() {
                     </div>
                   )}
 
-                  <button onClick={() => { setResult(null); startCamera(); }} className="w-full py-3 rounded-2xl font-semibold text-white mt-1" style={{ background: "var(--accent)" }}>
+                  <button onClick={() => { setResult(null); startCamera(); }} className="w-full py-3 rounded-2xl font-semibold text-white mt-1" style={{ background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)" }}>
                     Scanner un autre client
                   </button>
                 </div>
@@ -475,19 +476,19 @@ export default function ScannerPage() {
               {/* État idle */}
               {!scanning && !loadingTampon && !result && (
                 <div className="rounded-3xl flex flex-col items-center justify-center text-center h-[300px] md:h-auto md:aspect-square p-8"
-                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-                    style={{ background: "rgba(0,122,255,0.08)", color: "var(--accent)" }}>
-                    <Icons.Camera size={28} />
+                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
+                  <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5"
+                    style={{ background: "var(--lavande)" }}>
+                    <Icons.QrViewfinder size={36} />
                   </div>
-                  <p className="text-[16px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>{t.scan_scan_qr}</p>
+                  <p className="text-[17px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>{t.scan_scan_qr}</p>
                   <p className="text-[13px] mb-6 max-w-[220px]" style={{ color: "var(--fg-secondary)" }}>
                     {t.scan_point_qr}
                   </p>
                   <button
                     onClick={startCamera}
                     className="w-full max-w-[200px] py-4 rounded-2xl text-white font-bold text-[15px]"
-                    style={{ background: "var(--accent)", boxShadow: "0 6px 24px rgba(0,122,255,0.35)" }}
+                    style={{ background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)", boxShadow: "0 6px 20px rgba(47,123,255,0.35)" }}
                   >
                     {t.scan_enable_camera}
                   </button>

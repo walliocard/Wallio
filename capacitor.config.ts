@@ -10,26 +10,24 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1800,
-      launchAutoHide: true,
-      backgroundColor: "#FFFFFF",
+      launchAutoHide: false,       // on cache manuellement depuis JS après le splash HTML
+      backgroundColor: "#F7F7FA",
       showSpinner: false,
       androidSplashResourceName: "splash",
-      iosSplashResourceName: "Splash",
     },
     StatusBar: {
-      style: "Default",
-      backgroundColor: "#FFFFFF",
+      style: "Dark",
+      backgroundColor: "#F7F7FA",
       overlaysWebView: true,
     },
   },
   ios: {
     contentInset: "never",
     scrollEnabled: true,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F7F7FA",
   },
   android: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F7F7FA",
   },
 };
 

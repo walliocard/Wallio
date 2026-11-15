@@ -484,15 +484,20 @@ export function formatTemps(secondes: number): string {
 
 export function formatTempsDepuis(ts?: { seconds: number } | null): string {
   if (!ts) return "jamais";
-  const sec = Date.now() / 1000 - ts.seconds;
+  const date = new Date(ts.seconds * 1000);
+  const sec = (Date.now() - ts.seconds * 1000) / 1000;
   if (sec < 60) return "à l'instant";
   if (sec < 3600) return `il y a ${Math.floor(sec / 60)} min`;
-  if (sec < 86400) return `il y a ${Math.floor(sec / 3600)} h`;
-  const j = Math.floor(sec / 86400);
-  if (j === 1) return "hier";
-  if (j < 30) return `il y a ${j} jours`;
-  if (j < 365) return `il y a ${Math.floor(j / 30)} mois`;
-  return `il y a ${Math.floor(j / 365)} an(s)`;
+  const now = new Date();
+  const today = new Date(now); today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const dateDay = new Date(date); dateDay.setHours(0, 0, 0, 0);
+  const time = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  if (dateDay.getTime() === today.getTime()) return `aujourd'hui à ${time}`;
+  if (dateDay.getTime() === yesterday.getTime()) return `hier à ${time}`;
+  const days = Math.floor(sec / 86400);
+  if (days < 7) return `il y a ${days} jours`;
+  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
 export async function setTampons(clientId: string, tampons: number, paliersValides?: boolean[], clearChoix = false): Promise<void> {

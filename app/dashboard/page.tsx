@@ -8,6 +8,7 @@ import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
+import AmbientBackground from "@/components/AmbientBackground";
 
 function useCountUp(target: number, duration = 700) {
   const [val, setVal] = useState(0);
@@ -51,40 +52,50 @@ type Stats = {
   inactifs_30j: number;
 };
 
-function HeroRing({ value, ratio }: { value: number; ratio: number }) {
-  const animated = useCountUp(value);
-  const [filled, setFilled] = useState(0);
-  useEffect(() => {
-    const id = setTimeout(() => setFilled(ratio), 120);
-    return () => clearTimeout(id);
-  }, [ratio]);
-  const r = 58, cx = 76, circ = 2 * Math.PI * r;
+function TodayCard({ aujourd_hui, semaine, maxSemaine, tendance }: { aujourd_hui: number; semaine: number[]; maxSemaine: number; tendance: number | null }) {
+  const animated = useCountUp(aujourd_hui);
   return (
-    <div style={{ position: "relative", width: 156, height: 156, flexShrink: 0 }}>
-      <svg width="156" height="156" style={{ transform: "rotate(-90deg)", position: "absolute", inset: 0 }}>
-        <circle cx={cx} cy={cx} r={r} fill="none" stroke="rgba(0,122,255,0.12)" strokeWidth="8" />
-        <circle cx={cx} cy={cx} r={r} fill="none" stroke="#007AFF" strokeWidth="8"
-          strokeDasharray={circ} strokeDashoffset={circ * (1 - filled)}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.9s cubic-bezier(0.34,1.05,0.64,1)" }} />
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 42, fontWeight: 800, color: "#007AFF", lineHeight: 1, letterSpacing: -1 }}>{fmt(animated)}</span>
-        <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(0,122,255,0.6)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 4 }}>
-          Aujourd&apos;hui
-        </span>
+    <div style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", borderRadius: 20, padding: "18px 20px", marginBottom: 16, boxShadow: "var(--shadow-sm)" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <p style={{ fontSize: 13, color: "var(--fg-tertiary)", marginBottom: 4 }}>Aujourd&apos;hui</p>
+          <p style={{ fontSize: 48, fontWeight: 800, color: "var(--fg)", lineHeight: 1, letterSpacing: -2, fontVariantNumeric: "tabular-nums" }}>
+            {animated}
+          </p>
+          <p style={{ fontSize: 13, color: "var(--fg-secondary)", marginTop: 4 }}>
+            {aujourd_hui === 0 ? "Aucune visite" : `visite${aujourd_hui > 1 ? "s" : ""}`}
+          </p>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          {tendance !== null && (
+            <span style={{ display: "inline-block", background: "var(--lavande)", color: "var(--lavande-fg)", padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, marginBottom: 10 }}>
+              {tendance >= 0 ? "+" : ""}{tendance}% vs sem. préc.
+            </span>
+          )}
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 32 }}>
+            {semaine.map((val, i) => {
+              const h = Math.max((val / maxSemaine) * 28, val > 0 ? 4 : 2);
+              return (
+                <div key={i} style={{ width: 14, height: h, borderRadius: 2, background: i === 6 ? "linear-gradient(to top, #2F7BFF, #8B5CF6)" : "var(--border)", transition: `height 0.4s cubic-bezier(0.34,1.06,0.64,1) ${i * 0.04}s` }} />
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function MiniStat({ value, label, color, trend }: { value: number; label: string; color: string; trend?: string }) {
+function StatTile({ value, label, trend, icon }: { value: number; label: string; trend?: string; icon: React.ReactNode }) {
   const animated = useCountUp(value);
   return (
-    <div style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", borderRadius: 20, padding: "16px 18px" }}>
-      <p style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1, letterSpacing: -0.5 }}>{fmt(animated)}</p>
-      <p style={{ fontSize: 10, fontWeight: 600, color: "var(--fg-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 6 }}>{label}</p>
-      {trend && <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginTop: 3 }}>{trend}</p>}
+    <div style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", borderRadius: 20, padding: "16px 18px", boxShadow: "var(--shadow-sm)" }}>
+      <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--lavande)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+        {icon}
+      </div>
+      <p style={{ fontSize: 28, fontWeight: 800, color: "var(--fg)", lineHeight: 1, letterSpacing: -0.5, fontVariantNumeric: "tabular-nums" }}>{fmt(animated)}</p>
+      <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginTop: 5, fontWeight: 500 }}>{label}</p>
+      {trend && <p style={{ fontSize: 11, color: "var(--fg-tertiary)", marginTop: 2 }}>{trend}</p>}
     </div>
   );
 }
@@ -279,7 +290,7 @@ export default function AccueilPage() {
       type: "inactive",
       text: `${stats.inactifs_30j} client${stats.inactifs_30j > 1 ? "s à relancer" : " à relancer"}`,
       sub: "Envoyer un message de relance",
-      color: "#FF3B30",
+      color: "var(--lavande-fg)",
       href: "/dashboard/notifications",
     });
   }
@@ -296,31 +307,30 @@ export default function AccueilPage() {
     return null;
   })();
 
+  const heure = new Date().getHours();
+  const salut = heure < 18 ? "Bonjour" : "Bonsoir";
+
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-36 md:pb-10 max-w-5xl">
+    <div style={{ position: "relative" }}>
+      <AmbientBackground variant="hero" />
+      <div className="relative px-5 md:px-8 lg:px-10 pt-6 pb-36 md:pb-10 max-w-5xl" style={{ zIndex: 1 }}>
 
       {/* Header */}
-      <div className="mb-8 flex items-center gap-4">
-        <div className="flex-shrink-0 overflow-hidden flex items-center justify-center"
-          style={{ width: 72, height: 72, borderRadius: 22, background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--glass-bg)", border: "1px solid var(--border)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           {m.logo_url
             // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={m.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            : <span className="text-[30px] font-bold" style={{ color: "var(--accent)" }}>{(marchand.nom?.[0] || "?").toUpperCase()}</span>
+            ? <img src={m.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : <span style={{ fontSize: 20, fontWeight: 700, color: "var(--accent)" }}>{(marchand.nom?.[0] || "?").toUpperCase()}</span>
           }
         </div>
         <div>
-          <p className="text-[12px] font-medium" style={{ color: "var(--fg-tertiary)" }}>
-            Bonjour · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          <p style={{ fontSize: 13, color: "var(--fg-tertiary)", marginBottom: 2 }}>
+            {salut} · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
-          <h1 className="text-[40px] lg:text-[44px] font-black tracking-[-2px] leading-tight" style={{ color: "var(--fg)" }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.5, lineHeight: 1.15, margin: 0 }}>
             {marchand.nom}
           </h1>
-          {stats.anniversaires_today > 0 && (
-            <p className="text-[12px] mt-0.5 font-medium" style={{ color: "#FF9F0A" }}>
-              {`${stats.anniversaires_today} anniversaire${stats.anniversaires_today > 1 ? "s" : ""} aujourd'hui`}
-            </p>
-          )}
         </div>
       </div>
 
@@ -381,76 +391,31 @@ export default function AccueilPage() {
         </div>
       )}
 
-      {/* Scanner CTA — pleine largeur */}
-      <Link href="/dashboard/scanner"
-        className="flex items-center justify-between rounded-2xl p-3.5 mb-5 transition-all hover:opacity-90 active:scale-[0.98]"
-        style={{
-          background: "linear-gradient(var(--glass-bg), var(--glass-bg)) padding-box, linear-gradient(135deg,#007AFF,#8B5CF6) border-box",
-          border: "2px solid transparent",
-        }}>
-        <div>
-          <p className="text-[15px] font-bold tracking-[-0.2px]"
-            style={{ background: "linear-gradient(135deg,#007AFF,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Scanner une carte
-          </p>
-          <p className="text-[12px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>Ajouter un tampon client</p>
-        </div>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.10),rgba(139,92,246,0.07))", color: "#007AFF" }}>
-          <Icons.Scan size={17} />
-        </div>
-      </Link>
+      {/* Carte Aujourd'hui */}
+      <TodayCard aujourd_hui={stats.aujourd_hui} semaine={stats.semaine} maxSemaine={maxSemaine} tendance={tendance} />
 
-      {/* Message d'encouragement contextuel */}
-      {encouragement && (
-        <div className="flex items-center gap-2 mb-4 px-1">
-          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: encouragement.color }} />
-          <p className="text-[13px] font-medium" style={{ color: encouragement.color }}>{encouragement.text}</p>
-        </div>
-      )}
-
-      {/* Hero Aujourd'hui + stats 2×2 */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-4">
-
-        <div className="rounded-2xl p-4 flex items-center gap-5"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-          <HeroRing value={stats.aujourd_hui} ratio={heroRatio} />
-          <div>
-            {stats.aujourd_hui === 0 ? (
-              <>
-                <p className="text-[15px] font-semibold" style={{ color: "var(--fg)" }}>Premier scan du jour ?</p>
-                <p className="text-[12px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>Appuyez sur Scanner ci-dessus</p>
-              </>
-            ) : (
-              <>
-                <p className="text-[13px] font-medium" style={{ color: "var(--fg-secondary)" }}>
-                  client{stats.aujourd_hui > 1 ? "s" : ""} visité{stats.aujourd_hui > 1 ? "s" : ""}
-                </p>
-                {tendance !== null && (
-                  <span className="inline-block text-[12px] font-semibold px-2.5 py-0.5 rounded-full mt-2"
-                    style={{
-                      background: tendance >= 0 ? "rgba(0,122,255,0.10)" : "rgba(255,59,48,0.10)",
-                      color: tendance >= 0 ? "#007AFF" : "#FF3B30",
-                    }}>
-                    {tendance >= 0 ? "+" : ""}{tendance}% {t.dash_vs_prev}
-                  </span>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 flex-1">
-          <MiniStat value={stats.ce_mois} label={t.dash_this_month} color="#8B5CF6" />
-          <MiniStat value={stats.total} label={t.dash_total_clients} color="#34C759"
-            trend={stats.nouvelles_semaine > 0 ? `+${stats.nouvelles_semaine} cette semaine` : undefined} />
-          <MiniStat value={stats.tampons_total} label={t.dash_stamps} color="#FF9F0A"
-            trend={totalSemaine > 0 ? `${totalSemaine} cette semaine` : undefined} />
-          <MiniStat value={stats.recompenses} label={t.dash_rewards}
-            color={stats.recompenses > 0 ? "#FFD60A" : "var(--fg-tertiary)"}
-            trend={stats.recompenses > 0 ? "en attente" : undefined} />
-        </div>
-      </div>
+      {/* Stats 2×2 */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+        <StatTile value={stats.ce_mois} label="Visites ce mois" icon={
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--lavande-fg)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        } />
+        <StatTile value={stats.total} label="Clients" trend={stats.nouvelles_semaine > 0 ? `+${stats.nouvelles_semaine} cette semaine` : undefined} icon={
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--lavande-fg)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        } />
+        <StatTile value={stats.tampons_total} label="Tampons" trend={totalSemaine > 0 ? `${totalSemaine} cette semaine` : undefined} icon={
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--lavande-fg)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        } />
+        <StatTile value={stats.recompenses} label="Récompenses" trend={stats.recompenses > 0 ? "en attente" : undefined} icon={
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="var(--lavande-fg)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+          </svg>
+        } /></div>
 
       {/* Chart 7 jours */}
       <div className="rounded-2xl p-5 mb-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
@@ -490,10 +455,6 @@ export default function AccueilPage() {
               <div key={i} className="flex-1 flex flex-col items-center gap-1.5"
                 onClick={() => setTooltipBar(sel ? null : i)}
                 style={{ cursor: "pointer", userSelect: "none" }}>
-                {val > 0 && (
-                  <span className="text-[10px] font-semibold"
-                    style={{ color: isToday ? "#007AFF" : "var(--fg-tertiary)" }}>{val}</span>
-                )}
                 <div className="w-full relative" style={{ height: 60 }}>
                   {prevH > 0 && (
                     <div className="absolute bottom-0 w-full rounded-t"
@@ -503,13 +464,13 @@ export default function AccueilPage() {
                     style={{
                       height: curH,
                       background: isToday
-                        ? "linear-gradient(to top, rgba(0,122,255,0.45), #007AFF)"
-                        : "linear-gradient(to top, rgba(0,122,255,0.15), rgba(0,122,255,0.5))",
-                      outline: sel ? "2px solid rgba(0,122,255,0.45)" : "none",
+                        ? "linear-gradient(to top, #2F7BFF, #8B5CF6)"
+                        : "linear-gradient(to top, rgba(47,123,255,0.15), rgba(47,123,255,0.5))",
+                      outline: sel ? `2px solid rgba(47,123,255,0.45)` : "none",
                       outlineOffset: 1,
                     }} />
                 </div>
-                <span className="text-[10px] font-medium" style={{ color: isToday ? "#007AFF" : "var(--fg-tertiary)" }}>
+                <span className="text-[10px] font-medium" style={{ color: isToday ? "var(--accent)" : "var(--fg-tertiary)" }}>
                   {t.dash_days[i]}
                 </span>
               </div>
@@ -545,18 +506,19 @@ export default function AccueilPage() {
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: `${todo.color}22`, color: todo.color }}>
                   {todo.type === "birthday" && (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/>
+                      <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
                     </svg>
                   )}
                   {todo.type === "reward" && (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
                   )}
                   {todo.type === "inactive" && (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                     </svg>
                   )}
                 </div>
@@ -571,50 +533,23 @@ export default function AccueilPage() {
         </div>
       )}
 
-      {/* Analytique — Taux de retour + Nouvelles inscriptions */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {stats.total >= 5 ? (
-        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
-          <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-            Taux de retour
+      {/* Taux de retour — pleine largeur */}
+      {stats.total >= 5 ? (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
+          <p style={{ fontSize: 13, color: "var(--fg)", fontWeight: 500, marginBottom: 4 }}>
+            {stats.taux_fidelite}% de tes clients ({Math.round(stats.total * stats.taux_fidelite / 100)}/{stats.total}) sont revenus au moins 2 fois
           </p>
-          <p className="text-[28px] font-bold tracking-tight leading-none"
-            style={{ color: stats.taux_fidelite > 0 ? "#34C759" : "var(--fg-tertiary)" }}>
-            {stats.taux_fidelite}<span className="text-[16px] font-normal">%</span>
-          </p>
-          <div className="h-1.5 rounded-full overflow-hidden mt-2" style={{ background: "var(--border)" }}>
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${stats.taux_fidelite}%`, background: "#34C759" }} />
+          <div style={{ height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden", marginTop: 8 }}>
+            <div style={{ height: "100%", borderRadius: 3, background: "linear-gradient(90deg, #2F7BFF, #8B5CF6)", width: `${stats.taux_fidelite}%`, transition: "width 0.7s ease" }} />
           </div>
-          <p className="text-[11px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>{t.dash_returned}</p>
         </div>
-        ) : (
-        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
-          <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--fg-tertiary)" }}>
-            Taux de retour
-          </p>
-          <p className="text-[15px] font-medium" style={{ color: "var(--fg-tertiary)" }}>Disponible dès 5 clients</p>
-          <p className="text-[11px] mt-1.5" style={{ color: "var(--fg-tertiary)" }}>
-            {5 - stats.total} client{5 - stats.total > 1 ? "s" : ""} restant{5 - stats.total > 1 ? "s" : ""}
+      ) : stats.total > 0 ? (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
+          <p style={{ fontSize: 13, color: "var(--fg-tertiary)" }}>
+            Taux de fidélité disponible dès 5 clients — encore {5 - stats.total} à inviter
           </p>
         </div>
-        )}
-
-        <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--fg-tertiary)" }}>
-              {t.dash_new_label}
-            </p>
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-              style={{ background: "rgba(0,122,255,0.10)", color: "#007AFF" }}>7j</span>
-          </div>
-          <p className="text-[28px] font-bold tracking-tight leading-none"
-            style={{ color: stats.nouvelles_semaine > 0 ? "#007AFF" : "var(--fg-tertiary)" }}>
-            {stats.nouvelles_semaine > 0 ? `+${stats.nouvelles_semaine}` : "0"}
-          </p>
-          <p className="text-[11px] mt-2.5" style={{ color: "var(--fg-tertiary)" }}>{t.dash_today} — 7j</p>
-        </div>
-      </div>
+      ) : null}
 
       {/* Stats mode Flex — choix petit vs grand */}
       {(m?.mode_recompense === "flex") && flexStats && flexStats.total > 0 && (
@@ -649,56 +584,28 @@ export default function AccueilPage() {
         </div>
       )}
 
-      {/* Bottom row — top client + voir tous */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {stats.top_client && stats.top_client.tampons > 0 ? (
-          <Link href="/dashboard/clients"
-            className="flex items-center gap-4 p-4 rounded-2xl transition-all hover:opacity-80"
-            style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[15px] flex-shrink-0 text-white"
-              style={{ background: "linear-gradient(135deg,#FFD700,#FF9F0A)" }}>
-              {(stats.top_client.prenom[0] || "?").toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1 mb-0.5">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="#FF9F0A">
-                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
-                </svg>
-                <p className="text-[11px] font-semibold" style={{ color: "#FF9F0A" }}>{t.dash_best_clients}</p>
-              </div>
-              <p className="text-[14px] font-medium truncate" style={{ color: "var(--fg)" }}>
-                {stats.top_client.prenom} {stats.top_client.nom}
-              </p>
-              <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
-                {stats.top_client.tampons} tampon{stats.top_client.tampons > 1 ? "s" : ""}
-              </p>
-            </div>
-            <Icons.ChevronRight />
-          </Link>
-        ) : (
-          <div className="p-4 rounded-2xl" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
-            <p className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{t.clients_empty}</p>
-          </div>
-        )}
-
+      {/* Meilleur client */}
+      {stats.top_client && stats.top_client.tampons > 0 && (
         <Link href="/dashboard/clients"
-          className="flex items-center justify-between p-4 rounded-2xl transition-all hover:opacity-80"
+          className="flex items-center gap-4 p-4 rounded-2xl mb-4 transition-all hover:opacity-80"
           style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(0,122,255,0.1)", color: "var(--accent)" }}>
-              <Icons.Users size={16} />
-            </div>
-            <div>
-              <p className="text-[14px] font-medium" style={{ color: "var(--fg)" }}>{t.clients_title}</p>
-              <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>{stats.total}</p>
-            </div>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--lavande)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, color: "var(--lavande-fg)", flexShrink: 0 }}>
+            {(stats.top_client.prenom[0] || "?").toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-tertiary)", marginBottom: 2 }}>Meilleur client</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>
+              {stats.top_client.prenom} {stats.top_client.nom}
+            </p>
+            <p style={{ fontSize: 12, color: "var(--fg-tertiary)" }}>
+              {stats.top_client.tampons} tampon{stats.top_client.tampons > 1 ? "s" : ""}
+            </p>
           </div>
           <Icons.ChevronRight />
         </Link>
-      </div>
+      )}
 
-      {/* Carte Équipe */}
+      {/* Équipe */}
       {!!(marchand as Record<string, unknown>)?.equipe_actif && membres.length > 0 && (() => {
         const todayStr = new Date().toISOString().slice(0, 10);
         const actifs = membres.filter(mb => mb.statut === "actif");
@@ -747,6 +654,7 @@ export default function AccueilPage() {
           </div>
         );
       })()}
+      </div>
     </div>
   );
 }

@@ -60,9 +60,13 @@ const localCache =
 export const db = isNew
   ? initializeFirestore(app, {
       localCache,
-      // Détecte automatiquement si WebSocket est bloqué par l'opérateur mobile
-      // et bascule en HTTP long polling en quelques secondes (au lieu de ~8 min).
-      experimentalAutoDetectLongPolling: true,
+      // iOS : force le long polling HTTP immédiatement — WebSocket est souvent bloqué
+      // sur les réseaux mobiles (Orange Maroc, etc.) et l'auto-détection peut prendre
+      // 10-30 s, ce qui fait expirer le timeout marchand avant que Firestore réponde.
+      // Desktop : auto-détection (utilise WebSocket si disponible, sinon long polling).
+      ...(isIOS()
+        ? { experimentalForceLongPolling: true }
+        : { experimentalAutoDetectLongPolling: true }),
     })
   : getFirestore(app);
 

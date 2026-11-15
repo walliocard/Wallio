@@ -22,6 +22,18 @@ export default function SmokyBackground({ height = 280 }: SmokyBackgroundProps) 
     };
     document.addEventListener("visibilitychange", onVisibility);
 
+    // Pause quand le fondu sort de l'écran au défilement
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const state = entry.isIntersecting ? "running" : "paused";
+        el.querySelectorAll<HTMLElement>(".smoky-blob").forEach(b => {
+          b.style.animationPlayState = state;
+        });
+      },
+      { threshold: 0 }
+    );
+    observer.observe(el);
+
     // Pulse sur scan réussi ou récompense
     const onPulse = () => {
       el.classList.add("pulsing");
@@ -34,6 +46,7 @@ export default function SmokyBackground({ height = 280 }: SmokyBackgroundProps) 
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("wallio:scan-success", onPulse);
       window.removeEventListener("wallio:reward", onPulse);
+      observer.disconnect();
     };
   }, []);
 

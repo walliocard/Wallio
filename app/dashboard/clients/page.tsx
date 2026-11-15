@@ -8,6 +8,7 @@ import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } fro
 import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
+import AmbientBackground from "@/components/AmbientBackground";
 
 const AVATAR_PALETTES = [
   { bg: "rgba(94,140,247,0.18)",  text: "#5E8CF7" },
@@ -158,7 +159,9 @@ export default function ClientsPage() {
   const todayDay = new Date().getDate();
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-36 md:pb-10">
+    <div style={{ position: "relative" }}>
+      <AmbientBackground variant="subtle" />
+      <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-36 md:pb-10" style={{ position: "relative", zIndex: 1 }}>
 
       {/* Modal ajout client */}
       {showModal && (
@@ -223,19 +226,17 @@ export default function ClientsPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-end justify-between mb-5">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--fg-tertiary)" }}>
-            {loading ? "—" : `${clients.length} client${clients.length > 1 ? "s" : ""}`}
-          </p>
-          <h1 className="text-[32px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.clients_title}</h1>
+          <h1 className="text-[34px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.clients_title}</h1>
+          {!loading && <p style={{ fontSize: 13, color: "var(--fg-tertiary)", marginTop: 2 }}>{clients.length} client{clients.length > 1 ? "s" : ""}</p>}
         </div>
         <button
           onClick={() => { setShowModal(true); setFormError(""); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[13px] font-semibold text-white"
-          style={{ background: "var(--accent)", boxShadow: "0 4px 14px rgba(0,122,255,0.25)" }}
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[13px] font-semibold text-white"
+          style={{ background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)", boxShadow: "0 4px 14px rgba(47,123,255,0.30)" }}
         >
-          <span className="text-[18px] leading-none font-light">+</span>
+          <span style={{ fontSize: 18, lineHeight: 1, fontWeight: 300 }}>+</span>
           {t.clients_add}
         </button>
       </div>
@@ -305,8 +306,8 @@ export default function ClientsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "rgba(0,122,255,0.08)" }}>
-            <span style={{ color: "var(--accent)" }}><Icons.Users size={28} /></span>
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "var(--lavande)" }}>
+            <span style={{ color: "var(--lavande-fg)" }}><Icons.Users size={28} /></span>
           </div>
           <div>
             <p className="text-[16px] font-semibold mb-1" style={{ color: "var(--fg)" }}>
@@ -318,7 +319,8 @@ export default function ClientsPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+        <div style={{ background: "var(--glass-bg)", borderRadius: 20, border: "1px solid var(--border)", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}
+          className="lg:grid lg:grid-cols-2 lg:gap-0 fade-y">
           {filtered.map((client, idx) => {
             const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
             const aColor = avatarColor(initiales);
@@ -346,15 +348,15 @@ export default function ClientsPage() {
               <Link
                 key={client.id}
                 href={`/client/${client.wallet_id}`}
-                className="flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-150 active:scale-[0.98] hover:opacity-80 block"
-                style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", backdropFilter: "blur(20px)", animation: "stagger-in 0.35s ease backwards", animationDelay: `${Math.min(idx * 0.04, 0.4)}s` }}
+                className="flex items-center gap-3 p-3.5 transition-all duration-150 active:opacity-70 hover:opacity-80 block"
+                style={{ borderBottom: idx < filtered.length - 1 ? `1px solid var(--separator)` : "none", animation: "stagger-in 0.35s ease backwards", animationDelay: `${Math.min(idx * 0.04, 0.4)}s` }}
               >
-                {/* Avatar */}
+                {/* Avatar rond */}
                 <div
                   className="w-11 h-11 flex items-center justify-center text-[13px] font-bold flex-shrink-0"
                   style={{
-                    borderRadius: 12,
-                    background: client.recompense_en_attente ? "linear-gradient(135deg,#34C759,#30D158)" : aColor.bg,
+                    borderRadius: "50%",
+                    background: client.recompense_en_attente ? "linear-gradient(135deg,#2F7BFF,#8B5CF6)" : aColor.bg,
                     color: client.recompense_en_attente ? "white" : aColor.text,
                   }}
                 >
@@ -393,23 +395,23 @@ export default function ClientsPage() {
                     )}
                     {isProche && (
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                        style={{ background: "rgba(139,92,246,0.10)", color: "#8B5CF6" }}>
-                        Proche
+                        style={{ background: "var(--lavande)", color: "var(--lavande-fg)" }}>
+                        Presque
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px]" style={{ color: isInactif ? "#FF3B30" : "var(--fg-tertiary)" }}>
+                  <p className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>
                     {formatTempsDepuis(client.derniere_visite)}
                   </p>
                   <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
                     <div className="h-full rounded-full transition-all"
-                      style={{ width: `${pct}%`, background: client.recompense_en_attente ? "#34C759" : "var(--accent)" }} />
+                      style={{ width: `${pct}%`, background: "linear-gradient(90deg,#2F7BFF,#8B5CF6)" }} />
                   </div>
                 </div>
 
                 {/* Tampons */}
                 <div className="text-right flex-shrink-0 mr-1">
-                  <p className="text-[16px] font-bold" style={{ color: client.recompense_en_attente ? "#34C759" : "var(--accent)" }}>
+                  <p className="text-[16px] font-bold" style={{ color: "var(--fg)", fontVariantNumeric: "tabular-nums" }}>
                     {client.tampons}
                     <span className="text-[11px] font-normal" style={{ color: "var(--fg-tertiary)" }}>
                       /{objectifActuel}
@@ -443,6 +445,7 @@ export default function ClientsPage() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

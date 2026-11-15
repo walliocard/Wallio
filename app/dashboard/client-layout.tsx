@@ -2,70 +2,49 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import DashboardNav from "@/components/dashboard/Nav";
 import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
 import { useLang } from "@/lib/lang-context";
-import WallioLogo from "@/components/WallioLogo";
 import { ToastProvider } from "@/components/Toast";
-import { useRef } from "react";
+import OfflineBanner from "@/components/OfflineBanner";
 
-function SplashScreen({ exiting }: { exiting: boolean }) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "#FFFFFF",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 20,
-        animation: exiting
-          ? "splash-out 0.5s cubic-bezier(.4,0,.2,1) forwards"
-          : "splash-in 0.4s cubic-bezier(.4,0,.2,1) forwards",
-      }}
-    >
-      <WallioLogo size={72} />
-      <span style={{
-        fontSize: 13,
-        fontWeight: 700,
-        letterSpacing: "0.22em",
-        color: "var(--fg-tertiary)",
-      }}>
-        WALLIO
-      </span>
-    </div>
-  );
-}
-
+// ── Layout principal ───────────────────────────────────────────────────────
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, marchand, loading } = useAuth();
   const { t, setLang } = useLang();
   const router = useRouter();
   const pathname = usePathname();
-  // Page de connexion dans le scope dashboard — pas de vérification auth
-  if (pathname === "/dashboard/auth") return <>{children}</>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const splashRef              = useRef<any>(null);
+  const splashNativeHiddenRef  = useRef(false);
+  const splashDoneRef          = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pendingFinishRef       = useRef<Record<string, any> | null>(null);
 
-  const [showSplash, setShowSplash] = useState(true);
-  const [splashExiting, setSplashExiting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const touchStartY = useRef(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef   = useRef<HTMLDivElement>(null);
 
+  // ── Langue ──
   useEffect(() => {
     const saved = (marchand as Record<string, unknown>)?.langue as "fr" | "ro" | "es" | undefined;
     if (saved === "fr" || saved === "ro" || saved === "es") setLang(saved);
   }, [marchand, setLang]);
 
+  // ── Redirect vers auth ──
   useEffect(() => {
-    if (!loading && !user) router.push("/dashboard/auth");
-  }, [user, loading, router]);
+    if (loading) return;
+    if (!user) { router.push("/dashboard/auth"); return; }
+    if (!marchand) {
+      try { localStorage.removeItem("wallio_pk_gerant"); } catch {}
+      router.push("/dashboard/auth");
+    }
+  }, [user, marchand, loading, router]);
 
+  // ── Class scroll dashboard ──
   useEffect(() => {
     document.documentElement.classList.add("dashboard-scroll");
     document.body.classList.add("dashboard-scroll");
@@ -75,45 +54,126 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
   }, []);
 
-  // Splash exit quand loading terminé
+  // ── Scroll vers champ actif quand clavier iOS s'ouvre ──
   useEffect(() => {
-    if (!loading) {
-      setSplashExiting(true);
-      const t = setTimeout(() => setShowSplash(false), 500);
-      return () => clearTimeout(t);
-    }
-  }, [loading]);
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const el = document.activeElement as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
+      }
+    };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
-  if (!user && !loading) return null;
-  if (user && !marchand && !loading) {
-    try { localStorage.removeItem("wallio_pk_gerant"); } catch {}
-    router.push("/dashboard/auth");
+  // ── enterKeyHint="next" sur tous les inputs ──
+  useEffect(() => {
+    const setHints = () => {
+      document.querySelectorAll<HTMLInputElement>("input:not([type=submit]):not([type=button]):not([type=checkbox]):not([type=radio])").forEach(inp => {
+        if (!inp.hasAttribute("enterkeyhint")) inp.setAttribute("enterkeyhint", "next");
+      });
+      document.querySelectorAll<HTMLTextAreaElement>("textarea").forEach(ta => {
+        if (!ta.hasAttribute("enterkeyhint")) ta.setAttribute("enterkeyhint", "send");
+      });
+    };
+    setHints();
+    const obs = new MutationObserver(setHints);
+    obs.observe(document.body, { childList: true, subtree: true });
+    return () => obs.disconnect();
+  }, []);
+
+  // ── Mount wallio-splash + cache splash natif ──
+  useEffect(() => {
+    let gone = false;
+    (async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mod = await import("@/lib/wallio-splash") as any;
+      const WallioSplash = mod.WallioSplash ?? mod.default;
+      if (gone) return;
+      const splash = WallioSplash.mount({
+        iconSrc: "/icon-dashboard-512.png",
+        fallback: "login",
+        fallbackTarget: () => document.querySelector("#login-logo"),
+      });
+      splashRef.current = splash;
+      await splash.ready;
+      if (gone) return;
+      try {
+        const { SplashScreen: Cap } = await import("@capacitor/splash-screen");
+        await Cap.hide({ fadeOutDuration: 0 });
+      } catch {}
+      splashNativeHiddenRef.current = true;
+      if (pendingFinishRef.current) {
+        splash.finish(pendingFinishRef.current);
+        splashDoneRef.current = true;
+        pendingFinishRef.current = null;
+      }
+    })();
+    return () => { gone = true; };
+  }, []);
+
+  // ── Termine le splash dès que la destination est connue et rendue ──
+  useEffect(() => {
+    if (loading) return;
+    if (splashDoneRef.current) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const finish = (opts: Record<string, any>) => {
+      if (splashDoneRef.current) return;
+      splashDoneRef.current = true;
+      if (splashRef.current && splashNativeHiddenRef.current) {
+        splashRef.current.finish(opts);
+      } else {
+        pendingFinishRef.current = opts;
+      }
+    };
+
+    if (!user && pathname === "/dashboard/auth") {
+      requestAnimationFrame(() =>
+        finish({ to: "login", target: document.querySelector("#login-logo") })
+      );
+    } else if (user && marchand) {
+      finish({ to: "home" });
+    }
+  }, [loading, user, marchand, pathname]);
+
+  // ── Page connexion : splash recouvre pendant la transition ──
+  if (pathname === "/dashboard/auth") {
+    return <>{children}</>;
+  }
+
+  // ── Pas connecté, plus de splash ──
+  if (!user && !loading) {
     return null;
   }
 
-  // Compte en attente d'activation
+  // ── Compte en attente d'activation ──
   if (marchand && !marchand.actif) {
     return (
-      <>
-        {showSplash && <SplashScreen exiting={splashExiting} />}
-        <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)", padding: "0 24px" }}>
-          <div style={{ textAlign: "center", maxWidth: 360 }}>
-            <div style={{ fontSize: 40, marginBottom: 20 }}>⏳</div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--fg)", marginBottom: 10 }}>
-              {t.dash_pending_title}
-            </h1>
-            <p style={{ fontSize: 15, color: "var(--fg-sec)", lineHeight: 1.6 }}>
-              {t.dash_pending_body}
-            </p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)", padding: "0 24px" }}>
+        <div style={{ textAlign: "center", maxWidth: 360 }}>
+          <div style={{ marginBottom: 20 }}>
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
           </div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--fg)", marginBottom: 10 }}>
+            {t.dash_pending_title}
+          </h1>
+          <p style={{ fontSize: 15, color: "var(--fg-sec)", lineHeight: 1.6 }}>
+            {t.dash_pending_body}
+          </p>
         </div>
-      </>
+      </div>
     );
   }
 
+  // ── Dashboard ──
   return (
     <ToastProvider>
-      {showSplash && <SplashScreen exiting={splashExiting} />}
+      <OfflineBanner />
       {marchand && user && (
         <div style={{ height: "100dvh", overflow: "hidden", background: "var(--bg)" }}>
           <DashboardNav marchand={marchand} />
@@ -129,13 +189,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               animation: "page-in 0.2s ease",
               paddingTop: "env(safe-area-inset-top)",
             } as React.CSSProperties}
+            onClick={e => {
+              const el = e.target as HTMLElement;
+              if (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA" && el.tagName !== "SELECT" && el.tagName !== "BUTTON") {
+                (document.activeElement as HTMLElement | null)?.blur();
+              }
+            }}
             onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
             onTouchEnd={e => {
               const dy = e.changedTouches[0].clientY - touchStartY.current;
               const atTop = (scrollRef.current?.scrollTop ?? 0) === 0;
               if (dy > 70 && atTop && !refreshing) {
                 setRefreshing(true);
-                setTimeout(() => { window.location.reload(); }, 300);
+                setTimeout(() => window.location.reload(), 300);
               }
             }}
           >

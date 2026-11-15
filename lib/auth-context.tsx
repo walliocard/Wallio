@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { onSnapshot, getDoc, doc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 
@@ -40,73 +40,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let unsubSnap: (() => void) | null = null;
+    let unsubAuth: (() => void) | null = null;
+    let marchandTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const fallback = setTimeout(() => setLoading(false), 5000);
+    // authStateReady() (Firebase 12) se résout quand Firebase a terminé de lire
+    // la session depuis localStorage/sessionStorage. Évite le faux null initial
+    // qui déclencherait un redirect vers connexion avant la restauration de session.
+    // Filet : si ça ne répond pas en 8 s, on débloque quand même.
+    const readyFallback = setTimeout(() => setLoading(false), 8000);
 
-    const unsubAuth = onAuthStateChanged(
-      auth,
-      (u) => {
-        clearTimeout(fallback);
-        setUser(u);
+    auth.authStateReady().then(() => {
+      clearTimeout(readyFallback);
 
-        // Annuler l'éventuel snapshot précédent
-        unsubSnap?.();
-        unsubSnap = null;
+      unsubAuth = onAuthStateChanged(
+        auth,
+        (u) => {
+          setUser(u);
+          unsubSnap?.();
+          unsubSnap = null;
+          if (marchandTimer) { clearTimeout(marchandTimer); marchandTimer = null; }
 
-        if (u) {
-          const marchandRef = doc(db, "marchands", u.uid);
+          if (u) {
+            // Remet loading=true pour les navigations client-side (router.push)
+            setLoading(true);
+            const marchandRef = doc(db, "marchands", u.uid);
+            marchandTimer = setTimeout(() => setLoading(false), 10000);
 
-          // Filet de sécurité : si getDoc et onSnapshot bloquent tous les deux
-          // (WKWebView + IndexedDB froid au premier lancement), on débloque après 6s
-          const marchandFallback = setTimeout(() => setLoading(false), 6000);
+            const tryGetMarchand = (attempt = 1) =>
+              getDoc(marchandRef).then(snap => {
+                if (snap.exists()) {
+                  if (marchandTimer) { clearTimeout(marchandTimer); marchandTimer = null; }
+                  setMarchand(prev => prev ?? ({ id: snap.id, actif: false, ...snap.data() } as MarchandData));
+                  setLoading(false);
+                }
+              }).catch(() => {
+                if (attempt < 3) setTimeout(() => tryGetMarchand(attempt + 1), 800 * attempt);
+                else { if (marchandTimer) { clearTimeout(marchandTimer); marchandTimer = null; } setLoading(false); }
+              });
+            tryGetMarchand();
 
-          // getDoc immédiat — charge le marchand dès que possible sans attendre onSnapshot
-          const tryGetMarchand = (attempt = 1) =>
-            getDoc(marchandRef).then(snap => {
-              clearTimeout(marchandFallback);
-              if (snap.exists()) {
-                setMarchand(prev => prev ?? ({ id: snap.id, actif: false, ...snap.data() } as MarchandData));
-              }
-              setLoading(false);
-            }).catch(() => {
-              if (attempt < 3) setTimeout(() => tryGetMarchand(attempt + 1), 800 * attempt);
-              else { clearTimeout(marchandFallback); setLoading(false); }
-            });
-          tryGetMarchand();
-
-          // onSnapshot garde le marchand à jour en temps réel
-          unsubSnap = onSnapshot(
-            marchandRef,
-            (snap) => {
-              clearTimeout(marchandFallback);
-              if (snap.exists()) {
-                setMarchand({ id: snap.id, actif: false, ...snap.data() } as MarchandData);
-              } else {
-                setMarchand(null);
-              }
-              setLoading(false);
-            },
-            () => { clearTimeout(marchandFallback); setLoading(false); }
-          );
-        } else {
+            unsubSnap = onSnapshot(
+              marchandRef,
+              (snap) => {
+                if (snap.exists()) {
+                  if (marchandTimer) { clearTimeout(marchandTimer); marchandTimer = null; }
+                  setMarchand({ id: snap.id, actif: false, ...snap.data() } as MarchandData);
+                  setLoading(false);
+                } else if (!snap.metadata.fromCache) {
+                  if (marchandTimer) { clearTimeout(marchandTimer); marchandTimer = null; }
+                  setMarchand(null);
+                  setLoading(false);
+                }
+                // fromCache=true + !exists → ignoré, on attend le serveur
+              },
+              () => { if (marchandTimer) { clearTimeout(marchandTimer); marchandTimer = null; } setLoading(false); }
+            );
+          } else {
+            setMarchand(null);
+            setLoading(false);
+          }
+        },
+        () => {
+          setUser(null);
           setMarchand(null);
           setLoading(false);
         }
-      },
-      // Erreur transitoire Firebase Auth (IndexedDB froid, ITP Safari) → reset
-      // sans signOut() : le token peut être valide, on ne force pas la déconnexion
-      () => {
-        clearTimeout(fallback);
-        setUser(null);
-        setMarchand(null);
-        setLoading(false);
-      }
-    );
+      );
+    }).catch(() => setLoading(false));
 
     return () => {
-      unsubAuth();
+      clearTimeout(readyFallback);
+      unsubAuth?.();
       unsubSnap?.();
-      clearTimeout(fallback);
+      if (marchandTimer) clearTimeout(marchandTimer);
     };
   }, []);
 

@@ -1,6 +1,10 @@
 export type HapticStyle = "light" | "medium" | "heavy" | "success" | "warning" | "error";
 
+export const HAPTICS_KEY = "wallio_haptics_off";
+export const isHapticsEnabled = () => typeof localStorage !== "undefined" && localStorage.getItem(HAPTICS_KEY) !== "1";
+
 export async function haptic(style: HapticStyle = "light"): Promise<void> {
+  if (!isHapticsEnabled()) return;
   try {
     // @capacitor/haptics — disponible uniquement sur iOS/Android natif
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

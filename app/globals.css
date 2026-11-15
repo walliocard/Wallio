@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
   --bg: #F7F7FA;
   --bg-secondary: #FFFFFF;
   --fg: #1D1D1F;
@@ -22,20 +23,10 @@
   --tab-h: 49px;
 }
 
+/* Force mode clair — l'app est light only */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #000000;
-    --bg-secondary: #1C1C1E;
-    --fg: #F5F5F7;
-    --fg-secondary: #8E8E93;
-    --fg-tertiary: #636366;
-    --border: rgba(255,255,255,0.10);
-    --separator: #38383A;
-    --glass-bg: rgba(28,28,30,0.80);
-    --glass-border: rgba(255,255,255,0.08);
-    --lavande: rgba(75,79,214,0.18);
-    --lavande-fg: #9DA3FF;
-  }
+  :root { color-scheme: light; }
+  html, body { background: #F7F7FA !important; color: #1D1D1F !important; }
 }
 
 
@@ -273,69 +264,79 @@ input[type="range"].zoom-slider::-moz-range-progress {
   }
 }
 
-/* ── Fondu fumé ── */
-.smoky-bg {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 280px;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
+/* ── AmbientBackground ── */
+.ambient-blob { position: absolute; border-radius: 50%; }
+
+/* Hero — nappe A : 22 s, alternate */
+@keyframes ambient-A {
+  from { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+  to   { transform: translate(calc(-50% + 20px), calc(-50% + 14px)) scale(1.06); }
 }
-.smoky-blob {
-  position: absolute;
-  border-radius: 50%;
-  will-change: transform;
+/* Hero — nappe B : 27 s, alternate */
+@keyframes ambient-B {
+  from { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+  to   { transform: translate(calc(-50% - 18px), calc(-50% + 18px)) scale(1.05); }
 }
-.smoky-blob-1 {
-  width: 320px; height: 320px;
-  top: -120px; left: -60px;
-  background: radial-gradient(circle, rgba(47,123,255,0.42) 0%, transparent 70%);
-  animation: blob1 20s ease-in-out infinite;
+/* Hero — nappe C : 18 s, alternate */
+@keyframes ambient-C {
+  from { transform: translate(-50%, -50%) translate(0, 0) scale(1); opacity: 1; }
+  to   { transform: translate(calc(-50% - 14px), calc(-50% - 10px)) scale(1); opacity: 0.75; }
 }
-.smoky-blob-2 {
-  width: 260px; height: 260px;
-  top: -100px; right: -40px;
-  background: radial-gradient(circle, rgba(139,92,246,0.38) 0%, transparent 70%);
-  animation: blob2 20s ease-in-out infinite;
-  animation-delay: -7s;
+/* Subtle — nappe A : 22 s, mouvements 60 % */
+@keyframes ambient-As {
+  from { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+  to   { transform: translate(calc(-50% + 12px), calc(-50% + 8px)) scale(1.04); }
 }
-.smoky-blob-3 {
-  width: 220px; height: 220px;
-  top: 30px; left: 35%;
-  background: radial-gradient(circle, rgba(185,168,255,0.32) 0%, transparent 70%);
-  animation: blob3 20s ease-in-out infinite;
-  animation-delay: -13s;
+/* Subtle — nappe B : 27 s, mouvements 60 % */
+@keyframes ambient-Bs {
+  from { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+  to   { transform: translate(calc(-50% - 11px), calc(-50% + 11px)) scale(1.03); }
 }
-.smoky-bg.pulsing .smoky-blob-1 { animation: blob1-pulse 1s ease-out forwards, blob1 20s ease-in-out infinite; }
-.smoky-bg.pulsing .smoky-blob-2 { animation: blob2-pulse 1s ease-out forwards, blob2 20s ease-in-out infinite 7s; }
-@keyframes blob1 {
-  0%,100% { transform: translate(0,0) scale(1); }
-  33%      { transform: translate(28px,18px) scale(1.07); }
-  66%      { transform: translate(-18px,10px) scale(0.94); }
+
+.ambient-blob-A  { animation: ambient-A  22s ease-in-out infinite alternate; }
+.ambient-blob-B  { animation: ambient-B  27s ease-in-out infinite alternate; }
+.ambient-blob-C  { animation: ambient-C  18s ease-in-out infinite alternate; }
+.ambient-blob-As { animation: ambient-As 22s ease-in-out infinite alternate; }
+.ambient-blob-Bs { animation: ambient-Bs 27s ease-in-out infinite alternate; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-blob { animation-play-state: paused !important; }
 }
-@keyframes blob2 {
-  0%,100% { transform: translate(0,0) scale(1); }
-  33%      { transform: translate(-24px,14px) scale(0.93); }
-  66%      { transform: translate(18px,-10px) scale(1.06); }
+
+/* Fade edges sur listes verticales */
+.fade-y {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%);
 }
-@keyframes blob3 {
-  0%,100% { transform: translate(0,0) scale(1); }
-  33%      { transform: translate(14px,-18px) scale(1.05); }
-  66%      { transform: translate(-10px,14px) scale(0.97); }
+.fade-y-bottom {
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
 }
-@keyframes blob1-pulse {
-  0%   { transform: scale(1); opacity: 1; }
-  50%  { transform: scale(1.3); opacity: 0.9; }
-  100% { transform: scale(1); opacity: 1; }
+
+@keyframes dot-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }
-@keyframes blob2-pulse {
-  0%   { transform: scale(1); opacity: 1; }
-  50%  { transform: scale(1.25); opacity: 0.9; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes icon-entrance {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
 }
-@media (prefers-color-scheme: dark) {
-  .smoky-blob-1 { background: radial-gradient(circle, rgba(47,123,255,0.30) 0%, transparent 70%); }
-  .smoky-blob-2 { background: radial-gradient(circle, rgba(139,92,246,0.28) 0%, transparent 70%); }
-  .smoky-blob-3 { background: radial-gradient(circle, rgba(185,168,255,0.22) 0%, transparent 70%); }
+@keyframes connexion-exit {
+  to { opacity: 0; transform: scale(1.04); }
+}
+@keyframes splash-icon-breathe {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes viewfinder-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes corner-lock {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.88); }
+  100% { transform: scale(1); }
 }

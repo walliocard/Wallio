@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { doc, deleteDoc } from "firebase/firestore";
+import { doc, deleteDoc, collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   getClientByWalletId, getMarchandById,
@@ -12,14 +12,80 @@ import {
 } from "@/lib/loyalty";
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
+import { haptic } from "@/lib/haptics";
 
-// Affiche le numéro avec indicatif, gère le 0 parasite après l'indicatif
-// Ex: +212612345678 → +212 612345678 / +2120612345678 → +212 612345678
-function formatPhone(raw: string | undefined): string {
-  if (!raw) return "";
-  const m = raw.match(/^(\+\d{1,4})(0?)(\d{7,11})$/);
-  if (!m) return raw;
-  return `${m[1]} ${m[3]}`;
+const AVATAR_PALETTES = [
+  { bg: "rgba(94,140,247,0.18)",  text: "#5E8CF7" },
+  { bg: "rgba(139,127,212,0.18)", text: "#9B8FE8" },
+  { bg: "rgba(52,199,137,0.18)",  text: "#34C789" },
+  { bg: "rgba(247,133,110,0.18)", text: "#E8785E" },
+  { bg: "rgba(240,160,96,0.18)",  text: "#E0A060" },
+  { bg: "rgba(112,184,232,0.18)", text: "#60B8E8" },
+  { bg: "rgba(212,127,179,0.18)", text: "#D47FB3" },
+  { bg: "rgba(92,200,168,0.18)",  text: "#5CC8A8" },
+];
+function avatarColor(initials: string) {
+  const code = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
+  return AVATAR_PALETTES[code % AVATAR_PALETTES.length];
+}
+
+import { formatPhone } from "@/lib/format";
+
+function anniversaireInfo(dob: string | undefined): { label: string; isToday: boolean } {
+  if (!dob) return { label: "—", isToday: false };
+  const parts = dob.split("-");
+  if (parts.length !== 3) return { label: dob, isToday: false };
+  const today = new Date();
+  const month = parseInt(parts[1]) - 1;
+  const day = parseInt(parts[2]);
+  const monthLabel = new Date(2000, month, day).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  const isToday = today.getDate() === day && today.getMonth() === month;
+  if (isToday) return { label: monthLabel, isToday: true };
+  const thisYearBday = new Date(today.getFullYear(), month, day);
+  const nextBday = thisYearBday < today
+    ? new Date(today.getFullYear() + 1, month, day)
+    : thisYearBday;
+  const days = Math.ceil((nextBday.getTime() - today.getTime()) / 86400000);
+  return { label: `${monthLabel} · dans ${days} jour${days > 1 ? "s" : ""}`, isToday: false };
+}
+
+function formatVisiteDate(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === today.toDateString()) return `Aujourd'hui à ${time}`;
+  if (d.toDateString() === yesterday.toDateString()) return `Hier à ${time}`;
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) + ` à ${time}`;
+}
+
+const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+
+interface VisiteEntry {
+  id: string;
+  created_at: string | null;
+  type: string;
+  added_by: string;
+  tampons_apres: number;
+  recompense: boolean;
+}
+
+function VisiteBadge({ type }: { type: string }) {
+  const styles: Record<string, { bg: string; color: string; label: string }> = {
+    manuel_equipe:  { bg: "rgba(255,159,10,0.12)",  color: "#FF9F0A", label: "Manuel" },
+    qr_equipe:      { bg: "rgba(0,122,255,0.10)",   color: "#007AFF", label: "QR" },
+    qr_gerant:      { bg: "rgba(139,92,246,0.10)",  color: "#8B5CF6", label: "QR" },
+    nfc_client:     { bg: "rgba(0,199,190,0.10)",   color: "#00C7BE", label: "NFC" },
+    auto_validation:{ bg: "rgba(52,199,89,0.10)",   color: "#34C759", label: "Auto" },
+    anti_doublon:   { bg: "rgba(255,59,48,0.10)",   color: "#FF3B30", label: "Refusé" },
+  };
+  const s = styles[type] ?? { bg: "rgba(142,142,147,0.10)", color: "#8E8E93", label: "—" };
+  return (
+    <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: s.bg, color: s.color, flexShrink: 0 }}>
+      {s.label}
+    </span>
+  );
 }
 
 export default function ClientQrPage({ params }: { params: Promise<{ walletId: string }> }) {
@@ -31,11 +97,20 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   const [loading, setLoading] = useState(true);
   const [ajoutEnCours, setAjoutEnCours] = useState(false);
   const [validationEnCours, setValidationEnCours] = useState(false);
-  const [adjusting, setAdjusting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [enregistrantChoix, setEnregistrantChoix] = useState(false);
   const [reinitialisantChoix, setReinitialisantChoix] = useState(false);
+  // UI state
+  const [phoneCopied, setPhoneCopied] = useState(false);
+  const [showCheck, setShowCheck] = useState(false);
+  const [showCorrectionSheet, setShowCorrectionSheet] = useState(false);
+  const [correctionValue, setCorrectionValue] = useState(0);
+  const [correctionSaving, setCorrectionSaving] = useState(false);
+  const [correctionSaved, setCorrectionSaved] = useState(false);
+  const [recentVisits, setRecentVisits] = useState<VisiteEntry[]>([]);
+  const [totalVisites, setTotalVisites] = useState(0);
+  const [totalRecompenses, setTotalRecompenses] = useState(0);
 
   useEffect(() => {
     if (authLoading) return;
@@ -49,7 +124,33 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
       setLoading(false);
     }
     init();
-  }, [user, marchandAuth, authLoading, walletId]);
+  }, [user, marchandAuth, authLoading, walletId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!client?.id || !user?.uid) return;
+    getDocs(
+      query(
+        collection(db, "marchands", user.uid, "historique"),
+        where("client_id", "==", client.id),
+        orderBy("created_at", "desc"),
+        limit(50)
+      )
+    ).then(snap => {
+      const all: VisiteEntry[] = snap.docs
+        .filter(d => !String(d.data().type || "").startsWith("choix_"))
+        .map(d => ({
+          id: d.id,
+          created_at: d.data().created_at?.toDate?.()?.toISOString() || null,
+          type: d.data().type,
+          added_by: d.data().added_by,
+          tampons_apres: d.data().tampons_apres,
+          recompense: d.data().recompense || false,
+        }));
+      setTotalVisites(all.filter(e => e.type !== "anti_doublon" && e.type !== "auto_validation").length);
+      setTotalRecompenses(all.filter(e => e.recompense).length);
+      setRecentVisits(all.filter(e => e.type !== "anti_doublon").slice(0, 5));
+    }).catch(() => {});
+  }, [client?.id, user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleAjouterTampon(forceOverride = false) {
     if (!client || !marchand || ajoutEnCours) return;
@@ -75,7 +176,6 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
       const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
       fetch("/api/apple-wallet/push-update", opts).catch(() => {});
       fetch("/api/google-wallet/push-update", opts).catch(() => {});
-      // Vérifie si ce tampon déclenche la récompense parrain (1ère vraie visite du filleul)
       if (marchand) {
         checkEtRecompenseParrain(client, marchand.id).then(res => {
           if (!res) return;
@@ -89,8 +189,15 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           }).catch(() => {});
         }).catch(() => {});
       }
+      if (r.type === "ok" || r.type === "recompense") {
+        setShowCheck(true);
+        haptic("medium");
+        setTimeout(() => setShowCheck(false), 800);
+      }
+      setTimeout(() => setAjoutEnCours(false), 1000);
+    } else {
+      setAjoutEnCours(false);
     }
-    setAjoutEnCours(false);
   }
 
   async function handleValiderRecompense() {
@@ -100,10 +207,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     const mode = (m.mode_recompense as string) || "cyclique";
     const paliers = (m.paliers as { tampons: number; recompense: string }[]) || [];
     const paliersValides = client.paliers_valides || [];
-
-    // Récompense progressive uniquement si le client est inscrit (paliers_valides défini)
     const isProgressiveReward = mode === "progressif" && paliers.length > 0 && client.paliers_valides !== undefined;
-
     if (isProgressiveReward) {
       const palierIndex = result?.type === "recompense" && result.palier_index !== undefined
         ? result.palier_index
@@ -138,7 +242,6 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
       await validerRecompense(client.id);
       setClient(prev => prev ? { ...prev, tampons: 0, recompense_en_attente: false } : prev);
     }
-    // Push Wallet après validation — met à jour le pass avec le nouveau palier ou le reset
     const body = JSON.stringify({ walletId: client.wallet_id });
     const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
     fetch("/api/apple-wallet/push-update", opts).catch(() => {});
@@ -173,9 +276,9 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   async function handleReinitialiserChoix() {
     if (!client || reinitialisantChoix) return;
     setReinitialisantChoix(true);
-    const { updateDoc, doc, deleteField } = await import("firebase/firestore");
+    const { updateDoc, doc: fDoc, deleteField } = await import("firebase/firestore");
     const { db: db2 } = await import("@/lib/firebase");
-    await updateDoc(doc(db2, "clients", client.id), {
+    await updateDoc(fDoc(db2, "clients", client.id), {
       choix_en_attente: true,
       choix_fait: deleteField(),
       recompense_en_attente: false,
@@ -184,32 +287,44 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     setReinitialisantChoix(false);
   }
 
-  async function handleAjuster(delta: number) {
-    if (!client || !marchand || adjusting) return;
-    const maxTampons = modeRecompense === "progressif" && paliersDef.length > 0
+  async function handleCorrectionSave() {
+    if (!client || !marchand || correctionSaving) return;
+    setCorrectionSaving(true);
+    const maxT = modeRecompense === "progressif" && paliersDef.length > 0
       ? paliersDef[paliersDef.length - 1].tampons
       : marchand.objectif_tampons;
-    const next = Math.max(0, Math.min(client.tampons + delta, maxTampons));
-    setAdjusting(true);
-    let newPaliersValides: boolean[] | undefined = undefined;
+    const next = Math.max(0, Math.min(correctionValue, maxT));
+    let newPV: boolean[] | undefined;
     if (modeRecompense === "progressif" && paliersDef.length > 0) {
-      newPaliersValides = paliersDef.map(p => next >= p.tampons);
+      newPV = paliersDef.map(p => next >= p.tampons);
     }
-    // Mode flex : nettoyer choix_en_attente/choix_fait si la correction manuelle sort de la zone de choix
-    const flexClearChoix = modeRecompense === "flex" && !!(client.choix_en_attente || client.choix_fait);
-    await setTampons(client.id, next, newPaliersValides, flexClearChoix);
+    const flexClear = modeRecompense === "flex" && !!(client.choix_en_attente || client.choix_fait);
+    await setTampons(client.id, next, newPV, flexClear);
     setClient(prev => prev ? {
       ...prev,
       tampons: next,
-      ...(newPaliersValides !== undefined ? { paliers_valides: newPaliersValides } : {}),
-      ...(flexClearChoix ? { choix_en_attente: undefined, choix_fait: undefined, recompense_en_attente: false } : {}),
+      ...(newPV !== undefined ? { paliers_valides: newPV } : {}),
+      ...(flexClear ? { choix_en_attente: undefined, choix_fait: undefined, recompense_en_attente: false } : {}),
     } : prev);
     setResult(null);
     const body = JSON.stringify({ walletId: client.wallet_id });
     const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
     fetch("/api/apple-wallet/push-update", opts).catch(() => {});
     fetch("/api/google-wallet/push-update", opts).catch(() => {});
-    setAdjusting(false);
+    haptic("success");
+    setCorrectionSaving(false);
+    setShowCorrectionSheet(false);
+    setCorrectionSaved(true);
+    setTimeout(() => setCorrectionSaved(false), 2500);
+  }
+
+  async function copyPhone() {
+    if (!client?.telephone) return;
+    try {
+      await navigator.clipboard.writeText(formatPhone(client.telephone));
+      setPhoneCopied(true);
+      setTimeout(() => setPhoneCopied(false), 2000);
+    } catch {}
   }
 
   if (loading || authLoading) return <Loading />;
@@ -240,7 +355,14 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     objectif = marchand?.objectif_tampons || 10;
     nomRecompense = marchand?.nom_recompense || "";
   }
+
   const pct = Math.min((client.tampons / objectif) * 100, 100);
+  const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
+  const aColor = avatarColor(initiales);
+  const annivInfo = anniversaireInfo(client.date_naissance);
+  const maxTampons = modeRecompense === "progressif" && paliersDef.length > 0
+    ? paliersDef[paliersDef.length - 1].tampons
+    : marchand?.objectif_tampons || 10;
 
   if (deleted) return (
     <main className="min-h-screen pb-10" style={{ background: "var(--bg)" }}>
@@ -256,31 +378,48 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
   return (
     <main className="min-h-screen pb-10" style={{ background: "var(--bg)" }}>
+
+      {/* Toast numéro copié */}
+      {phoneCopied && (
+        <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", left: "50%", transform: "translateX(-50%)", zIndex: 999, background: "rgba(30,30,32,0.92)", backdropFilter: "blur(12px)", padding: "10px 18px", borderRadius: 100, animation: "toast-in 0.25s ease", whiteSpace: "nowrap" }}>
+          <p style={{ color: "white", fontSize: 13, fontWeight: 600 }}>Numéro copié</p>
+        </div>
+      )}
+
+      {/* Toast correction */}
+      {correctionSaved && (
+        <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", left: "50%", transform: "translateX(-50%)", zIndex: 999, background: "rgba(52,199,89,0.92)", backdropFilter: "blur(12px)", padding: "10px 18px", borderRadius: 100, animation: "toast-in 0.25s ease", whiteSpace: "nowrap" }}>
+          <p style={{ color: "white", fontSize: 13, fontWeight: 600 }}>Tampons corrigés</p>
+        </div>
+      )}
+
       <div className="max-w-lg mx-auto px-5 pt-6">
 
         {/* Retour */}
-        <Link
-          href="/dashboard/clients"
-          className="inline-flex items-center gap-1.5 mb-6 text-[14px]"
-          style={{ color: "var(--accent)" }}
-        >
+        <Link href="/dashboard/clients" className="inline-flex items-center gap-1.5 mb-6 text-[14px]" style={{ color: "var(--accent)" }}>
           <Icons.ArrowLeft size={15} />
           Clients
         </Link>
 
-        {/* Header client */}
+        {/* Header */}
         <div className="flex items-center gap-4 mb-5">
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-[18px] flex-shrink-0"
-            style={{ background: "var(--accent)", boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }}
+            className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-[18px] flex-shrink-0"
+            style={{ background: aColor.bg, color: aColor.text }}
           >
-            {(client.prenom?.[0] || "").toUpperCase()}{(client.nom?.[0] || "").toUpperCase()}
+            {initiales}
           </div>
           <div>
             <h1 className="text-[22px] font-semibold tracking-tight leading-tight" style={{ color: "var(--fg)" }}>
-              {client.prenom} {client.nom}
+              {cap(client.prenom)} {cap(client.nom)}
             </h1>
-            <p className="text-[14px] mt-0.5" style={{ color: "var(--fg-secondary)" }}>{formatPhone(client.telephone)}</p>
+            <button
+              onClick={copyPhone}
+              className="text-[14px] mt-0.5 active:opacity-60 transition-opacity text-left"
+              style={{ color: "var(--fg-secondary)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+            >
+              {formatPhone(client.telephone)}
+            </button>
           </div>
         </div>
 
@@ -296,12 +435,21 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
               label: "Client depuis",
               value: client.date_inscription
                 ? new Date((client.date_inscription as { seconds: number }).seconds * 1000)
-                    .toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+                    .toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })
                 : "—",
             },
             {
               label: "Anniversaire",
-              value: client.date_naissance || "—",
+              value: annivInfo.label,
+              isToday: annivInfo.isToday,
+            },
+            {
+              label: "Visites au total",
+              value: String(totalVisites || "—"),
+            },
+            {
+              label: "Récompenses",
+              value: String(totalRecompenses || "—"),
             },
           ].map((row, i, arr) => (
             <div
@@ -310,50 +458,84 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
               style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}
             >
               <span className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{row.label}</span>
-              <span className="text-[13px] font-medium" style={{ color: row.highlight ? "var(--fg-tertiary)" : "var(--fg)" }}>
-                {row.value}
-              </span>
+              <div className="flex items-center gap-1.5">
+                {row.isToday && (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/>
+                    <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+                  </svg>
+                )}
+                <span className="text-[13px] font-medium" style={{ color: row.highlight ? "var(--fg-tertiary)" : "var(--fg)" }}>
+                  {row.value}
+                </span>
+              </div>
             </div>
           ))}
         </div>
 
         {/* Tampons */}
         <div className="rounded-2xl p-5 mb-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-
-
           <div className="flex items-center justify-between mb-3">
             <p className="text-[15px] font-semibold" style={{ color: "var(--fg)" }}>
               {client.tampons} / {objectif} tampons
             </p>
-            <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
-              {nomRecompense}
-            </p>
-          </div>
-          <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "var(--border)" }}>
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${pct}%`, background: "var(--wallio-gradient)" }}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {Array.from({ length: objectif }).map((_, i) => (
-              <div
-                key={i}
-                className="w-8 h-8 rounded-full transition-all duration-300"
-                style={i < client.tampons
-                  ? { background: "var(--wallio-gradient)", boxShadow: "0 2px 8px rgba(139,92,246,0.35)" }
-                  : { background: "transparent", border: "1.5px solid var(--border)" }
-                }
-              />
-            ))}
+            <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>{cap(nomRecompense)}</p>
           </div>
 
-          {/* Paliers progressifs */}
+          {objectif <= 12 ? (
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: objectif }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-8 h-8 rounded-full"
+                  style={i < client.tampons
+                    ? {
+                        background: "var(--wallio-gradient)",
+                        boxShadow: "0 2px 8px rgba(139,92,246,0.35)",
+                        animation: showCheck && i === client.tampons - 1
+                          ? "success-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)"
+                          : undefined,
+                      }
+                    : { background: "transparent", border: "1.5px solid var(--border)" }
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%`, background: "var(--wallio-gradient)" }}
+                />
+              </div>
+              {modeRecompense === "flex" && (() => {
+                const palierInter = (m?.palier_intermediaire as number) || 5;
+                const grand = marchand?.objectif_tampons || 10;
+                const pctPetit = Math.min(99, Math.round((palierInter / grand) * 100));
+                return (
+                  <div className="relative mt-2" style={{ height: 24 }}>
+                    <div style={{ position: "absolute", left: `${pctPetit}%`, transform: "translateX(-50%)" }}>
+                      <div style={{ width: 1, height: 6, background: "var(--fg-tertiary)", margin: "0 auto" }} />
+                      <p className="text-[9px] mt-0.5 whitespace-nowrap" style={{ color: "var(--fg-tertiary)", textAlign: "center" }}>
+                        {cap((m?.nom_recompense_petit as string) || "")}
+                      </p>
+                    </div>
+                    <div style={{ position: "absolute", right: 0 }}>
+                      <div style={{ width: 1, height: 6, background: "var(--fg-tertiary)", margin: "0 auto" }} />
+                      <p className="text-[9px] mt-0.5 whitespace-nowrap" style={{ color: "var(--fg-tertiary)", textAlign: "right" }}>
+                        {cap((m?.nom_recompense_grand as string) || "")}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           {modeRecompense === "progressif" && paliersDef.length > 0 && (
             <div className="mt-4 pt-4 space-y-2" style={{ borderTop: "1px solid var(--border)" }}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--fg-tertiary)" }}>
-                Programme progressif
-              </p>
+              <p className="text-[12px] mb-3" style={{ color: "var(--fg-tertiary)" }}>Programme progressif</p>
               {paliersDef.map((palier, i) => {
                 const valide = !!(paliersValides[i]) && client.tampons >= palier.tampons;
                 const atteint = !valide && client.tampons >= palier.tampons;
@@ -361,11 +543,8 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
                 const restants = palier.tampons - client.tampons;
                 return (
                   <div key={i} className="flex items-center gap-3">
-                    {/* Icône statut */}
                     <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{
-                        background: valide ? "rgba(52,199,89,0.15)" : atteint ? "rgba(255,159,10,0.15)" : enCours ? "rgba(0,122,255,0.12)" : "var(--border)",
-                      }}>
+                      style={{ background: valide ? "rgba(52,199,89,0.15)" : atteint ? "rgba(255,159,10,0.15)" : enCours ? "rgba(0,122,255,0.12)" : "var(--border)" }}>
                       {valide && (
                         <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
                           <path d="M2 6l3 3 5-5" stroke="#34C759" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -374,7 +553,6 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
                       {atteint && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#FF9F0A" }} />}
                       {!valide && !atteint && <div style={{ width: 5, height: 5, borderRadius: "50%", background: enCours ? "var(--accent)" : "var(--fg-tertiary)", opacity: enCours ? 1 : 0.4 }} />}
                     </div>
-                    {/* Seuil + nom */}
                     <div className="flex-1 flex items-center justify-between min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] font-semibold flex-shrink-0"
@@ -383,12 +561,12 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
                         </span>
                         <span className="text-[13px] font-medium truncate"
                           style={{ color: valide || atteint || enCours ? "var(--fg)" : "var(--fg-tertiary)" }}>
-                          {palier.recompense}
+                          {cap(palier.recompense)}
                         </span>
                       </div>
                       <span className="text-[11px] flex-shrink-0 ml-2"
                         style={{ color: valide ? "#34C759" : atteint ? "#FF9F0A" : "var(--fg-tertiary)" }}>
-                        {valide ? "Validé" : atteint ? "À valider" : enCours ? `${restants} restant${restants > 1 ? "s" : ""}` : `${restants} restant${restants > 1 ? "s" : ""}`}
+                        {valide ? "Validé" : atteint ? "À valider" : `${restants} restant${restants > 1 ? "s" : ""}`}
                       </span>
                     </div>
                   </div>
@@ -396,56 +574,37 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
               })}
             </div>
           )}
-
         </div>
 
         {/* Résultat */}
         {result && result.type !== "choix_requis" && (
-          <div
-            className="rounded-2xl p-4 mb-4"
-            style={{
-              background:
-                result.type === "anti_doublon" ? "rgba(255,159,10,0.1)" :
-                result.type === "recompense"   ? "rgba(52,199,89,0.1)" :
-                "rgba(0,122,255,0.08)",
-              border: `1px solid ${
-                result.type === "anti_doublon" ? "rgba(255,159,10,0.25)" :
-                result.type === "recompense"   ? "rgba(52,199,89,0.25)" :
-                "rgba(0,122,255,0.2)"}`,
-            }}
-          >
-            <p
-              className="text-[15px] font-semibold mb-0.5"
-              style={{
-                color:
-                  result.type === "anti_doublon" ? "#FF9F0A" :
-                  result.type === "recompense"   ? "#34C759" :
-                  "var(--accent)",
-              }}
-            >
-              {result.type === "ok"          && `Tampon ajouté — ${result.tampons}/${result.objectif}`}
+          <div className="rounded-2xl p-4 mb-4" style={{
+            background: result.type === "anti_doublon" ? "rgba(255,159,10,0.1)" : result.type === "recompense" ? "rgba(52,199,89,0.1)" : "rgba(0,122,255,0.08)",
+            border: `1px solid ${result.type === "anti_doublon" ? "rgba(255,159,10,0.25)" : result.type === "recompense" ? "rgba(52,199,89,0.25)" : "rgba(0,122,255,0.2)"}`,
+          }}>
+            <p className="text-[15px] font-semibold mb-0.5" style={{
+              color: result.type === "anti_doublon" ? "#FF9F0A" : result.type === "recompense" ? "#34C759" : "var(--accent)",
+            }}>
+              {result.type === "ok" && `Tampon ajouté — ${result.tampons}/${result.objectif}`}
               {result.type === "anti_doublon" && "Déjà scanné récemment"}
-              {result.type === "recompense"   && `${result.nom_recompense} débloqué !`}
+              {result.type === "recompense" && `${cap(result.nom_recompense)} !`}
             </p>
             <p className="text-[13px]" style={{ color: "var(--fg-secondary)" }}>
-              {result.type === "ok" && result.objectif > result.tampons && `${result.objectif - result.tampons} tampon${result.objectif - result.tampons > 1 ? "s" : ""} restant avant ${result.prochainRecompense || nomRecompense || "la récompense"}`}
+              {result.type === "ok" && result.objectif > result.tampons && `${result.objectif - result.tampons} tampon${result.objectif - result.tampons > 1 ? "s" : ""} restant avant ${cap(result.prochainRecompense || nomRecompense || "la récompense")}`}
               {result.type === "anti_doublon" && `Scanné il y a ${formatTemps(marchand!.anti_doublon_delai - result.secondes_restantes)} — prochain dans ${formatTemps(result.secondes_restantes)}`}
               {result.type === "recompense" && "Validez la récompense pour continuer"}
             </p>
             {result.type === "anti_doublon" && (
-              <button
-                onClick={() => handleAjouterTampon(true)}
-                disabled={ajoutEnCours}
+              <button onClick={() => handleAjouterTampon(true)} disabled={ajoutEnCours}
                 className="mt-3 w-full py-2.5 rounded-xl text-[13px] font-semibold"
-                style={{ background: "rgba(255,159,10,0.15)", color: "#FF9F0A", border: "1px solid rgba(255,159,10,0.3)" }}
-              >
+                style={{ background: "rgba(255,159,10,0.15)", color: "#FF9F0A", border: "1px solid rgba(255,159,10,0.3)" }}>
                 Ajouter quand même
               </button>
             )}
           </div>
         )}
 
-        {/* Bloc choix Flex — visible si choix_en_attente */}
+        {/* Choix Flex */}
         {modeRecompense === "flex" && client.choix_en_attente && (
           <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.22)" }}>
             {result?.type === "choix_requis" && result.birthday && (
@@ -472,7 +631,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           </div>
         )}
 
-        {/* Réinitialiser le choix (patron uniquement, si choix_fait défini) */}
+        {/* Réinitialiser choix */}
         {modeRecompense === "flex" && client.choix_fait && (
           <div className="mb-4 px-1">
             <p className="text-[12px]" style={{ color: "var(--fg-tertiary)" }}>
@@ -488,80 +647,117 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
         {/* CTA principal */}
         {client.recompense_en_attente ? (
-          <button
-            onClick={handleValiderRecompense}
-            disabled={validationEnCours}
-            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-3"
-            style={{ background: "#34C759", boxShadow: "0 4px 18px rgba(52,199,89,0.35)" }}
-          >
+          <button onClick={handleValiderRecompense} disabled={validationEnCours}
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-4"
+            style={{ background: "#34C759", boxShadow: "0 4px 18px rgba(52,199,89,0.35)" }}>
             {validationEnCours ? "Validation…" : "Valider la récompense"}
           </button>
         ) : !client.choix_en_attente ? (
-          <button
-            onClick={() => handleAjouterTampon()}
-            disabled={ajoutEnCours}
-            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-5"
-            style={{ background: "var(--wallio-gradient)", boxShadow: "0 4px 18px rgba(139,92,246,0.3)" }}
-          >
-            {ajoutEnCours ? "Enregistrement…" : "+ Ajouter un tampon"}
+          <button onClick={() => handleAjouterTampon()} disabled={ajoutEnCours}
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-5 flex items-center justify-center gap-2 transition-all"
+            style={{ background: "var(--wallio-gradient)", boxShadow: "0 4px 18px rgba(139,92,246,0.3)" }}>
+            {showCheck ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "checkmark 0.3s ease" }}>
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            ) : ajoutEnCours ? "Enregistrement…" : "+ Ajouter un tampon"}
           </button>
         ) : null}
 
-        {/* Correction manuelle */}
-        <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
-          <p className="text-[11px] font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--fg-tertiary)" }}>
-            Correction manuelle
-          </p>
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => handleAjuster(-1)}
-              disabled={adjusting || client.tampons === 0}
-              className="w-12 h-12 rounded-2xl text-[22px] font-bold flex items-center justify-center transition-all"
-              style={{
-                background: "rgba(255,59,48,0.08)",
-                color: "#FF3B30",
-                opacity: client.tampons === 0 ? 0.3 : 1,
-              }}
-            >
-              −
-            </button>
-            <div className="text-center">
-              <p className="text-[32px] font-semibold leading-none" style={{ color: "var(--fg)" }}>
-                {client.tampons}
-              </p>
-              <p className="text-[11px] mt-1" style={{ color: "var(--fg-tertiary)" }}>tampons</p>
+        {/* Dernières visites */}
+        {recentVisits.length > 0 && (
+          <div className="rounded-2xl overflow-hidden mb-3" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
+            <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+              <p className="text-[13px] font-semibold" style={{ color: "var(--fg)" }}>Dernières visites</p>
+              <Link href="/dashboard/historique" className="text-[12px]" style={{ color: "var(--accent)" }}>Voir tout</Link>
             </div>
-            <button
-              onClick={() => handleAjuster(1)}
-              disabled={adjusting || client.tampons >= objectif}
-              className="w-12 h-12 rounded-2xl text-[22px] font-bold flex items-center justify-center transition-all"
-              style={{
-                background: "rgba(0,122,255,0.08)",
-                color: "var(--accent)",
-                opacity: client.tampons >= objectif ? 0.3 : 1,
-              }}
-            >
-              +
-            </button>
+            {recentVisits.map((v, i) => (
+              <div key={v.id} className="flex items-center gap-3 px-5 py-3"
+                style={{ borderBottom: i < recentVisits.length - 1 ? "1px solid var(--border)" : "none" }}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px]" style={{ color: "var(--fg)" }}>{formatVisiteDate(v.created_at)}</p>
+                  {v.added_by && v.added_by !== "Client" && (
+                    <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-tertiary)" }}>{v.added_by}</p>
+                  )}
+                </div>
+                <VisiteBadge type={v.type} />
+              </div>
+            ))}
           </div>
-        </div>
+        )}
 
-        {/* Supprimer le client */}
+        {/* Correction discrète */}
+        <button
+          onClick={() => { setCorrectionValue(client.tampons); setShowCorrectionSheet(true); }}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-2xl mb-3 transition-all active:opacity-70"
+          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}
+        >
+          <span className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>Corriger le nombre de tampons</span>
+          <Icons.ChevronRight />
+        </button>
+
+        {/* Supprimer */}
         <button
           onClick={async () => {
-            if (!confirm(`Supprimer définitivement ${client.prenom} ${client.nom} ?`)) return;
+            if (!confirm(`Supprimer définitivement ${cap(client.prenom)} ${cap(client.nom)} ?\nSes tampons seront perdus.`)) return;
             setDeleting(true);
             await deleteDoc(doc(db, "clients", client.id));
             setDeleted(true);
           }}
           disabled={deleting}
-          className="w-full py-3.5 rounded-2xl text-[14px] font-medium mt-3"
-          style={{ background: "rgba(255,59,48,0.07)", color: "#FF3B30", border: "1px solid rgba(255,59,48,0.2)" }}
+          className="w-full py-3 text-[14px] font-medium mt-1"
+          style={{ background: "none", color: "#FF3B30", border: "none", cursor: "pointer" }}
         >
           {deleting ? "Suppression…" : "Supprimer ce client"}
         </button>
 
       </div>
+
+      {/* Bottom sheet correction */}
+      {showCorrectionSheet && (
+        <div
+          className="fixed inset-0 z-50 flex items-end"
+          style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+          onClick={() => setShowCorrectionSheet(false)}
+        >
+          <div
+            className="w-full rounded-t-3xl p-6"
+            style={{ background: "var(--bg)", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "max(24px, env(safe-area-inset-bottom))" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
+            <p className="text-[17px] font-semibold mb-6" style={{ color: "var(--fg)" }}>Corriger les tampons</p>
+            <div className="flex items-center justify-center gap-10 mb-8">
+              <button
+                onClick={() => setCorrectionValue(v => Math.max(0, v - 1))}
+                className="w-12 h-12 rounded-full flex items-center justify-center text-[22px] font-bold"
+                style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30" }}
+              >
+                −
+              </button>
+              <p className="text-[48px] font-bold" style={{ color: "var(--fg)", minWidth: 70, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+                {correctionValue}
+              </p>
+              <button
+                onClick={() => setCorrectionValue(v => Math.min(maxTampons, v + 1))}
+                className="w-12 h-12 rounded-full flex items-center justify-center text-[22px] font-bold"
+                style={{ background: "rgba(0,122,255,0.08)", color: "var(--accent)" }}
+              >
+                +
+              </button>
+            </div>
+            <button
+              onClick={handleCorrectionSave}
+              disabled={correctionSaving}
+              className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white"
+              style={{ background: "var(--wallio-gradient)" }}
+            >
+              {correctionSaving ? "Enregistrement…" : "Valider"}
+            </button>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }
