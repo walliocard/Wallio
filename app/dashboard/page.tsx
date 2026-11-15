@@ -185,7 +185,7 @@ export default function AccueilPage() {
         if (dv >= today.getTime()) aujourd_hui++;
         if (dv >= moisDebut.getTime()) ce_mois++;
         if (di >= semaineDebut.getTime()) nouvelles_semaine++;
-        if (dv > 0 && dv < trenteJoursAgo.getTime()) inactifs_30j++;
+        if (dv > 0 && dv < trenteJoursAgo.getTime() && !data.relance_pending) inactifs_30j++;
         if (data.date_naissance) {
           const parts = (data.date_naissance as string).split("-");
           if (parts.length === 3 && parseInt(parts[1]) === todayMonth && parseInt(parts[2]) === todayDay) {

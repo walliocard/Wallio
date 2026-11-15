@@ -84,7 +84,9 @@ export async function POST(req: Request) {
     };
     const firestoreBatch = db.batch();
     for (const ref of allRefs) {
-      firestoreBatch.update(ref, { notifs: FieldValue.arrayUnion(notifRecord) });
+      const update: Record<string, unknown> = { notifs: FieldValue.arrayUnion(notifRecord) };
+      if (segment === "inactifs") update.relance_pending = true;
+      firestoreBatch.update(ref, update);
     }
     await firestoreBatch.commit();
 
