@@ -58,6 +58,7 @@ function avatarColor(initials: string) {
 
 export default function EquipeScannerPage() {
   const router = useRouter();
+  const [isNativeApp, setIsNativeApp] = useState(false);
   const [session, setSession] = useState<EquipeSession | null>(null);
   const sessionRef = useRef<EquipeSession | null>(null);
   const [result, setResult] = useState<TamponResult | null>(null);
@@ -81,6 +82,11 @@ export default function EquipeScannerPage() {
   const animRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
   const autoCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+    setIsNativeApp(cap?.isNativePlatform?.() === true);
+  }, []);
 
   useEffect(() => {
     const raw = localStorage.getItem("equipe_session");
@@ -426,7 +432,7 @@ export default function EquipeScannerPage() {
       </div>
 
       {/* Tab bar */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10 }}>
+      <div style={{ position: isNativeApp ? "absolute" : "fixed", bottom: 0, left: 0, right: 0, zIndex: 10 }}>
         <EquipeNav active="scanner" session={session} clientsBadge={clientsBadge} />
       </div>
 
