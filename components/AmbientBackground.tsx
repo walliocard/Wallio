@@ -191,6 +191,13 @@ export default function AmbientBackground({ variant }: { variant: AmbientVariant
         }}
       />
 
+      {/* Top tint — couvre la Dynamic Island indépendamment des blobs */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 100,
+        background: "linear-gradient(to bottom, rgba(130,110,250,0.18) 0%, transparent 100%)",
+        pointerEvents: "none",
+      }} />
+
       {/* Fade-out overlay */}
       <div style={{
         position: "absolute", inset: 0,

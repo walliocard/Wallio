@@ -607,9 +607,6 @@ export default function ReglagesPage() {
         )}
       </IosCard>
 
-      {/* ── 8. Équipe ──────────────────────────────────────────────────────── */}
-      {!!(m?.equipe_actif) && <SectionEquipe onDirty={mark} />}
-
       {/* ── 9. Apparence ───────────────────────────────────────────────────── */}
       <SectionLabel title="Apparence" />
       <IosCard>
@@ -633,14 +630,6 @@ export default function ReglagesPage() {
       </IosCard>
 
       {/* ── 10. Compte ─────────────────────────────────────────────────────── */}
-      <SectionLabel title="Compte" />
-      <IosCard>
-        <button onClick={() => signOut(getAuth())}
-          className="w-full px-5 py-4 text-left text-[15px] font-medium"
-          style={{ color: "#FF3B30", background: "none", border: "none", cursor: "pointer" }}>
-          Se déconnecter
-        </button>
-      </IosCard>
       <DeleteAccountSection />
 
       <div className="mb-8" />
