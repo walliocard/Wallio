@@ -6,6 +6,13 @@ service cloud.firestore {
       // Toutes les écritures passent par /api/marchand/save (Admin SDK)
       allow write: if false;
     }
+    match /marchands/{marchandId}/historique/{docId} {
+      // Lecture : marchand authentifié uniquement
+      allow read: if request.auth != null && request.auth.uid == marchandId;
+      // Création : flux NFC client (non authentifié) — champs et types restreints
+      allow create: if request.resource.data.keys().hasAll(['client_id', 'client_prenom', 'type', 'created_at'])
+        && request.resource.data.type in ['nfc_client', 'anti_doublon', 'auto_validation'];
+    }
     match /marchands/{marchandId}/membres/{membreId} {
       // Lecture : marchand authentifié uniquement (dashboard patron)
       allow read: if request.auth != null && request.auth.uid == marchandId;
