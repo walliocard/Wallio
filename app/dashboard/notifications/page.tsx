@@ -9,6 +9,7 @@ import { db } from "@/lib/firebase";
 import { useLang } from "@/lib/lang-context";
 import { haptic } from "@/lib/haptics";
 import AmbientBackground, { triggerAmbientPulse } from "@/components/AmbientBackground";
+import CompactHeader from "@/components/dashboard/CompactHeader";
 
 type Segment = "tous" | "actifs" | "inactifs";
 type SendState = "idle" | "sending" | "success" | "error";
@@ -22,6 +23,7 @@ function formatExpiry(date: string, time: string): string {
 export default function NotificationsPage() {
   const { user, marchand } = useAuth();
   const { t } = useLang();
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const [segment, setSegment] = useState<Segment>("tous");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -186,8 +188,9 @@ export default function NotificationsPage() {
 
   return (
     <div style={{ position: "relative" }}>
+      <CompactHeader title="Messages" observeRef={titleRef} />
       <AmbientBackground variant="subtle" />
-      <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-32 md:pb-10 max-w-5xl" style={{ position: "relative", zIndex: 1 }}>
+      <div className="px-5 md:px-8 lg:px-10 pb-32 md:pb-10 max-w-5xl" style={{ position: "relative", zIndex: 1, paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
 
       {/* Toast succès */}
       {successBanner && result && (
@@ -197,7 +200,7 @@ export default function NotificationsPage() {
       )}
 
       <div className="mb-5 md:mb-8">
-        <h1 className="text-[34px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.notif_title}</h1>
+        <h1 ref={titleRef} className="text-[34px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.notif_title}</h1>
       </div>
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-6 space-y-4 lg:space-y-0">

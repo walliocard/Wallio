@@ -109,7 +109,7 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
   function handleTabTap(href: string) {
     // Remonter en haut si déjà sur cet onglet
     if (pathname === href || (href === "/dashboard/plus" && isPlusActive(pathname) && pathname !== "/dashboard/plus")) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.dispatchEvent(new CustomEvent("wallio:scroll-top"));
     }
     setBounce(href);
     setTimeout(() => setBounce(null), 380);

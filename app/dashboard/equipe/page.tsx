@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { getAuth } from "firebase/auth";
@@ -38,6 +38,7 @@ function IosCard({ children }: { children: React.ReactNode }) {
 export default function EquipePage() {
   const { marchand, user } = useAuth();
   const router = useRouter();
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const m = marchand as Record<string, unknown>;
   const code = (m?.code_etablissement as string) || "";
   const [membres, setMembres] = useState<Membre[]>([]);
@@ -86,7 +87,9 @@ export default function EquipePage() {
   }
 
   return (
-    <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-32 md:pb-10 max-w-xl">
+    <>
+    <CompactHeader title="Gestion équipe" observeRef={titleRef} />
+    <div className="px-5 md:px-8 lg:px-10 pb-32 md:pb-10 max-w-xl" style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
       <button onClick={() => router.back()}
         className="flex items-center gap-2 mb-6"
         style={{ background: "none", border: "none", cursor: "pointer", color: "var(--accent)", padding: 0, fontSize: 16, fontWeight: 500 }}>
@@ -95,7 +98,7 @@ export default function EquipePage() {
         </svg>
         Retour
       </button>
-      <h1 className="text-[34px] font-bold tracking-[-1px] mb-8" style={{ color: "var(--fg)" }}>Gestion équipe</h1>
+      <h1 ref={titleRef} className="text-[34px] font-bold tracking-[-1px] mb-8" style={{ color: "var(--fg)" }}>Gestion équipe</h1>
 
       <IosCard>
         {/* Code établissement */}
@@ -220,7 +223,9 @@ export default function EquipePage() {
         </IosCard>
       </div>
     </div>
+    </>
   );
 }
 
 import React from "react";
+import CompactHeader from "@/components/dashboard/CompactHeader";

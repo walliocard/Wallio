@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
 import AmbientBackground from "@/components/AmbientBackground";
+import CompactHeader from "@/components/dashboard/CompactHeader";
 
 function useCountUp(target: number, duration = 700) {
   const [val, setVal] = useState(0);
@@ -104,6 +105,7 @@ export default function AccueilPage() {
   const { user, marchand, loading } = useAuth();
   const { t } = useLang();
   const router = useRouter();
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const [tooltipBar, setTooltipBar] = useState<number | null>(null);
   const [stats, setStats] = useState<Stats>({
     total: 0, aujourd_hui: 0, tampons_total: 0, ce_mois: 0,
@@ -312,8 +314,9 @@ export default function AccueilPage() {
 
   return (
     <div style={{ position: "relative" }}>
+      <CompactHeader title="Accueil" observeRef={titleRef} />
       <AmbientBackground variant="hero" />
-      <div className="relative px-5 md:px-8 lg:px-10 pt-6 pb-36 md:pb-10 max-w-5xl" style={{ zIndex: 1 }}>
+      <div className="relative px-5 md:px-8 lg:px-10 pb-36 md:pb-10 max-w-5xl" style={{ zIndex: 1, paddingTop: "calc(env(safe-area-inset-top) + 24px)" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
@@ -328,7 +331,7 @@ export default function AccueilPage() {
           <p style={{ fontSize: 13, color: "var(--fg-tertiary)", marginBottom: 2 }}>
             {salut} · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
           </p>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.5, lineHeight: 1.15, margin: 0 }}>
+          <h1 ref={titleRef} style={{ fontSize: 28, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.5, lineHeight: 1.15, margin: 0 }}>
             {marchand.nom}
           </h1>
         </div>

@@ -170,24 +170,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // ── Scroll-to-top via tab retap ──
+  useEffect(() => {
+    const handler = () => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    window.addEventListener("wallio:scroll-top", handler);
+    return () => window.removeEventListener("wallio:scroll-top", handler);
+  }, []);
+
   // ── Dashboard ──
   return (
     <ToastProvider>
       <OfflineBanner />
       {marchand && user && (
-        <div style={{ height: "100dvh", overflow: "hidden", background: "var(--bg)" }}>
+        <div style={{ height: "100dvh", background: "var(--bg)" }}>
           <DashboardNav marchand={marchand} />
           <div
             ref={scrollRef}
             className="md:ml-[72px] lg:ml-[240px]"
             style={{
-              height: "100dvh",
+              position: "fixed",
+              top: 0, left: 0, right: 0, bottom: 0,
               overflowY: "auto",
               overflowX: "hidden",
               WebkitOverflowScrolling: "touch",
               background: "transparent",
               animation: "page-in 0.2s ease",
-              paddingTop: "env(safe-area-inset-top)",
             } as React.CSSProperties}
             onClick={e => {
               const el = e.target as HTMLElement;

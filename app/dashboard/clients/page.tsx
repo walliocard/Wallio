@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } from "@/lib/loyalty";
@@ -9,6 +9,7 @@ import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
 import AmbientBackground from "@/components/AmbientBackground";
+import CompactHeader from "@/components/dashboard/CompactHeader";
 
 const AVATAR_PALETTES = [
   { bg: "rgba(94,140,247,0.18)",  text: "#5E8CF7" },
@@ -33,6 +34,7 @@ type Sort = "recent" | "visite" | "tampons" | "alpha";
 export default function ClientsPage() {
   const { user, marchand } = useAuth();
   const { t } = useLang();
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<Sort>("visite");
@@ -160,8 +162,9 @@ export default function ClientsPage() {
 
   return (
     <div style={{ position: "relative" }}>
+      <CompactHeader title="Clients" observeRef={titleRef} />
       <AmbientBackground variant="subtle" />
-      <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 pb-36 md:pb-10" style={{ position: "relative", zIndex: 1 }}>
+      <div className="px-5 md:px-8 lg:px-10 pb-36 md:pb-10" style={{ position: "relative", zIndex: 1, paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
 
       {/* Modal ajout client */}
       {showModal && (
@@ -228,7 +231,7 @@ export default function ClientsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[34px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.clients_title}</h1>
+          <h1 ref={titleRef} className="text-[34px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.clients_title}</h1>
           {!loading && <p style={{ fontSize: 13, color: "var(--fg-tertiary)", marginTop: 2 }}>{clients.length} client{clients.length > 1 ? "s" : ""}</p>}
         </div>
         <button

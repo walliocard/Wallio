@@ -34,6 +34,7 @@ function ItemRow({ href, label, sub, icon, last }: { href: string; label: string
 export default function PlusPage() {
   const { marchand } = useAuth();
   const router = useRouter();
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const hasEquipe = !!(marchand as Record<string, unknown>)?.equipe_actif;
 
   async function handleSignOut() {
@@ -92,9 +93,10 @@ export default function PlusPage() {
 
   return (
     <div style={{ position: "relative" }}>
+      <CompactHeader title={marchand?.nom || "Plus"} observeRef={titleRef} />
       <AmbientBackground variant="subtle" />
-      <div style={{ padding: "28px 20px 120px", maxWidth: 430, margin: "0 auto", position: "relative", zIndex: 1 }}>
-        <h1 style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.5px", color: "var(--fg)", marginBottom: 28 }}>
+      <div style={{ padding: "calc(env(safe-area-inset-top) + 28px) 20px 120px", maxWidth: 430, margin: "0 auto", position: "relative", zIndex: 1 }}>
+        <h1 ref={titleRef} style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.5px", color: "var(--fg)", marginBottom: 28 }}>
           {marchand?.nom || "Plus"}
         </h1>
 
@@ -143,5 +145,6 @@ export default function PlusPage() {
   );
 }
 
-import React from "react";
+import React, { useRef } from "react";
 import AmbientBackground from "@/components/AmbientBackground";
+import CompactHeader from "@/components/dashboard/CompactHeader";
