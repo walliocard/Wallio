@@ -38,6 +38,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const touchStartY = useRef(0);
   const scrollRef   = useRef<HTMLDivElement>(null);
 
+  // ── StatusBar : overlay + dark icons (applique overlaysWebView:true sans rebuild Xcode) ──
+  useEffect(() => {
+    (async () => {
+      try {
+        const { StatusBar, Style } = await import("@capacitor/status-bar");
+        await StatusBar.setOverlaysWebView({ overlay: true });
+        await StatusBar.setStyle({ style: Style.Dark });
+      } catch {}
+    })();
+  }, []);
+
   // ── Langue ──
   useEffect(() => {
     const saved = (marchand as Record<string, unknown>)?.langue as "fr" | "ro" | "es" | undefined;
