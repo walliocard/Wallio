@@ -170,6 +170,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // ── Reset scroll au changement de page (sinon le scrollTop persiste entre onglets) ──
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+
   // ── Scroll-to-top via tab retap ──
   useEffect(() => {
     const handler = () => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
