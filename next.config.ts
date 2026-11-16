@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   devIndicators: false,
   serverExternalPackages: ["sharp", "@napi-rs/canvas"],
+  webpack(config) {
+    config.resolve.fallback = { ...config.resolve.fallback, canvg: false, dompurify: false };
+    return config;
+  },
   async headers() {
     return [
       {
