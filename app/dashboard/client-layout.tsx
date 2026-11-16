@@ -34,6 +34,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pendingFinishRef       = useRef<Record<string, any> | null>(null);
 
+  const wasAuthenticatedRef = useRef(false);
+
   const [refreshing, setRefreshing] = useState(false);
   const touchStartY = useRef(0);
   const scrollRef   = useRef<HTMLDivElement>(null);
@@ -57,8 +59,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // ── Redirect vers auth ──
   useEffect(() => {
+    if (user && marchand) wasAuthenticatedRef.current = true;
+  }, [user, marchand]);
+
+  useEffect(() => {
     if (loading) return;
-    if (!user) { router.push("/dashboard/auth"); return; }
+    const isNative = typeof window !== "undefined" && "Capacitor" in window;
+    if (!user) {
+      // Déconnexion depuis état authentifié en natif → recharger depuis /native-launch
+      // (évite le flash "This page couldn't load" causé par router.push post-signOut)
+      if (wasAuthenticatedRef.current && isNative) {
+        window.location.replace("/native-launch");
+      } else {
+        router.push("/dashboard/auth");
+      }
+      return;
+    }
     if (!marchand) {
       try { localStorage.removeItem("wallio_pk_gerant"); } catch {}
       router.push("/dashboard/auth");
