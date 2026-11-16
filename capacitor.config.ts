@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "Wallio Pro",
   webDir: "out",
   server: {
-    url: "https://app.walliocard.com/app-test",
+    url: "https://app.walliocard.com",
     cleartext: false,
   },
   plugins: {
