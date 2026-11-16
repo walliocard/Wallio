@@ -1,18 +1,23 @@
 #!/bin/sh
 set -e
 
-# Install Node.js 20 LTS — ignore error if already installed, then link
+# Disable Homebrew auto-update to avoid stash/restore messages and speed up CI
+export HOMEBREW_NO_AUTO_UPDATE=1
+
+# Install Node.js 20 LTS
 brew install node@20 2>/dev/null || true
 brew link --force --overwrite node@20 2>/dev/null || true
 export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
 
-# Log Node/npm versions for debugging
-node --version
-npm --version
+# Debug: show environment
+echo "Node: $(node --version)"
+echo "npm:  $(npm --version)"
+echo "Dir:  $CI_PRIMARY_REPOSITORY_PATH"
 
-# Install npm dependencies
 cd "$CI_PRIMARY_REPOSITORY_PATH"
-npm ci
+
+# Install dependencies (npm install is more lenient than npm ci in CI environments)
+npm install --legacy-peer-deps
 
 # Sync Capacitor: generates config files + runs pod install
 npx cap sync ios
