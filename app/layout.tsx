@@ -68,6 +68,8 @@ export default function RootLayout({
     <html lang="fr" className={`${geist.variable} h-full antialiased`}>
       <head>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        {/* Capacitor : cache le splash natif dès que le bridge est prêt — avant React */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var n=0;function h(){try{var p=window.Capacitor;if(p&&p.Plugins&&p.Plugins.SplashScreen){p.Plugins.SplashScreen.hide();return;}}catch(e){}if(n++<40)setTimeout(h,100);}h();})();` }} />
       </head>
       <body className="min-h-full font-[family-name:var(--font-geist)]">
         <LangProvider>
