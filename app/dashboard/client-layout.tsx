@@ -8,6 +8,16 @@ import RecompenseAlert from "@/components/dashboard/RecompenseAlert";
 import { useLang } from "@/lib/lang-context";
 import { ToastProvider } from "@/components/Toast";
 import OfflineBanner from "@/components/OfflineBanner";
+import AmbientBackground, { type AmbientVariant } from "@/components/AmbientBackground";
+
+function getAmbientVariant(pathname: string): AmbientVariant | null {
+  if (pathname === "/dashboard") return "hero";
+  if (pathname === "/dashboard/clients" || pathname.startsWith("/dashboard/clients/")) return "subtle";
+  if (pathname === "/dashboard/notifications") return "subtle";
+  if (pathname === "/dashboard/plus") return "subtle";
+  if (pathname === "/dashboard/equipe") return "subtle";
+  return null;
+}
 
 // ── Layout principal ───────────────────────────────────────────────────────
 
@@ -186,8 +196,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <ToastProvider>
       <OfflineBanner />
-      {marchand && user && (
+      {marchand && user && (() => {
+        const ambientVariant = getAmbientVariant(pathname);
+        return (
         <div style={{ height: "100dvh", background: "var(--bg)" }}>
+          {ambientVariant && (
+            <div
+              className="md:ml-[72px] lg:ml-[240px]"
+              style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 0, pointerEvents: "none" }}
+            >
+              <AmbientBackground variant={ambientVariant} />
+            </div>
+          )}
           <DashboardNav marchand={marchand} />
           <div
             ref={scrollRef}
@@ -227,7 +247,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <RecompenseAlert marchand={marchand} marchandId={user.uid} />
         </div>
-      )}
+        );
+      })()}
     </ToastProvider>
   );
 }

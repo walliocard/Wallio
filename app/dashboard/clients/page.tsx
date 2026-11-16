@@ -8,7 +8,6 @@ import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } fro
 import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
-import AmbientBackground from "@/components/AmbientBackground";
 import CompactHeader from "@/components/dashboard/CompactHeader";
 
 const AVATAR_PALETTES = [
@@ -161,10 +160,9 @@ export default function ClientsPage() {
   const todayDay = new Date().getDate();
 
   return (
-    <div style={{ position: "relative" }}>
+    <div>
       <CompactHeader title="Clients" observeRef={titleRef} />
-      <AmbientBackground variant="subtle" />
-      <div className="px-5 md:px-8 lg:px-10 pb-36 md:pb-10" style={{ position: "relative", zIndex: 1, paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
+      <div className="px-5 md:px-8 lg:px-10 pb-36 md:pb-10" style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
 
       {/* Modal ajout client */}
       {showModal && (

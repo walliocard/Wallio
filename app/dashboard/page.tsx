@@ -8,7 +8,6 @@ import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
-import AmbientBackground from "@/components/AmbientBackground";
 import CompactHeader from "@/components/dashboard/CompactHeader";
 
 function useCountUp(target: number, duration = 700) {
@@ -313,10 +312,9 @@ export default function AccueilPage() {
   const salut = heure < 18 ? "Bonjour" : "Bonsoir";
 
   return (
-    <div style={{ position: "relative" }}>
+    <div>
       <CompactHeader title="Accueil" observeRef={titleRef} />
-      <AmbientBackground variant="hero" />
-      <div className="relative px-5 md:px-8 lg:px-10 pb-36 md:pb-10 max-w-5xl" style={{ zIndex: 1, paddingTop: "calc(env(safe-area-inset-top) + 24px)" }}>
+      <div className="relative px-5 md:px-8 lg:px-10 pb-36 md:pb-10 max-w-5xl" style={{ paddingTop: "calc(env(safe-area-inset-top) + 24px)" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>

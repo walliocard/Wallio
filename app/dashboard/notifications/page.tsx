@@ -8,7 +8,7 @@ import { getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useLang } from "@/lib/lang-context";
 import { haptic } from "@/lib/haptics";
-import AmbientBackground, { triggerAmbientPulse } from "@/components/AmbientBackground";
+import { triggerAmbientPulse } from "@/components/AmbientBackground";
 import CompactHeader from "@/components/dashboard/CompactHeader";
 
 type Segment = "tous" | "actifs" | "inactifs";
@@ -187,10 +187,9 @@ export default function NotificationsPage() {
   );
 
   return (
-    <div style={{ position: "relative" }}>
+    <div>
       <CompactHeader title="Messages" observeRef={titleRef} />
-      <AmbientBackground variant="subtle" />
-      <div className="px-5 md:px-8 lg:px-10 pb-32 md:pb-10 max-w-5xl" style={{ position: "relative", zIndex: 1, paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
+      <div className="px-5 md:px-8 lg:px-10 pb-32 md:pb-10 max-w-5xl" style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
 
       {/* Toast succès */}
       {successBanner && result && (

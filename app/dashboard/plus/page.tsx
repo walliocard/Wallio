@@ -92,10 +92,9 @@ export default function PlusPage() {
   ];
 
   return (
-    <div style={{ position: "relative" }}>
+    <div>
       <CompactHeader title={marchand?.nom || "Plus"} observeRef={titleRef} />
-      <AmbientBackground variant="subtle" />
-      <div style={{ padding: "calc(env(safe-area-inset-top) + 28px) 20px 120px", maxWidth: 430, margin: "0 auto", position: "relative", zIndex: 1 }}>
+      <div style={{ padding: "calc(env(safe-area-inset-top) + 28px) 20px 120px", maxWidth: 430, margin: "0 auto" }}>
         <h1 ref={titleRef} style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.5px", color: "var(--fg)", marginBottom: 28 }}>
           {marchand?.nom || "Plus"}
         </h1>
@@ -146,5 +145,4 @@ export default function PlusPage() {
 }
 
 import React, { useRef } from "react";
-import AmbientBackground from "@/components/AmbientBackground";
 import CompactHeader from "@/components/dashboard/CompactHeader";
