@@ -43,10 +43,7 @@ html {
   overflow-x: hidden;
   overscroll-behavior: none;
   touch-action: pan-y;
-  background:
-    radial-gradient(ellipse 100% 200px at 15% 0%, rgba(47,123,255,0.30), transparent 100%),
-    radial-gradient(ellipse 100% 180px at 85% 0%, rgba(139,92,246,0.24), transparent 100%),
-    #F7F7FA;
+  background: linear-gradient(to bottom, rgba(130,110,250,0.22) 0, rgba(130,110,250,0) 80px), #F7F7FA;
   min-height: 100%;
 }
 

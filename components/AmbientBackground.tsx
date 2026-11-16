@@ -14,12 +14,12 @@ interface BlobConfig {
 
 const HERO_BLOBS: BlobConfig[] = [
   {
-    w: 340, x: "-8%", y: "-100px",
+    w: 340, x: "-8%", y: "-30px",
     gradient: "radial-gradient(circle, rgba(47,123,255,0.42) 0%, rgba(47,123,255,0.16) 40%, transparent 70%)",
     animClass: "ambient-blob-A",
   },
   {
-    w: 320, x: "108%", y: "-80px",
+    w: 320, x: "108%", y: "-20px",
     gradient: "radial-gradient(circle, rgba(139,92,246,0.38) 0%, rgba(139,92,246,0.14) 40%, transparent 70%)",
     animClass: "ambient-blob-B",
   },
@@ -33,12 +33,12 @@ const HERO_BLOBS: BlobConfig[] = [
 // Login : même nappes que hero mais nappe lavande plus bas (derrière le logo)
 const LOGIN_BLOBS: BlobConfig[] = [
   {
-    w: 340, x: "-8%", y: "-100px",
+    w: 340, x: "-8%", y: "-30px",
     gradient: "radial-gradient(circle, rgba(47,123,255,0.42) 0%, rgba(47,123,255,0.16) 40%, transparent 70%)",
     animClass: "ambient-blob-A",
   },
   {
-    w: 320, x: "108%", y: "-80px",
+    w: 320, x: "108%", y: "-20px",
     gradient: "radial-gradient(circle, rgba(139,92,246,0.38) 0%, rgba(139,92,246,0.14) 40%, transparent 70%)",
     animClass: "ambient-blob-B",
   },
@@ -51,12 +51,12 @@ const LOGIN_BLOBS: BlobConfig[] = [
 
 const SUBTLE_BLOBS: BlobConfig[] = [
   {
-    w: 280, x: "-12%", y: "-70px",
+    w: 280, x: "-12%", y: "-20px",
     gradient: "radial-gradient(circle, rgba(47,123,255,0.26) 0%, rgba(47,123,255,0.10) 40%, transparent 70%)",
     animClass: "ambient-blob-As",
   },
   {
-    w: 260, x: "110%", y: "-50px",
+    w: 260, x: "110%", y: "-10px",
     gradient: "radial-gradient(circle, rgba(139,92,246,0.24) 0%, rgba(139,92,246,0.09) 40%, transparent 70%)",
     animClass: "ambient-blob-Bs",
   },
