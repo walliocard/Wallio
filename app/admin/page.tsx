@@ -139,6 +139,8 @@ export default function AdminPage() {
   const [clientSearch, setClientSearch] = useState("");
   const [newClientNotifs, setNewClientNotifs] = useState<{ prenom: string; nom: string; marchandNom: string }[]>([]);
   const touchStartY = useRef(0);
+  const touchStartedInTabBar = useRef(false);
+  const tabBarRef = useRef<HTMLDivElement>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [notifPerm, setNotifPerm] = useState<NotificationPermission | "unsupported">("default");
   // ── Facture ──
@@ -191,10 +193,16 @@ export default function AdminPage() {
     async function init() {
       const res = await fetch("/api/admin/check");
       if (!res.ok) { router.push("/admin/login"); return; }
-      // Lire l'état actuel de la permission sans la demander
+      // Notifs : enregistrer le token si déjà accordé, sinon afficher le bouton
       try {
-        if (!("Notification" in window)) setNotifPerm("unsupported");
-        else setNotifPerm(Notification.permission);
+        if (!("Notification" in window)) { setNotifPerm("unsupported"); }
+        else if (Notification.permission === "granted") {
+          setNotifPerm("granted");
+          const token = await registerFcmToken();
+          if (token) fetch("/api/admin/register-token", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fcm_token: token }) }).catch(() => {});
+        } else {
+          setNotifPerm(Notification.permission);
+        }
       } catch { setNotifPerm("unsupported"); }
       timeout = setTimeout(() => setLoadError(true), 15000);
       unsub = onSnapshot(collection(db, "marchands"), snap => {
@@ -978,8 +986,12 @@ export default function AdminPage() {
     <div
       style={{ height: "100dvh", overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
       ref={el => { if (el) (el as HTMLDivElement & { _adminScroll: boolean })._adminScroll = true; }}
-      onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
+      onTouchStart={e => {
+        touchStartY.current = e.touches[0].clientY;
+        touchStartedInTabBar.current = !!(tabBarRef.current?.contains(e.target as Node));
+      }}
       onTouchEnd={e => {
+        if (touchStartedInTabBar.current) return;
         const dy = e.changedTouches[0].clientY - touchStartY.current;
         const target = e.currentTarget as HTMLDivElement;
         if (dy > 70 && target.scrollTop === 0 && !refreshing) {
@@ -1448,9 +1460,8 @@ export default function AdminPage() {
 
         {/* Onglets */}
         <div
-          style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, overflowX: "auto", scrollbarWidth: "none" }}
-          onTouchStart={e => e.stopPropagation()}
-          onTouchEnd={e => e.stopPropagation()}
+          ref={tabBarRef}
+          style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3 }}
         >
           {([["marchands", "Marchands"], ["clients", "Clients"], ["comptabilite", "Comptabilité"], ["documents", "Documents"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
