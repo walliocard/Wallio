@@ -31,7 +31,7 @@ export default function NotificationsPage() {
   const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
   const [expiresDate, setExpiresDate] = useState("");
   const [expiresTime, setExpiresTime] = useState("23:00");
-  const [segmentCounts, setSegmentCounts] = useState({ tous: 0, actifs: 0, inactifs: 0 });
+  const [segmentCounts, setSegmentCounts] = useState<{ tous: number; actifs: number; inactifs: number } | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showExpirySheet, setShowExpirySheet] = useState(false);
   const [successBanner, setSuccessBanner] = useState(false);
@@ -107,7 +107,7 @@ export default function NotificationsPage() {
   const charTitle = title.length;
   const charBody = body.length;
   const canSend = title.trim().length > 0 && body.trim().length > 0 && expiresDate.length > 0;
-  const count = segmentCounts[segment];
+  const count = segmentCounts?.[segment] ?? null;
 
   const TEMPLATES: { label: string; icon: React.ReactNode; title: string; body: string }[] = [
     {
@@ -174,8 +174,8 @@ export default function NotificationsPage() {
           </svg>
         )}
         {sendState === "sending" ? t.notif_sending
-         : sendState === "success" ? `Envoyée à ${result?.sent ?? count} client${(result?.sent ?? count) > 1 ? "s" : ""}`
-         : canSend ? `Envoyer à ${count} client${count > 1 ? "s" : ""}`
+         : sendState === "success" ? `Envoyée à ${result?.sent ?? count ?? "…"} client${((result?.sent ?? count) ?? 0) > 1 ? "s" : ""}`
+         : canSend ? `Envoyer à ${count ?? "…"} client${(count ?? 0) > 1 ? "s" : ""}`
          : "Rédiger un message"}
       </button>
       {!canSend && sendState === "idle" && (
@@ -215,8 +215,8 @@ export default function NotificationsPage() {
                   style={{ flex: 1, padding: "7px 4px", borderRadius: 8, fontSize: 12, fontWeight: segment === id ? 600 : 400, background: segment === id ? "#FFFFFF" : "transparent", color: segment === id ? "var(--fg)" : "var(--fg-tertiary)", border: "none", cursor: "pointer", boxShadow: segment === id ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s", whiteSpace: "nowrap" }}>
                   {id === "tous" ? "Tous" : id === "actifs" ? "Actifs" : "Inactifs"}
                   {" "}
-                  <span key={segmentCounts[id]} style={{ opacity: 0.7, animation: "fade-in 0.2s ease" }}>
-                    ({segmentCounts[id]})
+                  <span key={segmentCounts?.[id] ?? "loading"} style={{ opacity: 0.7, animation: "fade-in 0.2s ease" }}>
+                    ({segmentCounts === null ? "…" : segmentCounts[id]})
                   </span>
                 </button>
               ))}
@@ -375,7 +375,7 @@ export default function NotificationsPage() {
             <p className="text-[17px] font-semibold mb-4" style={{ color: "var(--fg)" }}>Confirmer l'envoi</p>
             {iosPreview}
             <p className="text-[13px] mt-4 mb-5 text-center" style={{ color: "var(--fg-tertiary)" }}>
-              Sera envoyée à <strong style={{ color: "var(--fg)" }}>{count} client{count > 1 ? "s" : ""}</strong>
+              Sera envoyée à <strong style={{ color: "var(--fg)" }}>{count ?? "…"} client{(count ?? 0) > 1 ? "s" : ""}</strong>
             </p>
             <button onClick={envoyer}
               className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white"

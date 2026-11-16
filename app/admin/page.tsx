@@ -5,6 +5,7 @@ import { collection, onSnapshot, query, where, getCountFromServer, orderBy, limi
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
 import { drawPrintCard, drawPrintCardQROnly, drawPrintCardNFCOnly } from "@/lib/print-card-draw";
+import { registerFcmToken } from "@/lib/fcm";
 
 type AboType = "mensuel" | "6mois" | "annuel";
 type Paiement = { date: number; type: AboType; montant: number };
@@ -130,8 +131,9 @@ export default function AdminPage() {
   const [createVille, setCreateVille] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [tab, setTab] = useState<"marchands" | "comptabilite" | "contrat" | "facture" | "clients">("marchands");
-  type ClientEntry = { id: string; prenom: string; nom: string; telephone: string; marchand_id: string; date_inscription?: { seconds: number }; tampons: number };
+  const [tab, setTab] = useState<"marchands" | "comptabilite" | "documents" | "clients">("marchands");
+  const [docType, setDocType] = useState<"contrat" | "facture">("contrat");
+  type ClientEntry = { id: string; prenom: string; nom: string; telephone: string; marchand_id: string; date_inscription?: { seconds: number }; derniere_visite?: { seconds: number }; tampons: number };
   const [allClients, setAllClients] = useState<ClientEntry[]>([]);
   const [clientsLoaded, setClientsLoaded] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
@@ -188,6 +190,22 @@ export default function AdminPage() {
     async function init() {
       const res = await fetch("/api/admin/check");
       if (!res.ok) { router.push("/admin/login"); return; }
+      // Enregistre le token FCM pour les notifs push admin
+      try {
+        const perm = Notification.permission === "default"
+          ? await Notification.requestPermission()
+          : Notification.permission;
+        if (perm === "granted") {
+          const token = await registerFcmToken();
+          if (token) {
+            fetch("/api/admin/register-token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ fcm_token: token }),
+            }).catch(() => {});
+          }
+        }
+      } catch { /* notifs non supportées */ }
       timeout = setTimeout(() => setLoadError(true), 15000);
       unsub = onSnapshot(collection(db, "marchands"), snap => {
         clearTimeout(timeout);
@@ -240,7 +258,18 @@ export default function AdminPage() {
     if (tab !== "clients" || clientsLoaded) return;
     const q = query(collection(db, "clients"), orderBy("date_inscription", "desc"), limit(500));
     onSnapshot(q, snap => {
-      setAllClients(snap.docs.map(d => ({ id: d.id, prenom: d.data().prenom || "", nom: d.data().nom || "", telephone: d.data().telephone || "", marchand_id: d.data().marchand_id || "", date_inscription: d.data().date_inscription, tampons: d.data().tampons ?? 0 })));
+      const rows = snap.docs.map(d => ({
+        id: d.id,
+        prenom: d.data().prenom || "",
+        nom: d.data().nom || "",
+        telephone: d.data().telephone || "",
+        marchand_id: d.data().marchand_id || "",
+        date_inscription: d.data().date_inscription,
+        derniere_visite: d.data().derniere_visite,
+        tampons: d.data().tampons ?? 0,
+      }));
+      rows.sort((a, b) => (b.derniere_visite?.seconds ?? 0) - (a.derniere_visite?.seconds ?? 0));
+      setAllClients(rows);
       setClientsLoaded(true);
     });
   }, [tab, clientsLoaded]);
@@ -1405,8 +1434,11 @@ export default function AdminPage() {
         </div>
 
         {/* Onglets */}
-        <div style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, overflowX: "auto", scrollbarWidth: "none" }}>
-          {([["marchands", "Marchands"], ["clients", "Clients"], ["comptabilite", "Comptabilité"], ["contrat", "Contrat"], ["facture", "Facture"]] as const).map(([key, label]) => (
+        <div
+          style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, overflowX: "auto", scrollbarWidth: "none" }}
+          onTouchStart={e => e.stopPropagation()}
+        >
+          {([["marchands", "Marchands"], ["clients", "Clients"], ["comptabilite", "Comptabilité"], ["documents", "Documents"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               style={{ padding: "7px 18px", borderRadius: 8, fontSize: 14, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s" }}>
               {label}
@@ -1418,14 +1450,14 @@ export default function AdminPage() {
           {/* Stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }} className="md:grid-cols-3">
             {[
-              { label: "Marchands total",  value: String(marchands.filter(reel).length),           color: T.label },
-              { label: "Actifs",           value: String(actifs),                                  color: T.actifFg },
-              { label: "En attente",       value: String(marchands.filter(m => m.abonnement_statut === "en_attente" && reel(m)).length), color: "#7A4A00" },
-              { label: "Clients total",    value: totalClients > 0 ? totalClients.toLocaleString("fr-FR") : "…", color: T.label },
-              { label: "Encaissé ce mois", value: `${encaisseCeMois.toLocaleString("fr-FR")} DH`,   color: T.label },
-              { label: "Encaissé total",   value: `${revenuTotal.toLocaleString("fr-FR")} DH`,     color: T.actifFg },
+              { label: "Marchands total",  value: String(marchands.filter(reel).length),           color: T.label,    onClick: undefined },
+              { label: "Actifs",           value: String(actifs),                                  color: T.actifFg,  onClick: undefined },
+              { label: "En attente",       value: String(marchands.filter(m => m.abonnement_statut === "en_attente" && reel(m)).length), color: "#7A4A00", onClick: undefined },
+              { label: "Clients total",    value: totalClients > 0 ? totalClients.toLocaleString("fr-FR") : "…", color: T.label, onClick: () => setTab("clients") },
+              { label: "Encaissé ce mois", value: `${encaisseCeMois.toLocaleString("fr-FR")} DH`,   color: T.label,    onClick: undefined },
+              { label: "Encaissé total",   value: `${revenuTotal.toLocaleString("fr-FR")} DH`,     color: T.actifFg,  onClick: undefined },
             ].map(s => (
-              <div key={s.label} style={{ ...G, borderRadius: 18, padding: "18px 20px" }}>
+              <div key={s.label} onClick={s.onClick} style={{ ...G, borderRadius: 18, padding: "18px 20px", cursor: s.onClick ? "pointer" : "default" }}>
                 <p style={{ fontSize: 26, fontWeight: 600, color: s.color, letterSpacing: "-0.5px", lineHeight: 1 }}>{s.value}</p>
                 <p style={{ fontSize: 12, color: T.sec, marginTop: 6, fontWeight: 400 }}>{s.label}</p>
               </div>
@@ -1579,7 +1611,7 @@ export default function AdminPage() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead>
                       <tr style={{ borderBottom: `1px solid ${T.border}` }}>
-                        {["Prénom", "Nom", "Téléphone", "Marchand", "Inscription", "Tampons"].map(h => (
+                        {["Prénom", "Nom", "Téléphone", "Marchand", "Dernière visite", "Tampons"].map(h => (
                           <th key={h} style={{ textAlign: "left", padding: "10px 14px", color: T.tert, fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
@@ -1595,7 +1627,7 @@ export default function AdminPage() {
                               <td style={{ padding: "10px 14px", color: T.label }}>{c.nom}</td>
                               <td style={{ padding: "10px 14px", color: T.sec, fontFamily: "monospace" }}>{c.telephone}</td>
                               <td style={{ padding: "10px 14px", color: T.sec }}>{marchand?.nom || c.marchand_id}</td>
-                              <td style={{ padding: "10px 14px", color: T.tert, whiteSpace: "nowrap" }}>{formatDate(c.date_inscription)}</td>
+                              <td style={{ padding: "10px 14px", color: T.tert, whiteSpace: "nowrap" }}>{c.derniere_visite ? formatDate(c.derniere_visite) : "—"}</td>
                               <td style={{ padding: "10px 14px", color: T.label, textAlign: "center" }}>{c.tampons}</td>
                             </tr>
                           );
@@ -1731,191 +1763,195 @@ export default function AdminPage() {
         })()}
 
 
-        {/* ── Contrat ── */}
-        {tab === "contrat" && (
+        {/* ── Documents (Contrat + Facture) ── */}
+        {tab === "documents" && (
           <div style={{ maxWidth: 680 }}>
-            <div style={{ ...G, borderRadius: 18, padding: "24px 28px", marginBottom: 16 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: T.tert, marginBottom: 16 }}>Générer un contrat</p>
-
-              {/* Sélecteur marchand */}
-              <div style={{ marginBottom: 16 }}>
-                <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Marchand</p>
-                <select value={ctMarchandId} onChange={e => chargerMarchandContrat(e.target.value)} style={{ ...inputStyle, width: "100%" }}>
-                  <option value="">Sélectionner un marchand…</option>
-                  {marchands.map(m => <option key={m.id} value={m.id}>{m.nom || m.email}</option>)}
-                </select>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Référence contrat</p>
-                  <input value={ctRef} onChange={e => setCtRef(e.target.value)} style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date du contrat</p>
-                  <input type="date" value={ctDate} onChange={e => setCtDate(e.target.value)} style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date de début</p>
-                  <input type="date" value={ctDebut} onChange={e => setCtDebut(e.target.value)} style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Formule</p>
-                  <select value={ctType} onChange={e => { const t = e.target.value as AboType; setCtType(t); setCtPrix(prixParFormule(t, ctDevise)); }} style={{ ...inputStyle }}>
-                    <option value="mensuel">Mensuel</option>
-                    <option value="6mois">6 mois</option>
-                    <option value="annuel">Annuel</option>
-                  </select>
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Montant</p>
-                  <input value={ctPrix} onChange={e => setCtPrix(e.target.value)} style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Devise</p>
-                  <select value={ctDevise} onChange={e => { setCtDevise(e.target.value); setCtPrix(prixParFormule(ctType, e.target.value)); }} style={{ ...inputStyle }}>
-                    <option value="DH">DH (Maroc)</option>
-                    <option value="€">€ (Europe)</option>
-                    <option value="RON">RON (Roumanie)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Nom du marchand</p>
-                  <input value={ctNom} onChange={e => setCtNom(e.target.value)} placeholder="Nom de l'établissement" style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Email</p>
-                  <input value={ctEmail} onChange={e => setCtEmail(e.target.value)} placeholder="email@etablissement.com" style={{ ...inputStyle }} />
-                </div>
-                <div style={{ gridColumn: "1/-1" }}>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Adresse</p>
-                  <input value={ctAdresse} onChange={e => setCtAdresse(e.target.value)} placeholder="Adresse, ville, pays" style={{ ...inputStyle }} />
-                </div>
-              </div>
-
-              <button onClick={async () => { setDownloadingDoc(true); await telechargerContrat(); setDownloadingDoc(false); }} disabled={downloadingDoc}
-                style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: downloadingDoc ? "default" : "pointer", opacity: downloadingDoc ? 0.7 : 1 }}>
-                {downloadingDoc ? "Génération en cours…" : "Télécharger en PDF"}
-              </button>
+            {/* Switch Contrat / Facture */}
+            <div style={{ display: "flex", background: T.tabsBg, borderRadius: 10, padding: 3, marginBottom: 20, width: "fit-content" }}>
+              {(["contrat", "facture"] as const).map(dt => (
+                <button key={dt} onClick={() => setDocType(dt)}
+                  style={{ padding: "7px 24px", borderRadius: 8, fontSize: 14, fontWeight: docType === dt ? 600 : 400, background: docType === dt ? T.tabActiveBg : "transparent", color: docType === dt ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: docType === dt ? T.shadow : "none", transition: "all 0.15s" }}>
+                  {dt === "contrat" ? "Contrat" : "Facture"}
+                </button>
+              ))}
             </div>
 
-            <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>
-              Le contrat s&apos;ouvre dans un nouvel onglet · Ctrl+P ou Cmd+P pour sauvegarder en PDF
-            </p>
-          </div>
-        )}
+            {docType === "contrat" && <>
+              <div style={{ ...G, borderRadius: 18, padding: "24px 28px", marginBottom: 16 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: T.tert, marginBottom: 16 }}>Générer un contrat</p>
 
-        {/* ── Facture ── */}
-        {tab === "facture" && (
-          <div style={{ maxWidth: 680 }}>
-            <div style={{ ...G, borderRadius: 18, padding: "24px 28px", marginBottom: 16 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: T.tert, marginBottom: 16 }}>Générer une facture</p>
-
-              {/* Sélecteur marchand */}
-              <div style={{ marginBottom: 16 }}>
-                <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Marchand</p>
-                <select value={faMarchandId} onChange={e => chargerMarchandFacture(e.target.value)} style={{ ...inputStyle, width: "100%" }}>
-                  <option value="">Sélectionner un marchand…</option>
-                  {marchands.map(m => <option key={m.id} value={m.id}>{m.nom || m.email}</option>)}
-                </select>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>N° facture</p>
-                  <input value={faRef} onChange={e => setFaRef(e.target.value)} style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date de facturation</p>
-                  <input type="date" value={faDate} onChange={e => setFaDate(e.target.value)} style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Début de période</p>
-                  <input type="date" value={faEcheance} onChange={e => setFaEcheance(e.target.value)} style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Formule</p>
-                  <select value={faType} onChange={e => { const t = e.target.value as AboType; setFaType(t); setFaPrix(prixParFormule(t, faDevise)); }} style={{ ...inputStyle }}>
-                    <option value="mensuel">Mensuel</option>
-                    <option value="6mois">6 mois</option>
-                    <option value="annuel">Annuel</option>
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Marchand</p>
+                  <select value={ctMarchandId} onChange={e => chargerMarchandContrat(e.target.value)} style={{ ...inputStyle, width: "100%" }}>
+                    <option value="">Sélectionner un marchand…</option>
+                    {marchands.map(m => <option key={m.id} value={m.id}>{m.nom || m.email}</option>)}
                   </select>
                 </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Montant</p>
-                  <input value={faPrix} onChange={e => setFaPrix(e.target.value)} style={{ ...inputStyle }} />
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Référence contrat</p>
+                    <input value={ctRef} onChange={e => setCtRef(e.target.value)} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date du contrat</p>
+                    <input type="date" value={ctDate} onChange={e => setCtDate(e.target.value)} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date de début</p>
+                    <input type="date" value={ctDebut} onChange={e => setCtDebut(e.target.value)} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Formule</p>
+                    <select value={ctType} onChange={e => { const t = e.target.value as AboType; setCtType(t); setCtPrix(prixParFormule(t, ctDevise)); }} style={{ ...inputStyle }}>
+                      <option value="mensuel">Mensuel</option>
+                      <option value="6mois">6 mois</option>
+                      <option value="annuel">Annuel</option>
+                    </select>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Montant</p>
+                    <input value={ctPrix} onChange={e => setCtPrix(e.target.value)} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Devise</p>
+                    <select value={ctDevise} onChange={e => { setCtDevise(e.target.value); setCtPrix(prixParFormule(ctType, e.target.value)); }} style={{ ...inputStyle }}>
+                      <option value="DH">DH (Maroc)</option>
+                      <option value="€">€ (Europe)</option>
+                      <option value="RON">RON (Roumanie)</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Devise</p>
-                  <select value={faDevise} onChange={e => { setFaDevise(e.target.value); setFaPrix(prixParFormule(faType, e.target.value)); }} style={{ ...inputStyle }}>
-                    <option value="DH">DH (Maroc)</option>
-                    <option value="€">€ (Europe)</option>
-                    <option value="RON">RON (Roumanie)</option>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Nom du marchand</p>
+                    <input value={ctNom} onChange={e => setCtNom(e.target.value)} placeholder="Nom de l'établissement" style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Email</p>
+                    <input value={ctEmail} onChange={e => setCtEmail(e.target.value)} placeholder="email@etablissement.com" style={{ ...inputStyle }} />
+                  </div>
+                  <div style={{ gridColumn: "1/-1" }}>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Adresse</p>
+                    <input value={ctAdresse} onChange={e => setCtAdresse(e.target.value)} placeholder="Adresse, ville, pays" style={{ ...inputStyle }} />
+                  </div>
+                </div>
+
+                <button onClick={async () => { setDownloadingDoc(true); await telechargerContrat(); setDownloadingDoc(false); }} disabled={downloadingDoc}
+                  style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: downloadingDoc ? "default" : "pointer", opacity: downloadingDoc ? 0.7 : 1 }}>
+                  {downloadingDoc ? "Génération en cours…" : "Télécharger en PDF"}
+                </button>
+              </div>
+              <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>
+                Le contrat s&apos;ouvre dans un nouvel onglet · Ctrl+P ou Cmd+P pour sauvegarder en PDF
+              </p>
+            </>}
+
+            {docType === "facture" && <>
+              <div style={{ ...G, borderRadius: 18, padding: "24px 28px", marginBottom: 16 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: T.tert, marginBottom: 16 }}>Générer une facture</p>
+
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Marchand</p>
+                  <select value={faMarchandId} onChange={e => chargerMarchandFacture(e.target.value)} style={{ ...inputStyle, width: "100%" }}>
+                    <option value="">Sélectionner un marchand…</option>
+                    {marchands.map(m => <option key={m.id} value={m.id}>{m.nom || m.email}</option>)}
                   </select>
                 </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Mode de paiement</p>
-                  <select value={faPaiement} onChange={e => setFaPaiement(e.target.value as "virement"|"especes"|"cheque")} style={{ ...inputStyle }}>
-                    <option value="virement">Virement bancaire</option>
-                    <option value="especes">Espèces</option>
-                    <option value="cheque">Chèque</option>
-                  </select>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>N° facture</p>
+                    <input value={faRef} onChange={e => setFaRef(e.target.value)} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Date de facturation</p>
+                    <input type="date" value={faDate} onChange={e => setFaDate(e.target.value)} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Début de période</p>
+                    <input type="date" value={faEcheance} onChange={e => setFaEcheance(e.target.value)} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Formule</p>
+                    <select value={faType} onChange={e => { const t = e.target.value as AboType; setFaType(t); setFaPrix(prixParFormule(t, faDevise)); }} style={{ ...inputStyle }}>
+                      <option value="mensuel">Mensuel</option>
+                      <option value="6mois">6 mois</option>
+                      <option value="annuel">Annuel</option>
+                    </select>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Montant</p>
+                    <input value={faPrix} onChange={e => setFaPrix(e.target.value)} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Devise</p>
+                    <select value={faDevise} onChange={e => { setFaDevise(e.target.value); setFaPrix(prixParFormule(faType, e.target.value)); }} style={{ ...inputStyle }}>
+                      <option value="DH">DH (Maroc)</option>
+                      <option value="€">€ (Europe)</option>
+                      <option value="RON">RON (Roumanie)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Mode de paiement</p>
+                    <select value={faPaiement} onChange={e => setFaPaiement(e.target.value as "virement"|"especes"|"cheque")} style={{ ...inputStyle }}>
+                      <option value="virement">Virement bancaire</option>
+                      <option value="especes">Espèces</option>
+                      <option value="cheque">Chèque</option>
+                    </select>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Statut</p>
+                    <select value={faStatut} onChange={e => setFaStatut(e.target.value as "emise"|"payee")} style={{ ...inputStyle }}>
+                      <option value="emise">Émise (en attente)</option>
+                      <option value="payee">Payée</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Statut</p>
-                  <select value={faStatut} onChange={e => setFaStatut(e.target.value as "emise"|"payee")} style={{ ...inputStyle }}>
-                    <option value="emise">Émise (en attente)</option>
-                    <option value="payee">Payée</option>
-                  </select>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Nom du marchand</p>
+                    <input value={faNom} onChange={e => setFaNom(e.target.value)} placeholder="Nom de l'établissement" style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Email</p>
+                    <input value={faEmail} onChange={e => setFaEmail(e.target.value)} placeholder="email@etablissement.com" style={{ ...inputStyle }} />
+                  </div>
+                  <div style={{ gridColumn: "1/-1" }}>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Adresse</p>
+                    <input value={faAdresse} onChange={e => setFaAdresse(e.target.value)} placeholder="Adresse, ville, pays" style={{ ...inputStyle }} />
+                  </div>
                 </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Remise (montant)</p>
+                    <input value={faRemise} onChange={e => setFaRemise(e.target.value)} placeholder={`0 ${faDevise}`} style={{ ...inputStyle }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Intitulé de la remise</p>
+                    <input value={faRemiseLabel} onChange={e => setFaRemiseLabel(e.target.value)} placeholder="Ex : Remise lancement, Promo…" style={{ ...inputStyle }} />
+                  </div>
+                </div>
+
+                {faRemise && parseFloat(faRemise) > 0 && (
+                  <div style={{ background: "rgba(255,59,48,0.06)", border: "1px solid rgba(255,59,48,0.15)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 13 }}>
+                    <span style={{ color: T.sec }}>Total après remise : </span>
+                    <strong style={{ color: T.label }}>{Math.max(0, (parseFloat(faPrix.replace(/\s/g,""))||0) - (parseFloat(faRemise.replace(/\s/g,""))||0))} {faDevise}</strong>
+                  </div>
+                )}
+
+                <button onClick={async () => { setDownloadingDoc(true); await telechargerFacture(); setDownloadingDoc(false); }} disabled={downloadingDoc}
+                  style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: downloadingDoc ? "default" : "pointer", opacity: downloadingDoc ? 0.7 : 1 }}>
+                  {downloadingDoc ? "Génération en cours…" : "Télécharger en PDF"}
+                </button>
               </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Nom du marchand</p>
-                  <input value={faNom} onChange={e => setFaNom(e.target.value)} placeholder="Nom de l'établissement" style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Email</p>
-                  <input value={faEmail} onChange={e => setFaEmail(e.target.value)} placeholder="email@etablissement.com" style={{ ...inputStyle }} />
-                </div>
-                <div style={{ gridColumn: "1/-1" }}>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Adresse</p>
-                  <input value={faAdresse} onChange={e => setFaAdresse(e.target.value)} placeholder="Adresse, ville, pays" style={{ ...inputStyle }} />
-                </div>
-              </div>
-
-              {/* Remise */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Remise (montant)</p>
-                  <input value={faRemise} onChange={e => setFaRemise(e.target.value)} placeholder={`0 ${faDevise}`} style={{ ...inputStyle }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 12, color: T.sec, marginBottom: 6 }}>Intitulé de la remise</p>
-                  <input value={faRemiseLabel} onChange={e => setFaRemiseLabel(e.target.value)} placeholder="Ex : Remise lancement, Promo…" style={{ ...inputStyle }} />
-                </div>
-              </div>
-
-              {faRemise && parseFloat(faRemise) > 0 && (
-                <div style={{ background: "rgba(255,59,48,0.06)", border: "1px solid rgba(255,59,48,0.15)", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 13 }}>
-                  <span style={{ color: T.sec }}>Total après remise : </span>
-                  <strong style={{ color: T.label }}>{Math.max(0, (parseFloat(faPrix.replace(/\s/g,""))||0) - (parseFloat(faRemise.replace(/\s/g,""))||0))} {faDevise}</strong>
-                </div>
-              )}
-
-              <button onClick={async () => { setDownloadingDoc(true); await telechargerFacture(); setDownloadingDoc(false); }} disabled={downloadingDoc}
-                style={{ width: "100%", padding: "13px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: "none", cursor: downloadingDoc ? "default" : "pointer", opacity: downloadingDoc ? 0.7 : 1 }}>
-                {downloadingDoc ? "Génération en cours…" : "Télécharger en PDF"}
-              </button>
-            </div>
-
-            <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>
-              La facture s&apos;ouvre dans un nouvel onglet · Ctrl+P ou Cmd+P pour sauvegarder en PDF
-            </p>
+              <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>
+                La facture s&apos;ouvre dans un nouvel onglet · Ctrl+P ou Cmd+P pour sauvegarder en PDF
+              </p>
+            </>}
           </div>
         )}
 
