@@ -70,12 +70,6 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
       <body className="min-h-full font-[family-name:var(--font-geist)]">
-        <div aria-hidden="true" style={{
-          position: "fixed", top: 0, left: 0, right: 0,
-          height: "calc(env(safe-area-inset-top, 60px) + 24px)",
-          background: "linear-gradient(to bottom, rgba(130,110,250,0.22) 0%, transparent 100%)",
-          pointerEvents: "none", zIndex: 999,
-        }} />
         <LangProvider>
           <AuthProvider>{children}</AuthProvider>
         </LangProvider>

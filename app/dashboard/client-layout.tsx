@@ -185,7 +185,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               overflowY: "auto",
               overflowX: "hidden",
               WebkitOverflowScrolling: "touch",
-              background: "var(--bg)",
+              background: "transparent",
               animation: "page-in 0.2s ease",
               paddingTop: "env(safe-area-inset-top)",
             } as React.CSSProperties}
