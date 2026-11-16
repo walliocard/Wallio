@@ -273,7 +273,13 @@ function ConnexionInner() {
       await haptic("success");
       setSuccess(true);
       await new Promise(r => setTimeout(r, 320));
-      router.push("/dashboard");
+      // window.location is treated as internal by Capacitor (starts with server.url prefix /app-test)
+      // then /app-test immediately does router.replace('/dashboard') — avoids layout state issues
+      if (typeof window !== "undefined" && "Capacitor" in window) {
+        window.location.replace("/app-test");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       shake(msg === "timeout" || msg.includes("network") || msg.includes("unavailable")
@@ -293,7 +299,11 @@ function ConnexionInner() {
       await haptic("success");
       setSuccess(true);
       await new Promise(r => setTimeout(r, 320));
-      router.push("/dashboard");
+      if (typeof window !== "undefined" && "Capacitor" in window) {
+        window.location.replace("/app-test");
+      } else {
+        router.push("/dashboard");
+      }
     } catch {
       try { localStorage.removeItem("wallio_pk_gerant"); } catch {}
       setPasskeyAvail(false);
