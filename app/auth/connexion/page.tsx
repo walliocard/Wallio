@@ -273,10 +273,10 @@ function ConnexionInner() {
       await haptic("success");
       setSuccess(true);
       await new Promise(r => setTimeout(r, 320));
-      // window.location is treated as internal by Capacitor (starts with server.url prefix /app-test)
-      // then /app-test immediately does router.replace('/dashboard') — avoids layout state issues
+      // window.location stays internal (starts with server.url /native-launch prefix)
+      // then /native-launch does router.replace('/dashboard') — avoids layout state issues
       if (typeof window !== "undefined" && "Capacitor" in window) {
-        window.location.replace("/app-test");
+        window.location.replace("/native-launch");
       } else {
         router.push("/dashboard");
       }
@@ -300,7 +300,7 @@ function ConnexionInner() {
       setSuccess(true);
       await new Promise(r => setTimeout(r, 320));
       if (typeof window !== "undefined" && "Capacitor" in window) {
-        window.location.replace("/app-test");
+        window.location.replace("/native-launch");
       } else {
         router.push("/dashboard");
       }

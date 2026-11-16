@@ -107,6 +107,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // ── Mount wallio-splash + cache splash natif ──
   useEffect(() => {
+    // Capacitor native : le splash natif iOS gère l'animation de lancement
+    // → pas besoin du splash web (évite le flash entre splash natif et dashboard)
+    if (typeof window !== "undefined" && "Capacitor" in window) {
+      splashNativeHiddenRef.current = true;
+      splashDoneRef.current = true;
+      return;
+    }
     let gone = false;
     (async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
