@@ -1,36 +1,18 @@
 "use client";
+import { useEffect } from "react";
+
 export default function AppTest() {
+  useEffect(() => {
+    // Redirect to /dashboard after 1.5s — tests if /dashboard loads from JS navigation
+    const t = setTimeout(() => { window.location.replace("/dashboard"); }, 1500);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <html>
-      <body style={{ fontFamily: "sans-serif", padding: 40, background: "#fff" }}>
+      <body style={{ fontFamily: "sans-serif", padding: 40, background: "#F7F7FA" }}>
         <h1 style={{ color: "#007AFF" }}>Wallio OK</h1>
-        <p>WKWebView charge cette page correctement.</p>
-        <p style={{ marginTop: 32 }}>
-          <a
-            href="/dashboard"
-            style={{
-              display: "inline-block", padding: "14px 28px",
-              background: "#007AFF", color: "#fff",
-              borderRadius: 12, fontSize: 16, fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            Ouvrir /dashboard
-          </a>
-        </p>
-        <p style={{ marginTop: 16 }}>
-          <a
-            href="/dashboard/auth"
-            style={{
-              display: "inline-block", padding: "14px 28px",
-              background: "#8B5CF6", color: "#fff",
-              borderRadius: 12, fontSize: 16, fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            Ouvrir /dashboard/auth
-          </a>
-        </p>
+        <p style={{ color: "#555" }}>Redirection vers /dashboard dans 1.5s...</p>
       </body>
     </html>
   );
