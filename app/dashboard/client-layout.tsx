@@ -107,13 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // ── Mount wallio-splash + cache splash natif ──
   useEffect(() => {
-    // Capacitor native : le splash natif iOS gère l'animation de lancement
-    // → pas besoin du splash web (évite le flash entre splash natif et dashboard)
-    if (typeof window !== "undefined" && "Capacitor" in window) {
-      splashNativeHiddenRef.current = true;
-      splashDoneRef.current = true;
-      return;
-    }
+    const isNative = typeof window !== "undefined" && "Capacitor" in window;
     let gone = false;
     (async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,13 +122,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       splashRef.current = splash;
       await splash.ready;
       if (gone) return;
-      try {
-        const { SplashScreen: Cap } = await import("@capacitor/splash-screen");
-        await Promise.race([
-          Cap.hide({ fadeOutDuration: 0 }),
-          new Promise<void>(r => setTimeout(r, 1500)),
-        ]);
-      } catch {}
+      if (!isNative) {
+        // PWA web : cacher le splash natif Capacitor manuellement
+        try {
+          const { SplashScreen: Cap } = await import("@capacitor/splash-screen");
+          await Promise.race([
+            Cap.hide({ fadeOutDuration: 0 }),
+            new Promise<void>(r => setTimeout(r, 1500)),
+          ]);
+        } catch {}
+      }
+      // Natif : launchAutoHide:true gère le splash iOS seul — ne pas appeler Cap.hide()
+      // trop tôt, sinon le splash natif se cache avant que wallio-splash soit prêt → flash
       splashNativeHiddenRef.current = true;
       if (pendingFinishRef.current) {
         splash.finish(pendingFinishRef.current);
