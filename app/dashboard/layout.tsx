@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   manifest: "/dashboard/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black",
+    statusBarStyle: "black-translucent",
     title: "Wallio",
   },
   icons: {
