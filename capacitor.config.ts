@@ -10,7 +10,8 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchAutoHide: false,       // on cache manuellement depuis JS après le splash HTML
+      launchAutoHide: true,
+      launchShowDuration: 1200,
       backgroundColor: "#F7F7FA",
       showSpinner: false,
       androidSplashResourceName: "splash",
@@ -25,6 +26,7 @@ const config: CapacitorConfig = {
     contentInset: "never",
     scrollEnabled: true,
     backgroundColor: "#F7F7FA",
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
   },
   android: {
     backgroundColor: "#F7F7FA",

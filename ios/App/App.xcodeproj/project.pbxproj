@@ -361,7 +361,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Wallio Pro";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.wallio.merchant;
 				PRODUCT_NAME = "Wallio Pro";
@@ -387,7 +387,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Wallio Pro";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wallio.merchant;
 				PRODUCT_NAME = "Wallio Pro";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
