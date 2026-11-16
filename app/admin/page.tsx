@@ -140,6 +140,7 @@ export default function AdminPage() {
   const [newClientNotifs, setNewClientNotifs] = useState<{ prenom: string; nom: string; marchandNom: string }[]>([]);
   const touchStartY = useRef(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [notifPerm, setNotifPerm] = useState<NotificationPermission | "unsupported">("default");
   // ── Facture ──
   const [faMarchandId, setFaMarchandId] = useState("");
   const [faRef,    setFaRef]    = useState(() => `FAC-${new Date().getFullYear()}-${Math.floor(1000+Math.random()*9000)}`);
@@ -190,22 +191,11 @@ export default function AdminPage() {
     async function init() {
       const res = await fetch("/api/admin/check");
       if (!res.ok) { router.push("/admin/login"); return; }
-      // Enregistre le token FCM pour les notifs push admin
+      // Lire l'état actuel de la permission sans la demander
       try {
-        const perm = Notification.permission === "default"
-          ? await Notification.requestPermission()
-          : Notification.permission;
-        if (perm === "granted") {
-          const token = await registerFcmToken();
-          if (token) {
-            fetch("/api/admin/register-token", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ fcm_token: token }),
-            }).catch(() => {});
-          }
-        }
-      } catch { /* notifs non supportées */ }
+        if (!("Notification" in window)) setNotifPerm("unsupported");
+        else setNotifPerm(Notification.permission);
+      } catch { setNotifPerm("unsupported"); }
       timeout = setTimeout(() => setLoadError(true), 15000);
       unsub = onSnapshot(collection(db, "marchands"), snap => {
         clearTimeout(timeout);
@@ -445,6 +435,23 @@ export default function AdminPage() {
     setCopied(true); setTimeout(() => setCopied(false), 2000);
   }
   async function logout() { await fetch("/api/admin/logout", { method: "POST" }); router.push("/admin/login"); }
+
+  async function activerNotifs() {
+    try {
+      const perm = await Notification.requestPermission();
+      setNotifPerm(perm);
+      if (perm === "granted") {
+        const token = await registerFcmToken();
+        if (token) {
+          fetch("/api/admin/register-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fcm_token: token }),
+          }).catch(() => {});
+        }
+      }
+    } catch { /* non supporté */ }
+  }
 
   function chargerMarchandContrat(id: string) {
     const m = marchands.find(x => x.id === id);
@@ -1426,6 +1433,12 @@ export default function AdminPage() {
               style={{ padding: "9px 16px", borderRadius: 12, background: T.btnBg, color: T.btnFg, fontSize: 14, fontWeight: 600, border: `1px solid ${T.border}`, boxShadow: T.shadow, cursor: "pointer" }}>
               + Nouveau
             </button>
+            {notifPerm !== "unsupported" && notifPerm !== "granted" && (
+              <button onClick={activerNotifs}
+                style={{ padding: "9px 14px", borderRadius: 12, background: notifPerm === "denied" ? "rgba(255,59,48,0.08)" : "rgba(0,122,255,0.08)", border: `1px solid ${notifPerm === "denied" ? "rgba(255,59,48,0.2)" : "rgba(0,122,255,0.2)"}`, color: notifPerm === "denied" ? "#FF3B30" : "#007AFF", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                {notifPerm === "denied" ? "Notifs bloquées" : "Activer notifs"}
+              </button>
+            )}
             <button onClick={logout}
               style={{ padding: "9px 14px", borderRadius: 12, background: T.btnSecBg, border: `1px solid ${T.btnSecBorder}`, color: T.btnSecFg, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
               Sortir
@@ -1437,6 +1450,7 @@ export default function AdminPage() {
         <div
           style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3, overflowX: "auto", scrollbarWidth: "none" }}
           onTouchStart={e => e.stopPropagation()}
+          onTouchEnd={e => e.stopPropagation()}
         >
           {([["marchands", "Marchands"], ["clients", "Clients"], ["comptabilite", "Comptabilité"], ["documents", "Documents"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
