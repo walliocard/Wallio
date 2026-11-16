@@ -123,7 +123,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (gone) return;
       try {
         const { SplashScreen: Cap } = await import("@capacitor/splash-screen");
-        await Cap.hide({ fadeOutDuration: 0 });
+        await Promise.race([
+          Cap.hide({ fadeOutDuration: 0 }),
+          new Promise<void>(r => setTimeout(r, 1500)),
+        ]);
       } catch {}
       splashNativeHiddenRef.current = true;
       if (pendingFinishRef.current) {
