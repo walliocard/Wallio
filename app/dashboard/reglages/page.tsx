@@ -233,7 +233,7 @@ export default function ReglagesPage() {
   }
 
   return (
-    <div className={`px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 max-w-2xl ${isDirty ? "pb-36 md:pb-28" : "pb-16"}`}>
+    <div className={`px-5 md:px-8 lg:px-10 max-w-2xl ${isDirty ? "pb-36 md:pb-28" : "pb-16"}`} style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)" }}>
 
       {/* Saved indicator */}
       {saved && (

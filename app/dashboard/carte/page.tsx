@@ -858,6 +858,7 @@ export default function CartePage() {
       {/* ── Header ── */}
       <div style={{
         padding: "14px 24px",
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 14px)",
         borderBottom: "1px solid var(--border)",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "var(--glass-bg)", backdropFilter: "blur(20px)", flexShrink: 0,

@@ -174,7 +174,7 @@ export default function HistoriquePage() {
   }
 
   return (
-    <div className="px-5 md:px-8 pt-6 pb-36 md:pb-10 max-w-3xl">
+    <div className="px-5 md:px-8 pb-36 md:pb-10 max-w-3xl" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
       <style>{`
         @media print {
           body * { visibility: hidden; }
