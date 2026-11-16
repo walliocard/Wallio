@@ -187,7 +187,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <ToastProvider>
       <OfflineBanner />
       {marchand && user && (
-        <div style={{ height: "100dvh", background: "var(--bg)" }}>
+        <div style={{ height: "100dvh" }}>
           <DashboardNav marchand={marchand} />
           <div
             ref={scrollRef}
