@@ -1463,9 +1463,9 @@ export default function AdminPage() {
           ref={tabBarRef}
           style={{ display: "flex", marginBottom: 28, background: T.tabsBg, borderRadius: 10, padding: 3 }}
         >
-          {([["marchands", "Marchands"], ["clients", "Clients"], ["comptabilite", "Comptabilité"], ["documents", "Documents"]] as const).map(([key, label]) => (
+          {([["marchands", "Marchands"], ["clients", "Clients"], ["comptabilite", "Compta"], ["documents", "Documents"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              style={{ padding: "7px 18px", borderRadius: 8, fontSize: 14, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s" }}>
+              style={{ flex: 1, padding: "7px 4px", borderRadius: 8, fontSize: 13, fontWeight: tab === key ? 600 : 400, background: tab === key ? T.tabActiveBg : "transparent", color: tab === key ? T.tabActiveFg : T.tabInactiveFg, border: "none", cursor: "pointer", boxShadow: tab === key ? T.shadow : "none", transition: "all 0.15s", whiteSpace: "nowrap" }}>
               {label}
             </button>
           ))}
