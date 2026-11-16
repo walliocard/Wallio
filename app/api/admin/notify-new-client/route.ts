@@ -12,13 +12,16 @@ export async function POST(req: Request) {
     if (!fcmToken) return NextResponse.json({ ok: false, reason: "no_token" });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
+    const body = `${prenom}${nom ? ` ${nom}` : ""} a rejoint ${marchandNom || "un marchand"}`;
     await adminMessaging().send({
       token: fcmToken,
       webpush: {
-        data: {
+        notification: {
           title: "Nouveau client Wallio",
-          body: `${prenom}${nom ? ` ${nom}` : ""} a rejoint ${marchandNom || "un marchand"}`,
+          body,
           icon: `${appUrl}/wallio-instagram-profil.png`,
+        },
+        data: {
           url: "https://admin.walliocard.com",
         },
         headers: { TTL: "86400" },
@@ -26,7 +29,8 @@ export async function POST(req: Request) {
       },
     });
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error("[notify-new-client]", err);
     return NextResponse.json({ ok: false });
   }
 }
