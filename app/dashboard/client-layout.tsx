@@ -109,6 +109,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     const isNative = typeof window !== "undefined" && "Capacitor" in window;
     let gone = false;
+    // En natif, le LaunchScreen iOS (icône 96px) reste visible 1200ms (launchAutoHide).
+    // On retarde le mount wallio-splash de 1300ms pour qu'il démarre APRÈS la disparition
+    // du LaunchScreen — évite le jump visuel entre les deux icônes de taille différente.
+    const startDelay = isNative ? 1300 : 0;
+    const startTimer = setTimeout(() => {
     (async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mod = await import("@/lib/wallio-splash") as any;
@@ -141,7 +146,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         pendingFinishRef.current = null;
       }
     })();
-    return () => { gone = true; };
+    }, startDelay);
+    return () => { gone = true; clearTimeout(startTimer); };
   }, []);
 
   // ── Termine le splash dès que la destination est connue et rendue ──
