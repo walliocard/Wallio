@@ -40,8 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const touchStartY = useRef(0);
   const scrollRef   = useRef<HTMLDivElement>(null);
 
-  // ── Failsafe SplashScreen.hide() — débloque coquille App Store (launchAutoHide:false) ──
-  // TestFlight (launchAutoHide:true) : splash déjà masqué à 1 200 ms, ces appels sont sans effet.
+  // ── Failsafe SplashScreen.hide() — sécurité si le flux principal échoue ──
   useEffect(() => {
     (async () => {
       try {
@@ -49,7 +48,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (!Capacitor.isNativePlatform()) return;
         if (!Capacitor.isPluginAvailable("SplashScreen")) return;
         const { SplashScreen } = await import("@capacitor/splash-screen");
-        setTimeout(() => { SplashScreen.hide({ fadeOutDuration: 0 }).catch(() => {}); }, 1500);
         setTimeout(() => { SplashScreen.hide({ fadeOutDuration: 0 }).catch(() => {}); }, 4000);
       } catch {}
     })();
@@ -138,15 +136,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   // ── Mount wallio-splash + cache splash natif ──
+  // Natif : une seule fois par lancement à froid. sessionStorage persiste pendant
+  // window.location.replace (même session WKWebView) → pas de second splash après login/logout.
   useEffect(() => {
-    const isNative = typeof window !== "undefined" && "Capacitor" in window;
     let gone = false;
-    const startTimer = setTimeout(() => {
     (async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const isNative = !!(window as any).Capacitor?.isNativePlatform?.();
+
+      if (isNative) {
+        if (sessionStorage.getItem("wallio_splash_shown")) return;
+        sessionStorage.setItem("wallio_splash_shown", "1");
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mod = await import("@/lib/wallio-splash") as any;
       const WallioSplash = mod.WallioSplash ?? mod.default;
       if (gone) return;
+
       const splash = WallioSplash.mount({
         iconSrc: "/icon-pro-512.png",
         fallback: "login",
@@ -155,8 +162,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       splashRef.current = splash;
       await splash.ready;
       if (gone) return;
-      if (!isNative) {
-        // PWA web : cacher le splash natif Capacitor manuellement
+
+      if (isNative) {
+        // Masque le splash natif maintenant que notre splash est visible → transition invisible
+        try {
+          const { Capacitor } = await import("@capacitor/core");
+          if (Capacitor.isPluginAvailable("SplashScreen")) {
+            const { SplashScreen } = await import("@capacitor/splash-screen");
+            await SplashScreen.hide({ fadeOutDuration: 0 }).catch(() => {});
+          }
+        } catch {}
+      } else {
+        // PWA : no-op, conservé pour compatibilité
         try {
           const { SplashScreen: Cap } = await import("@capacitor/splash-screen");
           await Promise.race([
@@ -165,8 +182,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ]);
         } catch {}
       }
-      // Natif : launchAutoHide:true gère le splash iOS seul — ne pas appeler Cap.hide()
-      // trop tôt, sinon le splash natif se cache avant que wallio-splash soit prêt → flash
+
       splashNativeHiddenRef.current = true;
       if (pendingFinishRef.current) {
         splash.finish(pendingFinishRef.current);
@@ -174,8 +190,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         pendingFinishRef.current = null;
       }
     })();
-    }, 0);
-    return () => { gone = true; clearTimeout(startTimer); };
+    return () => { gone = true; };
   }, []);
 
   // ── Termine le splash dès que la destination est connue et rendue ──
