@@ -40,6 +40,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const touchStartY = useRef(0);
   const scrollRef   = useRef<HTMLDivElement>(null);
 
+  // ── Failsafe SplashScreen.hide() — débloque coquille App Store (launchAutoHide:false) ──
+  // TestFlight (launchAutoHide:true) : splash déjà masqué à 1 200 ms, ces appels sont sans effet.
+  useEffect(() => {
+    (async () => {
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (!Capacitor.isNativePlatform()) return;
+        if (!Capacitor.isPluginAvailable("SplashScreen")) return;
+        const { SplashScreen } = await import("@capacitor/splash-screen");
+        setTimeout(() => { SplashScreen.hide({ fadeOutDuration: 0 }).catch(() => {}); }, 1500);
+        setTimeout(() => { SplashScreen.hide({ fadeOutDuration: 0 }).catch(() => {}); }, 4000);
+      } catch {}
+    })();
+  }, []);
+
   // ── StatusBar : overlay + dark icons (applique overlaysWebView:true sans rebuild Xcode) ──
   useEffect(() => {
     (async () => {
@@ -66,10 +81,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (loading) return;
     const isNative = typeof window !== "undefined" && "Capacitor" in window;
     if (!user) {
-      // Déconnexion depuis état authentifié en natif → recharger depuis /native-launch
-      // (évite le flash "This page couldn't load" causé par router.push post-signOut)
       if (wasAuthenticatedRef.current && isNative) {
-        window.location.replace("/native-launch");
+        window.location.replace("/dashboard/auth");
       } else {
         router.push("/dashboard/auth");
       }
