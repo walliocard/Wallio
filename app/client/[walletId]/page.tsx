@@ -365,7 +365,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
   if (deleted) return (
     <main className="min-h-screen pb-10" style={{ background: "var(--bg)" }}>
-      <div className="max-w-lg mx-auto px-5 pt-6">
+      <div className="max-w-lg mx-auto px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
         <Link href="/dashboard/clients" className="inline-flex items-center gap-1.5 mb-10 text-[14px]" style={{ color: "var(--accent)" }}>
           <Icons.ArrowLeft size={15} />
           Clients
@@ -392,7 +392,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         </div>
       )}
 
-      <div className="max-w-lg mx-auto px-5 pt-6">
+      <div className="max-w-lg mx-auto px-5" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)" }}>
 
         {/* Retour */}
         <Link href="/dashboard/clients" className="inline-flex items-center gap-1.5 mb-6 text-[14px]" style={{ color: "var(--accent)" }}>
