@@ -12,6 +12,16 @@ import CompactHeader from "@/components/dashboard/CompactHeader";
 import { SmokeCard } from "@/components/dashboard/SmokeCard";
 import { formatName } from "@/lib/format";
 
+// Retourne "2026-11-18" pour un timestamp dans un fuseau donné
+const getDateStr = (ts: number, tz: string) =>
+  new Intl.DateTimeFormat("sv", { timeZone: tz }).format(new Date(ts));
+
+// Retourne "L", "M", etc. pour il y a N jours dans le fuseau
+const getDayLetter = (daysAgo: number, tz: string) =>
+  new Intl.DateTimeFormat("fr-FR", { weekday: "narrow", timeZone: tz })
+    .format(new Date(Date.now() - daysAgo * 86400000))
+    .slice(0, 1).toUpperCase();
+
 function useCountUp(target: number, duration = 700) {
   const [val, setVal] = useState(0);
   useEffect(() => {
@@ -58,10 +68,10 @@ type Stats = {
 // ── Carte héros ────────────────────────────────────────────────────────────────
 
 function HeroCard({
-  aujourd_hui, semaine, maxSemaine, hierDiff, lastScanBeforeToday, days, totalSemaine,
+  aujourd_hui, semaine, maxSemaine, hierDiff, lastScanBeforeToday, tz, totalSemaine,
 }: {
   aujourd_hui: number; semaine: number[]; maxSemaine: number;
-  hierDiff: number; lastScanBeforeToday: Date | null; days: readonly string[];
+  hierDiff: number; lastScanBeforeToday: Date | null; tz: string;
   totalSemaine: number;
 }) {
   const showToday = aujourd_hui > 0;
@@ -97,9 +107,9 @@ function HeroCard({
         {!showToday && lastScanBeforeToday && (
           <p style={{ fontSize: 13, color: "#8E8E93", marginTop: 4 }}>
             Dernier scan{" "}
-            {lastScanBeforeToday.toLocaleDateString("fr-FR", { weekday: "long" })}{" "}
+            {lastScanBeforeToday.toLocaleDateString("fr-FR", { weekday: "long", timeZone: tz })}{" "}
             à{" "}
-            {lastScanBeforeToday.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            {lastScanBeforeToday.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: tz })}
           </p>
         )}
       </div>
@@ -109,6 +119,7 @@ function HeroCard({
         {semaine.map((val, i) => {
           const isToday = i === 6;
           const h = Math.max((val / maxSemaine) * 32, 4);
+          const letter = getDayLetter(6 - i, tz);
           return (
             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div style={{ width: "100%", height: 32, display: "flex", alignItems: "flex-end" }}>
@@ -119,7 +130,7 @@ function HeroCard({
                 }} />
               </div>
               <span style={{ color: isToday ? "#2F7BFF" : "#8E8E93", fontSize: 10, fontWeight: isToday ? 600 : 400 }}>
-                {days[i]}
+                {letter}
               </span>
             </div>
           );
@@ -208,12 +219,14 @@ export default function AccueilPage() {
   const objectifRef = useRef<number>(marchand?.objectif_tampons || 10);
   const marchandModeRef = useRef<string>("cyclique");
   const marchandPaliersRef = useRef<{ tampons: number; recompense: string }[]>([]);
+  const marchandTzRef = useRef<string>("Africa/Casablanca");
 
   useEffect(() => {
     const mc = marchand as Record<string, unknown>;
     objectifRef.current = marchand?.objectif_tampons || 10;
     marchandModeRef.current = (mc?.mode_recompense as string) || "cyclique";
     marchandPaliersRef.current = (mc?.paliers as { tampons: number; recompense: string }[]) || [];
+    marchandTzRef.current = (mc?.fuseau_horaire as string) || "Africa/Casablanca";
   }, [marchand]);
 
   useEffect(() => {
@@ -248,14 +261,19 @@ export default function AccueilPage() {
     if (!user) return;
     const q = query(collection(db, "clients"), where("marchand_id", "==", user.uid));
     const unsub = onSnapshot(q, snap => {
-      const now = new Date();
-      const today = new Date(now); today.setHours(0, 0, 0, 0);
-      const moisDebut = new Date(now.getFullYear(), now.getMonth(), 1);
-      const semaineDebut = new Date(today); semaineDebut.setDate(semaineDebut.getDate() - 7);
-      const trenteJoursAgo = new Date(today); trenteJoursAgo.setDate(trenteJoursAgo.getDate() - 30);
+      const tz = marchandTzRef.current;
       const objectif = objectifRef.current;
-      const todayMonth = today.getMonth() + 1;
-      const todayDay = today.getDate();
+
+      // Dates en chaîne "YYYY-MM-DD" dans le fuseau du marchand
+      const todayStr = getDateStr(Date.now(), tz);
+      const todayParts = todayStr.split("-");
+      const todayMonthTZ = parseInt(todayParts[1]);
+      const todayDayTZ = parseInt(todayParts[2]);
+      const thisMonthStr = todayStr.slice(0, 7); // "2026-11"
+      const last7 = Array.from({length: 7}, (_, i) => getDateStr(Date.now() - (6 - i) * 86400000, tz));
+      const prev7 = Array.from({length: 7}, (_, i) => getDateStr(Date.now() - (13 - i) * 86400000, tz));
+      const sevenDaysAgoStr = last7[0];
+      const thirtyDaysAgoStr = getDateStr(Date.now() - 30 * 86400000, tz);
 
       let aujourd_hui = 0, tampons_total = 0, ce_mois = 0, recompenses = 0, choix_en_attente = 0;
       let fideles = 0, nouvelles_semaine = 0, proches_recompense = 0;
@@ -284,30 +302,27 @@ export default function AccueilPage() {
         }
         const dv = (data.derniere_visite?.seconds || 0) * 1000;
         const di = (data.date_inscription?.seconds || 0) * 1000;
-        if (dv >= today.getTime()) aujourd_hui++;
-        if (dv >= moisDebut.getTime()) ce_mois++;
-        if (di >= semaineDebut.getTime()) nouvelles_semaine++;
-        if (dv > 0 && dv < today.getTime()) {
-          if (!lastScanBeforeToday || dv > lastScanBeforeToday.getTime()) {
-            lastScanBeforeToday = new Date(dv);
-          }
+        const dvStr = dv > 0 ? getDateStr(dv, tz) : null;
+        const diStr = di > 0 ? getDateStr(di, tz) : null;
+
+        if (dvStr === todayStr) aujourd_hui++;
+        if (dvStr && dvStr.startsWith(thisMonthStr)) ce_mois++;
+        if (diStr && diStr >= sevenDaysAgoStr) nouvelles_semaine++;
+        if (dvStr && dvStr < todayStr) {
+          if (!lastScanBeforeToday || dv > lastScanBeforeToday.getTime()) lastScanBeforeToday = new Date(dv);
         }
-        if (dv > 0 && dv < trenteJoursAgo.getTime() && !data.relance_pending) inactifs_30j++;
+        if (dvStr && dvStr < thirtyDaysAgoStr && !data.relance_pending) inactifs_30j++;
         if (data.date_naissance) {
           const parts = (data.date_naissance as string).split("-");
-          if (parts.length === 3 && parseInt(parts[1]) === todayMonth && parseInt(parts[2]) === todayDay) {
+          if (parts.length === 3 && parseInt(parts[1]) === todayMonthTZ && parseInt(parts[2]) === todayDayTZ) {
             anniversaires_today++;
           }
         }
-        for (let i = 0; i < 7; i++) {
-          const debut = new Date(today); debut.setDate(debut.getDate() - (6 - i));
-          const fin = new Date(debut); fin.setDate(fin.getDate() + 1);
-          if (dv >= debut.getTime() && dv < fin.getTime()) semaine[i]++;
-        }
-        for (let i = 0; i < 7; i++) {
-          const debut = new Date(today); debut.setDate(debut.getDate() - (13 - i));
-          const fin = new Date(debut); fin.setDate(fin.getDate() + 1);
-          if (dv >= debut.getTime() && dv < fin.getTime()) semaine_precedente[i]++;
+        if (dvStr) {
+          const idx = last7.indexOf(dvStr);
+          if (idx !== -1) semaine[idx]++;
+          const pidx = prev7.indexOf(dvStr);
+          if (pidx !== -1) semaine_precedente[pidx]++;
         }
       });
 
@@ -384,8 +399,9 @@ export default function AccueilPage() {
     });
   }
 
-  const heure = new Date().getHours();
-  const salut = heure < 18 ? "Bonjour" : "Bonsoir";
+  const tz = (m?.fuseau_horaire as string) || "Africa/Casablanca";
+  const heure = parseInt(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hour12: false, timeZone: tz }).format(new Date()));
+  const salut = heure >= 5 && heure < 18 ? "Bonjour" : "Bonsoir";
 
   return (
     <div>
@@ -403,7 +419,7 @@ export default function AccueilPage() {
         </div>
         <div>
           <p style={{ fontSize: 13, color: "var(--fg-tertiary)", marginBottom: 2 }}>
-            {salut} · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            {salut} · {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: tz })}
           </p>
           <h1 ref={titleRef} style={{ fontSize: 28, fontWeight: 700, color: "var(--fg)", letterSpacing: -0.5, lineHeight: 1.15, margin: 0 }}>
             {marchand.nom}
@@ -475,7 +491,7 @@ export default function AccueilPage() {
         maxSemaine={maxSemaine}
         hierDiff={hierDiff}
         lastScanBeforeToday={stats.lastScanBeforeToday}
-        days={t.dash_days}
+        tz={tz}
         totalSemaine={totalSemaine}
       />
 
@@ -547,7 +563,7 @@ export default function AccueilPage() {
       {stats.total >= 5 ? (
         <div className="rounded-2xl p-4 mb-4" style={{ background: "var(--glass-bg)", boxShadow: "var(--shadow-sm)" }}>
           <p style={{ fontSize: 13, color: "var(--fg)", fontWeight: 500, marginBottom: 4 }}>
-            {stats.taux_fidelite}% de tes clients ({Math.round(stats.total * stats.taux_fidelite / 100)}/{stats.total}) sont revenus au moins 2 fois
+            {stats.taux_fidelite}% de vos clients ({Math.round(stats.total * stats.taux_fidelite / 100)}/{stats.total}) sont revenus au moins 2 fois
           </p>
           <div style={{ height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden", marginTop: 8 }}>
             <div style={{ height: "100%", borderRadius: 3, background: "linear-gradient(90deg, #2F7BFF, #8B5CF6)", width: `${stats.taux_fidelite}%`, transition: "width 0.7s ease" }} />
