@@ -178,8 +178,7 @@ const IcoUsers = () => (
 );
 const IcoStamp = () => (
   <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#4B4FD6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 22h14"/><path d="M9.7 17H5l-1-5h16l-1 5h-4.7"/><path d="M12 17v-6"/>
-    <rect x="9" y="7" width="6" height="6" rx="1"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>
+    <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
   </svg>
 );
 const IcoGift = () => (
