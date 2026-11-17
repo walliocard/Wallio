@@ -3,9 +3,8 @@
 import { useAuth } from "@/lib/auth-context";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, getDocs, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getDocs } from "firebase/firestore";
 import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
@@ -382,18 +381,6 @@ export default function AccueilPage() {
       href: "/dashboard/notifications",
     });
   }
-
-  const encouragement = (() => {
-    if (tendance !== null && tendance > 0)
-      return { text: `+${tendance}% cette semaine, beau travail !`, color: "#007AFF" };
-    if (stats.aujourd_hui > 0)
-      return { text: `${stats.aujourd_hui} client${stats.aujourd_hui > 1 ? "s" : ""} visité${stats.aujourd_hui > 1 ? "s" : ""} aujourd'hui`, color: "#34C759" };
-    if (stats.nouvelles_semaine > 0)
-      return { text: `+${stats.nouvelles_semaine} nouveau${stats.nouvelles_semaine > 1 ? "x" : ""} client${stats.nouvelles_semaine > 1 ? "s" : ""} cette semaine`, color: "#34C759" };
-    if (stats.total > 0)
-      return { text: `${stats.total} client${stats.total > 1 ? "s" : ""} vous font confiance`, color: "#8B5CF6" };
-    return null;
-  })();
 
   const heure = new Date().getHours();
   const salut = heure < 18 ? "Bonjour" : "Bonsoir";
