@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useEffect, useRef, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { creerClient, getClientByTelephone, formatTempsDepuis, type Client } from "@/lib/loyalty";
+import { creerClient, getClientByTelephone, formatTempsDepuis, setTampons as setTamponsLib, type Client } from "@/lib/loyalty";
 import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
@@ -56,6 +56,8 @@ export default function ClientsPage() {
   const [fetchError, setFetchError] = useState("");
   const [validatingId, setValidatingId] = useState<string | null>(null);
   const [annivValidatingId, setAnnivValidatingId] = useState<string | null>(null);
+  const [activeStampId, setActiveStampId] = useState<string | null>(null);
+  const [stampLoading, setStampLoading] = useState<string | null>(null);
 
   const mn = marchand as Record<string, unknown> | null;
   const annivCustom = (mn?.automatisations as Record<string, unknown> | undefined)
@@ -88,6 +90,29 @@ export default function ClientsPage() {
       });
     } catch { /* silent */ }
     finally { setValidatingId(null); }
+  }
+
+  async function handleAddStamp(clientId: string) {
+    if (stampLoading) return;
+    setStampLoading(clientId);
+    try {
+      const token = await user!.getIdToken();
+      await fetch("/api/dashboard/tampon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ clientId, forceOverride: true }),
+      });
+    } catch { /* silent */ }
+    finally { setStampLoading(null); }
+  }
+
+  async function handleRemoveStamp(clientId: string, tampons: number) {
+    if (stampLoading || tampons <= 0) return;
+    setStampLoading(clientId);
+    try {
+      await setTamponsLib(clientId, tampons - 1);
+    } catch { /* silent */ }
+    finally { setStampLoading(null); }
   }
 
   useEffect(() => {
@@ -390,6 +415,7 @@ export default function ClientsPage() {
                 href={`/client/${client.wallet_id}`}
                 className="flex items-center gap-3 p-3.5 transition-all duration-150 active:opacity-70 hover:opacity-80 block"
                 style={{ borderBottom: idx < filtered.length - 1 ? `1px solid var(--separator)` : "none", animation: "stagger-in 0.35s ease backwards", animationDelay: `${Math.min(idx * 0.04, 0.4)}s` }}
+                onClick={() => { if (activeStampId) { setActiveStampId(null); } }}
               >
                 {/* Avatar rond */}
                 <div
@@ -449,16 +475,7 @@ export default function ClientsPage() {
                   </div>
                 </div>
 
-                {/* Tampons */}
-                <div className="text-right flex-shrink-0 mr-1">
-                  <p className="text-[16px] font-bold" style={{ color: "var(--fg)", fontVariantNumeric: "tabular-nums" }}>
-                    {client.tampons}
-                    <span className="text-[11px] font-normal" style={{ color: "var(--fg-tertiary)" }}>
-                      /{objectifActuel}
-                    </span>
-                  </p>
-                </div>
-
+                {/* Contrôle tampons / actions */}
                 {client.recompense_en_attente ? (
                   <button
                     onClick={e => { e.preventDefault(); e.stopPropagation(); handleValiderRecompense(client.id); }}
@@ -477,8 +494,39 @@ export default function ClientsPage() {
                   >
                     {annivValidatingId === client.id ? "…" : "Cadeau"}
                   </button>
+                ) : activeStampId === client.id ? (
+                  /* Contrôle +/− actif */
+                  <div
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+                    style={{ display: "flex", alignItems: "center", gap: 2, background: "#EEF0FF", borderRadius: 12, padding: "2px 2px", flexShrink: 0 }}
+                  >
+                    <button
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); handleRemoveStamp(client.id, client.tampons); }}
+                      disabled={stampLoading === client.id || client.tampons <= 0}
+                      style={{ width: 30, height: 30, border: "none", background: "transparent", cursor: client.tampons > 0 ? "pointer" : "default", color: "#4B4FD6", fontSize: 20, fontWeight: 300, display: "flex", alignItems: "center", justifyContent: "center", opacity: client.tampons <= 0 ? 0.3 : 1 }}
+                    >
+                      {stampLoading === client.id ? "·" : "−"}
+                    </button>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#4B4FD6", minWidth: 20, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+                      {client.tampons}
+                    </span>
+                    <button
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); handleAddStamp(client.id); }}
+                      disabled={stampLoading === client.id}
+                      style={{ width: 30, height: 30, border: "none", background: "transparent", cursor: "pointer", color: "#4B4FD6", fontSize: 20, fontWeight: 300, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      {stampLoading === client.id ? "·" : "+"}
+                    </button>
+                  </div>
                 ) : (
-                  <Icons.ChevronRight />
+                  /* Badge tampon tappable */
+                  <button
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); setActiveStampId(client.id); }}
+                    style={{ background: "#EEF0FF", color: "#4B4FD6", borderRadius: 10, padding: "5px 10px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}
+                  >
+                    {client.tampons}
+                    <span style={{ fontSize: 11, fontWeight: 500, color: "#8B9CF7" }}>/{objectifActuel}</span>
+                  </button>
                 )}
               </Link>
             );
