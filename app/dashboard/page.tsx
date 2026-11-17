@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
 import CompactHeader from "@/components/dashboard/CompactHeader";
+import { SmokeCard } from "@/components/dashboard/SmokeCard";
 
 function useCountUp(target: number, duration = 700) {
   const [val, setVal] = useState(0);
@@ -67,37 +68,7 @@ function HeroCard({
   const animated = useCountUp(displayValue);
 
   return (
-    <div style={{
-      borderRadius: 24, padding: 20, marginBottom: 16,
-      background: "rgba(255,255,255,0.75)",
-      border: "1px solid rgba(255,255,255,0.90)",
-      boxShadow: "0 10px 30px rgba(91,92,240,0.12)",
-      overflow: "hidden",
-      position: "relative",
-      minHeight: 190,
-      display: "flex", flexDirection: "column", justifyContent: "space-between",
-    }}>
-      <style>{`
-        @keyframes hero-blob-a { to { transform: translate(14px,10px); } }
-        @keyframes hero-blob-b { to { transform: translate(-12px,-14px); } }
-        @media (prefers-reduced-motion: reduce) { .hero-blob { animation: none !important; } }
-      `}</style>
-
-      {/* Nappes de couleur — transform only, pas de filter:blur() */}
-      <div className="hero-blob" style={{
-        position: "absolute", top: -200, left: -150,
-        width: 400, height: 400, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(47,123,255,0.28) 0%, transparent 65%)",
-        animation: "hero-blob-a 22s ease-in-out infinite alternate",
-        willChange: "transform", pointerEvents: "none",
-      }} />
-      <div className="hero-blob" style={{
-        position: "absolute", bottom: -200, right: -150,
-        width: 400, height: 400, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(139,92,246,0.24) 0%, transparent 65%)",
-        animation: "hero-blob-b 25s ease-in-out infinite alternate",
-        willChange: "transform", pointerEvents: "none",
-      }} />
+    <SmokeCard style={{ marginBottom: 16, minHeight: 190, padding: 20, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
 
       {/* Contenu */}
       <div style={{ position: "relative" }}>
@@ -153,7 +124,7 @@ function HeroCard({
           );
         })}
       </div>
-    </div>
+    </SmokeCard>
   );
 }
 

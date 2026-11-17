@@ -10,6 +10,7 @@ import { useLang } from "@/lib/lang-context";
 import { haptic } from "@/lib/haptics";
 import { triggerAmbientPulse } from "@/components/AmbientBackground";
 import CompactHeader from "@/components/dashboard/CompactHeader";
+import { SmokeCard } from "@/components/dashboard/SmokeCard";
 
 type Segment = "tous" | "actifs" | "inactifs";
 type SendState = "idle" | "sending" | "success" | "error";
@@ -112,44 +113,55 @@ export default function NotificationsPage() {
   const TEMPLATES: { label: string; icon: React.ReactNode; title: string; body: string }[] = [
     {
       label: t.notif_tpl_offer_title,
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B4FD6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>,
       title: t.notif_tpl_offer_title, body: t.notif_tpl_offer_body,
     },
     {
       label: t.notif_tpl_double_title,
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B4FD6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>,
       title: t.notif_tpl_double_title, body: t.notif_tpl_double_body,
     },
     {
       label: t.notif_tpl_event_title,
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B4FD6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
       title: t.notif_tpl_event_title, body: t.notif_tpl_event_body,
     },
     {
       label: t.notif_tpl_reward_title,
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B4FD6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
       title: t.notif_tpl_reward_title, body: t.notif_tpl_reward_body,
     },
   ];
 
-  const iosPreview = (
-    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(20,20,22,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
-      <div className="flex items-center justify-between px-4 pt-3 pb-1">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg overflow-hidden flex-shrink-0" style={{ background: marchand.couleur_principale || "var(--accent)" }}>
+  // Aperçu notification iOS — utilisé dans SmokeCard et modal confirmation
+  const notifPreviewCard = (
+    <div style={{
+      background: "white",
+      borderRadius: 18,
+      padding: "12px 14px",
+      boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+      maxWidth: 340,
+      width: "100%",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 24, height: 24, borderRadius: 7, overflow: "hidden", background: marchand.couleur_principale || "#EEF0FF", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
             {mn.logo_url
-              ? <img src={mn.logo_url as string} alt="" className="w-full h-full object-cover" />
-              : <span className="text-white font-bold text-[10px] flex items-center justify-center w-full h-full">{marchand.nom[0]?.toUpperCase()}</span>
+              // eslint-disable-next-line @next/next/no-img-element
+              ? <img src={mn.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <span style={{ fontSize: 11, fontWeight: 700, color: "#4B4FD6" }}>{marchand.nom[0]?.toUpperCase()}</span>
             }
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.5)" }}>{marchand.nom}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#1D1D1F" }}>{marchand.nom}</span>
         </div>
-        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>maintenant</span>
+        <span style={{ fontSize: 11, color: "#8E8E93" }}>maintenant</span>
       </div>
-      <div className="px-4 pb-4">
-        <p className="text-[14px] font-semibold mb-0.5" style={{ color: "white" }}>{title || "Titre…"}</p>
-        <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.65)" }}>{body || "Message…"}</p>
-      </div>
+      <p style={{ fontSize: 14, fontWeight: 600, color: "#1D1D1F", marginBottom: 2 }}>
+        {title || <span style={{ color: "#C7C7CC" }}>Votre titre</span>}
+      </p>
+      <p style={{ fontSize: 13, color: "#3C3C43", opacity: 0.6, lineHeight: 1.4 }}>
+        {body || <span style={{ color: "#C7C7CC" }}>Votre message</span>}
+      </p>
     </div>
   );
 
@@ -160,11 +172,11 @@ export default function NotificationsPage() {
         disabled={sendState === "sending"}
         className="w-full py-4 rounded-2xl text-[15px] font-semibold transition-all flex items-center justify-center gap-2"
         style={{
-          background: canSend ? "linear-gradient(135deg,#2F7BFF,#8B5CF6)" : "var(--glass-bg)",
+          background: canSend ? "linear-gradient(135deg,#2F7BFF,#8B5CF6)" : "#E9E9EE",
           boxShadow: canSend ? "0 8px 24px rgba(47,123,255,0.25)" : "none",
-          border: canSend ? "none" : "1px solid var(--border)",
+          border: "none",
           cursor: canSend && sendState === "idle" ? "pointer" : "default",
-          color: canSend ? "white" : "var(--fg-tertiary)",
+          color: canSend ? "white" : "#8E8E93",
         }}
       >
         {sendState === "sending" && <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />}
@@ -178,18 +190,13 @@ export default function NotificationsPage() {
          : canSend ? `Envoyer à ${count ?? "…"} client${(count ?? 0) > 1 ? "s" : ""}`
          : "Rédiger un message"}
       </button>
-      {!canSend && sendState === "idle" && (
-        <p className="text-[11px] text-center mt-1.5" style={{ color: "var(--fg-tertiary)" }}>
-          {!title.trim() ? "Ajoutez un titre et un message" : !expiresDate ? "Choisissez une date d'expiration" : ""}
-        </p>
-      )}
     </div>
   );
 
   return (
     <div>
       <CompactHeader title="Messages" observeRef={titleRef} />
-      <div className="px-5 md:px-8 lg:px-10 pb-32 md:pb-10 max-w-5xl" style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
+      <div className="px-5 md:px-8 lg:px-10 pb-36 md:pb-10 max-w-5xl" style={{ paddingTop: "calc(env(safe-area-inset-top) + 20px)" }}>
 
       {/* Toast succès */}
       {successBanner && result && (
@@ -198,9 +205,14 @@ export default function NotificationsPage() {
         </div>
       )}
 
-      <div className="mb-5 md:mb-8">
+      <div className="mb-5 md:mb-6">
         <h1 ref={titleRef} className="text-[34px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.notif_title}</h1>
       </div>
+
+      {/* Aperçu en haut — SmokeCard */}
+      <SmokeCard style={{ marginBottom: 20, padding: 20, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 170 }}>
+        {notifPreviewCard}
+      </SmokeCard>
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-6 space-y-4 lg:space-y-0">
 
@@ -226,7 +238,7 @@ export default function NotificationsPage() {
             </p>
           </div>
 
-          {/* Templates — carrousel horizontal */}
+          {/* Modèles */}
           <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
             <p className="text-[12px] mb-3" style={{ color: "var(--fg-tertiary)" }}>Modèles</p>
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
@@ -236,12 +248,12 @@ export default function NotificationsPage() {
                   className="text-left rounded-xl transition-all active:scale-95 w-full"
                   style={{
                     padding: "12px",
-                    background: title === tmpl.title ? "rgba(47,123,255,0.08)" : "var(--bg)",
-                    border: `1px solid ${title === tmpl.title ? "var(--accent)" : "var(--border)"}`,
+                    background: title === tmpl.title ? "rgba(75,79,214,0.08)" : "var(--bg)",
+                    border: `1px solid ${title === tmpl.title ? "#4B4FD6" : "var(--border)"}`,
                   }}>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <span style={{ color: title === tmpl.title ? "var(--accent)" : "var(--fg-tertiary)" }}>{tmpl.icon}</span>
-                    <p className="text-[12px] font-semibold truncate" style={{ color: title === tmpl.title ? "var(--accent)" : "var(--fg)" }}>{tmpl.label}</p>
+                    <span>{tmpl.icon}</span>
+                    <p className="text-[12px] font-semibold truncate" style={{ color: title === tmpl.title ? "#4B4FD6" : "var(--fg)" }}>{tmpl.label}</p>
                   </div>
                   <p className="text-[11px]" style={{ color: "var(--fg-tertiary)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3 as never, WebkitBoxOrient: "vertical" as never, overflow: "hidden" }}>
                     {tmpl.body}
@@ -256,7 +268,7 @@ export default function NotificationsPage() {
         {/* Colonne droite */}
         <div className="space-y-4 min-w-0">
 
-          {/* Rédaction + aperçu */}
+          {/* Rédaction */}
           <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
             <div className="space-y-3">
               <div>
@@ -271,7 +283,7 @@ export default function NotificationsPage() {
                   placeholder={t.notif_placeholder_title}
                   className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none"
                   style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }}
-                  onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                  onFocus={e => (e.target.style.borderColor = "#4B4FD6")}
                   onBlur={e => (e.target.style.borderColor = "var(--border)")}
                 />
               </div>
@@ -288,15 +300,9 @@ export default function NotificationsPage() {
                   placeholder={t.notif_placeholder_body}
                   className="w-full px-4 py-3 rounded-2xl text-[14px] outline-none resize-none"
                   style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", lineHeight: 1.5 }}
-                  onFocus={e => (e.target.style.borderColor = "var(--accent)")}
+                  onFocus={e => (e.target.style.borderColor = "#4B4FD6")}
                   onBlur={e => (e.target.style.borderColor = "var(--border)")}
                 />
-              </div>
-
-              {/* Aperçu live — toujours visible */}
-              <div>
-                <p className="text-[12px] mb-2" style={{ color: "var(--fg-tertiary)" }}>Aperçu</p>
-                {iosPreview}
               </div>
             </div>
           </div>
@@ -304,11 +310,12 @@ export default function NotificationsPage() {
           {/* Expiration */}
           <div className="rounded-2xl p-5" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
             <div className="flex items-center gap-2 mb-4">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: "var(--fg-tertiary)", flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <p className="text-[13px] font-semibold" style={{ color: "var(--fg-secondary)" }}>Expiration</p>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#EEF0FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B4FD6" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <p className="text-[13px] font-semibold" style={{ color: "var(--fg)" }}>Expiration</p>
             </div>
 
-            {/* Choix rapides */}
             <div className="flex gap-2 mb-4">
               {[{ label: "24 h", h: 24 }, { label: "3 jours", h: 72 }, { label: "7 jours", h: 168 }].map(opt => (
                 <button key={opt.label} onClick={() => setQuickExpiry(opt.h)}
@@ -319,7 +326,7 @@ export default function NotificationsPage() {
               ))}
               <button onClick={() => setShowExpirySheet(true)}
                 className="px-3 py-2 rounded-xl text-[12px] font-semibold transition-all flex-1 active:opacity-70"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--accent)" }}>
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "#4B4FD6" }}>
                 Personnaliser
               </button>
             </div>
@@ -372,8 +379,8 @@ export default function NotificationsPage() {
             style={{ background: "var(--bg)", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "max(24px, env(safe-area-inset-bottom))" }}
             onClick={e => e.stopPropagation()}>
             <div className="w-10 h-1 rounded-full mx-auto mb-5 md:hidden" style={{ background: "var(--border)" }} />
-            <p className="text-[17px] font-semibold mb-4" style={{ color: "var(--fg)" }}>Confirmer l'envoi</p>
-            {iosPreview}
+            <p className="text-[17px] font-semibold mb-4" style={{ color: "var(--fg)" }}>Confirmer l&apos;envoi</p>
+            {notifPreviewCard}
             <p className="text-[13px] mt-4 mb-5 text-center" style={{ color: "var(--fg-tertiary)" }}>
               Sera envoyée à <strong style={{ color: "var(--fg)" }}>{count ?? "…"} client{(count ?? 0) > 1 ? "s" : ""}</strong>
             </p>
