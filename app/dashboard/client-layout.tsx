@@ -14,7 +14,7 @@ function getAmbientVariant(pathname: string): AmbientVariant | null {
   if (pathname === "/dashboard") return "hero";
   if (pathname === "/dashboard/clients" || pathname.startsWith("/dashboard/clients/")) return "subtle";
   if (pathname === "/dashboard/notifications") return "subtle";
-  if (pathname === "/dashboard/plus") return "subtle";
+  if (pathname === "/dashboard/plus") return "hero-soft";
   if (pathname === "/dashboard/equipe") return "subtle";
   return null;
 }

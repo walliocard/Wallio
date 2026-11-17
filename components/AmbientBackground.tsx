@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-export type AmbientVariant = "hero" | "subtle" | "login";
+export type AmbientVariant = "hero" | "hero-soft" | "subtle" | "login";
 
 interface BlobConfig {
   w: number;
@@ -49,6 +49,25 @@ const LOGIN_BLOBS: BlobConfig[] = [
   },
 ];
 
+// hero-soft : même structure que hero, opacités réduites (bleu 0.30, violet 0.26, lavande 0.20)
+const HERO_SOFT_BLOBS: BlobConfig[] = [
+  {
+    w: 340, x: "-8%", y: "-30px",
+    gradient: "radial-gradient(circle, rgba(47,123,255,0.30) 0%, rgba(47,123,255,0.11) 40%, transparent 70%)",
+    animClass: "ambient-blob-A",
+  },
+  {
+    w: 320, x: "108%", y: "-20px",
+    gradient: "radial-gradient(circle, rgba(139,92,246,0.26) 0%, rgba(139,92,246,0.10) 40%, transparent 70%)",
+    animClass: "ambient-blob-B",
+  },
+  {
+    w: 260, x: "50%", y: "150px",
+    gradient: "radial-gradient(circle, rgba(185,168,255,0.20) 0%, rgba(185,168,255,0.07) 40%, transparent 70%)",
+    animClass: "ambient-blob-C",
+  },
+];
+
 const SUBTLE_BLOBS: BlobConfig[] = [
   {
     w: 280, x: "-12%", y: "-20px",
@@ -70,9 +89,9 @@ export default function AmbientBackground({ variant }: { variant: AmbientVariant
   const wrapperRef = useRef<HTMLDivElement>(null);
   const pulseRef = useRef<HTMLDivElement>(null);
   const pulsingRef = useRef(false);
-  const height = variant === "hero" ? 360 : variant === "login" ? 480 : 220;
-  const fadeFrom = variant === "subtle" ? 35 : 45;
-  const blobs = variant === "hero" ? HERO_BLOBS : variant === "login" ? LOGIN_BLOBS : SUBTLE_BLOBS;
+  const height = (variant === "hero" || variant === "hero-soft") ? 360 : variant === "login" ? 480 : 220;
+  const fadeFrom = variant === "subtle" ? 35 : variant === "hero-soft" ? 50 : 45;
+  const blobs = variant === "hero" ? HERO_BLOBS : variant === "hero-soft" ? HERO_SOFT_BLOBS : variant === "login" ? LOGIN_BLOBS : SUBTLE_BLOBS;
 
   // Scroll opacity
   useEffect(() => {
