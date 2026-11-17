@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Icons } from "@/components/dashboard/icons";
 import { getClientByTelephone, formatTemps, setClientEmail, type Client } from "@/lib/loyalty";
-import { collection, query, where, getDocs, getDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, getDoc, doc, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
@@ -12,6 +12,9 @@ import jsQR from "jsqr";
 import { useLang } from "@/lib/lang-context";
 import { useToast } from "@/components/Toast";
 import { triggerAmbientPulse } from "@/components/AmbientBackground";
+import { SmokeCard } from "@/components/dashboard/SmokeCard";
+import { formatName } from "@/lib/format";
+import { formatTempsDepuis } from "@/lib/loyalty";
 
 type Tab = "qr" | "telephone" | "nom";
 interface TamponResult {
@@ -37,6 +40,13 @@ export default function ScannerPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const [scanning, setScanning] = useState(false);
+  const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false);
+  const nativeAutoRef = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isNative = typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
+  const [torch, setTorch] = useState(false);
+  type RecentScan = { prenom: string; nom: string; ts: string | null };
+  const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const [result, setResult] = useState<TamponResult | null>(null);
   const [loadingTampon, setLoadingTampon] = useState(false);
   const [validating, setValidating] = useState(false);
@@ -90,14 +100,17 @@ export default function ScannerPage() {
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      // videoRef.current est toujours disponible car <video> est toujours dans le DOM
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
+      setCameraPermissionDenied(false);
       setScanning(true);
       animRef.current = requestAnimationFrame(scan);
-    } catch { setScanning(false); }
+    } catch {
+      setScanning(false);
+      setCameraPermissionDenied(true);
+    }
   }
 
   function stopCamera() {
@@ -108,9 +121,49 @@ export default function ScannerPage() {
       video.srcObject = null;
     }
     setScanning(false);
+    setTorch(false);
+  }
+
+  async function toggleTorch() {
+    const video = videoRef.current;
+    if (!video?.srcObject) return;
+    const track = (video.srcObject as MediaStream).getVideoTracks()[0];
+    if (!track) return;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: !torch } as MediaTrackConstraintSet] });
+      setTorch(t => !t);
+    } catch {}
   }
 
   useEffect(() => () => { cancelAnimationFrame(animRef.current); stopCamera(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Natif : démarrage auto de la caméra quand on arrive sur l'onglet QR
+  useEffect(() => {
+    if (!isNative || tab !== "qr" || scanning || nativeAutoRef.current) return;
+    nativeAutoRef.current = true;
+    startCamera();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, isNative]);
+
+  // Derniers scans (3 derniers tampons valides du marchand)
+  useEffect(() => {
+    if (!user) return;
+    getDocs(query(
+      collection(db, "marchands", user.uid, "historique"),
+      orderBy("created_at", "desc"),
+      limit(10)
+    )).then(snap => {
+      const scans: RecentScan[] = snap.docs
+        .filter(d => d.data().type !== "anti_doublon" && d.data().type !== "auto_validation")
+        .slice(0, 3)
+        .map(d => ({
+          prenom: d.data().client_prenom || "",
+          nom: d.data().client_nom || "",
+          ts: d.data().created_at?.toDate?.()?.toISOString() || null,
+        }));
+      setRecentScans(scans);
+    }).catch(() => {});
+  }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleTampon(walletId: string, forceOverride = false) {
     if (!auth.currentUser) return;
@@ -233,8 +286,8 @@ export default function ScannerPage() {
       <div className="px-5 md:px-8 lg:px-10 pt-8 lg:pt-10 mb-5">
         <h1 className="text-[34px] font-bold tracking-[-1px] mb-4" style={{ color: "var(--fg)" }}>{t.scan_title}</h1>
 
-        {/* Sélecteur segmenté */}
-        <div style={{ display: "inline-flex", background: "rgba(0,0,0,0.06)", borderRadius: 10, padding: 3 }}>
+        {/* Sélecteur segmenté — pleine largeur */}
+        <div style={{ display: "flex", background: "rgba(0,0,0,0.06)", borderRadius: 10, padding: 3 }}>
           {([["qr", t.scan_tab_qr], ["telephone", t.scan_tab_phone], ["nom", t.scan_tab_name]] as [Tab, string][]).map(([tab_, label]) => (
             <button
               key={tab_}
@@ -265,33 +318,66 @@ export default function ScannerPage() {
         {tab === "qr" && (
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <div className="w-full md:max-w-md">
-              {/* Zone caméra — hauteur fixe sur mobile, carré sur desktop */}
-              <div className="relative rounded-3xl overflow-hidden h-[300px] md:h-auto md:aspect-square"
-                style={{ display: scanning ? "block" : "none" }}>
-                <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
-                <canvas ref={canvasRef} className="hidden" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative w-48 h-48 md:w-52 md:h-52" style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }}>
-                    {[
-                      "top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl",
-                      "top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl",
-                      "bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl",
-                      "bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl",
-                    ].map((cls, i) => (
-                      <div key={i} className={`absolute w-8 h-8 ${cls}`}
-                        style={{ borderColor: "white", animation: `qr-pulse 1.8s ease-in-out ${i * 0.15}s infinite` }} />
-                    ))}
+              {/* Zone caméra — un seul <video>, plein écran en natif */}
+              {scanning && (
+                <div className="relative overflow-hidden"
+                  style={isNative ? {
+                    position: "fixed", inset: 0, zIndex: 100, borderRadius: 0,
+                  } : {
+                    borderRadius: 24, height: 300,
+                  }}>
+                  <video ref={videoRef} playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <canvas ref={canvasRef} style={{ display: "none" }} />
+
+                  {/* Cadre de visée */}
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{
+                      width: isNative ? 220 : 192, height: isNative ? 220 : 192,
+                      position: "relative",
+                      boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
+                    }}>
+                      {["top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl","top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl","bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl","bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl"].map((cls, i) => (
+                        <div key={i} className={`absolute w-8 h-8 ${cls}`}
+                          style={{ borderColor: "white", animation: `qr-pulse 1.8s ease-in-out ${i*0.15}s infinite` }} />
+                      ))}
+                    </div>
                   </div>
+                  <style>{`@keyframes qr-pulse{0%,100%{opacity:.7}50%{opacity:1}}`}</style>
+
+                  {isNative ? (
+                    <>
+                      {/* Torche */}
+                      <button onClick={toggleTorch} style={{
+                        position: "absolute", top: "calc(env(safe-area-inset-top,20px) + 16px)", right: 20,
+                        width: 44, height: 44, borderRadius: "50%",
+                        background: torch ? "white" : "rgba(255,255,255,0.18)",
+                        backdropFilter: "blur(10px)", border: "none", cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={torch ? "#1D1D1F" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 2h6l-1 7h-4L9 2z"/><path d="M10 9L6 20h12L14 9"/><line x1="12" y1="20" x2="12" y2="22"/>
+                        </svg>
+                      </button>
+                      {/* Saisir manuellement */}
+                      <button onClick={() => { stopCamera(); nativeAutoRef.current = false; }} style={{
+                        position: "absolute", bottom: "calc(env(safe-area-inset-bottom,20px) + 24px)",
+                        left: "50%", transform: "translateX(-50%)",
+                        padding: "12px 24px", borderRadius: 100,
+                        background: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)",
+                        color: "white", fontSize: 14, fontWeight: 600,
+                        border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", whiteSpace: "nowrap",
+                      }}>
+                        Saisir manuellement
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={stopCamera} className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
+                      style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(10px)" }}>
+                      {t.scan_stop}
+                    </button>
+                  )}
                 </div>
-                <style>{`@keyframes qr-pulse{0%,100%{opacity:.7}50%{opacity:1}}`}</style>
-                <button
-                  onClick={stopCamera}
-                  className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
-                  style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(10px)" }}
-                >
-                  {t.scan_stop}
-                </button>
-              </div>
+              )}
 
               {/* Loading tampon */}
               {loadingTampon && (
@@ -475,24 +561,61 @@ export default function ScannerPage() {
 
               {/* État idle */}
               {!scanning && !loadingTampon && !result && (
-                <div className="rounded-3xl flex flex-col items-center justify-center text-center h-[300px] md:h-auto md:aspect-square p-8"
-                  style={{ background: "var(--glass-bg)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
-                  <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5"
-                    style={{ background: "var(--lavande)" }}>
-                    <Icons.QrViewfinder size={36} />
+                <SmokeCard style={{ minHeight: 300, padding: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <style>{`
+                    @keyframes vf-breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+                    @keyframes vf-scan { 0%{transform:translateY(0);opacity:0} 8%{opacity:1} 88%{opacity:0.8} 100%{transform:translateY(132px);opacity:0} }
+                    @media(prefers-reduced-motion:reduce){.vf-breathe,.vf-scan{animation:none!important}}
+                  `}</style>
+
+                  {/* Viewfinder animé */}
+                  <div className="vf-breathe" style={{ animation: "vf-breathe 2s ease-in-out infinite", position: "relative", width: 140, height: 140, marginBottom: 20, flexShrink: 0 }}>
+                    <svg width="140" height="140" viewBox="0 0 140 140" style={{ position: "absolute", inset: 0 }}>
+                      <defs>
+                        <linearGradient id="vfGrad" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#2F7BFF"/>
+                          <stop offset="100%" stopColor="#8B5CF6"/>
+                        </linearGradient>
+                      </defs>
+                      <path d="M24,2 L8,2 Q2,2 2,8 L2,24" fill="none" stroke="url(#vfGrad)" strokeWidth="4" strokeLinecap="round"/>
+                      <path d="M116,2 L132,2 Q138,2 138,8 L138,24" fill="none" stroke="url(#vfGrad)" strokeWidth="4" strokeLinecap="round"/>
+                      <path d="M2,116 L2,132 Q2,138 8,138 L24,138" fill="none" stroke="url(#vfGrad)" strokeWidth="4" strokeLinecap="round"/>
+                      <path d="M138,116 L138,132 Q138,138 132,138 L116,138" fill="none" stroke="url(#vfGrad)" strokeWidth="4" strokeLinecap="round"/>
+                    </svg>
+                    {/* Ligne de scan */}
+                    <div className="vf-scan" style={{
+                      position: "absolute", top: 4, left: 12, right: 12, height: 2,
+                      background: "linear-gradient(to right, transparent, #2F7BFF 30%, #8B5CF6 70%, transparent)",
+                      animation: "vf-scan 2.5s ease-in-out infinite", borderRadius: 1,
+                    }} />
                   </div>
+
                   <p className="text-[17px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>{t.scan_scan_qr}</p>
-                  <p className="text-[13px] mb-6 max-w-[220px]" style={{ color: "var(--fg-secondary)" }}>
+                  <p className="text-[13px] mb-5 max-w-[220px] text-center" style={{ color: "var(--fg-secondary)" }}>
                     {t.scan_point_qr}
                   </p>
-                  <button
-                    onClick={startCamera}
-                    className="w-full max-w-[200px] py-4 rounded-2xl text-white font-bold text-[15px]"
-                    style={{ background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)", boxShadow: "0 6px 20px rgba(47,123,255,0.35)" }}
-                  >
-                    {t.scan_enable_camera}
-                  </button>
-                </div>
+
+                  {cameraPermissionDenied ? (
+                    <div className="text-center">
+                      <p className="text-[13px] mb-3" style={{ color: "#FF3B30" }}>Autorisez la caméra dans les réglages</p>
+                      <button
+                        onClick={() => { try { /* @ts-ignore */ window.Capacitor?.Plugins?.App?.openUrl?.({ url: "app-settings:" }); } catch {} }}
+                        className="px-5 py-2.5 rounded-2xl text-[13px] font-semibold"
+                        style={{ background: "#EEF0FF", color: "#4B4FD6", border: "none", cursor: "pointer" }}
+                      >
+                        Ouvrir les réglages
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={startCamera}
+                      className="w-full max-w-[200px] py-4 rounded-2xl text-white font-bold text-[15px]"
+                      style={{ background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)", boxShadow: "0 6px 20px rgba(47,123,255,0.35)" }}
+                    >
+                      {t.scan_enable_camera}
+                    </button>
+                  )}
+                </SmokeCard>
               )}
             </div>
 
@@ -645,7 +768,40 @@ export default function ScannerPage() {
             )}
           </div>
         )}
-      </div>
+      {/* Derniers scans */}
+      {recentScans.length > 0 && (
+        <div className="px-5 md:px-8 lg:px-10 mt-4 max-w-md">
+          <div style={{ background: "#FFFFFF", borderRadius: 20, border: "1px solid var(--border)", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+              <p className="text-[13px] font-semibold" style={{ color: "var(--fg)" }}>Derniers scans</p>
+              <Link href="/dashboard/historique" className="text-[12px]" style={{ color: "var(--accent)" }}>Voir tout</Link>
+            </div>
+            {recentScans.map((s, i) => {
+              const initials = `${(s.prenom?.[0] || "").toUpperCase()}${(s.nom?.[0] || "").toUpperCase()}`;
+              return (
+                <div key={i} className="flex items-center gap-3 px-4 py-3"
+                  style={{ borderBottom: i < recentScans.length - 1 ? "1px solid var(--border)" : "none" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#EEF0FF", color: "#4B4FD6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                    {initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium truncate" style={{ color: "var(--fg)" }}>
+                      {formatName(s.prenom)} {formatName(s.nom)}
+                    </p>
+                    <p className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>
+                      {s.ts ? formatTempsDepuis({ seconds: new Date(s.ts).getTime() / 1000 } as never) : "—"}
+                    </p>
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#2F7BFF" }}>+1</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+
+</div>
     </div>
   );
 }
