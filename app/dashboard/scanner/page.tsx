@@ -137,14 +137,6 @@ export default function ScannerPage() {
 
   useEffect(() => () => { cancelAnimationFrame(animRef.current); stopCamera(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Natif : démarrage auto de la caméra quand on arrive sur l'onglet QR
-  useEffect(() => {
-    if (!isNative || tab !== "qr" || scanning || nativeAutoRef.current) return;
-    nativeAutoRef.current = true;
-    startCamera();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, isNative]);
-
   // Derniers scans (3 derniers tampons valides du marchand)
   useEffect(() => {
     if (!user) return;
@@ -348,13 +340,21 @@ export default function ScannerPage() {
                             <path d="M9 2h6l-1 7h-4L9 2z"/><path d="M10 9L6 20h12L14 9"/><line x1="12" y1="20" x2="12" y2="22"/>
                           </svg>
                         </button>
-                        <button onClick={() => { stopCamera(); nativeAutoRef.current = false; }} style={{ position: "absolute", bottom: "calc(env(safe-area-inset-bottom,20px) + 24px)", left: "50%", transform: "translateX(-50%)", padding: "12px 24px", borderRadius: 100, background: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)", color: "white", fontSize: 14, fontWeight: 600, border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", whiteSpace: "nowrap" }}>
+                        <button onClick={stopCamera} style={{ position: "absolute", bottom: "calc(env(safe-area-inset-bottom,20px) + 24px)", left: "50%", transform: "translateX(-50%)", padding: "12px 24px", borderRadius: 100, background: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)", color: "white", fontSize: 14, fontWeight: 600, border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", whiteSpace: "nowrap" }}>
                           Saisir manuellement
                         </button>
                       </>
                     ) : (
-                      <button onClick={stopCamera} className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
-                        style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(10px)" }}>
+                      <button onClick={stopCamera}
+                        style={{
+                          position: "fixed",
+                          bottom: "calc(var(--tab-h, 49px) + env(safe-area-inset-bottom, 0px) + 16px)",
+                          left: "50%", transform: "translateX(-50%)",
+                          padding: "10px 22px", borderRadius: 100,
+                          background: "rgba(0,0,0,0.55)", color: "white",
+                          backdropFilter: "blur(10px)", fontSize: 13, fontWeight: 500,
+                          border: "none", cursor: "pointer", whiteSpace: "nowrap", zIndex: 10,
+                        }}>
                         {t.scan_stop}
                       </button>
                     )}
