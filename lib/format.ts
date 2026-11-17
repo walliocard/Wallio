@@ -1,3 +1,9 @@
+/** Capitalise chaque mot séparé par espace, tiret ou apostrophe. Ne modifie jamais Firebase. */
+export function formatName(s: string): string {
+  if (!s) return s;
+  return s.toLowerCase().replace(/(^|[ \-''])([a-zàâãäéèêëíìîïóòôõöúùûüçñ])/gi, m => m.toUpperCase());
+}
+
 export function formatNum(n: number): string {
   return new Intl.NumberFormat("fr-FR").format(n);
 }

@@ -29,7 +29,7 @@ function avatarColor(initials: string) {
   return AVATAR_PALETTES[code % AVATAR_PALETTES.length];
 }
 
-import { formatPhone } from "@/lib/format";
+import { formatPhone, formatName } from "@/lib/format";
 
 function anniversaireInfo(dob: string | undefined): { label: string; isToday: boolean } {
   if (!dob) return { label: "—", isToday: false };
@@ -410,7 +410,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           </div>
           <div>
             <h1 className="text-[22px] font-semibold tracking-tight leading-tight" style={{ color: "var(--fg)" }}>
-              {cap(client.prenom)} {cap(client.nom)}
+              {formatName(client.prenom)} {formatName(client.nom)}
             </h1>
             <button
               onClick={copyPhone}

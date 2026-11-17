@@ -9,6 +9,7 @@ import { Icons } from "@/components/dashboard/icons";
 import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
 import CompactHeader from "@/components/dashboard/CompactHeader";
+import { formatName } from "@/lib/format";
 
 const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
@@ -385,7 +386,7 @@ export default function ClientsPage() {
           </div>
         </div>
       ) : (
-        <div style={{ background: "var(--glass-bg)", borderRadius: 20, border: "1px solid var(--border)", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}
+        <div style={{ background: "#FFFFFF", borderRadius: 20, border: "1px solid var(--border)", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}
           className="lg:grid lg:grid-cols-2 lg:gap-0 fade-y">
           {filtered.map((client, idx) => {
             const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
@@ -403,7 +404,7 @@ export default function ClientsPage() {
             const objectifActuel = prochainPalier ? prochainPalier.tampons : (flexObjectif ?? (marchand?.objectif_tampons ?? 10));
             const dvSeconds = (client.derniere_visite as { seconds?: number })?.seconds;
             const isInactif = dvSeconds ? (dvSeconds * 1000) < trenteJoursAgo.getTime() : false;
-            const isProche = client.tampons >= objectifActuel - 2 && client.tampons < objectifActuel && !client.recompense_en_attente;
+            const isProche = client.tampons === objectifActuel - 1 && !client.recompense_en_attente;
             const isAnniversaire = (() => {
               const parts = client.date_naissance?.split("-");
               return parts?.length === 3 && parseInt(parts[1]) === todayMonth && parseInt(parts[2]) === todayDay;
@@ -433,7 +434,7 @@ export default function ClientsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                     <p className="text-[14px] font-semibold truncate" style={{ color: "var(--fg)" }}>
-                      {cap(client.prenom)} {cap(client.nom)}
+                      {formatName(client.prenom)} {formatName(client.nom)}
                     </p>
                     {client.recompense_en_attente && (
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
@@ -466,11 +467,10 @@ export default function ClientsPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>
-                    {formatTempsDepuis(client.derniere_visite)}
-                  </p>
-                  {/* Points de tampons */}
-                  <div className="mt-1.5">
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 2 }}>
+                    <p className="text-[11px]" style={{ color: "var(--fg-tertiary)", flexShrink: 0 }}>
+                      {formatTempsDepuis(client.derniere_visite)}
+                    </p>
                     <StampDots tampons={client.tampons} objectif={objectifActuel} />
                   </div>
                 </div>

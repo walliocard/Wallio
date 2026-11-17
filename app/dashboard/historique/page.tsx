@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getAuth } from "firebase/auth";
+import { formatName } from "@/lib/format";
 
 type FilterType = "tout" | "qr_gerant" | "qr_equipe" | "manuel_equipe" | "nfc_client" | "auto_validation" | "anti_doublon";
 
@@ -292,7 +293,7 @@ export default function HistoriquePage() {
                           <div className="flex-1 min-w-0 text-left">
                             <div className="flex items-center gap-1.5">
                               <p className="text-[14px] font-medium truncate" style={{ color: "var(--fg)" }}>
-                                {e.client_prenom} {e.client_nom?.[0] ? e.client_nom[0] + "." : ""}
+                                {formatName(e.client_prenom)} {e.client_nom?.[0] ? (e.client_nom[0].toUpperCase() + ".") : ""}
                                 {hasGroup && <span className="text-[12px] font-normal ml-1" style={{ color: "var(--fg-tertiary)" }}>×{e.group!.length}</span>}
                               </p>
                               {e.recompense && (

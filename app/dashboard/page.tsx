@@ -10,6 +10,7 @@ import { Icons } from "@/components/dashboard/icons";
 import { useLang } from "@/lib/lang-context";
 import CompactHeader from "@/components/dashboard/CompactHeader";
 import { SmokeCard } from "@/components/dashboard/SmokeCard";
+import { formatName } from "@/lib/format";
 
 function useCountUp(target: number, duration = 700) {
   const [val, setVal] = useState(0);
@@ -605,7 +606,7 @@ export default function AccueilPage() {
           <div className="flex-1 min-w-0">
             <p style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-tertiary)", marginBottom: 2 }}>Meilleur client</p>
             <p style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)" }}>
-              {stats.top_client.prenom} {stats.top_client.nom}
+              {formatName(stats.top_client.prenom)} {formatName(stats.top_client.nom)}
             </p>
             <p style={{ fontSize: 12, color: "var(--fg-tertiary)" }}>
               {stats.top_client.tampons} tampon{stats.top_client.tampons > 1 ? "s" : ""}
