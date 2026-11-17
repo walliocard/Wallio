@@ -344,7 +344,8 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
   } else if (modeRecompense === "flex") {
     const palierInter = (m?.palier_intermediaire as number) || 5;
     const choixFait = client.choix_fait;
-    objectif = choixFait === "grand" ? (marchand?.objectif_tampons || 10) : palierInter;
+    // Si choix "petit" → objectif = palier ; sinon (grand ou pas encore choisi) → objectif_tampons
+    objectif = choixFait === "petit" ? palierInter : (marchand?.objectif_tampons || 10);
     nomRecompense = choixFait === "grand"
       ? ((m?.nom_recompense_grand as string) || "")
       : choixFait === "petit"
@@ -385,10 +386,10 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         </div>
       )}
 
-      {/* Toast correction */}
+      {/* Toast tampons mis à jour */}
       {correctionSaved && (
         <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", left: "50%", transform: "translateX(-50%)", zIndex: 999, background: "rgba(52,199,89,0.92)", backdropFilter: "blur(12px)", padding: "10px 18px", borderRadius: 100, animation: "toast-in 0.25s ease", whiteSpace: "nowrap" }}>
-          <p style={{ color: "white", fontSize: 13, fontWeight: 600 }}>Tampons corrigés</p>
+          <p style={{ color: "white", fontSize: 13, fontWeight: 600 }}>Tampons mis à jour</p>
         </div>
       )}
 
@@ -482,23 +483,33 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           </div>
 
           {objectif <= 12 ? (
-            <div className="flex flex-wrap gap-2">
-              {Array.from({ length: objectif }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full"
-                  style={i < client.tampons
-                    ? {
-                        background: "var(--wallio-gradient)",
-                        boxShadow: "0 2px 8px rgba(139,92,246,0.35)",
-                        animation: showCheck && i === client.tampons - 1
-                          ? "success-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)"
-                          : undefined,
-                      }
-                    : { background: "transparent", border: "1.5px solid var(--border)" }
-                  }
-                />
-              ))}
+            <div>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: objectif }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-8 h-8 rounded-full"
+                    style={i < client.tampons
+                      ? {
+                          background: "var(--wallio-gradient)",
+                          boxShadow: "0 2px 8px rgba(139,92,246,0.35)",
+                          animation: showCheck && i === client.tampons - 1
+                            ? "success-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)"
+                            : undefined,
+                        }
+                      : { background: "transparent", border: "1.5px solid var(--border)" }
+                    }
+                  />
+                ))}
+              </div>
+              {modeRecompense === "flex" && !client.choix_fait && (() => {
+                const palierInter = (m?.palier_intermediaire as number) || 5;
+                return (
+                  <p className="text-[11px] mt-2" style={{ color: "var(--fg-tertiary)" }}>
+                    Au tampon {palierInter} : {cap((m?.nom_recompense_petit as string) || "petite récompense")} · Au tampon {objectif} : {cap((m?.nom_recompense_grand as string) || "grande récompense")}
+                  </p>
+                );
+              })()}
             </div>
           ) : (
             <div>
@@ -652,14 +663,15 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
             {validationEnCours ? "Validation…" : "Valider la récompense"}
           </button>
         ) : !client.choix_en_attente ? (
-          <button onClick={() => handleAjouterTampon()} disabled={ajoutEnCours}
+          <button
+            onClick={() => { setCorrectionValue(client.tampons); setShowCorrectionSheet(true); }}
             className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-5 flex items-center justify-center gap-2 transition-all"
             style={{ background: "var(--wallio-gradient)", boxShadow: "0 4px 18px rgba(139,92,246,0.3)" }}>
-            {showCheck ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "checkmark 0.3s ease" }}>
-                <path d="M20 6 9 17l-5-5"/>
-              </svg>
-            ) : ajoutEnCours ? "Enregistrement…" : "+ Ajouter un tampon"}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 22h14"/><path d="M9.7 17H5l-1-5h16l-1 5h-4.7"/><path d="M12 17v-6"/>
+              <rect x="9" y="7" width="6" height="6" rx="1"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>
+            </svg>
+            Modifier les tampons
           </button>
         ) : null}
 
@@ -685,16 +697,6 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           </div>
         )}
 
-        {/* Correction discrète */}
-        <button
-          onClick={() => { setCorrectionValue(client.tampons); setShowCorrectionSheet(true); }}
-          className="w-full flex items-center justify-between px-5 py-4 rounded-2xl mb-3 transition-all active:opacity-70"
-          style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}
-        >
-          <span className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>Corriger le nombre de tampons</span>
-          <Icons.ChevronRight />
-        </button>
-
         {/* Supprimer */}
         <button
           onClick={async () => {
@@ -712,7 +714,7 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
 
       </div>
 
-      {/* Bottom sheet correction */}
+      {/* Bottom sheet — Modifier les tampons */}
       {showCorrectionSheet && (
         <div
           className="fixed inset-0 z-50 flex items-end"
@@ -725,33 +727,82 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
             onClick={e => e.stopPropagation()}
           >
             <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
-            <p className="text-[17px] font-semibold mb-6" style={{ color: "var(--fg)" }}>Corriger les tampons</p>
-            <div className="flex items-center justify-center gap-10 mb-8">
+
+            {/* Nom + progression live */}
+            <div className="text-center mb-6">
+              <p className="text-[17px] font-semibold mb-3" style={{ color: "var(--fg)" }}>
+                {formatName(client.prenom)} {formatName(client.nom)}
+              </p>
+              {objectif <= 12 ? (
+                <div className="flex justify-center flex-wrap gap-1.5">
+                  {Array.from({ length: objectif }).map((_, i) => (
+                    <div key={i} style={{
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: i < correctionValue ? "linear-gradient(135deg, #2F7BFF, #8B5CF6)" : "var(--border)",
+                      transition: "background 0.15s ease",
+                    }} />
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  <div className="h-1.5 rounded-full overflow-hidden mx-auto" style={{ background: "var(--border)", maxWidth: 240 }}>
+                    <div className="h-full rounded-full transition-all duration-200"
+                      style={{ width: `${Math.min(100, Math.round((correctionValue / objectif) * 100))}%`, background: "var(--wallio-gradient)" }} />
+                  </div>
+                  <p className="text-[11px] mt-1" style={{ color: "var(--fg-tertiary)" }}>{correctionValue} / {objectif}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Compteur +/− */}
+            <div className="flex items-center justify-center gap-10 mb-2">
               <button
                 onClick={() => setCorrectionValue(v => Math.max(0, v - 1))}
-                className="w-12 h-12 rounded-full flex items-center justify-center text-[22px] font-bold"
-                style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30" }}
+                className="w-14 h-14 rounded-full flex items-center justify-center text-[26px] font-light"
+                style={{ background: "rgba(255,59,48,0.08)", color: "#FF3B30", border: "none", cursor: correctionValue > 0 ? "pointer" : "default", opacity: correctionValue > 0 ? 1 : 0.35 }}
               >
                 −
               </button>
-              <p className="text-[48px] font-bold" style={{ color: "var(--fg)", minWidth: 70, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+              <p className="text-[48px] font-bold" style={{ color: "var(--fg)", minWidth: 70, textAlign: "center", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
                 {correctionValue}
               </p>
               <button
                 onClick={() => setCorrectionValue(v => Math.min(maxTampons, v + 1))}
-                className="w-12 h-12 rounded-full flex items-center justify-center text-[22px] font-bold"
-                style={{ background: "rgba(0,122,255,0.08)", color: "var(--accent)" }}
+                className="w-14 h-14 rounded-full flex items-center justify-center text-[26px] font-light"
+                style={{ background: "rgba(47,123,255,0.08)", color: "#2F7BFF", border: "none", cursor: "pointer" }}
               >
                 +
               </button>
             </div>
+
+            {/* Indicateur de changement */}
+            <div className="text-center mb-6" style={{ minHeight: 20 }}>
+              {correctionValue !== client.tampons && (
+                <p className="text-[13px] font-medium" style={{ color: correctionValue > client.tampons ? "#2F7BFF" : "#FF3B30" }}>
+                  {correctionValue > client.tampons ? `+${correctionValue - client.tampons}` : correctionValue - client.tampons} tampon{Math.abs(correctionValue - client.tampons) > 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
             <button
               onClick={handleCorrectionSave}
-              disabled={correctionSaving}
-              className="w-full py-4 rounded-2xl text-[15px] font-semibold text-white"
-              style={{ background: "var(--wallio-gradient)" }}
+              disabled={correctionSaving || correctionValue === client.tampons}
+              className="w-full py-4 rounded-2xl text-[15px] font-semibold"
+              style={{
+                background: correctionValue !== client.tampons ? "var(--wallio-gradient)" : "#E9E9EE",
+                color: correctionValue !== client.tampons ? "white" : "#8E8E93",
+                boxShadow: correctionValue !== client.tampons ? "0 4px 18px rgba(139,92,246,0.25)" : "none",
+                border: "none",
+                cursor: correctionValue !== client.tampons ? "pointer" : "default",
+              }}
             >
               {correctionSaving ? "Enregistrement…" : "Valider"}
+            </button>
+            <button
+              onClick={() => setShowCorrectionSheet(false)}
+              className="w-full py-3 mt-1 text-[14px]"
+              style={{ color: "var(--fg-tertiary)", background: "none", border: "none", cursor: "pointer" }}
+            >
+              Annuler
             </button>
           </div>
         </div>
