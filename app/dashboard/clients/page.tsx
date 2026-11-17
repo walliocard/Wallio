@@ -10,25 +10,34 @@ import Link from "next/link";
 import { useLang } from "@/lib/lang-context";
 import CompactHeader from "@/components/dashboard/CompactHeader";
 
-const AVATAR_PALETTES = [
-  { bg: "rgba(94,140,247,0.18)",  text: "#5E8CF7" },
-  { bg: "rgba(139,127,212,0.18)", text: "#9B8FE8" },
-  { bg: "rgba(52,199,137,0.18)",  text: "#34C789" },
-  { bg: "rgba(247,133,110,0.18)", text: "#E8785E" },
-  { bg: "rgba(240,160,96,0.18)",  text: "#E0A060" },
-  { bg: "rgba(112,184,232,0.18)", text: "#60B8E8" },
-  { bg: "rgba(212,127,179,0.18)", text: "#D47FB3" },
-  { bg: "rgba(92,200,168,0.18)",  text: "#5CC8A8" },
-];
-function avatarColor(initials: string) {
-  const code = (initials.charCodeAt(0) || 0) + (initials.charCodeAt(1) || 0);
-  return AVATAR_PALETTES[code % AVATAR_PALETTES.length];
-}
-import CustomSelect from "@/components/CustomSelect";
-
 const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
 type Sort = "recent" | "visite" | "tampons" | "alpha";
+
+// ── Points de tampons ─────────────────────────────────────────────────────────
+
+function StampDots({ tampons, objectif }: { tampons: number; objectif: number }) {
+  if (objectif > 12) {
+    const pct = Math.min(100, Math.round((tampons / objectif) * 100));
+    return (
+      <div style={{ height: 4, borderRadius: 2, background: "#E5E5EA", overflow: "hidden", flex: 1 }}>
+        <div style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #2F7BFF, #8B5CF6)", width: `${pct}%`, transition: "width 0.3s ease" }} />
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: "flex", gap: 4, flexWrap: "nowrap", alignItems: "center" }}>
+      {Array.from({ length: objectif }).map((_, i) => (
+        <div key={i} style={{
+          width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+          background: i < tampons ? "linear-gradient(135deg, #2F7BFF, #8B5CF6)" : "#E5E5EA",
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ClientsPage() {
   const { user, marchand } = useAuth();
@@ -40,6 +49,7 @@ export default function ClientsPage() {
   const [filterRecompense, setFilterRecompense] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
   const [form, setForm] = useState({ prenom: "", nom: "", telephone: "", date_naissance: "", email: "" });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -114,7 +124,7 @@ export default function ClientsPage() {
       if (sort === "tampons") return b.tampons - a.tampons;
       if (sort === "alpha") return `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr");
       if (sort === "visite") return ((b.derniere_visite as { seconds?: number })?.seconds || 0) - ((a.derniere_visite as { seconds?: number })?.seconds || 0);
-      return 0; // "recent" : déjà trié dans onSnapshot
+      return 0;
     });
 
   async function ajouterClient() {
@@ -139,12 +149,10 @@ export default function ClientsPage() {
       email: form.email.trim(),
     });
     fetch("/api/admin/notify-new-client", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prenom: form.prenom.trim(), nom: form.nom.trim(), marchandNom: marchand?.nom || "" }) }).catch(() => {});
-    // Créer wallio_users pour que le client puisse se connecter sur /mes-cartes
     fetch("/api/client/register", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ telephone: form.telephone.trim(), prenom: form.prenom.trim(), nom: form.nom.trim(), dob: form.date_naissance, email: form.email.trim() }),
     }).catch(() => {});
-    // Email de bienvenue
     fetch("/api/send-welcome-email", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: form.email.trim(), prenom: form.prenom.trim(), marchandNom: marchand?.nom || "", walletId, mode: "inscription" }),
@@ -158,6 +166,13 @@ export default function ClientsPage() {
   trenteJoursAgo.setDate(trenteJoursAgo.getDate() - 30);
   const todayMonth = new Date().getMonth() + 1;
   const todayDay = new Date().getDate();
+
+  const SORT_OPTIONS: { label: string; value: Sort }[] = [
+    { label: t.clients_sort_recent, value: "recent" },
+    { label: "Dernier tampon", value: "visite" },
+    { label: t.clients_sort_stamps, value: "tampons" },
+    { label: t.clients_sort_alpha_label, value: "alpha" },
+  ];
 
   return (
     <div>
@@ -226,26 +241,67 @@ export default function ClientsPage() {
         </div>
       )}
 
+      {/* Sheet tri */}
+      {showSortSheet && (
+        <div className="fixed inset-0 z-50 flex items-end"
+          style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+          onClick={() => setShowSortSheet(false)}>
+          <div className="w-full rounded-t-3xl p-6"
+            style={{ background: "var(--bg)", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "max(24px, env(safe-area-inset-bottom))" }}
+            onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
+            <p className="text-[17px] font-semibold mb-4" style={{ color: "var(--fg)" }}>Trier par</p>
+            <div className="space-y-1">
+              {SORT_OPTIONS.map(opt => (
+                <button key={opt.value}
+                  onClick={() => { setSort(opt.value); setShowSortSheet(false); }}
+                  className="w-full text-left px-4 py-3 rounded-2xl text-[15px] transition-all"
+                  style={{
+                    background: sort === opt.value ? "#EEF0FF" : "transparent",
+                    color: sort === opt.value ? "#4B4FD6" : "var(--fg)",
+                    fontWeight: sort === opt.value ? 600 : 400,
+                    border: "none", cursor: "pointer",
+                  }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 ref={titleRef} className="text-[34px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.clients_title}</h1>
           {!loading && <p style={{ fontSize: 13, color: "var(--fg-tertiary)", marginTop: 2 }}>{clients.length} client{clients.length > 1 ? "s" : ""}</p>}
         </div>
-        <button
-          onClick={() => { setShowModal(true); setFormError(""); }}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[13px] font-semibold text-white"
-          style={{ background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)", boxShadow: "0 4px 14px rgba(47,123,255,0.30)" }}
-        >
-          <span style={{ fontSize: 18, lineHeight: 1, fontWeight: 300 }}>+</span>
-          {t.clients_add}
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          {/* Tri */}
+          <button
+            onClick={() => setShowSortSheet(true)}
+            style={{ width: 36, height: 36, borderRadius: "50%", background: "#EEF0FF", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#4B4FD6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 5h10M11 9h7M11 13h4"/><path d="M3 5l4 4-4 4"/>
+            </svg>
+          </button>
+          {/* Ajouter */}
+          <button
+            onClick={() => { setShowModal(true); setFormError(""); }}
+            style={{ width: 36, height: 36, borderRadius: "50%", background: "#EEF0FF", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#4B4FD6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Filtres */}
-      <div className="flex flex-col gap-2 mb-4">
-        {/* Recherche — pleine largeur */}
-        <div className="relative">
+      <div className="flex gap-2 mb-4">
+        {/* Recherche */}
+        <div className="relative flex-1">
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-tertiary)" }}>
             <Icons.Search size={15} />
           </span>
@@ -260,39 +316,23 @@ export default function ClientsPage() {
             onBlur={e => (e.target.style.borderColor = "var(--border)")}
           />
         </div>
-
-        {/* Sort + filtre récompenses */}
-        <div className="flex gap-2">
-          <CustomSelect
-            className="flex-1"
-            value={sort}
-            onChange={v => setSort(v as Sort)}
-            options={[
-              { label: t.clients_sort_recent, value: "recent" },
-              { label: "Dernier tampon", value: "visite" },
-              { label: t.clients_sort_stamps, value: "tampons" },
-              { label: t.clients_sort_alpha_label, value: "alpha" },
-            ]}
-          />
-
-          {recompensesCount > 0 && (
-            <button
-              onClick={() => setFilterRecompense(f => !f)}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl text-[13px] font-medium transition-all flex-shrink-0"
-              style={{
-                background: filterRecompense ? "rgba(52,199,89,0.12)" : "var(--glass-bg)",
-                border: `1px solid ${filterRecompense ? "rgba(52,199,89,0.3)" : "var(--border)"}`,
-                color: filterRecompense ? "#34C759" : "var(--fg-secondary)",
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/>
-                <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
-              </svg>
-              {recompensesCount}
-            </button>
-          )}
-        </div>
+        {recompensesCount > 0 && (
+          <button
+            onClick={() => setFilterRecompense(f => !f)}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl text-[13px] font-medium transition-all flex-shrink-0"
+            style={{
+              background: filterRecompense ? "rgba(52,199,89,0.12)" : "var(--glass-bg)",
+              border: `1px solid ${filterRecompense ? "rgba(52,199,89,0.3)" : "var(--border)"}`,
+              color: filterRecompense ? "#34C759" : "var(--fg-secondary)",
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/>
+              <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+            </svg>
+            {recompensesCount}
+          </button>
+        )}
       </div>
 
       {/* Liste */}
@@ -307,8 +347,8 @@ export default function ClientsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "var(--lavande)" }}>
-            <span style={{ color: "var(--lavande-fg)" }}><Icons.Users size={28} /></span>
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "#EEF0FF" }}>
+            <span style={{ color: "#4B4FD6" }}><Icons.Users size={28} /></span>
           </div>
           <div>
             <p className="text-[16px] font-semibold mb-1" style={{ color: "var(--fg)" }}>
@@ -324,7 +364,6 @@ export default function ClientsPage() {
           className="lg:grid lg:grid-cols-2 lg:gap-0 fade-y">
           {filtered.map((client, idx) => {
             const initiales = `${(client.prenom?.[0] || "").toUpperCase()}${(client.nom?.[0] || "").toUpperCase()}`;
-            const aColor = avatarColor(initiales);
             const mn = marchand as Record<string, unknown> | undefined;
             const paliersDef = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
             const pv = client.paliers_valides || [];
@@ -337,7 +376,6 @@ export default function ClientsPage() {
                 : (mn?.palier_intermediaire as number ?? 5))
               : null;
             const objectifActuel = prochainPalier ? prochainPalier.tampons : (flexObjectif ?? (marchand?.objectif_tampons ?? 10));
-            const pct = Math.min(100, Math.round((client.tampons / objectifActuel) * 100));
             const dvSeconds = (client.derniere_visite as { seconds?: number })?.seconds;
             const isInactif = dvSeconds ? (dvSeconds * 1000) < trenteJoursAgo.getTime() : false;
             const isProche = client.tampons >= objectifActuel - 2 && client.tampons < objectifActuel && !client.recompense_en_attente;
@@ -345,6 +383,7 @@ export default function ClientsPage() {
               const parts = client.date_naissance?.split("-");
               return parts?.length === 3 && parseInt(parts[1]) === todayMonth && parseInt(parts[2]) === todayDay;
             })();
+            void isInactif;
             return (
               <Link
                 key={client.id}
@@ -357,8 +396,8 @@ export default function ClientsPage() {
                   className="w-11 h-11 flex items-center justify-center text-[13px] font-bold flex-shrink-0"
                   style={{
                     borderRadius: "50%",
-                    background: client.recompense_en_attente ? "linear-gradient(135deg,#2F7BFF,#8B5CF6)" : aColor.bg,
-                    color: client.recompense_en_attente ? "white" : aColor.text,
+                    background: client.recompense_en_attente ? "linear-gradient(135deg,#2F7BFF,#8B5CF6)" : "#EEF0FF",
+                    color: client.recompense_en_attente ? "white" : "#4B4FD6",
                   }}
                 >
                   {initiales}
@@ -396,7 +435,7 @@ export default function ClientsPage() {
                     )}
                     {isProche && (
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                        style={{ background: "var(--lavande)", color: "var(--lavande-fg)" }}>
+                        style={{ background: "#EEF0FF", color: "#4B4FD6" }}>
                         Presque
                       </span>
                     )}
@@ -404,9 +443,9 @@ export default function ClientsPage() {
                   <p className="text-[11px]" style={{ color: "var(--fg-tertiary)" }}>
                     {formatTempsDepuis(client.derniere_visite)}
                   </p>
-                  <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
-                    <div className="h-full rounded-full transition-all"
-                      style={{ width: `${pct}%`, background: "linear-gradient(90deg,#2F7BFF,#8B5CF6)" }} />
+                  {/* Points de tampons */}
+                  <div className="mt-1.5">
+                    <StampDots tampons={client.tampons} objectif={objectifActuel} />
                   </div>
                 </div>
 
