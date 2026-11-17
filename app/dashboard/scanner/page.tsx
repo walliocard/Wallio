@@ -599,7 +599,7 @@ export default function ScannerPage() {
                     <div className="text-center">
                       <p className="text-[13px] mb-3" style={{ color: "#FF3B30" }}>Autorisez la caméra dans les réglages</p>
                       <button
-                        onClick={() => { try { /* @ts-ignore */ window.Capacitor?.Plugins?.App?.openUrl?.({ url: "app-settings:" }); } catch {} }}
+                        onClick={() => { try { /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ (window as any).Capacitor?.Plugins?.App?.openUrl?.({ url: "app-settings:" }); } catch {} }}
                         className="px-5 py-2.5 rounded-2xl text-[13px] font-semibold"
                         style={{ background: "#EEF0FF", color: "#4B4FD6", border: "none", cursor: "pointer" }}
                       >
