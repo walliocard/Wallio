@@ -203,6 +203,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [loading, user, marchand, pathname]);
 
+  // ── Reset scroll au changement de page (sinon le scrollTop persiste entre onglets) ──
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+
+  // ── Scroll-to-top via tab retap ──
+  useEffect(() => {
+    const handler = () => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    window.addEventListener("wallio:scroll-top", handler);
+    return () => window.removeEventListener("wallio:scroll-top", handler);
+  }, []);
+
   // ── Page connexion : splash recouvre pendant la transition ──
   if (pathname === "/dashboard/auth") {
     return <>{children}</>;
@@ -233,18 +245,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
     );
   }
-
-  // ── Reset scroll au changement de page (sinon le scrollTop persiste entre onglets) ──
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname]);
-
-  // ── Scroll-to-top via tab retap ──
-  useEffect(() => {
-    const handler = () => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    window.addEventListener("wallio:scroll-top", handler);
-    return () => window.removeEventListener("wallio:scroll-top", handler);
-  }, []);
 
   // ── Dashboard ──
   return (
