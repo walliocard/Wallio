@@ -60,7 +60,7 @@ export function SmokeCard({
           willChange: "transform", pointerEvents: "none",
         }}
       />
-      <div style={{ position: "relative", zIndex: 1, height: "100%" }}>
+      <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column", alignItems: "inherit", justifyContent: "inherit" }}>
         {children}
       </div>
     </div>

@@ -298,7 +298,7 @@ export default function ScannerPage() {
                 if (scanning) stopCamera();
               }}
               style={{
-                padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: tab === tab_ ? 600 : 400,
+                flex: 1, padding: "7px 8px", borderRadius: 8, fontSize: 13, fontWeight: tab === tab_ ? 600 : 400,
                 background: tab === tab_ ? "#FFFFFF" : "transparent",
                 color: tab === tab_ ? "var(--fg)" : "var(--fg-tertiary)",
                 border: "none", cursor: "pointer",
@@ -318,66 +318,49 @@ export default function ScannerPage() {
         {tab === "qr" && (
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <div className="w-full md:max-w-md">
-              {/* Zone caméra — un seul <video>, plein écran en natif */}
-              {scanning && (
-                <div className="relative overflow-hidden"
-                  style={isNative ? {
-                    position: "fixed", inset: 0, zIndex: 100, borderRadius: 0,
-                  } : {
-                    borderRadius: 24, height: 300,
-                  }}>
-                  <video ref={videoRef} playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <canvas ref={canvasRef} style={{ display: "none" }} />
+              {/* Zone caméra — toujours dans le DOM (sinon videoRef est null au moment de startCamera) */}
+              <div style={!scanning
+                ? { position: "absolute", left: -9999, width: 1, height: 1, overflow: "hidden" }
+                : isNative
+                  ? { position: "fixed", inset: 0, zIndex: 100 }
+                  : { position: "relative", borderRadius: 24, height: 300, overflow: "hidden" }
+              }>
+                <video ref={videoRef} playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <canvas ref={canvasRef} style={{ display: "none" }} />
 
-                  {/* Cadre de visée */}
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{
-                      width: isNative ? 220 : 192, height: isNative ? 220 : 192,
-                      position: "relative",
-                      boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
-                    }}>
-                      {["top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl","top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl","bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl","bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl"].map((cls, i) => (
-                        <div key={i} className={`absolute w-8 h-8 ${cls}`}
-                          style={{ borderColor: "white", animation: `qr-pulse 1.8s ease-in-out ${i*0.15}s infinite` }} />
-                      ))}
+                {/* UI scanning — uniquement quand actif */}
+                {scanning && (
+                  <>
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: isNative ? 220 : 192, height: isNative ? 220 : 192, position: "relative", boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }}>
+                        {["top-0 left-0 border-t-2 border-l-2 rounded-tl-2xl","top-0 right-0 border-t-2 border-r-2 rounded-tr-2xl","bottom-0 left-0 border-b-2 border-l-2 rounded-bl-2xl","bottom-0 right-0 border-b-2 border-r-2 rounded-br-2xl"].map((cls, i) => (
+                          <div key={i} className={`absolute w-8 h-8 ${cls}`}
+                            style={{ borderColor: "white", animation: `qr-pulse 1.8s ease-in-out ${i*0.15}s infinite` }} />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <style>{`@keyframes qr-pulse{0%,100%{opacity:.7}50%{opacity:1}}`}</style>
+                    <style>{`@keyframes qr-pulse{0%,100%{opacity:.7}50%{opacity:1}}`}</style>
 
-                  {isNative ? (
-                    <>
-                      {/* Torche */}
-                      <button onClick={toggleTorch} style={{
-                        position: "absolute", top: "calc(env(safe-area-inset-top,20px) + 16px)", right: 20,
-                        width: 44, height: 44, borderRadius: "50%",
-                        background: torch ? "white" : "rgba(255,255,255,0.18)",
-                        backdropFilter: "blur(10px)", border: "none", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={torch ? "#1D1D1F" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 2h6l-1 7h-4L9 2z"/><path d="M10 9L6 20h12L14 9"/><line x1="12" y1="20" x2="12" y2="22"/>
-                        </svg>
+                    {isNative ? (
+                      <>
+                        <button onClick={toggleTorch} style={{ position: "absolute", top: "calc(env(safe-area-inset-top,20px) + 16px)", right: 20, width: 44, height: 44, borderRadius: "50%", background: torch ? "white" : "rgba(255,255,255,0.18)", backdropFilter: "blur(10px)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={torch ? "#1D1D1F" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 2h6l-1 7h-4L9 2z"/><path d="M10 9L6 20h12L14 9"/><line x1="12" y1="20" x2="12" y2="22"/>
+                          </svg>
+                        </button>
+                        <button onClick={() => { stopCamera(); nativeAutoRef.current = false; }} style={{ position: "absolute", bottom: "calc(env(safe-area-inset-bottom,20px) + 24px)", left: "50%", transform: "translateX(-50%)", padding: "12px 24px", borderRadius: 100, background: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)", color: "white", fontSize: 14, fontWeight: 600, border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", whiteSpace: "nowrap" }}>
+                          Saisir manuellement
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={stopCamera} className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
+                        style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(10px)" }}>
+                        {t.scan_stop}
                       </button>
-                      {/* Saisir manuellement */}
-                      <button onClick={() => { stopCamera(); nativeAutoRef.current = false; }} style={{
-                        position: "absolute", bottom: "calc(env(safe-area-inset-bottom,20px) + 24px)",
-                        left: "50%", transform: "translateX(-50%)",
-                        padding: "12px 24px", borderRadius: 100,
-                        background: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)",
-                        color: "white", fontSize: 14, fontWeight: 600,
-                        border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", whiteSpace: "nowrap",
-                      }}>
-                        Saisir manuellement
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={stopCamera} className="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full text-[13px] font-medium"
-                      style={{ background: "rgba(0,0,0,0.55)", color: "white", backdropFilter: "blur(10px)" }}>
-                      {t.scan_stop}
-                    </button>
-                  )}
-                </div>
-              )}
+                    )}
+                  </>
+                )}
+              </div>
 
               {/* Loading tampon */}
               {loadingTampon && (
@@ -564,13 +547,12 @@ export default function ScannerPage() {
                 <SmokeCard style={{ minHeight: 300, padding: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                   <style>{`
                     @keyframes vf-breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
-                    @keyframes vf-scan { 0%{transform:translateY(0);opacity:0} 8%{opacity:1} 88%{opacity:0.8} 100%{transform:translateY(132px);opacity:0} }
-                    @media(prefers-reduced-motion:reduce){.vf-breathe,.vf-scan{animation:none!important}}
+                    @media(prefers-reduced-motion:reduce){.vf-breathe{animation:none!important}}
                   `}</style>
 
                   {/* Viewfinder animé */}
-                  <div className="vf-breathe" style={{ animation: "vf-breathe 2s ease-in-out infinite", position: "relative", width: 140, height: 140, marginBottom: 20, flexShrink: 0 }}>
-                    <svg width="140" height="140" viewBox="0 0 140 140" style={{ position: "absolute", inset: 0 }}>
+                  <div className="vf-breathe" style={{ animation: "vf-breathe 2s ease-in-out infinite", width: 140, height: 140, marginBottom: 20, flexShrink: 0 }}>
+                    <svg width="140" height="140" viewBox="0 0 140 140">
                       <defs>
                         <linearGradient id="vfGrad" x1="0" y1="0" x2="1" y2="1">
                           <stop offset="0%" stopColor="#2F7BFF"/>
@@ -582,12 +564,6 @@ export default function ScannerPage() {
                       <path d="M2,116 L2,132 Q2,138 8,138 L24,138" fill="none" stroke="url(#vfGrad)" strokeWidth="4" strokeLinecap="round"/>
                       <path d="M138,116 L138,132 Q138,138 132,138 L116,138" fill="none" stroke="url(#vfGrad)" strokeWidth="4" strokeLinecap="round"/>
                     </svg>
-                    {/* Ligne de scan */}
-                    <div className="vf-scan" style={{
-                      position: "absolute", top: 4, left: 12, right: 12, height: 2,
-                      background: "linear-gradient(to right, transparent, #2F7BFF 30%, #8B5CF6 70%, transparent)",
-                      animation: "vf-scan 2.5s ease-in-out infinite", borderRadius: 1,
-                    }} />
                   </div>
 
                   <p className="text-[17px] font-semibold mb-1.5" style={{ color: "var(--fg)" }}>{t.scan_scan_qr}</p>
