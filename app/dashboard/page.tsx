@@ -59,7 +59,7 @@ function HeroCard({
   aujourd_hui, semaine, maxSemaine, hierDiff, lastScanBeforeToday, days,
 }: {
   aujourd_hui: number; semaine: number[]; maxSemaine: number;
-  hierDiff: number; lastScanBeforeToday: Date | null; days: string[];
+  hierDiff: number; lastScanBeforeToday: Date | null; days: readonly string[];
 }) {
   const animated = useCountUp(aujourd_hui);
   return (
