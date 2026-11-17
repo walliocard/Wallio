@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { LangProvider } from "@/lib/lang-context";
+import NativeErrorReporter from "@/components/NativeErrorReporter";
 import "./globals.css";
 
 const geist = Geist({
@@ -75,6 +76,7 @@ export default function RootLayout({
         <LangProvider>
           <AuthProvider>{children}</AuthProvider>
         </LangProvider>
+        <NativeErrorReporter />
       </body>
     </html>
   );

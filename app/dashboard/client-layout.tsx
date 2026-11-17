@@ -59,6 +59,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     (async () => {
       try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (!Capacitor.isNativePlatform()) return;
+        if (!Capacitor.isPluginAvailable("StatusBar")) return;
         const { StatusBar, Style } = await import("@capacitor/status-bar");
         await StatusBar.setOverlaysWebView({ overlay: true });
         await StatusBar.setStyle({ style: Style.Dark });
