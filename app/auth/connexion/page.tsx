@@ -200,11 +200,11 @@ function ConnexionInner() {
   const [equipeLoading, setEquipeLoading] = useState(false);
   const [equipeError, setEquipeError]   = useState("");
 
-  // Mémoriser le dernier mode
+  // Mémoriser le dernier mode — équipe seulement sur tablet/desktop (md+)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(MODE_KEY) as Mode | null;
-      if (saved === "equipe") setMode("equipe");
+      if (saved === "equipe" && window.innerWidth >= 768) setMode("equipe");
     } catch {}
   }, []);
 
@@ -420,8 +420,8 @@ function ConnexionInner() {
           <p style={{ fontSize: 15, color: "#8E8E93", marginTop: 4 }}>Espace commerçant</p>
         </div>
 
-        {/* ── Sélecteur Gérant / Équipe ── */}
-        <div style={{ marginTop: 32, animation: "stagger-in 0.35s 0.08s cubic-bezier(0.34,1.06,0.64,1) both" }}>
+        {/* ── Sélecteur Gérant / Équipe — masqué sur mobile, visible sur tablet/desktop ── */}
+        <div className="hidden md:block" style={{ marginTop: 32, animation: "stagger-in 0.35s 0.08s cubic-bezier(0.34,1.06,0.64,1) both" }}>
           <SegmentedControl mode={mode} onChange={changeMode} />
         </div>
 
@@ -546,7 +546,7 @@ function ConnexionInner() {
             </div>
           )}
 
-          {/* ══ ÉQUIPE — Étape code ══ */}
+          {/* ══ ÉQUIPE — masqué sur mobile ══ */}
           {mode === "equipe" && equipeStep === "code" && (
             <form onSubmit={handleValiderCode} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ textAlign: "center", marginBottom: 4 }}>
