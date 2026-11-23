@@ -29,15 +29,15 @@ const PLUS_ROUTES = [
   "/dashboard/equipe",
 ];
 
-// Sidebar desktop — tous les items
-const SIDEBAR_NAV = [
-  { href: "/dashboard",               label: "Accueil",     Icon: Icons.Home     },
+// Sidebar desktop — items de base (équipe ajouté dynamiquement si equipe_actif)
+const SIDEBAR_NAV_BASE = [
+  { href: "/dashboard",               label: "Accueil",     Icon: Icons.Home        },
   { href: "/dashboard/scanner",       label: "Scanner",     Icon: Icons.QrViewfinder },
-  { href: "/dashboard/clients",       label: "Clients",     Icon: Icons.Users    },
-  { href: "/dashboard/notifications", label: "Notifs",      Icon: Icons.Bell     },
-  { href: "/dashboard/reglages",      label: "Réglages",    Icon: Icons.Settings },
-  { href: "/dashboard/historique",    label: "Historique",  Icon: Icons.History  },
-  { href: "/dashboard/carte",         label: "Ma carte",    Icon: Icons.Card     },
+  { href: "/dashboard/clients",       label: "Clients",     Icon: Icons.Users       },
+  { href: "/dashboard/notifications", label: "Notifs",      Icon: Icons.Bell        },
+  { href: "/dashboard/reglages",      label: "Réglages",    Icon: Icons.Settings    },
+  { href: "/dashboard/historique",    label: "Historique",  Icon: Icons.History     },
+  { href: "/dashboard/carte",         label: "Ma carte",    Icon: Icons.Card        },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -133,6 +133,11 @@ export default function DashboardNav({ marchand }: { marchand: Marchand }) {
   }
 
   const ALL_TABS = [...LEFT_TABS, ...RIGHT_TABS];
+
+  const hasEquipe = !!(marchand as Record<string, unknown>)?.equipe_actif;
+  const SIDEBAR_NAV = hasEquipe
+    ? [...SIDEBAR_NAV_BASE, { href: "/dashboard/equipe", label: "Équipe", Icon: Icons.Users }]
+    : SIDEBAR_NAV_BASE;
 
   return (
     <>
