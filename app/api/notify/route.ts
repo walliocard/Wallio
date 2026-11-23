@@ -7,7 +7,7 @@ import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const { title, body, segment, marchandId, idToken, expiresAt } = await req.json();
+    const { title, body, segment, clientIds, marchandId, idToken, expiresAt } = await req.json();
 
     if (!title || !body || !marchandId || !idToken) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     };
     await db.collection("marchands").doc(marchandId).set(marchandUpdate, { merge: true });
 
-    // Récupère les clients
+    // Récupère les clients selon segment ou sélection manuelle
     let query = db.collection("clients").where("marchand_id", "==", marchandId);
     if (segment === "actifs") {
       const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
@@ -48,6 +48,9 @@ export async function POST(req: Request) {
     }
 
     const snap = await query.get();
+    // Sélection manuelle : filtrer sur les IDs choisis
+    const ids = Array.isArray(clientIds) && clientIds.length > 0 ? new Set<string>(clientIds) : null;
+    const filteredDocs = ids ? snap.docs.filter(d => ids.has(d.id)) : snap.docs;
 
     const seen = new Set<string>();
     const tokenDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
     const apnsDocs: { token: string; ref: FirebaseFirestore.DocumentReference }[] = [];
     const gwWalletIds: string[] = [];
 
-    snap.forEach(doc => {
+    filteredDocs.forEach(doc => {
       allRefs.push(doc.ref);
       const data = doc.data();
       const fcmToken = data.fcm_token;

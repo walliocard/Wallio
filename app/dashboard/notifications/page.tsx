@@ -12,8 +12,15 @@ import { triggerAmbientPulse } from "@/components/AmbientBackground";
 import CompactHeader from "@/components/dashboard/CompactHeader";
 import { SmokeCard } from "@/components/dashboard/SmokeCard";
 
-type Segment = "tous" | "actifs" | "inactifs";
+type Segment = "tous" | "actifs" | "inactifs" | "manuel";
 type SendState = "idle" | "sending" | "success" | "error";
+
+interface ClientItem {
+  id: string;
+  prenom: string;
+  nom: string;
+  telephone: string;
+}
 
 function formatExpiry(date: string, time: string): string {
   if (!date) return "";
@@ -36,6 +43,9 @@ export default function NotificationsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showExpirySheet, setShowExpirySheet] = useState(false);
   const [successBanner, setSuccessBanner] = useState(false);
+  const [clientList, setClientList] = useState<ClientItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [clientSearch, setClientSearch] = useState("");
   const typingRef = useRef(false);
 
   const expiresAt = expiresDate ? `${expiresDate}T${expiresTime || "23:00"}` : "";
@@ -45,12 +55,17 @@ export default function NotificationsPage() {
     const trente = new Date(); trente.setDate(trente.getDate() - 30);
     getDocs(query(collection(db, "clients"), where("marchand_id", "==", user.uid))).then(snap => {
       let actifs = 0, inactifs = 0;
+      const list: ClientItem[] = [];
       snap.docs.forEach(d => {
-        const dv = (d.data().derniere_visite?.seconds || 0) * 1000;
+        const data = d.data();
+        const dv = (data.derniere_visite?.seconds || 0) * 1000;
         if (dv >= trente.getTime()) actifs++;
         else if (dv > 0) inactifs++;
+        list.push({ id: d.id, prenom: data.prenom || "", nom: data.nom || "", telephone: data.telephone || "" });
       });
+      list.sort((a, b) => `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`, "fr"));
       setSegmentCounts({ tous: snap.size, actifs, inactifs });
+      setClientList(list);
     });
   }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -87,7 +102,7 @@ export default function NotificationsPage() {
       const res = await fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body, segment, marchandId: user.uid, idToken, logoUrl: mn.logo_url || null, expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null }),
+        body: JSON.stringify({ title, body, segment, clientIds: segment === "manuel" ? Array.from(selectedIds) : undefined, marchandId: user.uid, idToken, logoUrl: mn.logo_url || null, expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -107,8 +122,8 @@ export default function NotificationsPage() {
   const mn = marchand as Record<string, unknown>;
   const charTitle = title.length;
   const charBody = body.length;
-  const canSend = title.trim().length > 0 && body.trim().length > 0 && expiresDate.length > 0;
-  const count = segmentCounts?.[segment] ?? null;
+  const canSend = title.trim().length > 0 && body.trim().length > 0 && expiresDate.length > 0 && (segment !== "manuel" || selectedIds.size > 0);
+  const count = segment === "manuel" ? selectedIds.size : (segmentCounts?.[segment as "tous" | "actifs" | "inactifs"] ?? null);
 
   const TEMPLATES: { label: string; icon: React.ReactNode; title: string; body: string }[] = [
     {
@@ -222,20 +237,84 @@ export default function NotificationsPage() {
           {/* Segment */}
           <div className="rounded-2xl p-4" style={{ background: "var(--glass-bg)", border: "1px solid var(--border)" }}>
             <div style={{ display: "flex", background: "rgba(0,0,0,0.06)", borderRadius: 10, padding: 3, marginBottom: 12 }}>
-              {(["tous", "actifs", "inactifs"] as Segment[]).map(id => (
-                <button key={id} onClick={() => setSegment(id)}
-                  style={{ flex: 1, padding: "7px 4px", borderRadius: 8, fontSize: 12, fontWeight: segment === id ? 600 : 400, background: segment === id ? "#FFFFFF" : "transparent", color: segment === id ? "var(--fg)" : "var(--fg-tertiary)", border: "none", cursor: "pointer", boxShadow: segment === id ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s", whiteSpace: "nowrap" }}>
-                  {id === "tous" ? "Tous" : id === "actifs" ? "Actifs" : "Inactifs"}
-                  {" "}
-                  <span key={segmentCounts?.[id] ?? "loading"} style={{ opacity: 0.7, animation: "fade-in 0.2s ease" }}>
-                    ({segmentCounts === null ? "…" : segmentCounts[id]})
-                  </span>
+              {(["tous", "actifs", "inactifs", "manuel"] as Segment[]).map(id => (
+                <button key={id} onClick={() => { setSegment(id); if (id !== "manuel") setSelectedIds(new Set()); setClientSearch(""); }}
+                  style={{ flex: 1, padding: "7px 2px", borderRadius: 8, fontSize: 11, fontWeight: segment === id ? 600 : 400, background: segment === id ? "#FFFFFF" : "transparent", color: segment === id ? "var(--fg)" : "var(--fg-tertiary)", border: "none", cursor: "pointer", boxShadow: segment === id ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s", whiteSpace: "nowrap" }}>
+                  {id === "tous" ? "Tous" : id === "actifs" ? "Actifs" : id === "inactifs" ? "Inactifs" : "Manuel"}
+                  {id !== "manuel" && (
+                    <> <span style={{ opacity: 0.7 }}>({segmentCounts === null ? "…" : segmentCounts[id as "tous"|"actifs"|"inactifs"]})</span></>
+                  )}
                 </button>
               ))}
             </div>
-            <p style={{ fontSize: 12, color: "var(--fg-tertiary)" }}>
-              {segment === "tous" ? "Tous les porteurs de la carte" : segment === "actifs" ? t.notif_segment_active_desc : t.notif_segment_inactive_desc}
-            </p>
+            {segment !== "manuel" && (
+              <p style={{ fontSize: 12, color: "var(--fg-tertiary)" }}>
+                {segment === "tous" ? "Tous les porteurs de la carte" : segment === "actifs" ? t.notif_segment_active_desc : t.notif_segment_inactive_desc}
+              </p>
+            )}
+
+            {/* Sélection manuelle */}
+            {segment === "manuel" && (() => {
+              const filtered = clientList.filter(c =>
+                !clientSearch || `${c.prenom} ${c.nom} ${c.telephone}`.toLowerCase().includes(clientSearch.toLowerCase())
+              );
+              const allSelected = filtered.length > 0 && filtered.every(c => selectedIds.has(c.id));
+              return (
+                <div>
+                  {/* Barre recherche + tout sélectionner */}
+                  <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                    <div style={{ position: "relative", flex: 1 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" strokeLinecap="round" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Rechercher un client…"
+                        value={clientSearch}
+                        onChange={e => setClientSearch(e.target.value)}
+                        style={{ width: "100%", paddingLeft: 30, paddingRight: 10, paddingTop: 7, paddingBottom: 7, borderRadius: 8, fontSize: 12, background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)", outline: "none", boxSizing: "border-box" }}
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (allSelected) {
+                          setSelectedIds(prev => { const s = new Set(prev); filtered.forEach(c => s.delete(c.id)); return s; });
+                        } else {
+                          setSelectedIds(prev => { const s = new Set(prev); filtered.forEach(c => s.add(c.id)); return s; });
+                        }
+                      }}
+                      style={{ padding: "7px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600, background: allSelected ? "rgba(47,123,255,0.08)" : "var(--bg)", border: `1px solid ${allSelected ? "var(--accent)" : "var(--border)"}`, color: allSelected ? "var(--accent)" : "var(--fg-secondary)", cursor: "pointer", whiteSpace: "nowrap" }}>
+                      {allSelected ? "Tout désélect." : "Tout sélect."}
+                    </button>
+                  </div>
+
+                  {/* Liste clients */}
+                  <div style={{ maxHeight: 220, overflowY: "auto", borderRadius: 8, border: "1px solid var(--border)" }}>
+                    {filtered.length === 0 ? (
+                      <p style={{ fontSize: 12, color: "var(--fg-tertiary)", textAlign: "center", padding: "16px 0" }}>Aucun client</p>
+                    ) : filtered.map((c, i) => {
+                      const sel = selectedIds.has(c.id);
+                      return (
+                        <button key={c.id} onClick={() => setSelectedIds(prev => { const s = new Set(prev); sel ? s.delete(c.id) : s.add(c.id); return s; })}
+                          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", background: sel ? "rgba(47,123,255,0.06)" : "transparent", border: "none", borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none", cursor: "pointer", textAlign: "left" }}>
+                          <div style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${sel ? "var(--accent)" : "var(--border)"}`, background: sel ? "var(--accent)" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.1s" }}>
+                            {sel && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                          </div>
+                          <span style={{ fontSize: 13, color: "var(--fg)", fontWeight: sel ? 600 : 400 }}>{c.prenom} {c.nom}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Compteur */}
+                  {selectedIds.size > 0 && (
+                    <p style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600, marginTop: 8 }}>
+                      {selectedIds.size} client{selectedIds.size > 1 ? "s" : ""} sélectionné{selectedIds.size > 1 ? "s" : ""}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Modèles */}
