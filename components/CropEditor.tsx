@@ -8,12 +8,13 @@ interface CropEditorProps {
   label: string;
   onCrop: (dataUrl: string) => void;
   onClose: () => void;
+  circle?: boolean;
 }
 
 const CROP_W = 520;
 
-export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, onClose }: CropEditorProps) {
-  const CROP_H = Math.round(CROP_W * targetH / targetW);
+export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, onClose, circle }: CropEditorProps) {
+  const CROP_H = circle ? CROP_W : Math.round(CROP_W * targetH / targetW);
 
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -93,6 +94,11 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
       const canvas = document.createElement("canvas");
       canvas.width = targetW; canvas.height = targetH;
       const ctx = canvas.getContext("2d")!;
+      if (circle) {
+        ctx.beginPath();
+        ctx.arc(targetW / 2, targetH / 2, targetW / 2, 0, Math.PI * 2);
+        ctx.clip();
+      }
       // Utiliser les refs pour éviter les closures périmées après l'await
       const ox = offsetRef.current.x;
       const oy = offsetRef.current.y;
@@ -102,7 +108,7 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
       const sw = CROP_W / (fitScale * s);
       const sh = CROP_H / (fitScale * s);
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      const dataUrl = canvas.toDataURL(circle ? "image/png" : "image/jpeg", circle ? undefined : 0.92);
       onCrop(dataUrl);
     } catch (e) {
       console.error("[CropEditor] Erreur recadrage:", e);
@@ -155,16 +161,32 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
               }}
             />
           )}
-          {/* Grille rule-of-thirds */}
-          {[33, 66].map(p => (
-            <div key={`v${p}`} style={{ position: "absolute", left: `${p}%`, top: 0, bottom: 0, width: 1, background: "rgba(255,255,255,0.18)", pointerEvents: "none" }}/>
-          ))}
-          {[33, 66].map(p => (
-            <div key={`h${p}`} style={{ position: "absolute", top: `${p}%`, left: 0, right: 0, height: 1, background: "rgba(255,255,255,0.18)", pointerEvents: "none" }}/>
-          ))}
+          {circle ? (
+            /* Masque circulaire — zone sombre hors du cercle + contour */
+            <svg width={CROP_W} height={CROP_H} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+              <defs>
+                <mask id="circleHole">
+                  <rect width={CROP_W} height={CROP_H} fill="white"/>
+                  <circle cx={CROP_W/2} cy={CROP_H/2} r={CROP_W/2 - 1} fill="black"/>
+                </mask>
+              </defs>
+              <rect width={CROP_W} height={CROP_H} fill="rgba(0,0,0,0.55)" mask="url(#circleHole)"/>
+              <circle cx={CROP_W/2} cy={CROP_H/2} r={CROP_W/2 - 1} fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth={2}/>
+            </svg>
+          ) : (
+            <>
+              {/* Grille rule-of-thirds */}
+              {[33, 66].map(p => (
+                <div key={`v${p}`} style={{ position: "absolute", left: `${p}%`, top: 0, bottom: 0, width: 1, background: "rgba(255,255,255,0.18)", pointerEvents: "none" }}/>
+              ))}
+              {[33, 66].map(p => (
+                <div key={`h${p}`} style={{ position: "absolute", top: `${p}%`, left: 0, right: 0, height: 1, background: "rgba(255,255,255,0.18)", pointerEvents: "none" }}/>
+              ))}
+            </>
+          )}
         </div>
-        {/* Coins */}
-        {[["0,0","top:0;left:0","0,4px,4px,0"],["100,0","top:0;right:0","0,0,4px,4px"],["0,100","bottom:0;left:0","4px,4px,0,0"],["100,100","bottom:0;right:0","4px,0,0,4px"]].map(([,pos,r]) => (
+        {/* Coins (seulement en mode rectangulaire) */}
+        {!circle && [["0,0","top:0;left:0","0,4px,4px,0"],["100,0","top:0;right:0","0,0,4px,4px"],["0,100","bottom:0;left:0","4px,4px,0,0"],["100,100","bottom:0;right:0","4px,0,0,4px"]].map(([,pos,r]) => (
           <div key={pos} style={{
             position: "absolute", width: 18, height: 18,
             border: "2.5px solid white", borderRadius: r.split(",").map(x => x+"px").join(" "),

@@ -35,6 +35,8 @@ export default function CartePage() {
   const nom = (marchand?.nom as string) || "";
   const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
   const [logoShape, setLogoShape] = useState<"square" | "round">((marchand as Record<string, unknown>)?.logo_shape as "square" | "round" || "square");
+  const [logoCircleDataUrl, setLogoCircleDataUrl] = useState<string>((marchand as Record<string, unknown>)?.logo_circle_url as string || "");
+  const [showLogoCrop, setShowLogoCrop] = useState(false);
   const [stripUrl, setStripUrl] = useState<string>((marchand?.strip_url as string) || "");
   const mn = marchand as Record<string, unknown>;
   const paliersDef = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
@@ -496,6 +498,7 @@ export default function CartePage() {
       body: JSON.stringify({
         logo_url: logoUrl,
         logo_shape: logoShape,
+        logo_circle_url: logoCircleDataUrl || null,
         strip_url: finalStripUrl,
         apple_bg_color: bgColor,
         apple_fg_color: fgAuto ? null : fgColor,
@@ -602,6 +605,7 @@ export default function CartePage() {
     try {
       const dataUrl = await resizeImage(file, 320);
       setLogoUrl(dataUrl);
+      setLogoCircleDataUrl(""); // recadrage à refaire avec le nouveau logo
       await saveMarchandFields(user, { logo_url: dataUrl });
     } catch (err: unknown) {
       console.error("[Logo] Erreur upload:", err);
@@ -774,6 +778,7 @@ export default function CartePage() {
     const m = marchand as Record<string, unknown>;
     setLogoUrl((m.logo_url as string) || "");
     setLogoShape((m.logo_shape as "square" | "round") || "square");
+    setLogoCircleDataUrl((m.logo_circle_url as string) || "");
     setStripUrl((m.strip_url as string) || "");
     setBgColor((m.apple_bg_color as string) || "#1C1C1E");
     setFgAuto(!(m.apple_fg_color));
@@ -1021,6 +1026,7 @@ export default function CartePage() {
             <AppleWalletCard
               logoUrl={logoUrl}
               logoShape={logoShape}
+              logoCircleUrl={logoCircleDataUrl || undefined}
               logoText={nom}
               stripUrl={stripUrl || undefined}
               previewCropY={rawStripUrl ? cropY : 50}
@@ -1147,6 +1153,32 @@ export default function CartePage() {
                 </button>
               ))}
             </div>
+            {/* Recadrage circulaire — affiché seulement si logo uploadé + mode rond */}
+            {logoShape === "round" && logoUrl && (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
+                {/* Préview du cercle */}
+                <div style={{ width: 52, height: 52, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "1px solid var(--border)", background: bgColor }}>
+                  <img src={logoCircleDataUrl || logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: logoCircleDataUrl ? "contain" : "cover" }} />
+                </div>
+                <button onClick={() => setShowLogoCrop(true)} style={{
+                  flex: 1, padding: "8px 0", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  border: "1px solid var(--accent)", background: "rgba(47,123,255,0.06)",
+                  color: "var(--accent)", cursor: "pointer",
+                }}>
+                  {logoCircleDataUrl ? "Modifier le recadrage" : "Recadrer dans le cercle"}
+                </button>
+              </div>
+            )}
+            {showLogoCrop && logoUrl && (
+              <CropEditor
+                imageUrl={logoUrl}
+                targetW={300} targetH={300}
+                label="Recadrer le logo — cercle"
+                circle
+                onCrop={dataUrl => { setLogoCircleDataUrl(dataUrl); setShowLogoCrop(false); }}
+                onClose={() => setShowLogoCrop(false)}
+              />
+            )}
           </Section>
 
           {/* Bannière photo — COMMUN */}

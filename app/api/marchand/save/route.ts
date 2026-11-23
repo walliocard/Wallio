@@ -96,7 +96,7 @@ export async function POST(req: Request) {
     // Profil de base (inscription)
     "telephone", "ville", "pays",
     // Carte Apple Wallet
-    "logo_url", "strip_url", "strip_raw_url",
+    "logo_url", "logo_shape", "logo_circle_url", "strip_url", "strip_raw_url",
     "apple_bg_color", "apple_fg_color", "apple_label_color",
     "apple_primary_label", "apple_reward_label", "apple_member_label",
     "apple_description", "apple_back_info",

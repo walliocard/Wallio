@@ -81,7 +81,7 @@ const ICON_29 = Buffer.from(
   "base64"
 );
 
-export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string; notifIconUrl?: string; logoShape?: "square" | "round" } & StampOverlayInput): Promise<Buffer> {
+export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string; notifIconUrl?: string; logoShape?: "square" | "round"; logoCircleUrl?: string } & StampOverlayInput): Promise<Buffer> {
   const passJson = JSON.stringify(generatePassJson(input), null, 2);
 
   const files: Record<string, Buffer> = {
@@ -92,10 +92,12 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
   };
 
   // Logo marchand = coin supérieur gauche de la carte (Apple + Google Wallet)
-  if (input.logoUrl) {
+  // Si logo_circle_url fourni (pré-recadré en cercle), il remplace logo_url pour le pass
+  const logoSrc = (input.logoShape === "round" && input.logoCircleUrl) ? input.logoCircleUrl : input.logoUrl;
+  if (logoSrc) {
     try {
       const { createCanvas, loadImage } = await import("@napi-rs/canvas");
-      const logo = await loadImage(input.logoUrl);
+      const logo = await loadImage(logoSrc);
 
       const mkLogo = async (maxW: number) => {
         const natW = logo.width || maxW;
@@ -106,19 +108,22 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         const canvas = createCanvas(logoW, logoH);
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, logoW, logoH);
-        const r = Math.round(Math.min(logoW, logoH) * (input.logoShape === "round" ? 0.5 : 0.20));
-        ctx.beginPath();
-        ctx.moveTo(r, 0);
-        ctx.lineTo(logoW - r, 0);
-        ctx.quadraticCurveTo(logoW, 0, logoW, r);
-        ctx.lineTo(logoW, logoH - r);
-        ctx.quadraticCurveTo(logoW, logoH, logoW - r, logoH);
-        ctx.lineTo(r, logoH);
-        ctx.quadraticCurveTo(0, logoH, 0, logoH - r);
-        ctx.lineTo(0, r);
-        ctx.quadraticCurveTo(0, 0, r, 0);
-        ctx.closePath();
-        ctx.clip();
+        // Si logo_circle_url fourni : déjà pré-recadré en cercle transparent, pas de clip à refaire
+        if (!input.logoCircleUrl || input.logoShape !== "round") {
+          const r = Math.round(Math.min(logoW, logoH) * (input.logoShape === "round" ? 0.5 : 0.20));
+          ctx.beginPath();
+          ctx.moveTo(r, 0);
+          ctx.lineTo(logoW - r, 0);
+          ctx.quadraticCurveTo(logoW, 0, logoW, r);
+          ctx.lineTo(logoW, logoH - r);
+          ctx.quadraticCurveTo(logoW, logoH, logoW - r, logoH);
+          ctx.lineTo(r, logoH);
+          ctx.quadraticCurveTo(0, logoH, 0, logoH - r);
+          ctx.lineTo(0, r);
+          ctx.quadraticCurveTo(0, 0, r, 0);
+          ctx.closePath();
+          ctx.clip();
+        }
         ctx.drawImage(logo, 0, 0, logoW, logoH);
         return canvas.encode("png");
       };
@@ -133,7 +138,7 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       // Fallback : logo brut sans arrondi
       console.error("[logo] rounded corners failed, using raw:", e);
       try {
-        const res = await fetch(input.logoUrl);
+        const res = await fetch(logoSrc);
         if (res.ok) {
           const buf = Buffer.from(await res.arrayBuffer());
           files["logo.png"]    = buf;

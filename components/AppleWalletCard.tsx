@@ -50,6 +50,7 @@ export interface AppleWalletCardProps {
   stampThickness?: number;
   stampLogoOpacity?: number;
   logoShape?: "square" | "round";
+  logoCircleUrl?: string;
 }
 
 export default function AppleWalletCard({
@@ -88,6 +89,7 @@ export default function AppleWalletCard({
   stampThickness = 2,
   stampLogoOpacity = 1,
   logoShape = "square",
+  logoCircleUrl,
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -136,13 +138,15 @@ export default function AppleWalletCard({
         <div style={{
           height: 24, width: 24, flexShrink: 0,
           borderRadius: logoShape === "round" ? "50%" : 5,
-          border: logoUrl ? "none" : `1px dashed ${dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
+          border: (logoUrl || logoCircleUrl) ? "none" : `1px dashed ${dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
           overflow: "hidden",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
-          {logoUrl
-            ? <img src={logoUrl} alt="" style={{ height: 24, width: 24, objectFit: "contain", display: "block" }} />
-            : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+          {logoCircleUrl && logoShape === "round"
+            ? <img src={logoCircleUrl} alt="" style={{ height: 24, width: 24, objectFit: "contain", display: "block" }} />
+            : logoUrl
+              ? <img src={logoUrl} alt="" style={{ height: 24, width: 24, objectFit: logoShape === "round" ? "cover" : "contain", display: "block" }} />
+              : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)"} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
           }
         </div>
 
