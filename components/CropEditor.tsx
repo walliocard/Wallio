@@ -24,6 +24,7 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
   const dragStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const scaleRef = useRef(1);
   const offsetRef = useRef({ x: 0, y: 0 });
+  const activePointers = useRef<Set<number>>(new Set());
 
   const fitScale = imgSize.w > 0 ? Math.max(CROP_W / imgSize.w, CROP_H / imgSize.h) : 1;
 
@@ -44,13 +45,15 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
   }, [imageUrl]);
 
   function onPointerDown(e: React.PointerEvent) {
+    activePointers.current.add(e.pointerId);
+    if (activePointers.current.size > 1) return; // pinch en cours — pas de drag
     isDragging.current = true;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragStart.current = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y };
   }
 
   function onPointerMove(e: React.PointerEvent) {
-    if (!isDragging.current) return;
+    if (!isDragging.current || activePointers.current.size > 1) return;
     const dx = e.clientX - dragStart.current.x;
     const dy = e.clientY - dragStart.current.y;
     const clamped = clamp(dragStart.current.ox + dx, dragStart.current.oy + dy, scaleRef.current);
@@ -58,7 +61,10 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
     offsetRef.current = clamped;
   }
 
-  function onPointerUp() { isDragging.current = false; }
+  function onPointerUp(e: React.PointerEvent) {
+    activePointers.current.delete(e.pointerId);
+    isDragging.current = false;
+  }
 
   function applyZoom(newScale: number, pivotX = CROP_W / 2, pivotY = CROP_H / 2) {
     newScale = Math.max(1, Math.min(4, newScale));
@@ -174,6 +180,7 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
+          onPointerLeave={onPointerUp}
           onWheel={onWheel}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
