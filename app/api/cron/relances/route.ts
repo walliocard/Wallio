@@ -83,7 +83,7 @@ export async function GET(req: Request) {
         notification: { title: `${marchand.nom} vous attend !`, body: message },
         webpush: {
           notification: { icon: logoUrl || "/wallio-instagram-profil.png", badge: "/favicon-32.png" },
-          fcmOptions: { link: "https://app.walliocard.com" },
+          fcmOptions: { link: "https://app.walliocard.com/mes-cartes" },
         },
       });
       const invalid = ["messaging/registration-token-not-registered", "messaging/invalid-registration-token"];

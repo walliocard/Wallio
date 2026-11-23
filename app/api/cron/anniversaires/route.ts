@@ -78,6 +78,15 @@ export async function GET(req: Request) {
           }
         });
       }
+      // Google Wallet : mise à jour du pass anniversaire
+      const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.walliocard.com";
+      if (client.wallet_type === "google" && client.wallet_id) {
+        fetch(`${BASE}/api/google-wallet/push-update`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ walletId: client.wallet_id }),
+        }).catch(() => {});
+      }
       traites++;
     }
 
@@ -87,7 +96,7 @@ export async function GET(req: Request) {
         notification: { title: `Joyeux anniversaire !`, body: message },
         webpush: {
           notification: { icon: logoUrl || "/wallio-instagram-profil.png", badge: "/favicon-32.png" },
-          fcmOptions: { link: "https://app.walliocard.com" },
+          fcmOptions: { link: "https://app.walliocard.com/mes-cartes" },
         },
       });
       const invalid = ["messaging/registration-token-not-registered", "messaging/invalid-registration-token"];
