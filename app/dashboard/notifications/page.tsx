@@ -145,10 +145,10 @@ export default function NotificationsPage() {
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 24, height: 24, borderRadius: 7, overflow: "hidden", background: marchand.couleur_principale || "#EEF0FF", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 24, height: 24, borderRadius: (mn.logo_shape as string) === "round" ? "50%" : 7, overflow: "hidden", background: marchand.couleur_principale || "#EEF0FF", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
             {mn.logo_url
               // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={mn.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ? <img src={(mn.logo_circle_url as string) || (mn.logo_url as string)} alt="" style={{ width: "100%", height: "100%", objectFit: (mn.logo_shape as string) === "round" ? "contain" : "cover" }} />
               : <span style={{ fontSize: 11, fontWeight: 700, color: "#4B4FD6" }}>{marchand.nom[0]?.toUpperCase()}</span>
             }
           </div>
