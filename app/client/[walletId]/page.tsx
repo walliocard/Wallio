@@ -665,12 +665,8 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
         ) : !client.choix_en_attente ? (
           <button
             onClick={() => { setCorrectionValue(client.tampons); setShowCorrectionSheet(true); }}
-            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-5 flex items-center justify-center gap-2 transition-all"
+            className="w-full py-4 rounded-2xl text-[16px] font-semibold text-white mb-5 transition-all"
             style={{ background: "var(--wallio-gradient)", boxShadow: "0 4px 18px rgba(139,92,246,0.3)" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 22h14"/><path d="M9.7 17H5l-1-5h16l-1 5h-4.7"/><path d="M12 17v-6"/>
-              <rect x="9" y="7" width="6" height="6" rx="1"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>
-            </svg>
             Modifier les tampons
           </button>
         ) : null}

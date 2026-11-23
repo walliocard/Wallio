@@ -97,6 +97,18 @@ export async function GET(
     description: m.apple_description || undefined,
     locations: m.apple_location ? [m.apple_location as { latitude: number; longitude: number; relevantText?: string }] : undefined,
     messagePush: (() => {
+      // Priorité 1 : message anniversaire si birthday_bonus actif sur ce client
+      if (client.birthday_bonus === true) {
+        const annivMsg = (m.automatisations as Record<string, unknown> | undefined)?.anniversaire as Record<string, unknown> | undefined;
+        return (annivMsg?.message as string | undefined) || "Joyeux anniversaire !";
+      }
+      // Priorité 2 : message de relance si relance_pending actif
+      if (client.relance_pending === true) {
+        const relanceMsg = (m.automatisations as Record<string, unknown> | undefined)?.relance as Record<string, unknown> | undefined;
+        const msg = relanceMsg?.message as string | undefined;
+        if (msg) return msg;
+      }
+      // Priorité 3 : message custom du marchand (non expiré)
       const msg = m.current_message as string | undefined;
       const exp = m.message_expires_at as string | undefined;
       if (!msg) return undefined;
