@@ -6,13 +6,14 @@ import { useAuth } from "@/lib/auth-context";
 import { getAuth } from "firebase/auth";
 import { formatName } from "@/lib/format";
 
-type FilterType = "tout" | "qr_gerant" | "qr_equipe" | "manuel_equipe" | "nfc_client" | "auto_validation" | "anti_doublon";
+type FilterType = "tout" | "qr_gerant" | "qr_equipe" | "manuel_equipe" | "nfc_client" | "auto_validation" | "anti_doublon" | "correction_gerant";
 
 interface Entry {
   id: string;
   client_prenom: string;
   client_nom: string;
   tampons_apres: number;
+  tampons_avant?: number;
   recompense: boolean;
   type: FilterType;
   added_by: string;
@@ -32,7 +33,8 @@ const FILTERS: { value: FilterType; label: string }[] = [
   { value: "manuel_equipe",  label: "Manuel" },
   { value: "nfc_client",     label: "NFC client" },
   { value: "auto_validation",label: "Auto" },
-  { value: "anti_doublon",   label: "Refusé" },
+  { value: "anti_doublon",      label: "Refusé" },
+  { value: "correction_gerant", label: "Correction" },
 ];
 
 const TYPE_COLORS: Record<string, { bg: string; color: string }> = {
@@ -41,7 +43,8 @@ const TYPE_COLORS: Record<string, { bg: string; color: string }> = {
   manuel_equipe:  { bg: "rgba(255,159,10,0.12)",  color: "#FF9F0A" },
   nfc_client:     { bg: "rgba(0,199,190,0.10)",   color: "#00C7BE" },
   auto_validation:{ bg: "rgba(52,199,89,0.10)",   color: "#34C759" },
-  anti_doublon:   { bg: "rgba(255,59,48,0.10)",   color: "#FF3B30" },
+  anti_doublon:      { bg: "rgba(255,59,48,0.10)",   color: "#FF3B30" },
+  correction_gerant: { bg: "rgba(255,149,0,0.10)",   color: "#FF9500" },
 };
 
 function SourceIcon({ type }: { type: string }) {
@@ -72,6 +75,12 @@ function SourceIcon({ type }: { type: string }) {
   if (type === "anti_doublon") return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round">
       <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+    </svg>
+  );
+  if (type === "correction_gerant") return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
     </svg>
   );
   return null;
@@ -311,7 +320,9 @@ export default function HistoriquePage() {
                           {/* Tampons */}
                           <div className="flex items-center gap-1.5 flex-shrink-0">
                             <span className="text-[15px] font-bold tabular-nums" style={{ color: "var(--fg)" }}>
-                              {e.tampons_apres}
+                              {e.type === "correction_gerant" && e.tampons_avant !== undefined
+                                ? `${e.tampons_avant} → ${e.tampons_apres}`
+                                : e.tampons_apres}
                             </span>
                             {hasGroup && (
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" strokeWidth="2" strokeLinecap="round"

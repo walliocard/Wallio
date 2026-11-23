@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { doc, deleteDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, deleteDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   getClientByWalletId, getMarchandById,
@@ -78,7 +78,8 @@ function VisiteBadge({ type }: { type: string }) {
     qr_gerant:      { bg: "rgba(139,92,246,0.10)",  color: "#8B5CF6", label: "QR" },
     nfc_client:     { bg: "rgba(0,199,190,0.10)",   color: "#00C7BE", label: "NFC" },
     auto_validation:{ bg: "rgba(52,199,89,0.10)",   color: "#34C759", label: "Auto" },
-    anti_doublon:   { bg: "rgba(255,59,48,0.10)",   color: "#FF3B30", label: "Refusé" },
+    anti_doublon:      { bg: "rgba(255,59,48,0.10)",   color: "#FF3B30", label: "Refusé" },
+    correction_gerant: { bg: "rgba(255,149,0,0.10)",   color: "#FF9500", label: "Correction" },
   };
   const s = styles[type] ?? { bg: "rgba(142,142,147,0.10)", color: "#8E8E93", label: "—" };
   return (
@@ -299,6 +300,18 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
     }
     const flexClear = modeRecompense === "flex" && !!(client.choix_en_attente || client.choix_fait);
     await setTampons(client.id, next, newPV, flexClear);
+    // Log dans l'historique — précise gérant ou équipe + qui
+    addDoc(collection(db, "marchands", marchand.id, "historique"), {
+      client_id: client.id,
+      client_prenom: client.prenom,
+      client_nom: client.nom || "",
+      tampons_avant: client.tampons,
+      tampons_apres: next,
+      recompense: false,
+      type: "correction_gerant",
+      added_by: marchand.nom,
+      created_at: serverTimestamp(),
+    }).catch(() => {});
     setClient(prev => prev ? {
       ...prev,
       tampons: next,

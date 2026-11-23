@@ -22,6 +22,7 @@ export async function GET(req: Request) {
           client_prenom: data.client_prenom,
           client_nom: data.client_nom,
           tampons_apres: data.tampons_apres,
+          tampons_avant: data.tampons_avant ?? undefined,
           recompense: data.recompense || false,
           type: data.type,
           added_by: data.added_by,
