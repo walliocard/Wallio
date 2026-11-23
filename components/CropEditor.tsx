@@ -40,9 +40,19 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
   useEffect(() => {
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => setImgSize({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onload = () => {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      setImgSize({ w, h });
+      // Centrer l'image dans la zone de crop (comme object-fit: cover centré)
+      const fs = Math.max(CROP_W / w, CROP_H / h);
+      const initX = (CROP_W - w * fs) / 2;
+      const initY = (CROP_H - h * fs) / 2;
+      setOffset({ x: initX, y: initY });
+      offsetRef.current = { x: initX, y: initY };
+    };
     img.src = imageUrl;
-  }, [imageUrl]);
+  }, [imageUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function onPointerDown(e: React.PointerEvent) {
     activePointers.current.add(e.pointerId);
