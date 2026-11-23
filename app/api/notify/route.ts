@@ -165,7 +165,7 @@ export async function POST(req: Request) {
       ).catch(() => {});
     }
 
-    return NextResponse.json({ sent: sent + apnsSent, failed, total: tokenDocs.length + apnsSent });
+    return NextResponse.json({ sent: allRefs.length, failed, total: allRefs.length });
   } catch (err) {
     console.error("Notify error:", err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
