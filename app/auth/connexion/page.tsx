@@ -546,7 +546,7 @@ function ConnexionInner() {
             </div>
           )}
 
-          {/* ══ ÉQUIPE — masqué sur mobile ══ */}
+          {/* ══ ÉQUIPE — Étape code ══ */}
           {mode === "equipe" && equipeStep === "code" && (
             <form onSubmit={handleValiderCode} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ textAlign: "center", marginBottom: 4 }}>
