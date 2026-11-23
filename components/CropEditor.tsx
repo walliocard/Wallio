@@ -11,9 +11,8 @@ interface CropEditorProps {
   circle?: boolean;
 }
 
-const CROP_W = 520;
-
 export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, onClose, circle }: CropEditorProps) {
+  const CROP_W = circle ? 260 : 520;
   const CROP_H = circle ? CROP_W : Math.round(CROP_W * targetH / targetW);
 
   const [scale, setScale] = useState(1);
@@ -61,20 +60,49 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
 
   function onPointerUp() { isDragging.current = false; }
 
-  function onZoomChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const newScale = Number(e.target.value);
-    // Keep crop center on same image point
-    const cx = (-offsetRef.current.x + CROP_W / 2) / (fitScale * scaleRef.current);
-    const cy = (-offsetRef.current.y + CROP_H / 2) / (fitScale * scaleRef.current);
+  function applyZoom(newScale: number, pivotX = CROP_W / 2, pivotY = CROP_H / 2) {
+    newScale = Math.max(1, Math.min(4, newScale));
+    const cx = (-offsetRef.current.x + pivotX) / (fitScale * scaleRef.current);
+    const cy = (-offsetRef.current.y + pivotY) / (fitScale * scaleRef.current);
     const clamped = clamp(
-      -(cx * fitScale * newScale) + CROP_W / 2,
-      -(cy * fitScale * newScale) + CROP_H / 2,
+      -(cx * fitScale * newScale) + pivotX,
+      -(cy * fitScale * newScale) + pivotY,
       newScale,
     );
     scaleRef.current = newScale;
     offsetRef.current = clamped;
     setScale(newScale);
     setOffset(clamped);
+  }
+
+  function onWheel(e: React.WheelEvent) {
+    e.preventDefault();
+    applyZoom(scaleRef.current * (e.deltaY > 0 ? 0.92 : 1.08));
+  }
+
+  // Pinch-to-zoom sur tablet/mobile
+  const lastPinchDist = useRef<number | null>(null);
+  function onTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 2) lastPinchDist.current = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    );
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    if (e.touches.length === 2 && lastPinchDist.current !== null) {
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      applyZoom(scaleRef.current * (dist / lastPinchDist.current));
+      lastPinchDist.current = dist;
+    }
+  }
+  function onTouchEnd() { lastPinchDist.current = null; }
+
+  function onZoomChange(e: React.ChangeEvent<HTMLInputElement>) {
+    applyZoom(Number(e.target.value));
   }
 
   async function applyCrop() {
@@ -146,6 +174,10 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
+          onWheel={onWheel}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
           {imgSize.w > 0 && (
             <img
