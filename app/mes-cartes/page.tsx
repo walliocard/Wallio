@@ -14,6 +14,7 @@ interface CardData {
   marchandId: string;
   marchandNom: string;
   logoUrl?: string;
+  logoShape?: "square" | "round";
   couleur: string;
   stampsCurrent: number;
   stampsObjective: number;
@@ -43,6 +44,7 @@ interface MarchandDiscover {
   id: string;
   nom: string;
   logoUrl?: string;
+  logoShape?: "square" | "round";
   couleur: string;
   nfc_id?: string;
   ville?: string;
@@ -121,7 +123,7 @@ export default function MesCartesPage() {
     unsubMerchantsRef.current = onSnapshot(q, snap => {
       allMerchantsRef.current = snap.docs.map(d => {
         const m = d.data();
-        return { id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined, couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id, ville: m.ville || undefined };
+        return { id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined, logoShape: (m.logo_shape as "square" | "round") || "square", couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id, ville: m.ville || undefined };
       });
       refreshMerchants();
     });
@@ -214,6 +216,7 @@ export default function MesCartesPage() {
             marchandId: client.marchand_id,
             marchandNom: (m.nom as string) || "Établissement",
             logoUrl: (m.logo_url as string) || undefined,
+            logoShape: (m.logo_shape as "square" | "round") || "square",
             couleur: (m.apple_bg_color as string) || (m.couleur_principale as string) || "#1C1C1E",
             stampsCurrent: client.tampons || 0,
             stampsObjective: (() => {
@@ -956,9 +959,9 @@ export default function MesCartesPage() {
               }}>
                 <div style={{ padding: "16px 18px", display: "flex", gap: 14, alignItems: "flex-start" }}>
                   {card?.logoUrl ? (
-                    <img src={card.logoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 12, objectFit: "contain", background: "rgba(142,155,181,0.1)", flexShrink: 0 }} />
+                    <img src={card.logoUrl} alt="" style={{ width: 40, height: 40, borderRadius: card?.logoShape === "round" ? "50%" : 12, objectFit: "contain", background: "rgba(142,155,181,0.1)", flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: card?.couleur || "#5B7CFA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: card?.logoShape === "round" ? "50%" : 12, background: card?.couleur || "#5B7CFA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{n.marchandNom[0]?.toUpperCase()}</span>
                     </div>
                   )}
@@ -1002,9 +1005,9 @@ export default function MesCartesPage() {
             <div key={m.id} className="card-appear" style={{ animationDelay: `${i * 0.06}s`, ...glass, borderRadius: 22, overflow: "hidden" }}>
               <div style={{ padding: "18px 18px 14px", display: "flex", alignItems: "center", gap: 14 }}>
                 {m.logoUrl ? (
-                  <img src={m.logoUrl} alt="" style={{ width: 48, height: 48, borderRadius: 14, objectFit: "contain", background: "rgba(142,155,181,0.1)", flexShrink: 0 }} />
+                  <img src={m.logoUrl} alt="" style={{ width: 48, height: 48, borderRadius: m.logoShape === "round" ? "50%" : 14, objectFit: "contain", background: "rgba(142,155,181,0.1)", flexShrink: 0 }} />
                 ) : (
-                  <div style={{ width: 48, height: 48, borderRadius: 14, background: m.couleur, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: m.logoShape === "round" ? "50%" : 14, background: m.couleur, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <span style={{ fontSize: 20, fontWeight: 700, color: "white" }}>{m.nom[0]?.toUpperCase()}</span>
                   </div>
                 )}
@@ -1127,8 +1130,8 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {card.logoUrl
-              ? <img src={card.logoUrl} alt="" style={{ height: 32, width: 32, borderRadius: 9, objectFit: "contain", background: "rgba(255,255,255,0.15)" }} />
-              : <div style={{ height: 32, width: 32, borderRadius: 9, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              ? <img src={card.logoUrl} alt="" style={{ height: 32, width: 32, borderRadius: card.logoShape === "round" ? "50%" : 9, objectFit: "contain", background: "rgba(255,255,255,0.15)" }} />
+              : <div style={{ height: 32, width: 32, borderRadius: card.logoShape === "round" ? "50%" : 9, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: dark ? "white" : "#1C2333" }}>{card.marchandNom[0]?.toUpperCase()}</span>
                 </div>
             }

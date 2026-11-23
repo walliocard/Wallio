@@ -410,7 +410,7 @@ export default function AccueilPage() {
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 28 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--glass-bg)", border: "1px solid var(--border)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div style={{ width: 48, height: 48, borderRadius: (m.logo_shape as string) === "round" ? "50%" : 14, background: "var(--glass-bg)", border: "1px solid var(--border)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           {m.logo_url
             // eslint-disable-next-line @next/next/no-img-element
             ? <img src={m.logo_url as string} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
