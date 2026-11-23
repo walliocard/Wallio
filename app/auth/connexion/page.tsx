@@ -272,10 +272,17 @@ function ConnexionInner() {
       if (!snap.exists()) { shake("Compte marchand introuvable. Vérifiez vos identifiants."); return; }
       await haptic("success");
       setSuccess(true);
-      await new Promise(r => setTimeout(r, 320));
-      if (typeof window !== "undefined" && "Capacitor" in window) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((window as any).Capacitor?.isNativePlatform?.()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mod = await import("@/lib/wallio-splash") as any;
+        const WallioSplash = mod.WallioSplash ?? mod.default;
+        const splash = WallioSplash.mount({ iconSrc: "/icon-pro-512.png", fallback: "home" });
+        sessionStorage.setItem("wallio_splash_pending", "1");
+        await splash.ready;
         window.location.replace("/dashboard");
       } else {
+        await new Promise(r => setTimeout(r, 320));
         router.push("/dashboard");
       }
     } catch (err: unknown) {
@@ -296,10 +303,17 @@ function ConnexionInner() {
       await signInWithCustomToken(auth, result.customToken);
       await haptic("success");
       setSuccess(true);
-      await new Promise(r => setTimeout(r, 320));
-      if (typeof window !== "undefined" && "Capacitor" in window) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((window as any).Capacitor?.isNativePlatform?.()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mod = await import("@/lib/wallio-splash") as any;
+        const WallioSplash = mod.WallioSplash ?? mod.default;
+        const splash = WallioSplash.mount({ iconSrc: "/icon-pro-512.png", fallback: "home" });
+        sessionStorage.setItem("wallio_splash_pending", "1");
+        await splash.ready;
         window.location.replace("/dashboard");
       } else {
+        await new Promise(r => setTimeout(r, 320));
         router.push("/dashboard");
       }
     } catch {

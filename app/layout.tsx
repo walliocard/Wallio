@@ -68,6 +68,8 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${geist.variable} h-full antialiased`}>
       <head>
+        {/* Couleur de fond immédiate avant tout CSS — évite le blanc pur au chargement */}
+        <style dangerouslySetInnerHTML={{ __html: `html,body{background:#F7F7FA}` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         {/* Capacitor : si app native et sur la racine /, redirige vers /dashboard avant React */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.location.pathname==='/'){window.location.replace('/dashboard');}}catch(e){}})();` }} />

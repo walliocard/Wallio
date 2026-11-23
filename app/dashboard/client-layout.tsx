@@ -137,17 +137,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   // ── Mount wallio-splash + cache splash natif ──
-  // Natif : une seule fois par lancement à froid. sessionStorage persiste pendant
-  // window.location.replace (même session WKWebView) → pas de second splash après login/logout.
+  // Natif — deux cas :
+  //   1. Lancement à froid : wallio_splash_shown absent → monte splash (cold start).
+  //   2. Après connexion : wallio_splash_pending présent (posé par la page de connexion)
+  //      → monte un nouveau splash même si wallio_splash_shown est déjà là, puis supprime
+  //      le marqueur. Évite la page blanche entre la navigation window.location.replace et
+  //      l'arrivée sur le dashboard.
   useEffect(() => {
     let gone = false;
     (async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const isNative = !!(window as any).Capacitor?.isNativePlatform?.();
+      let isPending = false;
 
       if (isNative) {
-        if (sessionStorage.getItem("wallio_splash_shown")) return;
-        sessionStorage.setItem("wallio_splash_shown", "1");
+        isPending = sessionStorage.getItem("wallio_splash_pending") === "1";
+        if (!isPending && sessionStorage.getItem("wallio_splash_shown")) return;
+        sessionStorage.removeItem("wallio_splash_pending");
+        if (!sessionStorage.getItem("wallio_splash_shown")) {
+          sessionStorage.setItem("wallio_splash_shown", "1");
+        }
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -157,8 +166,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       const splash = WallioSplash.mount({
         iconSrc: "/icon-pro-512.png",
-        fallback: "login",
-        fallbackTarget: () => document.querySelector("#login-logo"),
+        fallback: isPending ? "home" : "login",
+        fallbackTarget: isPending ? undefined : () => document.querySelector("#login-logo"),
       });
       splashRef.current = splash;
       await splash.ready;
