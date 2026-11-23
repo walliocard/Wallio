@@ -1646,6 +1646,7 @@ function CarteCreee({ client, marchand, recuperation = false, parraine = false }
           ) : (
             <AppleWalletCard
               logoUrl={logo}
+              logoShape={(marchand as Record<string, unknown>).logo_shape as "square" | "round" || "square"}
               logoText={marchand.nom}
               stripUrl={(m.strip_url as string) || undefined}
               backgroundColor={(m.apple_bg_color as string) || couleur}

@@ -522,7 +522,7 @@ function CarteView({ client, marchand, isNew }: { client: Client; marchand: Marc
               />
             ) : (
               <AppleWalletCard
-                logoUrl={logo} logoText={marchand.nom}
+                logoUrl={logo} logoShape={(m.logo_shape as "square" | "round") || "square"} logoText={marchand.nom}
                 stripUrl={(m.strip_url as string) || undefined}
                 backgroundColor={(m.apple_bg_color as string) || couleur}
                 foregroundColor={(m.apple_fg_color as string) || undefined}
