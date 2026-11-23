@@ -68,6 +68,7 @@ export async function GET(
     authToken: client.apns_auth_token,
     merchantName: m.nom,
     logoUrl: m.logo_url || undefined,
+    logoShape: (m.logo_shape as "square" | "round") || "square",
     notifIconUrl: (m.apple_icon_url as string | undefined) || undefined,
     stripUrl: m.strip_url || undefined,
     backgroundColor: m.apple_bg_color || m.couleur_principale || "#1C1C1E",

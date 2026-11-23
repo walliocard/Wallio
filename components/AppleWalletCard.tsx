@@ -49,6 +49,7 @@ export interface AppleWalletCardProps {
   stampSizePreset?: "s"|"m"|"l";
   stampThickness?: number;
   stampLogoOpacity?: number;
+  logoShape?: "square" | "round";
 }
 
 export default function AppleWalletCard({
@@ -86,6 +87,7 @@ export default function AppleWalletCard({
   stampSizePreset = "m",
   stampThickness = 2,
   stampLogoOpacity = 1,
+  logoShape = "square",
 }: AppleWalletCardProps) {
   const [qr, setQr] = useState("");
 
@@ -133,7 +135,7 @@ export default function AppleWalletCard({
         {/* Logo */}
         <div style={{
           height: 24, width: 24, flexShrink: 0,
-          borderRadius: 5,
+          borderRadius: logoShape === "round" ? "50%" : 5,
           border: logoUrl ? "none" : `1px dashed ${dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}`,
           overflow: "hidden",
           display: "flex", alignItems: "center", justifyContent: "center",

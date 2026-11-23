@@ -81,7 +81,7 @@ const ICON_29 = Buffer.from(
   "base64"
 );
 
-export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string; notifIconUrl?: string } & StampOverlayInput): Promise<Buffer> {
+export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUrl?: string; notifIconUrl?: string; logoShape?: "square" | "round" } & StampOverlayInput): Promise<Buffer> {
   const passJson = JSON.stringify(generatePassJson(input), null, 2);
 
   const files: Record<string, Buffer> = {
@@ -106,7 +106,7 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
         const canvas = createCanvas(logoW, logoH);
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, logoW, logoH);
-        const r = Math.round(Math.min(logoW, logoH) * 0.20);
+        const r = Math.round(Math.min(logoW, logoH) * (input.logoShape === "round" ? 0.5 : 0.20));
         ctx.beginPath();
         ctx.moveTo(r, 0);
         ctx.lineTo(logoW - r, 0);

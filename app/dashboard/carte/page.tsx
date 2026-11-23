@@ -34,6 +34,7 @@ export default function CartePage() {
 
   const nom = (marchand?.nom as string) || "";
   const [logoUrl, setLogoUrl] = useState<string>((marchand?.logo_url as string) || "");
+  const [logoShape, setLogoShape] = useState<"square" | "round">((marchand as Record<string, unknown>)?.logo_shape as "square" | "round" || "square");
   const [stripUrl, setStripUrl] = useState<string>((marchand?.strip_url as string) || "");
   const mn = marchand as Record<string, unknown>;
   const paliersDef = (mn?.paliers as { tampons: number; recompense: string }[]) || [];
@@ -494,6 +495,7 @@ export default function CartePage() {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
       body: JSON.stringify({
         logo_url: logoUrl,
+        logo_shape: logoShape,
         strip_url: finalStripUrl,
         apple_bg_color: bgColor,
         apple_fg_color: fgAuto ? null : fgColor,
@@ -771,6 +773,7 @@ export default function CartePage() {
   function resetToSaved() {
     const m = marchand as Record<string, unknown>;
     setLogoUrl((m.logo_url as string) || "");
+    setLogoShape((m.logo_shape as "square" | "round") || "square");
     setStripUrl((m.strip_url as string) || "");
     setBgColor((m.apple_bg_color as string) || "#1C1C1E");
     setFgAuto(!(m.apple_fg_color));
@@ -1017,6 +1020,7 @@ export default function CartePage() {
           {walletType === "apple" ? (
             <AppleWalletCard
               logoUrl={logoUrl}
+              logoShape={logoShape}
               logoText={nom}
               stripUrl={stripUrl || undefined}
               previewCropY={rawStripUrl ? cropY : 50}
@@ -1130,6 +1134,19 @@ export default function CartePage() {
             <p style={{ fontSize: 10, color: "var(--fg-tertiary)", margin: "4px 0 0" }}>
               {tr.carte_logo_hint}
             </p>
+            <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+              {(["square", "round"] as const).map(shape => (
+                <button key={shape} onClick={() => setLogoShape(shape)} style={{
+                  flex: 1, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600,
+                  border: `1px solid ${logoShape === shape ? "var(--accent)" : "var(--border)"}`,
+                  background: logoShape === shape ? "rgba(47,123,255,0.08)" : "var(--glass-bg)",
+                  color: logoShape === shape ? "var(--accent)" : "var(--fg-secondary)",
+                  cursor: "pointer", transition: "all 0.15s",
+                }}>
+                  {shape === "square" ? "Carré" : "Rond"}
+                </button>
+              ))}
+            </div>
           </Section>
 
           {/* Bannière photo — COMMUN */}
