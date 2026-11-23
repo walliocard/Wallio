@@ -310,7 +310,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onTouchEnd={e => {
               const dy = e.changedTouches[0].clientY - touchStartY.current;
               const atTop = (scrollRef.current?.scrollTop ?? 0) === 0;
-              if (dy > 70 && atTop && !refreshing) {
+              const isScrollable = (scrollRef.current?.scrollHeight ?? 0) > (scrollRef.current?.clientHeight ?? 0) + 1;
+              if (dy > 70 && atTop && isScrollable && !refreshing) {
                 setRefreshing(true);
                 setTimeout(() => window.location.reload(), 300);
               }
