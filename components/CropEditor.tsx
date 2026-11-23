@@ -76,19 +76,26 @@ export default function CropEditor({ imageUrl, targetW, targetH, label, onCrop, 
     isDragging.current = false;
   }
 
-  function applyZoom(newScale: number, pivotX = CROP_W / 2, pivotY = CROP_H / 2) {
+  function applyZoom(newScale: number) {
     newScale = Math.max(1, Math.min(4, newScale));
-    const cx = (-offsetRef.current.x + pivotX) / (fitScale * scaleRef.current);
-    const cy = (-offsetRef.current.y + pivotY) / (fitScale * scaleRef.current);
-    const clamped = clamp(
-      -(cx * fitScale * newScale) + pivotX,
-      -(cy * fitScale * newScale) + pivotY,
-      newScale,
-    );
+    // Recalculer fitScale ici pour éviter les closures périmées
+    const fs = imgSize.w > 0 ? Math.max(CROP_W / imgSize.w, CROP_H / imgSize.h) : 1;
+    if (fs <= 0 || scaleRef.current <= 0) return;
+    // Point image au centre de la zone de crop — ce point reste fixe après zoom
+    const cx = (-offsetRef.current.x + CROP_W / 2) / (fs * scaleRef.current);
+    const cy = (-offsetRef.current.y + CROP_H / 2) / (fs * scaleRef.current);
+    // Nouveau offset pour garder ce point au centre
+    const nx = -(cx * fs * newScale) + CROP_W / 2;
+    const ny = -(cy * fs * newScale) + CROP_H / 2;
+    // Clamp
+    const dw = imgSize.w * fs * newScale;
+    const dh = imgSize.h * fs * newScale;
+    const newX = Math.min(0, Math.max(nx, CROP_W - dw));
+    const newY = Math.min(0, Math.max(ny, CROP_H - dh));
     scaleRef.current = newScale;
-    offsetRef.current = clamped;
+    offsetRef.current = { x: newX, y: newY };
     setScale(newScale);
-    setOffset(clamped);
+    setOffset({ x: newX, y: newY });
   }
 
   function onWheel(e: React.WheelEvent) {
