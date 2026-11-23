@@ -1109,14 +1109,15 @@ export default function CartePage() {
           <Section label={tr.carte_logo}>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <label style={{
-                width: 52, height: 52, borderRadius: 12,
+                width: 52, height: 52, borderRadius: logoShape === "round" ? "50%" : 12,
                 border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 background: "var(--glass-bg)", cursor: uploadingLogo ? "wait" : "pointer",
+                transition: "border-radius 0.2s ease",
               }}>
                 <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo}/>
                 {logoUrl
-                  ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }}/>
+                  ? <img src={logoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: logoShape === "round" ? "cover" : "contain" }}/>
                   : <CameraIcon/>
                 }
               </label>
