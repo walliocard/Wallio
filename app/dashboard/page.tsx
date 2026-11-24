@@ -415,7 +415,7 @@ export default function AccueilPage() {
   const rewardName = (() => {
     const paliers = (m?.paliers as { tampons: number; recompense: string }[]) || [];
     if (m?.mode_recompense === "progressif" && paliers.length > 0) return paliers[0].recompense || t.dash_rewards;
-    if (m?.mode_recompense === "flex") return (m?.nom_recompense_petit as string) || t.dash_rewards;
+    if (m?.mode_recompense === "flex") return (m?.nom_recompense_grand as string) || t.dash_rewards;
     return marchand?.nom_recompense || t.dash_rewards;
   })();
 
