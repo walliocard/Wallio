@@ -420,6 +420,7 @@ export default function AccueilPage() {
   const salut = heure >= 5 && heure < 18 ? "Bonjour" : "Bonsoir";
 
   return (
+    <>
     <div>
       <CompactHeader title="Accueil" observeRef={titleRef} />
       <div className="relative px-5 md:px-8 lg:px-10 pb-36 md:pb-10 max-w-5xl" style={{ paddingTop: "calc(env(safe-area-inset-top) + 24px)" }}>
@@ -701,7 +702,6 @@ export default function AccueilPage() {
       })()}
       </div>
     </div>
-
     {/* ── Bottom sheets ──────────────────────────────────────────────────── */}
     {openSheet && (() => {
       const thisMonthStr = new Intl.DateTimeFormat("sv", { timeZone: tz }).format(new Date()).slice(0, 7);
@@ -852,5 +852,6 @@ export default function AccueilPage() {
         </div>
       );
     })()}
+    </>
   );
 }
