@@ -354,8 +354,29 @@ export default function AccueilPage() {
   }, [loading, user, router]);
 
   useEffect(() => {
-    document.body.style.overflow = openSheet ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (openSheet) {
+      const scrollY = window.scrollY;
+      document.body.dataset.sheetScrollY = String(scrollY);
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+    } else {
+      const scrollY = parseInt(document.body.dataset.sheetScrollY || "0");
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollY);
+    }
+    return () => {
+      const scrollY = parseInt(document.body.dataset.sheetScrollY || "0");
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      if (scrollY) window.scrollTo(0, scrollY);
+    };
   }, [openSheet]);
 
   if (loading || !marchand) return (
