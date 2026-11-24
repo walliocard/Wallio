@@ -727,10 +727,11 @@ export default function LandingPage() {
     @media (max-width:1024px) { .lp-nav { padding:0 24px; } }
     @media (max-width:768px) {
       .lp-nav { padding:0 20px; }
-      .hero-split { flex-direction:column!important; text-align:center; align-items:center!important; height:auto!important; padding-top:88px!important; }
+      .hero-split { flex-direction:column!important; text-align:center; align-items:stretch!important; height:auto!important; padding-top:88px!important; }
+      .hero-split > div:first-child { width:100%!important; max-width:100%!important; flex:unset!important; }
       .hero-split .hero-ctas { justify-content:center!important; }
-      .hero-img-wrap { width:100%!important; max-width:460px!important; margin:0 auto; height:auto!important; flex:unset!important; }
-      .hero-img-wrap img { max-height:46vw!important; }
+      .hero-img-wrap { width:100%!important; max-width:460px!important; margin:0 auto; height:auto!important; flex:unset!important; align-self:center!important; }
+      .hero-img-wrap img { max-height:56vw!important; }
       .nav-right { display:none!important; }
       .nav-mobile-lang { display:flex!important; }
       .nav-mobile-title { display:block!important; }
@@ -777,7 +778,7 @@ export default function LandingPage() {
     @media (max-width:480px) {
       .cards-grid { grid-template-columns:1fr!important; }
       .screens-grid { grid-template-columns:1fr!important; }
-      .hero-title { font-size:clamp(32px,10vw,52px)!important; }
+      .hero-title { font-size:clamp(26px,7vw,36px)!important; }
       .pricing-grid > div { padding:28px 22px!important; }
       .custom-feats-grid { grid-template-columns:1fr!important; }
       .feats-2col { grid-template-columns:1fr!important; }
