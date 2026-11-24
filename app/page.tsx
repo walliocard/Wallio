@@ -1106,18 +1106,19 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               1. HERO V2
           ══════════════════════════════════════════ */}
-          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FFFFFF" }}>
-            {/* Blobs périphériques — contraste avec le blanc électrique central */}
-            <div style={{ position:"absolute", width:900, height:900, borderRadius:"50%", background:"rgba(99,102,241,.22)", filter:"blur(110px)", top:-280, left:-220, pointerEvents:"none", zIndex:0 }} />
-            <div style={{ position:"absolute", width:800, height:800, borderRadius:"50%", background:"rgba(0,122,255,.16)", filter:"blur(100px)", top:-80, right:-200, pointerEvents:"none", zIndex:0 }} />
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.10)", filter:"blur(90px)", bottom:-100, right:200, pointerEvents:"none", zIndex:0 }} />
-            {/* Halo central blanc électrique */}
-            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 65% 55% at 42% 45%, #FFFFFF 0%, rgba(255,255,255,.85) 35%, transparent 75%)", pointerEvents:"none", zIndex:1 }} />
+          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#F4F3FF" }}>
+            {/* Blob bleu électrique — bas gauche */}
+            <div style={{ position:"absolute", width:1000, height:900, borderRadius:"50%", background:"rgba(37,99,235,.52)", filter:"blur(100px)", bottom:-220, left:-260, pointerEvents:"none", zIndex:0 }} />
+            {/* Blob violet — haut droit */}
+            <div style={{ position:"absolute", width:820, height:820, borderRadius:"50%", background:"rgba(124,58,237,.48)", filter:"blur(95px)", top:-280, right:-220, pointerEvents:"none", zIndex:0 }} />
+            {/* Arc lumineux violet — haut droit (effet ligne de lumière) */}
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.55)", filter:"blur(8px)", top:-180, right:-80, pointerEvents:"none", zIndex:0 }} />
+            {/* Lavande mid */}
+            <div style={{ position:"absolute", width:700, height:500, borderRadius:"50%", background:"rgba(196,181,253,.30)", filter:"blur(80px)", top:"30%", left:"25%", pointerEvents:"none", zIndex:0 }} />
+            {/* Halo blanc central intense */}
+            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 55% 50% at 44% 48%, rgba(255,255,255,.92) 0%, rgba(255,255,255,.60) 40%, transparent 72%)", pointerEvents:"none", zIndex:1 }} />
             <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:2, height:"100%" }} className="hero-split">
               <div style={{ flex:"0 0 46%", maxWidth:520, minWidth:0 }}>
-                <div className="hero-anim-1" style={{ marginBottom:28 }}>
-                  <span style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"6px 14px", background:"rgba(0,0,0,.055)", borderRadius:99, fontSize:11.5, fontWeight:600, letterSpacing:".04em", color:"#374151" }}>{t.heroBadge}</span>
-                </div>
                 <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(40px,5.5vw,72px)", fontWeight:800, lineHeight:1.0, letterSpacing:"-0.04em", color:"#09090B", marginBottom:24 }}>
                   {t.heroTitle1.split(" ").map((w,i)=>(
                     <span key={i} className="hero-word" style={{"--wd":`${0.08+i*0.065}s`} as React.CSSProperties}>{w}{" "}</span>
@@ -1161,9 +1162,15 @@ export default function LandingPage() {
                   <Image src="/google-wallet-badge.svg" alt="Google Wallet" width={110} height={34} />
                 </div>
               </div>
-              <div className="hero-img-wrap" style={{ flex:"0 0 50%", maxWidth:600, display:"flex", alignItems:"center", justifyContent:"center", height:"100%" }}>
-                <Image src="/visuels_hero_trio_transparent.webp" alt="Wallio — cartes de fidélité digitales" width={960} height={660} priority className="hero-img-enter"
-                  style={{ width:"100%", height:"auto", maxHeight:"80vh", objectFit:"contain", display:"block" }} />
+              <div className="hero-img-wrap" style={{ flex:"0 0 50%", maxWidth:600, display:"flex", alignItems:"center", justifyContent:"center", height:"100%", position:"relative" }}>
+                {/* iPhone côté client avec carte Wallet ouverte */}
+                <Image src="/iphone_client.webp" alt="Wallio — carte de fidélité dans le Wallet" width={340} height={680} priority className="hero-img-enter"
+                  style={{ width:"auto", height:"min(72vh,560px)", objectFit:"contain", display:"block", position:"relative", zIndex:1 }} />
+                {/* Carte Wallet flottante en avant-plan */}
+                <div className="hero-img-enter" style={{ position:"absolute", right:"2%", bottom:"18%", zIndex:2, transform:"rotate(7deg)", filter:"drop-shadow(0 20px 44px rgba(0,0,0,.26))" }}>
+                  <Image src="/carte_wallet_8am.png" alt="Carte de fidélité Wallio" width={230} height={145}
+                    style={{ width:230, height:"auto", borderRadius:14, display:"block" }} />
+                </div>
               </div>
             </div>
           </section>
