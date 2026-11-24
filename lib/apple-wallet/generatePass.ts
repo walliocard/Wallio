@@ -48,6 +48,7 @@ export interface PassInput {
   backInfo?: string;
   description?: string;
   messagePush?: string;
+  notifSentAt?: string;
   locations?: PassLocation[];
 }
 
@@ -99,8 +100,9 @@ export function generatePassJson(input: PassInput): object {
       ],
       auxiliaryFields,
       backFields: [
-        // Toujours présent : changeMessage ne fire que si le champ EXISTAIT déjà dans le pass précédent
-        { key: "message_push", label: "OFFRE", value: input.messagePush || "", ...(input.messagePush ? { changeMessage: "%@" } : {}) },
+        // message_push : valeur affichée au dos. notif_id change à chaque envoi → garantit la notif lock screen même si le texte est identique
+        { key: "message_push", label: "OFFRE", value: input.messagePush || "" },
+        ...(input.notifSentAt ? [{ key: "notif_id", label: "DERNIÈRE NOTIFICATION", value: (() => { try { return new Date(input.notifSentAt!).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }); } catch { return input.notifSentAt!; } })(), ...(input.messagePush ? { changeMessage: input.messagePush } : {}) }] : []),
         ...(input.backInfo ? [{ key: "info", label: "À PROPOS", value: input.backInfo }] : []),
         ...backAux,
         { key: "mes_cartes", label: "MES CARTES WALLIO", value: "https://app.walliocard.com/mes-cartes" },

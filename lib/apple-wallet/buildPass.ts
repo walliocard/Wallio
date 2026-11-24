@@ -148,10 +148,9 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
       } catch (e2) { console.error("[logo] fetch failed:", e2); }
     }
 
-    // icon.png — pour le logo rond : utilise logoCircleUrl + clip cercle (fond transparent)
-    // sinon notifIconUrl ou logoUrl avec fond couleur marchand
-    const useCircleIcon = !input.notifIconUrl && input.logoShape === "round" && !!input.logoCircleUrl;
-    const iconSrc = input.notifIconUrl || (useCircleIcon ? input.logoCircleUrl! : input.logoUrl);
+    // icon.png — utilise notifIconUrl si uploadé par le marchand, sinon logoUrl
+    // Carré 38/76/114px, fond couleur marchand, logo centré cover
+    const iconSrc = input.notifIconUrl || input.logoUrl;
     if (iconSrc) {
       try {
         const { createCanvas, loadImage } = await import("@napi-rs/canvas");
@@ -162,15 +161,8 @@ export async function buildPkpass(input: PassInput & { stripUrl?: string; logoUr
           const natH = iconImg.height || size;
           const canvas = createCanvas(size, size);
           const ctx    = canvas.getContext("2d");
-          if (useCircleIcon) {
-            ctx.clearRect(0, 0, size, size);
-            ctx.beginPath();
-            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-            ctx.clip();
-          } else {
-            ctx.fillStyle = input.backgroundColor || "#FFFFFF";
-            ctx.fillRect(0, 0, size, size);
-          }
+          ctx.fillStyle = input.backgroundColor || "#FFFFFF";
+          ctx.fillRect(0, 0, size, size);
           // Cover : remplit tout le carré, recadre si nécessaire
           const ratio = Math.max(size / natW, size / natH);
           const w = natW * ratio;

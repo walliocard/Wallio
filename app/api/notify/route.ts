@@ -33,6 +33,7 @@ export async function POST(req: Request) {
     const marchandUpdate: Record<string, unknown> = {
       current_message: notifBody,
       current_message_title: title,
+      notif_sent_at: new Date().toISOString(),
       message_expires_at: expiresAt || FieldValue.delete(),
     };
     await db.collection("marchands").doc(marchandId).set(marchandUpdate, { merge: true });

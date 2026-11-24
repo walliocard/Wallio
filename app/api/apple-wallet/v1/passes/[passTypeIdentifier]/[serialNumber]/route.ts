@@ -97,6 +97,7 @@ export async function GET(
       }
       return base || undefined;
     })(),
+    notifSentAt: (m.notif_sent_at as string | undefined) || undefined,
     description: m.apple_description || undefined,
     locations: m.apple_location ? [m.apple_location as { latitude: number; longitude: number; relevantText?: string }] : undefined,
     messagePush: (() => {
