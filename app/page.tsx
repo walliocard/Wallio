@@ -1186,7 +1186,7 @@ export default function LandingPage() {
                   <div data-stagger style={{ display:"flex", flexDirection:"column" }}>
                     {t.problemPains.map((p, i) => (
                       <div key={i} data-reveal style={{ padding:"28px 0", borderBottom: i < 2 ? ".5px solid rgba(0,0,0,.07)" : "none", display:"flex", gap:20, alignItems:"flex-start" }}>
-                        <span style={{ fontSize:11, fontWeight:700, color:"rgba(0,0,0,.18)", letterSpacing:".06em", paddingTop:5, flexShrink:0, minWidth:28 }}>0{i+1}</span>
+                        <span style={{ fontSize:11, fontWeight:700, color:"#007AFF", letterSpacing:".06em", paddingTop:5, flexShrink:0, minWidth:28 }}>0{i+1}</span>
                         <div>
                           <h3 style={{ fontSize:20, fontWeight:700, lineHeight:1.25, marginBottom:8, color: i===2 ? "#F97316" : "#09090B" }}>{p.title}</h3>
                           <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{p.body}</p>
@@ -1482,7 +1482,7 @@ export default function LandingPage() {
               <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24 }} className="steps-row">
                 {t.howSteps.map((s, i) => (
                   <div key={i} data-reveal style={{ background:"transparent", borderRadius:24, padding:"36px 32px", border:".5px solid rgba(0,0,0,.06)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
-                    <div style={{ fontSize:56, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.09)`,`rgba(91,108,246,.09)`,`rgba(249,115,22,.10)`][i], lineHeight:1, marginBottom:24 }}>{s.n}</div>
+                    <div style={{ fontSize:56, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.28)`,`rgba(91,108,246,.28)`,`rgba(249,115,22,.28)`][i], lineHeight:1, marginBottom:24 }}>{s.n}</div>
                     <h3 style={{ fontSize:17, fontWeight:700, color:"#09090B", marginBottom:12, lineHeight:1.3 }}>{s.title}</h3>
                     <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{s.body}</p>
                     <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:`linear-gradient(180deg,${["#007AFF","#5B6CF6","#F97316"][i]}, transparent)` }} />
@@ -1570,7 +1570,7 @@ export default function LandingPage() {
               </div>
               <div data-stagger style={{ display:"flex", gap:20 }} className="steps-row">
                 {t.testimonials.map((testi, i) => (
-                  <div key={i} data-reveal style={{ flex:1, background:"transparent", border:".5px solid rgba(0,0,0,.07)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
+                  <div key={i} data-reveal style={{ flex:1, background:"#FFFFFF", border:".5px solid rgba(0,0,0,.07)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", boxShadow:"0 2px 16px rgba(0,0,0,.04)", borderTop:`2px solid ${["#007AFF","#8B5CF6","#F97316"][i]}` }}>
                     <div style={{ display:"flex", gap:3, marginBottom:18 }}>
                       {[0,1,2,3,4].map(s => ( <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F97316"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ))}
                     </div>
@@ -1605,8 +1605,8 @@ export default function LandingPage() {
               <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20, marginBottom:52 }} className="feats-2col">
                 {t.accomSteps.map((s, i) => (
                   <div key={i} style={{ background:"transparent", borderRadius:20, padding:"32px 28px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
-                    <div style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:"rgba(0,122,255,.09)", lineHeight:1, marginBottom:18 }}>{s.n}</div>
-                    <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:"linear-gradient(180deg,#007AFF, transparent)" }} />
+                    <div style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.28)`,`rgba(91,108,246,.28)`,`rgba(249,115,22,.28)`,`rgba(52,199,89,.28)`][i], lineHeight:1, marginBottom:18 }}>{s.n}</div>
+                    <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:`linear-gradient(180deg,${["#007AFF","#5B6CF6","#F97316","#34C759"][i]}, transparent)` }} />
                     <h3 style={{ fontSize:16.5, fontWeight:700, color:"#09090B", marginBottom:10, lineHeight:1.3 }}>{s.title}</h3>
                     <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{s.body}</p>
                   </div>
@@ -1699,9 +1699,9 @@ export default function LandingPage() {
                 {t.faqs.map((f, i) => (
                   <div key={i} className="faq-item" data-reveal>
                     <button className="faq-btn" onClick={() => setOpenFaq(openFaq===i ? null : i)}>
-                      <span className="faq-q" style={{ fontSize:16, fontWeight:600, color:"#09090B", lineHeight:1.4, transition:"color .15s" }}>{f.q}</span>
+                      <span className="faq-q" style={{ fontSize:16, fontWeight:600, color: openFaq===i ? "#007AFF" : "#09090B", lineHeight:1.4, transition:"color .15s" }}>{f.q}</span>
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink:0, transition:"transform .25s", transform: openFaq===i ? "rotate(45deg)" : "none" }}>
-                        <path d="M10 4v12M4 10h12" stroke="#8E8E93" strokeWidth="1.6" strokeLinecap="round"/>
+                        <path d="M10 4v12M4 10h12" stroke={openFaq===i ? "#007AFF" : "#8E8E93"} strokeWidth="1.6" strokeLinecap="round"/>
                       </svg>
                     </button>
                     <div style={{ overflow:"hidden", maxHeight: openFaq===i ? 400 : 0, transition:"max-height .3s cubic-bezier(.4,0,.2,1)", paddingBottom: openFaq===i ? 24 : 0 }}>
