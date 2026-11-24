@@ -26,7 +26,7 @@ const T = {
     heroBadge: "Apple Wallet · Google Wallet · NFC · QR Code",
     heroTitle1: "Vos habitués ne devraient pas",
     heroTitle2: "être des inconnus.",
-    heroSub: "Wallio crée une carte de fidélité digitale pour chaque client qui scanne votre QR code ou approche son téléphone du tag NFC. Elle atterrit dans son Apple ou Google Wallet. Sans application à installer, ni pour vous ni pour lui.",
+    heroSub: "Wallio met votre carte de fidélité dans le téléphone de vos clients. Un scan au comptoir, un tampon à chaque visite, et vous savez enfin qui revient.",
     heroCta1: "Découvrir sur WhatsApp",
     heroCta2: "Connexion",
     heroWa: "Bonjour, je souhaite découvrir Wallio pour mon commerce.",
@@ -208,7 +208,7 @@ const T = {
     heroBadge: "Apple Wallet · Google Wallet · NFC · QR Code",
     heroTitle1: "Your regulars shouldn't",
     heroTitle2: "be strangers.",
-    heroSub: "Wallio automatically creates a digital loyalty card for every customer who scans your QR code or taps your NFC tag. It lands in their Apple or Google Wallet. No app to install, for you or for them.",
+    heroSub: "Wallio puts your loyalty card straight onto your customers' phones. One scan at the counter, one stamp per visit — and you finally know who keeps coming back.",
     heroCta1: "Discover on WhatsApp",
     heroCta2: "Sign in",
     heroWa: "Hello, I'd like to discover Wallio for my business.",
@@ -390,7 +390,7 @@ const T = {
     heroBadge: "Apple Wallet · Google Wallet · NFC · QR Code",
     heroTitle1: "Clienții fideli nu ar trebui",
     heroTitle2: "să fie străini.",
-    heroSub: "Wallio creează automat un card de fidelitate digital pentru fiecare client care scanează codul QR sau apropie telefonul de tag-ul NFC. Cardul ajunge în Apple sau Google Wallet, fără nicio aplicație de instalat.",
+    heroSub: "Wallio pune cardul de fidelitate direct pe telefonul clienților dvs. Un scan la tejghea, o ștampilă la fiecare vizită, și știți în sfârșit cine revine.",
     heroCta1: "Descoperiți pe WhatsApp",
     heroCta2: "Autentificare",
     heroWa: "Bună ziua, doresc să descopăr Wallio pentru afacerea mea.",
@@ -1061,13 +1061,13 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FFFFFF" }}>
             {/* Glow bleu électrique — bas gauche */}
-            <div style={{ position:"absolute", width:860, height:860, borderRadius:"50%", background:"rgba(37,99,235,.60)", filter:"blur(78px)", bottom:-220, left:-180, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:860, height:860, borderRadius:"50%", background:"rgba(37,99,235,.30)", filter:"blur(78px)", bottom:-220, left:-180, pointerEvents:"none", zIndex:0 }} />
             {/* Glow violet — haut droit */}
-            <div style={{ position:"absolute", width:780, height:780, borderRadius:"50%", background:"rgba(124,58,237,.55)", filter:"blur(78px)", top:-200, right:-180, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:780, height:780, borderRadius:"50%", background:"rgba(124,58,237,.28)", filter:"blur(78px)", top:-200, right:-180, pointerEvents:"none", zIndex:0 }} />
             {/* Violet moyen — bas droit */}
-            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(167,139,250,.28)", filter:"blur(65px)", bottom:-60, right:80, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(167,139,250,.14)", filter:"blur(65px)", bottom:-60, right:80, pointerEvents:"none", zIndex:0 }} />
             {/* Arc lumineux haut droit */}
-            <div style={{ position:"absolute", width:520, height:520, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.65)", filter:"blur(7px)", top:-80, right:-20, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:520, height:520, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.35)", filter:"blur(7px)", top:-80, right:-20, pointerEvents:"none", zIndex:0 }} />
             {/* Blanc pur central — contraste électrique */}
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 68% 58% at 38% 44%, #FFFFFF 0%, rgba(255,255,255,.95) 32%, rgba(255,255,255,.55) 58%, transparent 78%)", pointerEvents:"none", zIndex:1 }} />
             {/* Transition bas vers page */}
@@ -1086,40 +1086,40 @@ export default function LandingPage() {
                   </span>
                 </h1>
                 <p className="hero-anim-3" style={{ fontSize:17, lineHeight:1.72, color:"#6B7280", maxWidth:460, marginBottom:20 }}>{t.heroSub}</p>
-                <div className="hero-anim-3" style={{ marginBottom:32 }}>
-                  <span style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"6px 14px", background:"rgba(0,122,255,.09)", borderRadius:99, fontSize:12.5, fontWeight:600, color:"#007AFF" }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    {t.heroNoBadge}
-                  </span>
+                <div className="hero-anim-3" style={{ display:"flex", gap:16, flexWrap:"wrap", marginBottom:32 }}>
+                  {(lang==="ro" ? ["Fără aplicație","Fără echipament","Gata în 1 oră"] : lang==="en" ? ["No app","No equipment","Ready in 1 hour"] : ["Sans application","Sans matériel","Prêt en 1 heure"]).map((item,i) => (
+                    <span key={i} style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:13, fontWeight:500, color:"#374151" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {item}
+                    </span>
+                  ))}
                 </div>
                 <div className="hero-anim-4 hero-ctas" style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:40 }}>
                   <a href={heroWA} target="_blank" rel="noopener noreferrer" className="btn-wa">
                     <svg width="17" height="17" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
                     {t.heroCta1}
                   </a>
-                  <Link href="/choisir" className="btn-ghost">{t.heroCta2}</Link>
+                  <a href="#comment" style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:15, fontWeight:600, color:"#374151", textDecoration:"none", padding:"10px 4px" }}>
+                    {lang==="ro" ? "Cum funcționează" : lang==="en" ? "See how it works" : "Voir comment ça marche"} →
+                  </a>
                 </div>
-                <div className="hero-anim-5" style={{ display:"flex", gap:28, marginBottom:32 }}>
-                  {[
-                    { v:"200+", l: lang==="ro" ? "carduri active" : lang==="en" ? "active cards" : "cartes actives", c:"#007AFF" },
-                    { v:"< 1s", l: lang==="ro" ? "per ștampilă" : lang==="en" ? "per stamp" : "par tampon", c:"#8B5CF6" },
-                    { v:"1h", l: lang==="ro" ? "lansare" : lang==="en" ? "to go live" : "pour lancer", c:"#F97316" },
-                  ].map(s=>(
-                    <div key={s.v}>
-                      <div style={{ fontSize:26, fontWeight:800, color:s.c, letterSpacing:-1, lineHeight:1 }}>{s.v}</div>
-                      <div style={{ fontSize:12, color:"#9CA3AF", marginTop:3 }}>{s.l}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="hero-anim-5" style={{ display:"flex", alignItems:"center", gap:16, opacity:.6 }}>
-                  <Image src="/apple-wallet-badge.svg" alt="Apple Wallet" width={110} height={34} />
-                  <div style={{ width:.5, height:24, background:"rgba(0,0,0,.18)" }} />
-                  <Image src="/google-wallet-badge.svg" alt="Google Wallet" width={110} height={34} />
+                <div className="hero-anim-5" style={{ display:"flex", alignItems:"center", gap:14 }}>
+                  <div style={{ display:"flex" }}>
+                    {["/logo-8am.jpg","/logo-maison-matcha.png","/logo-yumi.jpg","/logo-comptoir-homme.jpg"].map((src,i) => (
+                      <div key={src} style={{ width:34, height:34, borderRadius:"50%", border:"2px solid #FFFFFF", overflow:"hidden", marginLeft:i===0?0:-10, background:"#F5F5F7", flexShrink:0 }}>
+                        <Image src={src} alt="" width={34} height={34} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#09090B", lineHeight:1.3 }}>8AM, Maison Matcha, Yumi, Comptoir...</div>
+                    <div style={{ fontSize:12, color:"#6B7280" }}>{lang==="ro" ? "folosesc deja Wallio" : lang==="en" ? "already use Wallio" : "font déjà revenir leurs clients"}</div>
+                  </div>
                 </div>
               </div>
-              <div className="hero-img-wrap" style={{ flex:"0 0 50%", maxWidth:600, display:"flex", alignItems:"center", justifyContent:"center", height:"100%", position:"relative" }}>
-                <Image src="/wallio_hero_mobile_transparent.webp" alt="Wallio — cartes de fidélité et dashboard gérant" width={900} height={900} priority className="hero-img-enter"
-                  style={{ width:"100%", height:"auto", maxHeight:"82vh", objectFit:"contain", display:"block" }} />
+              <div className="hero-img-wrap" style={{ flex:"0 0 54%", maxWidth:680, display:"flex", alignItems:"center", justifyContent:"center", height:"100%", position:"relative" }}>
+                <Image src="/wallio_hero_ordinateur_transparent.webp" alt="Wallio — cartes de fidélité et dashboard gérant" width={1200} height={900} priority className="hero-img-enter"
+                  style={{ width:"100%", height:"auto", maxHeight:"88vh", objectFit:"contain", display:"block" }} />
               </div>
             </div>
           </section>
