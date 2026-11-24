@@ -369,62 +369,82 @@ export default function AdminPage() {
     catch { setMarchands(prev => prev.map(x => x.id === m.id ? m : x)); setSelected(m); }
     setUpdatingAbo(false);
   }
+  // iOS Safari ignore l'attribut download sur les blob/data URLs — ouvrir dans un nouvel onglet à la place
+  function iosWin() {
+    const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    return ios ? window.open("", "_blank") : null;
+  }
+  function triggerDownload(win: Window | null, dataUri: string, filename: string) {
+    if (win) {
+      if (dataUri.startsWith("data:image")) {
+        win.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#1c1c1e;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${dataUri}" style="max-width:100%;height:auto"></body></html>`);
+        win.document.close();
+      } else {
+        win.location.href = dataUri;
+      }
+    } else {
+      const a = document.createElement("a");
+      a.download = filename; a.href = dataUri;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+  }
+
   async function telechargerCarte(m: Marchand) {
     if (!m.nfc_id) return;
     setDownloadingCard(true);
+    const win = iosWin();
     const canvas = document.createElement("canvas");
     const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
     const scale = cardFormat === "A6" ? 2.1 : 3;
     await drawPrintCard(canvas, `https://app.walliocard.com/nfc/${m.nfc_id}`, scale, lang);
-    const a = document.createElement("a");
-    a.download = `wallio-carte-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
-    a.href = canvas.toDataURL("image/png"); a.click();
+    const fn = `wallio-carte-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
+    triggerDownload(win, canvas.toDataURL("image/png"), fn);
     setDownloadingCard(false);
   }
   async function telechargerCarteQR(m: Marchand) {
     setDownloadingQR(true);
+    const win = iosWin();
     const canvas = document.createElement("canvas");
     const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
     const url = m.nfc_id ? `https://app.walliocard.com/nfc/${m.nfc_id}` : "https://app.walliocard.com";
     const scale = cardFormat === "A6" ? 2.1 : 3;
     await drawPrintCardQROnly(canvas, url, scale, lang);
-    const a = document.createElement("a");
-    a.download = `wallio-qr-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
-    a.href = canvas.toDataURL("image/png"); a.click();
+    const fn = `wallio-qr-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
+    triggerDownload(win, canvas.toDataURL("image/png"), fn);
     setDownloadingQR(false);
   }
   async function telechargerCarteNFC(m: Marchand) {
     setDownloadingNFC(true);
+    const win = iosWin();
     const canvas = document.createElement("canvas");
     const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
     const scale = cardFormat === "A6" ? 2.1 : 3;
     await drawPrintCardNFCOnly(canvas, scale, lang);
-    const a = document.createElement("a");
-    a.download = `wallio-nfc-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
-    a.href = canvas.toDataURL("image/png"); a.click();
+    const fn = `wallio-nfc-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
+    triggerDownload(win, canvas.toDataURL("image/png"), fn);
     setDownloadingNFC(false);
   }
   async function telechargerCarteInscription(m: Marchand) {
     if (!m.nfc_id) return;
     setDownloadingIns(true);
+    const win = iosWin();
     const canvas = document.createElement("canvas");
     const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
     const scale = cardFormat === "A6" ? 2.1 : 3;
     await drawPrintCard(canvas, `https://app.walliocard.com/cartes/${m.nfc_id}`, scale, lang, true);
-    const a = document.createElement("a");
-    a.download = `wallio-carte-inscription-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
-    a.href = canvas.toDataURL("image/png"); a.click();
+    const fn = `wallio-carte-inscription-${cardFormat.toLowerCase()}-${slugify(m.nom || m.id)}.png`;
+    triggerDownload(win, canvas.toDataURL("image/png"), fn);
     setDownloadingIns(false);
   }
   async function telechargerQRInscription(m: Marchand) {
     if (!m.nfc_id) return;
     setDownloadingIns(true);
+    const win = iosWin();
     const canvas = document.createElement("canvas");
     const lang = ((m as Record<string, unknown>).langue as "fr" | "ro" | "es") || "fr";
     await drawPrintCardQROnly(canvas, `https://app.walliocard.com/cartes/${m.nfc_id}`, 2.1, lang, true);
-    const a = document.createElement("a");
-    a.download = `wallio-qr-inscription-a6-${slugify(m.nom || m.id)}.png`;
-    a.href = canvas.toDataURL("image/png"); a.click();
+    const fn = `wallio-qr-inscription-a6-${slugify(m.nom || m.id)}.png`;
+    triggerDownload(win, canvas.toDataURL("image/png"), fn);
     setDownloadingIns(false);
   }
   async function creerMarchand() {
@@ -488,6 +508,7 @@ export default function AdminPage() {
   }
 
   async function downloadPDF(html: string, filename: string) {
+    const win = iosWin();
     const { default: jsPDF } = await import("jspdf");
     const { default: html2canvas } = await import("html2canvas");
     const parsed = new DOMParser().parseFromString(html, "text/html");
@@ -519,7 +540,7 @@ export default function AdminPage() {
         pdf.addImage(pc.toDataURL("image/jpeg", 0.93), "JPEG", 0, 0, A4W, A4H);
         y += pageHpx; page++;
       }
-      pdf.save(`${filename}.pdf`);
+      triggerDownload(win, pdf.output("bloburl") as string, `${filename}.pdf`);
     } finally {
       document.body.removeChild(wrap);
     }
