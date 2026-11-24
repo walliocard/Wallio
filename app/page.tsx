@@ -1212,7 +1212,7 @@ export default function LandingPage() {
                   <div data-reveal className="sec-head">
                     <span className="stag">{t.problemTag}</span>
                     <h2 style={{ fontSize:"clamp(36px,4.5vw,62px)", fontWeight:800, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.0, marginBottom:28 }}>
-                      {t.problemTitle1}<br /><span className="grad">{t.problemTitle2}</span>
+                      {t.problemTitle1}<br />{t.problemTitle2}
                     </h2>
                     <p style={{ fontSize:15, color:"#6B7280", lineHeight:1.75, maxWidth:320 }}>
                       {lang==="ro" ? "Clienții fideli sunt invizibili. Nu știți cine vine, cine pleacă, nici cum să îi aduceți înapoi." :
@@ -1250,7 +1250,7 @@ export default function LandingPage() {
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:72 }}>
                 <span className="stag">{t.howTag}</span>
                 <h2 style={{ fontSize:"clamp(34px,4vw,56px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
-                  {t.howTitle}<br /><span className="grad">{t.howTitle2}</span>
+                  {t.howTitle}<br />{t.howTitle2}
                 </h2>
                 <p style={{ fontSize:16.5, color:"#6B7280", marginTop:14, maxWidth:420, lineHeight:1.65 }}>{t.howSub}</p>
               </div>
@@ -1290,7 +1290,7 @@ export default function LandingPage() {
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
                 <span className="stag">{t.clientTag}</span>
                 <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
-                  {t.clientTitle}<br /><span className="grad">{t.clientTitle2}</span>
+                  {t.clientTitle}<br />{t.clientTitle2}
                 </h2>
                 <p style={{ fontSize:16, color:"#6B7280", lineHeight:1.7, maxWidth:520 }}>{t.clientSub}</p>
               </div>
@@ -1357,7 +1357,7 @@ export default function LandingPage() {
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.rewardTag}</span>
                 <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", marginBottom:14 }}>
-                  {t.rewardTitle}<br /><span className="grad">{t.rewardTitle2}</span>
+                  {t.rewardTitle}<br />{t.rewardTitle2}
                 </h2>
                 <p style={{ fontSize:16, color:"#6B7280", maxWidth:440, margin:"0 auto" }}>{t.rewardSub}</p>
               </div>
@@ -1449,7 +1449,7 @@ export default function LandingPage() {
               <div data-reveal="scale" className="sec-head sec-head-dark" style={{ marginBottom:60 }}>
                 <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.outilsTag}</span>
                 <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#FFFFFF", lineHeight:1.05, marginBottom:14 }}>
-                  {t.outilsTitle}<br /><span className="grad">{t.outilsTitle2}</span>
+                  {t.outilsTitle}<br />{t.outilsTitle2}
                 </h2>
                 <p style={{ fontSize:16, color:"rgba(255,255,255,.45)", lineHeight:1.7, maxWidth:520 }}>{t.outilsSub}</p>
               </div>
@@ -1546,7 +1546,7 @@ export default function LandingPage() {
                 <div style={{ marginBottom:32 }}>
                   <span className="stag" style={{ background:"rgba(255,255,255,.08)", color:"rgba(255,255,255,.60)", marginBottom:12 }}>{t.teamTag}</span>
                   <h3 style={{ fontSize:"clamp(22px,2.5vw,32px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", marginBottom:10 }}>
-                    {t.teamTitle} <span className="grad">{t.teamTitle2}</span>
+                    {t.teamTitle} {t.teamTitle2}
                   </h3>
                   <p style={{ fontSize:15, color:"rgba(255,255,255,.40)", maxWidth:520 }}>{t.teamSub}</p>
                 </div>
@@ -1577,7 +1577,7 @@ export default function LandingPage() {
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:60 }}>
                 <span className="stag">{t.customTag}</span>
                 <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
-                  {t.customTitle}<br /><span className="grad">{t.customTitle2}</span>
+                  {t.customTitle}<br />{t.customTitle2}
                 </h2>
                 <p style={{ fontSize:16, color:"#6B7280", marginTop:14, maxWidth:440 }}>{t.customSub}</p>
               </div>
@@ -1649,7 +1649,7 @@ export default function LandingPage() {
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:64 }}>
                 <span className="stag">{t.accomTag}</span>
                 <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
-                  {t.accomTitle}<br /><span className="grad">{t.accomTitle2}</span>
+                  {t.accomTitle}<br />{t.accomTitle2}
                 </h2>
                 <p style={{ fontSize:16, color:"#6B7280", lineHeight:1.7, maxWidth:520 }}>{t.accomSub}</p>
               </div>
