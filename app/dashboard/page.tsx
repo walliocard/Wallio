@@ -755,10 +755,7 @@ export default function AccueilPage() {
 
       return (
         <div className="fixed inset-0 z-50 flex items-end" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)" }} onClick={() => setOpenSheet(null)}>
-          <div className="w-full" style={{ background: "var(--bg)", borderRadius: "24px 24px 0 0", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "max(20px, env(safe-area-inset-bottom))", maxHeight: "70vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
-
-            {/* Poignée */}
-            <div style={{ width: 36, height: 4, background: "var(--border)", borderRadius: 2, margin: "14px auto 0" }} />
+          <div className="w-full" style={{ background: "var(--bg)", borderRadius: "24px 24px 0 0", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "calc(var(--tab-h, 49px) + env(safe-area-inset-bottom, 0px) + 12px)", maxHeight: "70vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
 
             {/* Header */}
             <div style={{ padding: "16px 20px 0", display: "flex", alignItems: "baseline", gap: 8 }}>
@@ -767,7 +764,7 @@ export default function AccueilPage() {
             </div>
 
             {/* Contenu scrollable */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "8px 20px 0" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "8px 20px 0", overscrollBehavior: "contain" }}>
 
               {/* Visites */}
               {openSheet === "visites" && (
@@ -799,7 +796,7 @@ export default function AccueilPage() {
                 <>
                   {clientsRows.length === 0
                     ? <p style={{ fontSize: 13, color: "var(--fg-tertiary)", textAlign: "center", padding: "20px 0" }}>Aucun client</p>
-                    : clientsRows.map(c => <RowItem key={c.id} prenom={c.prenom} nom={c.nom} sub={c.date_inscription ? c.date_inscription.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : undefined} right={`${c.tampons} 🟣`} />)
+                    : clientsRows.map(c => <RowItem key={c.id} prenom={c.prenom} nom={c.nom} sub={c.date_inscription ? c.date_inscription.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : undefined} right={`${c.tampons} tampon${c.tampons > 1 ? "s" : ""}`} />)
                   }
                 </>
               )}
