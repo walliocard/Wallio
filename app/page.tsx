@@ -890,6 +890,11 @@ export default function LandingPage() {
     .check-icon { width:18px; height:18px; border-radius:50%; display:flex; align-items:center;
       justify-content:center; flex-shrink:0; background:rgba(0,122,255,.10); }
 
+    /* Fil continu — ligne de gradient avant chaque header de section */
+    .sec-head { display:flex; flex-direction:column; }
+    .sec-head::before { content:''; display:block; width:2px; height:40px; background:linear-gradient(180deg,transparent,rgba(0,122,255,.55)); border-radius:2px; margin-bottom:16px; }
+    .sec-head-dark::before { background:linear-gradient(180deg,transparent,rgba(96,165,250,.45)); }
+
     .video-wrap { position:relative; border-radius:20px; overflow:hidden; cursor:pointer; background:#09090B; }
     .video-play-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
       background:rgba(0,0,0,.35); transition:background .2s; }
@@ -1157,25 +1162,25 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               2. PROOF BAR
           ══════════════════════════════════════════ */}
-          <div style={{ background:"#09090B", borderTop:".5px solid rgba(255,255,255,.05)" }}>
-            <div style={{ ...MAX, padding:"22px 64px", display:"flex", alignItems:"center", justifyContent:"center", gap:36, flexWrap:"wrap" }} className="proof-bar">
-              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(255,255,255,.30)" }}>{t.proofLabel}</span>
+          <div style={{ background:"#F5F5F7", borderTop:".5px solid rgba(0,0,0,.06)", borderBottom:".5px solid rgba(0,0,0,.06)" }}>
+            <div style={{ ...MAX, padding:"20px 64px", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }} className="proof-bar">
+              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(0,0,0,.35)" }}>{t.proofLabel}</span>
               <div style={{ display:"flex", alignItems:"center", gap:20, flexWrap:"wrap", justifyContent:"center" }}>
                 {[
-                  { src:"/logo-8am.jpg", alt:"8AM Coffeehouse", name:"8AM Coffeehouse & More", fit:"cover" as const, bg:"rgba(255,255,255,.08)" },
+                  { src:"/logo-8am.jpg", alt:"8AM Coffeehouse", name:"8AM Coffeehouse & More", fit:"cover" as const, bg:"rgba(0,0,0,.04)" },
                   { src:"/logo-maison-matcha.png", alt:"Maison Matcha", name:"Maison Matcha", fit:"contain" as const, bg:"#FFFFFF" },
-                  { src:"/logo-comptoir-homme.jpg", alt:"Comptoir de l'Homme", name:"Comptoir de l'Homme", fit:"cover" as const, bg:"rgba(255,255,255,.08)" },
-                  { src:"/logo-yumi.jpg", alt:"Yumi", name:"Yumi", fit:"cover" as const, bg:"rgba(255,255,255,.08)" },
+                  { src:"/logo-comptoir-homme.jpg", alt:"Comptoir de l'Homme", name:"Comptoir de l'Homme", fit:"cover" as const, bg:"rgba(0,0,0,.04)" },
+                  { src:"/logo-yumi.jpg", alt:"Yumi", name:"Yumi", fit:"cover" as const, bg:"rgba(0,0,0,.04)" },
                 ].map(c => (
                   <div key={c.name} style={{ display:"flex", alignItems:"center", gap:9 }}>
-                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, background:c.bg, border:".5px solid rgba(255,255,255,.12)" }}>
+                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, background:c.bg, border:".5px solid rgba(0,0,0,.08)" }}>
                       <Image src={c.src} alt={c.alt} width={32} height={32} style={{ width:"100%", height:"100%", objectFit:c.fit }} />
                     </div>
-                    <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.70)", letterSpacing:-.2 }}>{c.name}</span>
+                    <span style={{ fontSize:13, fontWeight:600, color:"#374151", letterSpacing:-.2 }}>{c.name}</span>
                   </div>
                 ))}
               </div>
-              <div style={{ width:.5, height:24, background:"rgba(255,255,255,.12)" }} />
+              <div style={{ width:.5, height:24, background:"rgba(0,0,0,.12)" }} />
               <span style={{ fontSize:13, fontWeight:700, color:"#F97316" }}>{t.proofStat}</span>
             </div>
           </div>
@@ -1183,17 +1188,17 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               3. VIDÉO
           ══════════════════════════════════════════ */}
-          <section id="video" style={{ padding:"120px 64px", background:"#09090B", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(120px)", top:-200, left:-200, pointerEvents:"none" }} />
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.06)", filter:"blur(100px)", bottom:-150, right:-150, pointerEvents:"none" }} />
+          <section id="video" style={{ padding:"120px 64px", background:"#FFFFFF", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.06)", filter:"blur(120px)", top:-200, left:-200, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.05)", filter:"blur(100px)", bottom:-150, right:-150, pointerEvents:"none" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:52 }}>
-                <span className="stag" style={{ background:"rgba(255,255,255,.07)", color:"rgba(255,255,255,.55)" }}>{t.videoTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
-                <p style={{ fontSize:16, color:"rgba(255,255,255,.40)", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
+              <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:52, alignItems:"center" }}>
+                <span className="stag">{t.videoTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
+                <p style={{ fontSize:16, color:"#6B7280", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
               </div>
               <div data-reveal style={{ maxWidth:860, margin:"0 auto" }}>
-                <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,.60)", border:".5px solid rgba(255,255,255,.08)" }}>
+                <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 24px 64px rgba(0,0,0,.14)", border:".5px solid rgba(0,0,0,.08)" }}>
                   <video ref={videoRef} poster="/wallio_landing_v2_final_poster.jpg" playsInline
                     style={{ width:"100%", display:"block" }}
                     onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)}>
@@ -1215,17 +1220,17 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               3b. LE PROBLÈME
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"120px 64px", background:"#09090B", borderTop:".5px solid rgba(255,255,255,.04)", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(100px)", top:-150, right:-100, pointerEvents:"none" }} />
+          <section style={{ padding:"120px 64px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.06)", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.05)", filter:"blur(100px)", top:-150, right:-100, pointerEvents:"none" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
               <div style={{ display:"flex", gap:80, alignItems:"flex-start" }} className="prob-split">
                 <div style={{ flex:"0 0 40%" }} className="prob-left">
-                  <div data-reveal>
-                    <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.problemTag}</span>
-                    <h2 style={{ fontSize:"clamp(36px,4.5vw,62px)", fontWeight:800, letterSpacing:"-0.04em", color:"#FFFFFF", lineHeight:1.0, marginBottom:28 }}>
+                  <div data-reveal className="sec-head">
+                    <span className="stag">{t.problemTag}</span>
+                    <h2 style={{ fontSize:"clamp(36px,4.5vw,62px)", fontWeight:800, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.0, marginBottom:28 }}>
                       {t.problemTitle1}<br /><span className="grad">{t.problemTitle2}</span>
                     </h2>
-                    <p style={{ fontSize:15, color:"rgba(255,255,255,.38)", lineHeight:1.75, maxWidth:320 }}>
+                    <p style={{ fontSize:15, color:"#6B7280", lineHeight:1.75, maxWidth:320 }}>
                       {lang==="ro" ? "Clienții fideli sunt invizibili. Nu știți cine vine, cine pleacă, nici cum să îi aduceți înapoi." :
                        lang==="en" ? "Your regulars are invisible. You don't know who comes back, who left, or how to bring them back." :
                        "Vos habitués sont invisibles. Vous ne savez pas qui revient, qui est parti, ni comment les faire revenir."}
@@ -1235,16 +1240,16 @@ export default function LandingPage() {
                 <div style={{ flex:1 }} className="prob-right">
                   <div data-stagger style={{ display:"flex", flexDirection:"column" }}>
                     {t.problemPains.map((p,i) => (
-                      <div key={i} data-reveal style={{ padding:"28px 0", borderBottom: i < 2 ? ".5px solid rgba(255,255,255,.06)" : "none", display:"flex", gap:20, alignItems:"flex-start" }}>
-                        <span style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.18)", letterSpacing:".06em", paddingTop:5, flexShrink:0, minWidth:28 }}>0{i+1}</span>
+                      <div key={i} data-reveal style={{ padding:"28px 0", borderBottom: i < 2 ? ".5px solid rgba(0,0,0,.07)" : "none", display:"flex", gap:20, alignItems:"flex-start" }}>
+                        <span style={{ fontSize:11, fontWeight:700, color:"rgba(0,0,0,.18)", letterSpacing:".06em", paddingTop:5, flexShrink:0, minWidth:28 }}>0{i+1}</span>
                         <div>
-                          <h3 style={{ fontSize:20, fontWeight:700, lineHeight:1.25, marginBottom:8, color: i===2 ? "#F97316" : i===0 ? "#FFFFFF" : "rgba(255,255,255,.60)" }}>{p.title}</h3>
-                          <p style={{ fontSize:14, color:"rgba(255,255,255,.32)", lineHeight:1.7 }}>{p.body}</p>
+                          <h3 style={{ fontSize:20, fontWeight:700, lineHeight:1.25, marginBottom:8, color: i===2 ? "#F97316" : "#09090B" }}>{p.title}</h3>
+                          <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{p.body}</p>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div data-reveal style={{ marginTop:32, display:"inline-flex", alignItems:"center", gap:10, background:"rgba(249,115,22,.10)", border:"1px solid rgba(249,115,22,.22)", borderRadius:12, padding:"12px 20px" }}>
+                  <div data-reveal style={{ marginTop:32, display:"inline-flex", alignItems:"center", gap:10, background:"rgba(249,115,22,.08)", border:"1px solid rgba(249,115,22,.20)", borderRadius:12, padding:"12px 20px" }}>
                     <div style={{ width:7, height:7, borderRadius:"50%", background:"#F97316", flexShrink:0 }} />
                     <p style={{ fontSize:15, fontWeight:700, color:"#F97316" }}>{t.problemSolution}</p>
                   </div>
@@ -1258,7 +1263,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="comment" style={{ padding:"120px 64px", background:"#FAFAFA" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:72 }}>
+              <div data-reveal="scale" className="sec-head" style={{ marginBottom:72 }}>
                 <span className="stag">{t.howTag}</span>
                 <h2 style={{ fontSize:"clamp(34px,4vw,56px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
                   {t.howTitle}<br /><span className="grad">{t.howTitle2}</span>
@@ -1298,7 +1303,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="client" style={{ padding:"120px 64px", background:"#FFFFFF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:56 }}>
+              <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
                 <span className="stag">{t.clientTag}</span>
                 <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
                   {t.clientTitle}<br /><span className="grad">{t.clientTitle2}</span>
@@ -1365,7 +1370,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="recompenses" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
+              <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.rewardTag}</span>
                 <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", marginBottom:14 }}>
                   {t.rewardTitle}<br /><span className="grad">{t.rewardTitle2}</span>
@@ -1457,7 +1462,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="dashboard" style={{ padding:"120px 64px", background:"#09090B" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:60 }}>
+              <div data-reveal="scale" className="sec-head sec-head-dark" style={{ marginBottom:60 }}>
                 <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.outilsTag}</span>
                 <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#FFFFFF", lineHeight:1.05, marginBottom:14 }}>
                   {t.outilsTitle}<br /><span className="grad">{t.outilsTitle2}</span>
@@ -1585,7 +1590,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="carte" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:60 }}>
+              <div data-reveal="scale" className="sec-head" style={{ marginBottom:60 }}>
                 <span className="stag">{t.customTag}</span>
                 <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
                   {t.customTitle}<br /><span className="grad">{t.customTitle2}</span>
@@ -1624,28 +1629,26 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9. TÉMOIGNAGES
           ══════════════════════════════════════════ */}
-          <section id="temoignages" style={{ padding:"120px 64px", background:"#09090B", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(100px)", top:-100, right:-100, pointerEvents:"none" }} />
-            <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(139,92,246,.06)", filter:"blur(80px)", bottom:-80, left:-80, pointerEvents:"none" }} />
-            <div style={{ ...MAX, position:"relative", zIndex:1 }}>
-              <div data-reveal="scale" style={{ marginBottom:56 }}>
-                <span className="stag" style={{ background:"rgba(249,115,22,.12)", color:"#F97316" }}>{t.testTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:800, letterSpacing:"-0.04em", color:"#FFFFFF", lineHeight:1.05 }}>{t.testTitle}</h2>
+          <section id="temoignages" style={{ padding:"120px 64px", background:"#F5F5F7" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
+                <span className="stag" style={{ background:"rgba(249,115,22,.10)", color:"#F97316" }}>{t.testTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:800, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>{t.testTitle}</h2>
               </div>
               <div data-stagger style={{ display:"flex", gap:20 }} className="steps-row">
                 {t.testimonials.map((testi, i) => (
-                  <div key={i} data-reveal style={{ flex:1, background:"rgba(255,255,255,.04)", border:".5px solid rgba(255,255,255,.08)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column" }}>
+                  <div key={i} data-reveal style={{ flex:1, background:"#FFFFFF", border:".5px solid rgba(0,0,0,.07)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
                     <div style={{ display:"flex", gap:3, marginBottom:18 }}>
                       {[0,1,2,3,4].map(s => ( <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F97316"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ))}
                     </div>
-                    <p style={{ fontSize:14, color:"rgba(255,255,255,.68)", lineHeight:1.78, marginBottom:24, flex:1, fontStyle:"italic" }}>"{testi.quote}"</p>
+                    <p style={{ fontSize:14, color:"#4B5563", lineHeight:1.78, marginBottom:24, flex:1, fontStyle:"italic" }}>"{testi.quote}"</p>
                     <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                      <div style={{ width:40, height:40, borderRadius:10, overflow:"hidden", background:"rgba(255,255,255,.08)", flexShrink:0, border:".5px solid rgba(255,255,255,.12)" }}>
+                      <div style={{ width:40, height:40, borderRadius:10, overflow:"hidden", background:"rgba(0,0,0,.04)", flexShrink:0, border:".5px solid rgba(0,0,0,.08)" }}>
                         <Image src={testi.logo} alt={testi.business} width={40} height={40} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
                       </div>
                       <div>
-                        <div style={{ fontSize:13, fontWeight:700, color:"#FFFFFF" }}>{testi.name}</div>
-                        <div style={{ fontSize:12, color:"rgba(255,255,255,.38)" }}>{testi.role} · {testi.business}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:"#09090B" }}>{testi.name}</div>
+                        <div style={{ fontSize:12, color:"#6B7280" }}>{testi.role} · {testi.business}</div>
                       </div>
                     </div>
                   </div>
@@ -1659,7 +1662,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="accom" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:64 }}>
+              <div data-reveal="scale" className="sec-head" style={{ marginBottom:64 }}>
                 <span className="stag">{t.accomTag}</span>
                 <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
                   {t.accomTitle}<br /><span className="grad">{t.accomTitle2}</span>
@@ -1690,7 +1693,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="tarifs" style={{ padding:"120px 64px", background:"#FAFAFA" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
+              <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.tarifsTag}</span>
                 <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", marginBottom:14 }}>{t.tarifsTitle}</h2>
                 <p style={{ fontSize:16, color:"#6B7280", maxWidth:440, margin:"0 auto" }}>{t.tarifsSub}</p>
@@ -1755,7 +1758,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section id="faq" style={{ padding:"120px 64px", background:"#FFFFFF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
+              <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:56, alignItems:"center" }}>
                 <span className="stag">{t.faqTag}</span>
                 <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B" }}>{t.faqTitle}</h2>
               </div>
