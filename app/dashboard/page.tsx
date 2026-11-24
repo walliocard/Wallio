@@ -743,16 +743,16 @@ export default function AccueilPage() {
       const visitesRows = clientRows
         .filter(c => c.derniere_visite && getDateStr(c.derniere_visite.getTime(), tz).startsWith(thisMonthStr))
         .sort((a, b) => (b.derniere_visite?.getTime() || 0) - (a.derniere_visite?.getTime() || 0))
-        .slice(0, 7);
+        .slice(0, 4);
 
       const clientsRows = [...clientRows]
         .sort((a, b) => (b.date_inscription?.getTime() || 0) - (a.date_inscription?.getTime() || 0))
-        .slice(0, 7);
+        .slice(0, 4);
 
       const tamponsRows = [...clientRows]
         .filter(c => c.derniere_visite)
         .sort((a, b) => (b.derniere_visite?.getTime() || 0) - (a.derniere_visite?.getTime() || 0))
-        .slice(0, 7);
+        .slice(0, 4);
 
       const recompensesRows = clientRows.filter(c => c.recompense_en_attente);
 
@@ -781,7 +781,7 @@ export default function AccueilPage() {
 
       return (
         <div className="fixed inset-0 z-50 flex items-end" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)", touchAction: "none" }} onClick={() => setOpenSheet(null)}>
-          <div className="w-full" style={{ background: "var(--bg)", borderRadius: "24px 24px 0 0", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "calc(var(--tab-h, 49px) + env(safe-area-inset-bottom, 0px) + 12px)", maxHeight: "70vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+          <div className="w-full" style={{ background: "var(--bg)", borderRadius: "24px 24px 0 0", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "calc(var(--tab-h, 49px) + env(safe-area-inset-bottom, 0px) + 12px)", display: "flex", flexDirection: "column", touchAction: "none" }} onClick={e => e.stopPropagation()}>
 
             {/* Header */}
             <div style={{ padding: "16px 20px 0", display: "flex", alignItems: "baseline", gap: 8 }}>
@@ -790,7 +790,7 @@ export default function AccueilPage() {
             </div>
 
             {/* Contenu scrollable */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "8px 20px 0", overscrollBehavior: "contain", touchAction: "pan-y" }}>
+            <div style={{ padding: "8px 20px 0", overflow: "hidden" }}>
 
               {/* Visites */}
               {openSheet === "visites" && (
