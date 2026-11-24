@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLang } from "@/lib/lang-context";
 import { REGIONS } from "@/lib/regions";
 
@@ -180,6 +180,15 @@ const T = {
     ],
     accomCta: "Démarrer l'accompagnement",
     accomWa: "Bonjour, je souhaite démarrer avec Wallio et bénéficier de l'accompagnement.",
+    videoTag: "Le produit en action",
+    videoTitle: "Découvrez Wallio en 45 secondes.",
+    videoSub: "Un client, un scan, une carte dans son Wallet. Sans application.",
+    presentBtn: "Mode présentation",
+    presentExit: "Quitter",
+    outilsTag: "Outils gérant",
+    outilsTitle: "Tout ce dont vous avez besoin,",
+    outilsTitle2: "dans votre poche.",
+    outilsSub: "Wallio Pro centralise la gestion de votre programme de fidélité — statistiques, clients, notifications, automatisations et équipe.",
     footerLinks: [
       { href: "/privacy", label: "Confidentialité" }, { href: "/terms", label: "CGU" },
       { href: "/legal", label: "Mentions légales" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
@@ -353,6 +362,15 @@ const T = {
     ],
     accomCta: "Start your onboarding",
     accomWa: "Hello, I'd like to get started with Wallio and benefit from the onboarding support.",
+    videoTag: "The product in action",
+    videoTitle: "Discover Wallio in 45 seconds.",
+    videoSub: "A customer, a scan, a card in their Wallet. No app required.",
+    presentBtn: "Presentation mode",
+    presentExit: "Exit",
+    outilsTag: "Merchant tools",
+    outilsTitle: "Everything you need,",
+    outilsTitle2: "in your pocket.",
+    outilsSub: "Wallio Pro centralises your loyalty programme management — analytics, customers, notifications, automations and team.",
     footerLinks: [
       { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" },
       { href: "/legal", label: "Legal" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
@@ -526,6 +544,15 @@ const T = {
     ],
     accomCta: "Începeți însoțirea",
     accomWa: "Bună ziua, doresc să încep cu Wallio și să beneficiez de însoțire la lansare.",
+    videoTag: "Produsul în acțiune",
+    videoTitle: "Descoperiți Wallio în 45 de secunde.",
+    videoSub: "Un client, o scanare, un card în Wallet. Fără aplicație.",
+    presentBtn: "Mod prezentare",
+    presentExit: "Ieșire",
+    outilsTag: "Instrumente manager",
+    outilsTitle: "Tot ce aveți nevoie,",
+    outilsTitle2: "în buzunar.",
+    outilsSub: "Wallio Pro centralizează gestionarea programului de fidelitate — statistici, clienți, notificări, automatizări și echipă.",
     footerLinks: [
       { href: "/privacy", label: "Confidențialitate" }, { href: "/terms", label: "Termeni" },
       { href: "/legal", label: "Mențiuni legale" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
@@ -688,6 +715,8 @@ function DashPreview({ feat }: { feat: number }) {
   return <div key={feat} style={{ width:"100%" }}>{previews[feat]}</div>;
 }
 
+const PRESENT_SECTIONS = ["hero","video","comment","client","recompenses","dashboard","carte","temoignages","accom","tarifs","faq"];
+
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [navVisible, setNavVisible] = useState(false);
@@ -697,6 +726,10 @@ export default function LandingPage() {
   const [activeDash, setActiveDash] = useState(0);
   const [activeReward, setActiveReward] = useState(0);
   const [activeClient, setActiveClient] = useState(0);
+  const [presentMode, setPresentMode] = useState(false);
+  const [presentSlide, setPresentSlide] = useState(0);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { region, lang: contextLang, setLang: setContextLang } = useLang();
   const [lang, setLang] = useState<Lang>("fr");
   const t = T[lang];
@@ -737,12 +770,26 @@ export default function LandingPage() {
     return () => io.disconnect();
   }, [t.anchors]);
 
+  useEffect(() => {
+    if (!presentMode) return;
+    const goTo = (idx: number) => {
+      const id = PRESENT_SECTIONS[idx];
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setPresentSlide(idx);
+    };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") goTo(Math.min(presentSlide + 1, PRESENT_SECTIONS.length - 1));
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") goTo(Math.max(presentSlide - 1, 0));
+      if (e.key === "Escape") setPresentMode(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [presentMode, presentSlide]);
+
   const CSS = `
-    @keyframes fadeUp    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp    { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
     @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
-    @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-    @keyframes shimmer   { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
-    @keyframes heroImgIn { from{opacity:0;transform:translateX(28px) scale(.97)} to{opacity:1;transform:translateX(0) scale(1)} }
+    @keyframes heroImgIn { from{opacity:0;transform:translateX(32px) scale(.96)} to{opacity:1;transform:translateX(0) scale(1)} }
     @keyframes scaleBarUp{ from{transform:scaleY(0)} to{transform:scaleY(1)} }
     @keyframes notifDrop { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
     @keyframes stampPop  { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.25)} 100%{transform:scale(1);opacity:1} }
@@ -751,56 +798,64 @@ export default function LandingPage() {
     @keyframes cardSlide { from{opacity:0;transform:translateX(-14px)} to{opacity:1;transform:translateX(0)} }
     @keyframes scanLn    { 0%,100%{top:4px} 50%{top:calc(100% - 6px)} }
     @keyframes screenZoom { from{opacity:0;transform:scale(1.06)} to{opacity:1;transform:scale(1)} }
+    @keyframes presentIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
     .screen-enter { animation:screenZoom .55s cubic-bezier(.16,1,.3,1) both; }
 
     * { box-sizing:border-box; margin:0; padding:0; }
     html { scroll-behavior:smooth; scroll-padding-top:72px; }
 
-    [data-reveal]        { opacity:0; transform:translate3d(0,18px,0);   transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1); backface-visibility:hidden; }
-    [data-reveal="left"] { opacity:0; transform:translate3d(-20px,0,0);  transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1); }
-    [data-reveal="right"]{ opacity:0; transform:translate3d(20px,0,0);   transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1); }
-    [data-reveal="scale"]{ opacity:0; transform:translate3d(0,10px,0) scale3d(.97,.97,1); transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1); }
-    [data-reveal="fade"] { opacity:0; transition:opacity .7s ease; }
+    [data-reveal]        { opacity:0; transform:translate3d(0,24px,0);   transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1); backface-visibility:hidden; }
+    [data-reveal="left"] { opacity:0; transform:translate3d(-24px,0,0);  transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1); }
+    [data-reveal="right"]{ opacity:0; transform:translate3d(24px,0,0);   transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1); }
+    [data-reveal="scale"]{ opacity:0; transform:translate3d(0,12px,0) scale3d(.97,.97,1); transition:opacity .75s cubic-bezier(.16,1,.3,1),transform .75s cubic-bezier(.16,1,.3,1); }
+    [data-reveal="fade"] { opacity:0; transition:opacity .8s ease; }
     .revealed { opacity:1!important; transform:translate3d(0,0,0) scale3d(1,1,1)!important; }
 
-    .grad { background:linear-gradient(135deg,#007AFF,#8B5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .grad { background:linear-gradient(135deg,#007AFF,#8B5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .grad-bg { background:linear-gradient(135deg,#007AFF,#8B5CF6); }
 
-    .hero-anim-1 { animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .05s both; }
-    .hero-anim-3 { animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .58s both; }
-    .hero-anim-4 { animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .70s both; }
-    .hero-img-enter { animation:heroImgIn .95s cubic-bezier(.16,1,.3,1) .18s both; }
-    .hero-word { animation:fadeUp .65s cubic-bezier(.16,1,.3,1) var(--wd,0s) both; }
+    .hero-anim-1 { animation:fadeUp .9s cubic-bezier(.16,1,.3,1) .05s both; }
+    .hero-anim-3 { animation:fadeUp .9s cubic-bezier(.16,1,.3,1) .40s both; }
+    .hero-anim-4 { animation:fadeUp .9s cubic-bezier(.16,1,.3,1) .55s both; }
+    .hero-anim-5 { animation:fadeUp .9s cubic-bezier(.16,1,.3,1) .68s both; }
+    .hero-img-enter { animation:heroImgIn 1s cubic-bezier(.16,1,.3,1) .15s both; }
+    .hero-word { animation:fadeUp .7s cubic-bezier(.16,1,.3,1) var(--wd,0s) both; }
 
-    .pain-line { padding:28px 0; border-top:.5px solid rgba(0,0,0,.08); display:grid; grid-template-columns:40px 1fr; gap:20px; align-items:flex-start; }
-    .pain-line:last-child { border-bottom:.5px solid rgba(0,0,0,.08); }
+    .pain-line { padding:32px 0; border-top:.5px solid rgba(0,0,0,.07); display:grid; grid-template-columns:44px 1fr; gap:24px; align-items:flex-start; }
+    .pain-line:last-child { border-bottom:.5px solid rgba(0,0,0,.07); }
 
-    .feat-row { padding:14px 16px; border-radius:12px; cursor:pointer; border:1.5px solid transparent; transition:background .15s,border-color .15s; display:flex; gap:14px; align-items:flex-start; }
-    .feat-row:hover { background:rgba(0,0,0,.03); }
-    .feat-row.feat-active { background:rgba(0,122,255,.05); border-color:rgba(0,122,255,.20); }
-    .dash-spotlight { display:flex; background:#fff; border-radius:24px; border:.5px solid rgba(0,0,0,.07); overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.06); }
-    .dash-feat-list { flex:0 0 42%; padding:8px; border-right:.5px solid rgba(0,0,0,.07); }
-    .dash-preview-panel { flex:1; padding:28px; min-height:480px; display:flex; align-items:center; justify-content:center; }
+    .feat-row { padding:16px 18px; border-radius:14px; cursor:pointer; border:1.5px solid transparent; transition:background .15s,border-color .15s; display:flex; gap:14px; align-items:flex-start; }
+    .feat-row:hover { background:rgba(255,255,255,.04); }
+    .feat-row.feat-active { background:rgba(0,122,255,.06); border-color:rgba(0,122,255,.22); }
+    .dash-spotlight { display:flex; background:#fff; border-radius:28px; border:.5px solid rgba(0,0,0,.07); overflow:hidden; box-shadow:0 2px 24px rgba(0,0,0,.06),0 12px 48px rgba(0,0,0,.04); }
+    .dash-feat-list { flex:0 0 40%; padding:10px; border-right:.5px solid rgba(0,0,0,.06); }
+    .dash-preview-panel { flex:1; padding:32px; min-height:500px; display:flex; align-items:center; justify-content:center; }
 
     .btn-wa {
       background:linear-gradient(135deg,#007AFF,#8B5CF6);
-      color:#fff; padding:14px 26px; border-radius:14px; font-size:15px; font-weight:600;
+      color:#fff; padding:15px 28px; border-radius:14px; font-size:15px; font-weight:600;
       text-decoration:none; display:inline-flex; align-items:center; gap:9px;
-      transition:transform .15s,box-shadow .15s; border:none; cursor:pointer;
+      transition:opacity .15s,transform .15s,box-shadow .15s; border:none; cursor:pointer; letter-spacing:-.01em;
     }
-    .btn-wa:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,122,255,.28); }
+    .btn-wa:hover { opacity:.92; transform:translateY(-1px); box-shadow:0 8px 28px rgba(0,122,255,.30); }
     .btn-ghost {
-      background:rgba(0,0,0,.06); color:#1D1D1F; padding:14px 26px; border-radius:14px;
-      font-size:15px; font-weight:500; text-decoration:none; display:inline-block;
-      transition:background .15s; border:none; cursor:pointer;
+      background:rgba(0,0,0,.055); color:#09090B; padding:15px 28px; border-radius:14px;
+      font-size:15px; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+      transition:background .15s; border:none; cursor:pointer; letter-spacing:-.01em;
     }
-    .btn-ghost:hover { background:rgba(0,0,0,.10); }
+    .btn-ghost:hover { background:rgba(0,0,0,.09); }
+    .btn-present {
+      background:transparent; color:rgba(255,255,255,.65); padding:7px 14px; border-radius:10px;
+      font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+      border:.5px solid rgba(255,255,255,.18); cursor:pointer; transition:all .15s; white-space:nowrap;
+    }
+    .btn-present:hover { background:rgba(255,255,255,.08); color:#fff; }
 
-    .stag { display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:.08em;
+    .stag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.10em;
       text-transform:uppercase; color:#007AFF; background:rgba(0,122,255,.08);
-      padding:5px 13px; border-radius:20px; margin-bottom:18px; }
+      padding:5px 12px; border-radius:20px; margin-bottom:20px; }
 
-    .lp-nav { padding:0 48px; }
+    .lp-nav { padding:0 52px; }
     .anchor-nav::-webkit-scrollbar { display:none; }
     .anchor-nav { scrollbar-width:none; }
 
@@ -808,34 +863,55 @@ export default function LandingPage() {
       font-size:11px; font-weight:700; letter-spacing:.06em; transition:all .15s; }
 
     .feat-item { display:flex; gap:14px; align-items:flex-start; }
-    .feat-dot  { width:7px; height:7px; border-radius:50%; background:linear-gradient(135deg,#007AFF,#8B5CF6);
-      flex-shrink:0; margin-top:6px; }
+    .feat-dot  { width:6px; height:6px; border-radius:50%; background:linear-gradient(135deg,#007AFF,#8B5CF6);
+      flex-shrink:0; margin-top:7px; }
 
-    .card-hover { transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s; }
-    .card-hover:hover { transform:translateY(-4px); box-shadow:0 24px 48px rgba(0,0,0,.10)!important; }
+    .card-hover { transition:transform .25s cubic-bezier(.16,1,.3,1),box-shadow .25s; }
+    .card-hover:hover { transform:translateY(-5px); box-shadow:0 24px 56px rgba(0,0,0,.12)!important; }
 
     .reward-pill { display:inline-block; padding:4px 11px; border-radius:20px;
       font-size:12px; font-weight:600; margin-bottom:10px; }
 
     .faq-btn { width:100%; background:none; border:none; cursor:pointer; display:flex;
-      align-items:center; justify-content:space-between; padding:20px 0; text-align:left; gap:16px; }
+      align-items:center; justify-content:space-between; padding:22px 0; text-align:left; gap:16px; }
     .faq-btn:hover .faq-q { color:#007AFF; }
-    .faq-item { border-bottom:.5px solid rgba(0,0,0,.08); }
+    .faq-item { border-bottom:.5px solid rgba(0,0,0,.07); }
 
-    .pricing-card { background:#fff; border-radius:24px; padding:32px 28px;
-      border:.5px solid rgba(0,0,0,.08); transition:transform .2s,box-shadow .2s; }
-    .pricing-card:hover { transform:translateY(-4px); box-shadow:0 24px 48px rgba(0,0,0,.10); }
-    .pricing-featured { background:#1D1D1F; border-color:#1D1D1F; }
+    .pricing-card { background:#fff; border-radius:24px; padding:36px 32px;
+      border:.5px solid rgba(0,0,0,.07); transition:transform .2s,box-shadow .2s; }
+    .pricing-card:hover { transform:translateY(-4px); box-shadow:0 20px 48px rgba(0,0,0,.09); }
+    .pricing-featured { background:#09090B; border-color:#09090B; }
 
-    .sector-pill { display:inline-block; padding:9px 18px; border-radius:20px; font-size:13px;
-      font-weight:500; color:#3C3C43; background:#fff; border:.5px solid rgba(0,0,0,.09);
-      transition:transform .22s cubic-bezier(.16,1,.3,1); cursor:default; }
-    .sector-pill:hover { transform:scale(1.12); }
+    .sector-pill { display:inline-block; padding:10px 20px; border-radius:99px; font-size:13.5px;
+      font-weight:500; color:#374151; background:#fff; border:.5px solid rgba(0,0,0,.08);
+      transition:all .2s cubic-bezier(.16,1,.3,1); cursor:default; }
+    .sector-pill:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,.08); }
 
     .check-icon { width:18px; height:18px; border-radius:50%; display:flex; align-items:center;
       justify-content:center; flex-shrink:0; background:rgba(0,122,255,.10); }
 
-    @media (max-width:1024px) { .lp-nav { padding:0 24px; } }
+    .video-wrap { position:relative; border-radius:20px; overflow:hidden; cursor:pointer; background:#09090B; }
+    .video-play-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.35); transition:background .2s; }
+    .video-play-btn:hover { background:rgba(0,0,0,.20); }
+    .video-play-btn .play-circle { width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,.95);
+      display:flex; align-items:center; justify-content:center; transition:transform .2s,box-shadow .2s;
+      box-shadow:0 8px 32px rgba(0,0,0,.35); }
+    .video-play-btn:hover .play-circle { transform:scale(1.08); box-shadow:0 12px 40px rgba(0,0,0,.45); }
+
+    .present-overlay { position:fixed; inset:0; z-index:9999; pointer-events:none; animation:presentIn .3s cubic-bezier(.16,1,.3,1) both; }
+    .present-nav { position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+      display:flex; align-items:center; gap:12px; background:rgba(9,9,11,.85);
+      border:.5px solid rgba(255,255,255,.12); backdrop-filter:blur(16px);
+      border-radius:99px; padding:10px 20px; pointer-events:all; z-index:10000; }
+    .present-btn { width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.10);
+      border:.5px solid rgba(255,255,255,.12); color:#fff; cursor:pointer; display:flex;
+      align-items:center; justify-content:center; transition:background .15s; }
+    .present-btn:hover { background:rgba(255,255,255,.18); }
+    .present-btn:disabled { opacity:.3; cursor:default; }
+    .present-exit { position:fixed; top:20px; right:24px; pointer-events:all; z-index:10000; }
+
+    @media (max-width:1024px) { .lp-nav { padding:0 28px; } }
     @media (max-width:768px) {
       .lp-nav { padding:0 20px; }
       .hero-split { flex-direction:column!important; text-align:center; align-items:stretch!important; height:auto!important; padding-top:88px!important; }
@@ -847,33 +923,26 @@ export default function LandingPage() {
       .nav-mobile-lang { display:flex!important; }
       .nav-mobile-title { display:block!important; }
       .nav-logo { display:none!important; }
-      section { padding:72px 20px!important; }
-      .split-left,.split-right { width:100%!important; }
+      section { padding:88px 24px!important; }
       .steps-row { flex-direction:column!important; }
       .steps-row > div { flex:unset!important; }
       .reward-cols { flex-direction:column!important; }
-      .dash-split { flex-direction:column!important; }
-      .client-split { flex-direction:column!important; }
-      .screens-grid { grid-template-columns:1fr 1fr!important; }
       .pricing-grid { flex-direction:column!important; }
       .pricing-grid > div { width:100%!important; }
       .cards-grid { grid-template-columns:1fr 1fr!important; }
       .btn-wa,.btn-ghost { padding:13px 22px; font-size:14px; }
-      .cta-title { font-size:clamp(28px,8vw,42px)!important; }
+      .cta-title { font-size:clamp(28px,8vw,44px)!important; }
       .anchor-nav-desktop { display:none!important; }
       .anchor-nav-mobile { display:flex!important; }
       .feats-2col { grid-template-columns:1fr 1fr!important; }
       .steps-row { grid-template-columns:1fr!important; }
-      .reward-cols { flex-direction:column!important; }
-      .reward-cols > div { flex:1!important; }
       .custom-feats-grid { grid-template-columns:1fr 1fr!important; }
-      .prob-split { flex-direction:column!important; gap:36px!important; }
+      .prob-split { flex-direction:column!important; gap:40px!important; }
       .prob-left { flex:unset!important; width:100%!important; }
       .prob-right { flex:unset!important; width:100%!important; }
       .client-spotlight { flex-direction:column!important; }
       .client-phone-panel { flex:unset!important; width:100%!important; min-height:320px!important; padding:28px!important; }
       .client-phone-panel img { height:min(50vw,320px)!important; }
-      .client-screens { grid-template-columns:1fr 1fr 1fr!important; }
       .dash-spotlight { flex-direction:column!important; }
       .dash-feat-list { border-right:none!important; border-bottom:.5px solid rgba(0,0,0,.07)!important; flex:unset!important; }
       .dash-preview-panel { min-height:unset!important; padding:24px 20px!important; }
@@ -882,6 +951,7 @@ export default function LandingPage() {
       .proof-bar { padding:16px 20px!important; gap:16px!important; }
       .mini-cta-row { flex-direction:column!important; align-items:flex-start!important; }
       footer { padding:28px 20px!important; }
+      .present-nav { display:none!important; }
     }
     @media (max-width:1024px) {
       .dash-preview-panel > div { height:auto!important; }
@@ -889,9 +959,8 @@ export default function LandingPage() {
     }
     @media (max-width:480px) {
       .cards-grid { grid-template-columns:1fr!important; }
-      .screens-grid { grid-template-columns:1fr!important; }
       .hero-title { font-size:clamp(26px,7vw,36px)!important; }
-      .pricing-grid > div { padding:28px 22px!important; }
+      .pricing-grid > div { padding:28px 20px!important; }
       .custom-feats-grid { grid-template-columns:1fr!important; }
       .feats-2col { grid-template-columns:1fr!important; }
     }
@@ -900,99 +969,116 @@ export default function LandingPage() {
     }
   `;
 
-  const MAX = { maxWidth: 1040, margin: "0 auto" } as const;
+  const MAX = { maxWidth: 1100, margin: "0 auto" } as const;
+
+  const goToSlide = (idx: number) => {
+    document.getElementById(PRESENT_SECTIONS[idx])?.scrollIntoView({ behavior:"smooth", block:"start" });
+    setPresentSlide(idx);
+  };
 
   return (
     <>
       <style>{CSS}</style>
-      <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue',sans-serif", background:"#F5F5F7", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
+
+      {/* Mode présentation overlay */}
+      {presentMode && (
+        <div className="present-overlay">
+          <div className="present-exit">
+            <button onClick={() => setPresentMode(false)} style={{ background:"rgba(9,9,11,.88)", backdropFilter:"blur(16px)", border:".5px solid rgba(255,255,255,.12)", color:"rgba(255,255,255,.65)", padding:"7px 16px", borderRadius:10, fontSize:12, fontWeight:600, letterSpacing:".04em", textTransform:"uppercase" as const, cursor:"pointer" }}>
+              {t.presentExit} · Échap
+            </button>
+          </div>
+          <div className="present-nav">
+            <button className="present-btn" disabled={presentSlide === 0} onClick={() => goToSlide(Math.max(0, presentSlide-1))}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.65)", minWidth:52, textAlign:"center" as const }}>
+              {presentSlide + 1} / {PRESENT_SECTIONS.length}
+            </span>
+            <button className="present-btn" disabled={presentSlide === PRESENT_SECTIONS.length-1} onClick={() => goToSlide(Math.min(PRESENT_SECTIONS.length-1, presentSlide+1))}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue',sans-serif", background:"#FAFAFA", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
 
         {/* ── WhatsApp float ── */}
         <a href={heroWA} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
           style={{ position:"fixed", bottom:24, right:24, zIndex:50, width:52, height:52, borderRadius:"50%",
             background:"#25D366", display:"flex", alignItems:"center", justifyContent:"center",
-            boxShadow:"0 8px 24px rgba(37,211,102,.40)", transition:"transform .2s,box-shadow .2s" }}
+            boxShadow:"0 8px 24px rgba(37,211,102,.40)", transition:"transform .2s" }}
           onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="scale(1.08)";}}
           onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="";}}>
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="white">
-            <path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1.0 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9zm0 22.9c-2.0 0-3.9-.5-5.5-1.5l-.4-.2-4.4 1.1 1.2-4.2-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.7 0-5.9 4.8-10.8 10.8-10.8 2.9 0 5.6 1.1 7.6 3.2 2.0 2.0 3.2 4.7 3.2 7.6 0 5.9-4.8 10.9-10.5 10.9zm5.8-8.1c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.7-1.6-2.0-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.2-.7-1.7-1.0-2.4-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1.1 1.0-1.1 2.5s1.1 2.9 1.3 3.1c.2.2 2.2 3.4 5.4 4.7.8.3 1.4.5 1.8.6.8.2 1.5.2 2.0.1.6-.1 1.8-.7 2.1-1.4.3-.7.3-1.2.2-1.4-.1-.2-.3-.3-.6-.4z"/>
-          </svg>
+          <svg width="26" height="26" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
         </a>
 
-        {/* ── NAV ── */}
-        <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:30, height:58,
+        {/* ── NAV V2 ── */}
+        <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:30, height:60,
           display:"flex", alignItems:"center", justifyContent:"space-between",
-          background: scrolled ? "rgba(245,245,247,.88)" : "transparent",
-          backdropFilter: scrolled ? "blur(24px)" : "none",
-          borderBottom: scrolled ? ".5px solid rgba(0,0,0,.09)" : "none",
-          transition:"all .3s" }}>
+          background: scrolled ? "rgba(250,250,250,.92)" : "transparent",
+          backdropFilter: scrolled ? "blur(20px)" : "none",
+          borderBottom: scrolled ? ".5px solid rgba(0,0,0,.08)" : "none",
+          transition:"background .3s,border .3s" }}>
           <div className="nav-logo" style={{ display:"flex", alignItems:"center", gap:8 }}>
             <Image src="/wallio-instagram-profil.png" alt="Wallio" width={34} height={34} style={{ borderRadius:8 }} priority />
           </div>
-          <div className="nav-mobile-title" style={{ display:"none", position:"absolute", left:0, right:0, textAlign:"center", pointerEvents:"none" }}>
-            <span style={{ fontSize:16, fontWeight:700, letterSpacing:".12em", color:"#1D1D1F" }}>WALLIO</span>
-          </div>
-          <button className="nav-mobile-lang" onClick={() => changeLang(lang==="fr"?"en":lang==="en"?"ro":"fr")}
-            style={{ display:"none", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".06em", color:"#1D1D1F", alignItems:"center", justifyContent:"center" }}>
-            {lang.toUpperCase()}
-          </button>
-          <div className="nav-right" style={{ display:"flex", gap:8, alignItems:"center" }}>
-            <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,.06)", borderRadius:20, padding:2 }}>
+          <span className="nav-mobile-title" style={{ display:"none", fontSize:14, fontWeight:700, letterSpacing:".12em", color:"#09090B", position:"absolute", left:"50%", transform:"translateX(-50%)" }}>WALLIO</span>
+          <div className="nav-right" style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,.055)", borderRadius:20, padding:2 }}>
               {(["fr","en","ro"] as const).map(l => (
                 <button key={l} className="lang-btn" onClick={() => changeLang(l)}
-                  style={{ background: lang===l ? "#1D1D1F" : "transparent", color: lang===l ? "#fff" : "#6E6E73" }}>
+                  style={{ background: lang===l ? "#09090B" : "transparent", color: lang===l ? "#fff" : "#6B7280" }}>
                   {l.toUpperCase()}
                 </button>
               ))}
             </div>
-            <Link href="/choisir" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>
-              {t.navLogin}
-            </Link>
-            <a href={heroWA} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ padding:"7px 16px", fontSize:13, borderRadius:20 }}>
-              {t.navCta}
-            </a>
+            <Link href="/choisir" style={{ fontSize:13, fontWeight:400, color:"#6B7280", textDecoration:"none", padding:"6px 12px" }}>{t.navLogin}</Link>
+            <button onClick={() => { setPresentMode(m => !m); setPresentSlide(0); if (!presentMode) document.getElementById("hero")?.scrollIntoView(); }}
+              style={{ background: presentMode ? "#09090B" : "transparent", color: presentMode ? "#fff" : "#374151", padding:"6px 14px", borderRadius:9, border:".5px solid rgba(0,0,0,.14)", fontSize:12, fontWeight:600, letterSpacing:".04em", textTransform:"uppercase" as const, cursor:"pointer", transition:"all .15s", whiteSpace:"nowrap" as const }}>
+              {presentMode ? "✕" : t.presentBtn}
+            </button>
+            <a href={heroWA} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ padding:"7px 16px", fontSize:13, borderRadius:20 }}>{t.navCta}</a>
+          </div>
+          <div className="nav-mobile-lang" style={{ display:"none", alignItems:"center", gap:6 }}>
+            {(["fr","en","ro"] as const).map(l => (
+              <button key={l} className="lang-btn" onClick={() => changeLang(l)}
+                style={{ background: lang===l ? "#09090B" : "rgba(0,0,0,.06)", color: lang===l ? "#fff" : "#6B7280" }}>
+                {l.toUpperCase()}
+              </button>
+            ))}
           </div>
         </nav>
 
         {/* ── ANCHOR NAV ── */}
-        <div style={{ position:"fixed", top: navVisible ? 58 : -48, left:0, right:0, zIndex:29,
-          background:"rgba(245,245,247,.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
-          borderBottom:".5px solid rgba(0,0,0,.09)", transition:"top .4s cubic-bezier(.16,1,.3,1)" }}>
-          <div className="anchor-nav anchor-nav-desktop" style={{ maxWidth:1040, margin:"0 auto", padding:"0 32px" }}>
+        <div style={{ position:"fixed", top: navVisible ? 60 : -48, left:0, right:0, zIndex:29,
+          background:"rgba(250,250,250,.97)", backdropFilter:"blur(20px)",
+          borderBottom:".5px solid rgba(0,0,0,.08)", transition:"top .4s cubic-bezier(.16,1,.3,1)" }}>
+          <div className="anchor-nav anchor-nav-desktop" style={{ maxWidth:1100, margin:"0 auto", padding:"0 32px" }}>
             <div style={{ display:"flex", gap:2, height:40, alignItems:"center", justifyContent:"center" }}>
               {t.anchors.map(a => (
-                <a key={a.id} href={`#${a.id}`}
-                  style={{ fontSize:12.5, fontWeight: activeAnchor===a.id ? 600 : 400,
-                    color: activeAnchor===a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none",
-                    padding:"4px 11px", borderRadius:20,
-                    background: activeAnchor===a.id ? "rgba(0,0,0,.08)" : "transparent",
-                    whiteSpace:"nowrap", transition:"all .15s" }}>
+                <a key={a.id} href={`#${a.id}`} style={{ fontSize:12.5, fontWeight: activeAnchor===a.id ? 600 : 400,
+                  color: activeAnchor===a.id ? "#09090B" : "#6B7280", textDecoration:"none",
+                  padding:"4px 11px", borderRadius:20, background: activeAnchor===a.id ? "rgba(0,0,0,.07)" : "transparent",
+                  whiteSpace:"nowrap" as const, transition:"all .15s" }}>
                   {a.label}
                 </a>
               ))}
             </div>
           </div>
           <div className="anchor-nav anchor-nav-mobile" style={{ display:"none", position:"relative" }}>
-            <button onClick={() => setAnchorOpen(o=>!o)}
-              style={{ width:"100%", height:40, display:"flex", alignItems:"center", justifyContent:"center",
-                gap:6, background:"none", border:"none", cursor:"pointer" }}>
-              <span style={{ fontSize:13, fontWeight:600, color:"#1D1D1F" }}>
-                {t.anchors.find(a=>a.id===activeAnchor)?.label ?? t.anchors[0]?.label}
-              </span>
+            <button onClick={() => setAnchorOpen(o=>!o)} style={{ width:"100%", height:40, display:"flex", alignItems:"center", justifyContent:"center", gap:6, background:"none", border:"none", cursor:"pointer" }}>
+              <span style={{ fontSize:13, fontWeight:600, color:"#09090B" }}>{t.anchors.find(a=>a.id===activeAnchor)?.label ?? t.anchors[0]?.label}</span>
               <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transform: anchorOpen ? "rotate(180deg)" : "none", transition:"transform .2s" }}>
-                <path d="M1 1l4 4 4-4" stroke="#6E6E73" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M1 1l4 4 4-4" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             </button>
             {anchorOpen && (
-              <div style={{ position:"absolute", top:40, left:0, right:0, zIndex:18,
-                background:"rgba(245,245,247,.97)", backdropFilter:"blur(20px)",
-                borderBottom:".5px solid rgba(0,0,0,.09)" }}>
+              <div style={{ position:"absolute", top:40, left:0, right:0, zIndex:18, background:"rgba(250,250,250,.97)", backdropFilter:"blur(20px)", borderBottom:".5px solid rgba(0,0,0,.08)" }}>
                 {t.anchors.map(a => (
                   <a key={a.id} href={`#${a.id}`} onClick={() => setAnchorOpen(false)}
-                    style={{ display:"block", padding:"13px 24px", fontSize:14,
-                      fontWeight: activeAnchor===a.id ? 600 : 400,
-                      color: activeAnchor===a.id ? "#1D1D1F" : "#6E6E73",
-                      textDecoration:"none", borderBottom:".5px solid rgba(0,0,0,.06)" }}>
+                    style={{ display:"block", padding:"13px 24px", fontSize:14, fontWeight: activeAnchor===a.id ? 600 : 400, color: activeAnchor===a.id ? "#09090B" : "#6B7280", textDecoration:"none", borderBottom:".5px solid rgba(0,0,0,.06)" }}>
                     {a.label}
                   </a>
                 ))}
@@ -1004,73 +1090,62 @@ export default function LandingPage() {
         <div style={{ position:"relative", zIndex:1 }}>
 
           {/* ══════════════════════════════════════════
-              1. HERO
+              1. HERO V2
           ══════════════════════════════════════════ */}
-          <section style={{ height:"100dvh", minHeight:640, display:"flex", alignItems:"center", padding:"80px 48px 60px", position:"relative", overflow:"hidden", background:"#F7F8FF" }}>
-            {/* Blobs fondus */}
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(99,102,241,.18)", filter:"blur(90px)", top:-200, left:-150, pointerEvents:"none", zIndex:0 }} />
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.13)", filter:"blur(80px)", top:50, right:-100, pointerEvents:"none", zIndex:0 }} />
-            <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(249,115,22,.09)", filter:"blur(70px)", bottom:-80, right:280, pointerEvents:"none", zIndex:0 }} />
-            <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:32, justifyContent:"space-between", position:"relative", zIndex:1, height:"100%" }} className="hero-split">
-              {/* Left */}
-              <div style={{ flex:"0 0 46%", maxWidth:500, minWidth:0 }}>
-                <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(26px,3vw,44px)", fontWeight:800, lineHeight:1.1, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:20 }}>
+          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FAFAFA" }}>
+            <div style={{ position:"absolute", width:800, height:800, borderRadius:"50%", background:"rgba(99,102,241,.14)", filter:"blur(100px)", top:-200, left:-200, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.10)", filter:"blur(90px)", top:0, right:-150, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:1, height:"100%" }} className="hero-split">
+              <div style={{ flex:"0 0 46%", maxWidth:520, minWidth:0 }}>
+                <div className="hero-anim-1" style={{ marginBottom:28 }}>
+                  <span style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"6px 14px", background:"rgba(0,0,0,.055)", borderRadius:99, fontSize:11.5, fontWeight:600, letterSpacing:".04em", color:"#374151" }}>{t.heroBadge}</span>
+                </div>
+                <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(40px,5.5vw,72px)", fontWeight:800, lineHeight:1.0, letterSpacing:"-0.04em", color:"#09090B", marginBottom:24 }}>
                   {t.heroTitle1.split(" ").map((w,i)=>(
-                    <span key={i} className="hero-word" style={{"--wd":`${0.08+i*0.065}s`} as React.CSSProperties}>{w}{" "}</span>
+                    <span key={i} className="hero-word" style={{"--wd":`${0.08+i*0.065}s`} as React.CSSProperties}>{w}{" "}</span>
                   ))}
                   <br />
                   <span className="grad">
                     {t.heroTitle2.split(" ").map((w,i)=>(
-                      <span key={i} className="hero-word" style={{"--wd":`${0.08+(t.heroTitle1.split(" ").length+i)*0.065}s`} as React.CSSProperties}>{w}{i<t.heroTitle2.split(" ").length-1?" ":""}</span>
+                      <span key={i} className="hero-word" style={{"--wd":`${0.08+(t.heroTitle1.split(" ").length+i)*0.065}s`} as React.CSSProperties}>{w}{i<t.heroTitle2.split(" ").length-1?" ":""}</span>
                     ))}
                   </span>
                 </h1>
-                <p className="hero-anim-3" style={{ fontSize:17, lineHeight:1.65, color:"#6E6E73", maxWidth:480, marginBottom:20 }}>
-                  {t.heroSub}
-                </p>
-                <div className="hero-anim-3" style={{ marginBottom:28 }}>
-                  <span style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"6px 14px", background:"rgba(0,122,255,.09)", borderRadius:20, fontSize:12.5, fontWeight:600, color:"#007AFF" }}>
+                <p className="hero-anim-3" style={{ fontSize:17, lineHeight:1.72, color:"#6B7280", maxWidth:460, marginBottom:20 }}>{t.heroSub}</p>
+                <div className="hero-anim-3" style={{ marginBottom:32 }}>
+                  <span style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"6px 14px", background:"rgba(0,122,255,.09)", borderRadius:99, fontSize:12.5, fontWeight:600, color:"#007AFF" }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     {t.heroNoBadge}
                   </span>
                 </div>
-                <div className="hero-anim-4 hero-ctas" style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                <div className="hero-anim-4 hero-ctas" style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:40 }}>
                   <a href={heroWA} target="_blank" rel="noopener noreferrer" className="btn-wa">
                     <svg width="17" height="17" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
                     {t.heroCta1}
                   </a>
                   <Link href="/choisir" className="btn-ghost">{t.heroCta2}</Link>
                 </div>
-                {/* Stats hero */}
-                <div className="hero-anim-4" style={{ display:"flex", gap:24, marginTop:36, marginBottom:32 }}>
+                <div className="hero-anim-5" style={{ display:"flex", gap:28, marginBottom:32 }}>
                   {[
-                    { v:"200+", l: lang==="ro" ? "clienți fidelizați" : lang==="en" ? "customers enrolled" : "clients fidélisés", c:"#007AFF" },
-                    { v:"4", l: lang==="ro" ? "comercianți" : lang==="en" ? "businesses" : "commerces", c:"#8B5CF6" },
-                    { v:"< 1s", l: lang==="ro" ? "per ștampilă" : lang==="en" ? "per stamp" : "par tampon", c:"#F97316" },
+                    { v:"200+", l: lang==="ro" ? "carduri active" : lang==="en" ? "active cards" : "cartes actives", c:"#007AFF" },
+                    { v:"< 1s", l: lang==="ro" ? "per ștampilă" : lang==="en" ? "per stamp" : "par tampon", c:"#8B5CF6" },
+                    { v:"1h", l: lang==="ro" ? "lansare" : lang==="en" ? "to go live" : "pour lancer", c:"#F97316" },
                   ].map(s=>(
                     <div key={s.v}>
-                      <div style={{ fontSize:24, fontWeight:800, color:s.c, letterSpacing:-.5, lineHeight:1 }}>{s.v}</div>
-                      <div style={{ fontSize:11, color:"#6E6E73", marginTop:3 }}>{s.l}</div>
+                      <div style={{ fontSize:26, fontWeight:800, color:s.c, letterSpacing:-1, lineHeight:1 }}>{s.v}</div>
+                      <div style={{ fontSize:12, color:"#9CA3AF", marginTop:3 }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
-                {/* Wallet badges */}
-                <div className="hero-anim-4" style={{ display:"flex", alignItems:"center", gap:16, opacity:.65 }}>
+                <div className="hero-anim-5" style={{ display:"flex", alignItems:"center", gap:16, opacity:.6 }}>
                   <Image src="/apple-wallet-badge.svg" alt="Apple Wallet" width={110} height={34} />
                   <div style={{ width:.5, height:24, background:"rgba(0,0,0,.18)" }} />
                   <Image src="/google-wallet-badge.svg" alt="Google Wallet" width={110} height={34} />
                 </div>
               </div>
-              {/* Right — hero image transparent */}
-              <div className="hero-img-wrap" style={{ flex:"0 0 52%", maxWidth:580, display:"flex", alignItems:"center", justifyContent:"center", height:"100%" }}>
-                <Image
-                  src="/visuels_hero_trio_transparent.webp"
-                  alt="Wallio — cartes de fidélité digitales sur iPhone"
-                  width={960} height={660}
-                  priority
-                  className="hero-img-enter"
-                  style={{ width:"100%", height:"auto", maxHeight:"78vh", objectFit:"contain", display:"block" }}
-                />
+              <div className="hero-img-wrap" style={{ flex:"0 0 50%", maxWidth:600, display:"flex", alignItems:"center", justifyContent:"center", height:"100%" }}>
+                <Image src="/visuels_hero_trio_transparent.webp" alt="Wallio — cartes de fidélité digitales" width={960} height={660} priority className="hero-img-enter"
+                  style={{ width:"100%", height:"auto", maxHeight:"80vh", objectFit:"contain", display:"block" }} />
               </div>
             </div>
           </section>
@@ -1078,11 +1153,9 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               2. PROOF BAR
           ══════════════════════════════════════════ */}
-          <div style={{ background:"#1D1D1F", borderTop:".5px solid rgba(255,255,255,.06)" }}>
-            <div style={{ ...MAX, padding:"22px 48px", display:"flex", alignItems:"center", justifyContent:"center", gap:36, flexWrap:"wrap" }} className="proof-bar">
-              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase", color:"rgba(255,255,255,.35)" }}>
-                {t.proofLabel}
-              </span>
+          <div style={{ background:"#09090B", borderTop:".5px solid rgba(255,255,255,.05)" }}>
+            <div style={{ ...MAX, padding:"22px 64px", display:"flex", alignItems:"center", justifyContent:"center", gap:36, flexWrap:"wrap" }} className="proof-bar">
+              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(255,255,255,.30)" }}>{t.proofLabel}</span>
               <div style={{ display:"flex", alignItems:"center", gap:20, flexWrap:"wrap", justifyContent:"center" }}>
                 {[
                   { src:"/logo-8am.jpg", alt:"8AM Coffeehouse", name:"8AM Coffeehouse & More", fit:"cover" as const, bg:"rgba(255,255,255,.08)" },
@@ -1094,7 +1167,7 @@ export default function LandingPage() {
                     <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, background:c.bg, border:".5px solid rgba(255,255,255,.12)" }}>
                       <Image src={c.src} alt={c.alt} width={32} height={32} style={{ width:"100%", height:"100%", objectFit:c.fit }} />
                     </div>
-                    <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.75)", letterSpacing:-.2 }}>{c.name}</span>
+                    <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.70)", letterSpacing:-.2 }}>{c.name}</span>
                   </div>
                 ))}
               </div>
@@ -1104,44 +1177,65 @@ export default function LandingPage() {
           </div>
 
           {/* ══════════════════════════════════════════
-              3. LE PROBLÈME
+              3. VIDÉO
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"96px 48px", background:"#0C0C10", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.09)", filter:"blur(100px)", top:-150, right:-100, pointerEvents:"none" }} />
-            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(99,102,241,.07)", filter:"blur(80px)", bottom:-80, left:-60, pointerEvents:"none" }} />
+          <section id="video" style={{ padding:"120px 64px", background:"#09090B", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(120px)", top:-200, left:-200, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.06)", filter:"blur(100px)", bottom:-150, right:-150, pointerEvents:"none" }} />
+            <div style={{ ...MAX, position:"relative", zIndex:1 }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:52 }}>
+                <span className="stag" style={{ background:"rgba(255,255,255,.07)", color:"rgba(255,255,255,.55)" }}>{t.videoTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
+                <p style={{ fontSize:16, color:"rgba(255,255,255,.40)", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
+              </div>
+              <div data-reveal style={{ maxWidth:860, margin:"0 auto" }}>
+                <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,.60)", border:".5px solid rgba(255,255,255,.08)" }}>
+                  <video ref={videoRef} poster="/Wallio_Landing_v2_poster.jpg" playsInline
+                    style={{ width:"100%", display:"block" }}
+                    onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)}>
+                    <source src="/Wallio_Landing_v2.webm" type="video/webm" />
+                    <source src="/Wallio_Landing_v2.mp4" type="video/mp4" />
+                  </video>
+                  {!videoPlaying && (
+                    <div className="video-play-btn" onClick={() => videoRef.current?.play()}>
+                      <div className="play-circle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="#09090B" style={{ marginLeft:3 }}><polygon points="5 3 19 12 5 21"/></svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              3b. LE PROBLÈME
+          ══════════════════════════════════════════ */}
+          <section style={{ padding:"120px 64px", background:"#09090B", borderTop:".5px solid rgba(255,255,255,.04)", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(100px)", top:-150, right:-100, pointerEvents:"none" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
               <div style={{ display:"flex", gap:80, alignItems:"flex-start" }} className="prob-split">
-                {/* Left */}
                 <div style={{ flex:"0 0 40%" }} className="prob-left">
                   <div data-reveal>
                     <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.problemTag}</span>
-                    <h2 style={{ fontSize:"clamp(36px,4.5vw,62px)", fontWeight:800, letterSpacing:-2, color:"#FFFFFF", lineHeight:1.05, marginBottom:28 }}>
-                      {t.problemTitle1}<br />
-                      <span className="grad">{t.problemTitle2}</span>
+                    <h2 style={{ fontSize:"clamp(36px,4.5vw,62px)", fontWeight:800, letterSpacing:"-0.04em", color:"#FFFFFF", lineHeight:1.0, marginBottom:28 }}>
+                      {t.problemTitle1}<br /><span className="grad">{t.problemTitle2}</span>
                     </h2>
-                    <p style={{ fontSize:15, color:"rgba(255,255,255,.4)", lineHeight:1.7, maxWidth:320 }}>
+                    <p style={{ fontSize:15, color:"rgba(255,255,255,.38)", lineHeight:1.75, maxWidth:320 }}>
                       {lang==="ro" ? "Clienții fideli sunt invizibili. Nu știți cine vine, cine pleacă, nici cum să îi aduceți înapoi." :
                        lang==="en" ? "Your regulars are invisible. You don't know who comes back, who left, or how to bring them back." :
                        "Vos habitués sont invisibles. Vous ne savez pas qui revient, qui est parti, ni comment les faire revenir."}
                     </p>
                   </div>
                 </div>
-                {/* Right — 3 pains */}
                 <div style={{ flex:1 }} className="prob-right">
-                  <div data-stagger style={{ display:"flex", flexDirection:"column", gap:0 }}>
+                  <div data-stagger style={{ display:"flex", flexDirection:"column" }}>
                     {t.problemPains.map((p,i) => (
-                      <div key={i} data-reveal style={{
-                        padding:"28px 0",
-                        borderBottom: i < 2 ? ".5px solid rgba(255,255,255,.08)" : "none",
-                        display:"flex", gap:20, alignItems:"flex-start",
-                      }}>
-                        <span style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.2)", letterSpacing:".06em", paddingTop:4, flexShrink:0, minWidth:28 }}>0{i+1}</span>
+                      <div key={i} data-reveal style={{ padding:"28px 0", borderBottom: i < 2 ? ".5px solid rgba(255,255,255,.06)" : "none", display:"flex", gap:20, alignItems:"flex-start" }}>
+                        <span style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.18)", letterSpacing:".06em", paddingTop:5, flexShrink:0, minWidth:28 }}>0{i+1}</span>
                         <div>
-                          <h3 style={{ fontSize:20, fontWeight:700, lineHeight:1.25, marginBottom:8,
-                            color: i===2 ? "#F97316" : i===0 ? "#FFFFFF" : "rgba(255,255,255,.65)" }}>
-                            {p.title}
-                          </h3>
-                          <p style={{ fontSize:14, color:"rgba(255,255,255,.35)", lineHeight:1.65 }}>{p.body}</p>
+                          <h3 style={{ fontSize:20, fontWeight:700, lineHeight:1.25, marginBottom:8, color: i===2 ? "#F97316" : i===0 ? "#FFFFFF" : "rgba(255,255,255,.60)" }}>{p.title}</h3>
+                          <p style={{ fontSize:14, color:"rgba(255,255,255,.32)", lineHeight:1.7 }}>{p.body}</p>
                         </div>
                       </div>
                     ))}
@@ -1158,391 +1252,65 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               4. COMMENT ÇA MARCHE
           ══════════════════════════════════════════ */}
-          <section id="comment" style={{ padding:"96px 48px", background:"#FAFBFF" }}>
+          <section id="comment" style={{ padding:"120px 64px", background:"#FAFAFA" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:64 }}>
+              <div data-reveal="scale" style={{ marginBottom:72 }}>
                 <span className="stag">{t.howTag}</span>
-                <h2 style={{ fontSize:"clamp(34px,4vw,56px)", fontWeight:700, letterSpacing:-1.8, color:"#1D1D1F", lineHeight:1.08 }}>
+                <h2 style={{ fontSize:"clamp(34px,4vw,56px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
                   {t.howTitle}<br /><span className="grad">{t.howTitle2}</span>
                 </h2>
-                <p style={{ fontSize:16, color:"#6E6E73", marginTop:12, maxWidth:420 }}>{t.howSub}</p>
+                <p style={{ fontSize:16.5, color:"#6B7280", marginTop:14, maxWidth:420, lineHeight:1.65 }}>{t.howSub}</p>
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, marginBottom:56 }} className="steps-row">
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24 }} className="steps-row">
                 {t.howSteps.map((s,i) => (
-                  <div key={i} data-reveal style={{ background:"#fff", borderRadius:24, padding:"32px 28px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden" }}>
-                    <div style={{ fontSize:52, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.10)`,`rgba(91,108,246,.10)`,`rgba(249,115,22,.12)`][i], lineHeight:1, marginBottom:20, fontVariantNumeric:"tabular-nums" }}>{s.n}</div>
-                    <h3 style={{ fontSize:16, fontWeight:700, color:"#1D1D1F", marginBottom:10, lineHeight:1.35 }}>{s.title}</h3>
-                    <p style={{ fontSize:13.5, color:"#6E6E73", lineHeight:1.65 }}>{s.body}</p>
+                  <div key={i} data-reveal style={{ background:"#FFFFFF", borderRadius:24, padding:"36px 32px", border:".5px solid rgba(0,0,0,.06)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
+                    <div style={{ fontSize:56, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.09)`,`rgba(91,108,246,.09)`,`rgba(249,115,22,.10)`][i], lineHeight:1, marginBottom:24 }}>{s.n}</div>
+                    <h3 style={{ fontSize:17, fontWeight:700, color:"#09090B", marginBottom:12, lineHeight:1.3 }}>{s.title}</h3>
+                    <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{s.body}</p>
                     <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:`linear-gradient(180deg,${["#007AFF","#5B6CF6","#F97316"][i]},transparent)` }} />
                   </div>
                 ))}
               </div>
-              {/* Video demo */}
-              <div data-reveal="scale">
-                <video autoPlay muted loop playsInline preload="metadata"
-                  poster="/Wallio_Landing_v2_poster.jpg"
-                  style={{ width:"100%", borderRadius:20, display:"block", boxShadow:"0 24px 64px rgba(0,0,0,.12)" }}>
-                  <source src="/Wallio_Landing_v2.webm" type="video/webm" />
-                  <source src="/Wallio_Landing_v2.mp4" type="video/mp4" />
-                </video>
-              </div>
             </div>
           </section>
 
           {/* ══════════════════════════════════════════
-              4b. SECTEURS (ici pour montrer la polyvalence tôt)
+              4b. SECTEURS
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"64px 48px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.07)" }}>
+          <section style={{ padding:"72px 64px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.06)" }}>
             <div style={{ ...MAX, textAlign:"center" }}>
               <div data-reveal>
                 <span className="stag">{t.sectorsTag}</span>
-                <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:700, letterSpacing:-1.2, color:"#1D1D1F", marginBottom:28 }}>
-                  {t.sectorsTitle}
-                </h2>
+                <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", marginBottom:32 }}>{t.sectorsTitle}</h2>
               </div>
-              <div data-stagger style={{ display:"flex", flexWrap:"wrap", gap:10, justifyContent:"center" }}>
-                {t.sectors.map((s,i) => (
-                  <span key={i} className="sector-pill">{s}</span>
-                ))}
+              <div data-stagger style={{ display:"flex", flexWrap:"wrap", gap:12, justifyContent:"center" }}>
+                {t.sectors.map((s,i) => <span key={i} className="sector-pill">{s}</span>)}
               </div>
             </div>
           </section>
 
           {/* ══════════════════════════════════════════
-              5. MODES DE RÉCOMPENSES
+              5. EXPÉRIENCE CLIENT
           ══════════════════════════════════════════ */}
-          <section id="recompenses" style={{ padding:"96px 48px", background:"#FFFFFF" }}>
+          <section id="client" style={{ padding:"120px 64px", background:"#FFFFFF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:60 }}>
-                <span className="stag">{t.rewardTag}</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,52px)", fontWeight:700, letterSpacing:-1.6, color:"#1D1D1F", marginBottom:12 }}>
-                  {t.rewardTitle}<br /><span className="grad">{t.rewardTitle2}</span>
-                </h2>
-                <p style={{ fontSize:16, color:"#6E6E73", maxWidth:440, margin:"0 auto" }}>{t.rewardSub}</p>
-              </div>
-              <div style={{ display:"flex", gap:16, alignItems:"stretch" }} className="reward-cols">
-                {[
-                  { data: t.rewardCyclic, accent:"#007AFF", bg:"rgba(0,122,255,.08)", border:"rgba(0,122,255,.20)",
-                    visual: <div key="cyc" style={{ background:"#F0F5FF", borderRadius:14, padding:"16px 18px" }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-                        <span style={{ fontSize:12, color:"#007AFF", fontWeight:600 }}>Nomade Café · Cycle en cours</span>
-                        <span style={{ fontSize:13, fontWeight:700, color:"#1D1D1F" }}>6/10</span>
-                      </div>
-                      <div style={{ height:6, background:"rgba(0,0,0,.08)", borderRadius:99, overflow:"hidden", marginBottom:12 }}>
-                        <div style={{ height:"100%", width:"60%", borderRadius:99, background:"linear-gradient(90deg,#007AFF,#8B5CF6)", animation:"fillProg .9s cubic-bezier(.16,1,.3,1) .2s both" }} />
-                      </div>
-                      <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:10 }}>
-                        {Array.from({length:10}).map((_,i)=>(
-                          <div key={i} style={{ width:24, height:24, borderRadius:"50%", background: i<6 ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "rgba(0,0,0,.08)", animation:i<6?`stampPop .4s cubic-bezier(.34,1.5,.64,1) ${.3+i*.05}s both`:"none" }} />
-                        ))}
-                      </div>
-                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"#8E8E93" }}>
-                        <span>Récompense : Café offert</span><span>+4 restants</span>
-                      </div>
-                    </div>
-                  },
-                  { data: t.rewardProg, accent:"#5B6CF6", bg:"rgba(91,108,246,.08)", border:"rgba(91,108,246,.20)",
-                    visual: <div key="prog" style={{ background:"#F3F0FF", borderRadius:14, padding:"16px 18px" }}>
-                      <div style={{ fontSize:12, color:"#5B6CF6", fontWeight:600, marginBottom:14 }}>Comptoir de l'Homme · Paliers</div>
-                      {[{n:3,r:"Réduction -10%",done:true,pct:100},{n:7,r:"Soin offert",done:true,pct:100},{n:12,r:"Statut VIP",done:false,pct:42}].map((p,i)=>(
-                        <div key={i} style={{ marginBottom:i<2?12:0 }}>
-                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                            <span style={{ fontSize:12, fontWeight:600, color: p.done?"#5B6CF6":"#1D1D1F" }}>{p.r}</span>
-                            <span style={{ fontSize:11, color:"#8E8E93" }}>{p.n} tampons</span>
-                          </div>
-                          <div style={{ height:4, background:"rgba(0,0,0,.08)", borderRadius:99, overflow:"hidden" }}>
-                            <div style={{ height:"100%", width:`${p.pct}%`, background:p.done?"linear-gradient(90deg,#5B6CF6,#8B5CF6)":"rgba(91,108,246,.35)", borderRadius:99, animation:`fillProg .8s cubic-bezier(.16,1,.3,1) ${.2+i*.15}s both` }}/>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  },
-                  { data: t.rewardFlex, accent:"#8B5CF6", bg:"rgba(139,92,246,.08)", border:"rgba(139,92,246,.20)",
-                    visual: <div key="flex" style={{ background:"#F5F0FF", borderRadius:14, padding:"16px 18px" }}>
-                      <div style={{ fontSize:12, color:"#8B5CF6", fontWeight:600, marginBottom:10 }}>Yumi · À mi-parcours (5/10)</div>
-                      <div style={{ background:"rgba(139,92,246,.08)", borderRadius:10, padding:"12px 14px", marginBottom:10, border:"1.5px solid rgba(139,92,246,.25)", animation:"cardSlide .5s .2s both" }}>
-                        <div style={{ fontSize:12, fontWeight:700, color:"#8B5CF6", marginBottom:4 }}>Récompense intermédiaire</div>
-                        <div style={{ fontSize:13, color:"#1D1D1F" }}>Boisson chaude offerte → reset à 5</div>
-                      </div>
-                      <div style={{ textAlign:"center", fontSize:11, color:"#8E8E93", marginBottom:8 }}>ou continuer pour :</div>
-                      <div style={{ background:"linear-gradient(135deg,rgba(139,92,246,.10),rgba(0,122,255,.10))", borderRadius:10, padding:"12px 14px", border:"1.5px solid rgba(139,92,246,.20)", animation:"cardSlide .5s .45s both" }}>
-                        <div style={{ fontSize:12, fontWeight:700, color:"#5B6CF6", marginBottom:4 }}>Grande récompense</div>
-                        <div style={{ fontSize:13, color:"#1D1D1F" }}>Menu complet offert → reset à 0</div>
-                      </div>
-                    </div>
-                  },
-                ].map(({ data, accent, bg, border, visual }, i) => {
-                  const active = activeReward === i;
-                  return (
-                    <div key={i} data-reveal
-                      onMouseEnter={() => setActiveReward(i)}
-                      onClick={() => setActiveReward(i)}
-                      style={{
-                        flex: active ? "2.2" : "1",
-                        background:"#fff", borderRadius:24,
-                        padding: active ? "28px 28px" : "28px 20px",
-                        border: active ? `1.5px solid ${border}` : ".5px solid rgba(0,0,0,.07)",
-                        boxShadow: active ? `0 12px 40px rgba(0,0,0,.08), 0 0 0 4px ${bg}` : "0 2px 12px rgba(0,0,0,.04)",
-                        transition:"flex .4s cubic-bezier(.16,1,.3,1), box-shadow .3s, border-color .3s, padding .3s",
-                        cursor:"pointer", overflow:"hidden",
-                      }}>
-                      <span className="reward-pill" style={{ color:accent, background:bg }}>{data.tag}</span>
-                      <p style={{ fontSize:12, color:"#8E8E93", marginBottom:12 }}>{data.sub}</p>
-                      <div style={{ overflow:"hidden", maxHeight: active ? "320px" : 0, opacity: active ? 1 : 0, transition:"max-height .4s cubic-bezier(.16,1,.3,1), opacity .3s" }}>
-                        {active && visual}
-                      </div>
-                      <p style={{ fontSize:13.5, color:"#6E6E73", lineHeight:1.65, marginBottom:14, marginTop: active ? 16 : 0 }}>{data.desc}</p>
-                      <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
-                        {data.bullets.map((b,bi) => (
-                          <div key={bi} className="feat-item">
-                            <div className="feat-dot" style={{ background: accent }} />
-                            <span style={{ fontSize:13, color:"#3C3C43", lineHeight:1.5 }}>{b}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════
-              6. DASHBOARD GÉRANT
-          ══════════════════════════════════════════ */}
-          <section id="dashboard" style={{ padding:"96px 48px", background:"#0C0C10" }}>
-            <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:52 }}>
-                <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.dashTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)",fontWeight:700,letterSpacing:-1.5,color:"#FFFFFF",lineHeight:1.1,marginBottom:12 }}>
-                  {t.dashTitle}<br /><span className="grad">{t.dashTitle2}</span>
-                </h2>
-                <p style={{ fontSize:15.5,color:"rgba(255,255,255,.5)",lineHeight:1.65,maxWidth:520 }}>{t.dashSub}</p>
-              </div>
-              <div data-reveal className="dash-spotlight" style={{ background:"rgba(255,255,255,.04)", border:".5px solid rgba(255,255,255,.08)" }}>
-                {/* Feature list */}
-                <div className="dash-feat-list" style={{ borderRight:".5px solid rgba(255,255,255,.08)" }}>
-                  {t.dashFeats.map((f,i) => (
-                    <div key={i}
-                      className={`feat-row${activeDash===i?" feat-active":""}`}
-                      onMouseEnter={() => setActiveDash(i)}
-                      onClick={() => setActiveDash(i)}
-                      style={{ borderColor: activeDash===i ? "rgba(0,122,255,.4)" : "transparent" }}
-                    >
-                      <div style={{ width:7,height:7,borderRadius:"50%",background:activeDash===i?"#60A5FA":"rgba(255,255,255,.25)",flexShrink:0,marginTop:5,transition:"background .15s" }} />
-                      <div>
-                        <h4 style={{ fontSize:14,fontWeight:700,color:activeDash===i?"#FFFFFF":"rgba(255,255,255,.55)",marginBottom:activeDash===i?5:0,lineHeight:1.3,transition:"color .15s" }}>{f.title}</h4>
-                        <p style={{ fontSize:12.5,color:"rgba(255,255,255,.4)",lineHeight:1.55,maxHeight:activeDash===i?"80px":0,overflow:"hidden",opacity:activeDash===i?1:0,transition:"max-height .28s ease,opacity .2s ease",marginTop:activeDash===i?2:0 }}>{f.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {/* Phone avec zoom par feature */}
-                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"rgba(0,0,0,.2)", borderRadius:"0 20px 20px 0" }}>
-                  {(() => {
-                    const configs = [
-                      { src:"/iphone_accueil.webp",    scale:1.65, ty:-16 },
-                      { src:"/iphone_clients.webp",    scale:1,    ty:0   },
-                      { src:"/iphone_notifs.webp",     scale:1,    ty:0   },
-                      { src:"/iphone_accueil2.webp",   scale:1,    ty:0   },
-                      { src:"/iphone_scanner.webp",    scale:1,    ty:0   },
-                    ];
-                    const cfg = configs[Math.min(activeDash, configs.length - 1)];
-                    return (
-                      <div style={{ position:"relative", overflow:"hidden", borderRadius:32, boxShadow:"0 32px 80px rgba(0,0,0,.55)", height:640, width:"auto" }}>
-                        <Image
-                          key={cfg.src + activeDash}
-                          src={cfg.src}
-                          alt={t.dashFeats[activeDash]?.title ?? ""}
-                          width={280} height={560}
-                          className="screen-enter"
-                          style={{ display:"block", height:640, width:"auto",
-                            transform:`scale(${cfg.scale}) translateY(${cfg.ty}%)`,
-                            transition:"transform .7s cubic-bezier(.16,1,.3,1)",
-                            transformOrigin:"center center" }}
-                        />
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Mini CTA */}
-          <div style={{ background:"#0C0C10", padding:"40px 48px", borderTop:".5px solid rgba(255,255,255,.05)" }}>
-            <div style={{ ...MAX, display:"flex", alignItems:"center", justifyContent:"space-between", gap:24, flexWrap:"wrap" }} className="mini-cta-row">
-              <p style={{ fontSize:17, fontWeight:500, color:"rgba(255,255,255,.75)", margin:0 }}>{t.miniCtaText}</p>
-              <a href={wa(t.miniCtaWa)} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ flexShrink:0 }}>
-                <svg width="16" height="16" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
-                {t.miniCtaBtn}
-              </a>
-            </div>
-          </div>
-
-          {/* ══════════════════════════════════════════
-              6b. ÉQUIPE & WALLIO PRO
-          ══════════════════════════════════════════ */}
-          <section style={{ padding:"96px 48px", background:"#FFFFFF" }}>
-            <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:52 }}>
-                <span className="stag">{t.teamTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", lineHeight:1.1, marginBottom:14 }}>
-                  {t.teamTitle}<br /><span className="grad">{t.teamTitle2}</span>
-                </h2>
-                <p style={{ fontSize:15.5, color:"#6E6E73", lineHeight:1.65, maxWidth:520 }}>{t.teamSub}</p>
-              </div>
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:16, marginBottom:40 }} className="feats-2col">
-                {t.teamFeats.map((f,i) => (
-                  <div key={i} style={{ background:"#F5F5F7", borderRadius:16, padding:"24px 22px", border:".5px solid rgba(0,0,0,.06)" }}>
-                    <h4 style={{ fontSize:14.5, fontWeight:700, color:"#1D1D1F", marginBottom:8 }}>{f.title}</h4>
-                    <p style={{ fontSize:13, color:"#6E6E73", lineHeight:1.6 }}>{f.body}</p>
-                  </div>
-                ))}
-              </div>
-              <div data-reveal style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-                <span style={{ fontSize:13, color:"#8E8E93" }}>{lang==="ro" ? "Disponibil pe" : lang==="en" ? "Available on" : "Disponible sur"} :</span>
-                <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.65 }} />
-                <span style={{ fontSize:13, color:"#AEAEB2" }}>+</span>
-                <span style={{ fontSize:13, fontWeight:500, color:"#6E6E73", padding:"6px 14px", background:"rgba(0,0,0,.05)", borderRadius:20 }}>
-                  {lang==="ro" ? "Browser web" : lang==="en" ? "Web browser" : "Navigateur web"}
-                </span>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════
-              6c. AUTOMATISATIONS
-          ══════════════════════════════════════════ */}
-          <section style={{ padding:"96px 48px", background:"#0C0C10", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(100px)", top:-100, left:-100, pointerEvents:"none" }} />
-            <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(249,115,22,.07)", filter:"blur(80px)", bottom:-80, right:-80, pointerEvents:"none" }} />
-            <div style={{ ...MAX, position:"relative", zIndex:1 }}>
-              <div data-reveal="scale" style={{ marginBottom:60 }}>
-                <span className="stag" style={{ background:"rgba(249,115,22,.12)", color:"#F97316" }}>
-                  {lang==="ro" ? "Automatizări" : lang==="en" ? "Automations" : "Automatisations"}
-                </span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:800, letterSpacing:-1.5, color:"#FFFFFF", lineHeight:1.1, marginBottom:14 }}>
-                  {lang==="ro" ? <>Wallio lucrează pentru dvs.<br /><span className="grad">chiar și când dormiti.</span></> :
-                   lang==="en" ? <>Wallio works for you,<br /><span className="grad">even while you sleep.</span></> :
-                   <>Wallio travaille pour vous,<br /><span className="grad">même quand vous dormez.</span></>}
-                </h2>
-                <p style={{ fontSize:15, color:"rgba(255,255,255,.45)", maxWidth:480, marginBottom:16 }}>
-                  {lang==="ro" ? "Configurați o dată. Wallio trimite mesajele potrivite la momentul potrivit, fără nicio acțiune din partea dvs." :
-                   lang==="en" ? "Set it once. Wallio sends the right messages at the right time, with no action needed from you." :
-                   "Configurez une fois. Wallio envoie les bons messages au bon moment, sans aucune action de votre part."}
-                </p>
-                <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"7px 14px", background:"rgba(52,199,89,.12)", borderRadius:20, border:".5px solid rgba(52,199,89,.25)" }}>
-                  <div style={{ width:7, height:7, borderRadius:"50%", background:"#34C759", flexShrink:0 }} />
-                  <span style={{ fontSize:12.5, fontWeight:600, color:"#34C759" }}>{t.autoHook}</span>
-                </div>
-              </div>
-
-              <div style={{ display:"flex", gap:20 }} className="steps-row">
-                {[
-                  {
-                    color:"#007AFF", bg:"rgba(0,122,255,.10)", border:"rgba(0,122,255,.20)",
-                    tag: lang==="ro" ? "Zi de naștere" : lang==="en" ? "Birthday" : "Anniversaire",
-                    title: lang==="ro" ? "Un mesaj în ziua lor" : lang==="en" ? "A message on their day" : "Un message le jour J",
-                    body: lang==="ro" ? "În ziua de naștere a clientului dvs., Wallio trimite automat un mesaj personalizat — cu sau fără un tampon dublu cadou. Zero intervenție din partea dvs." :
-                          lang==="en" ? "On your customer's birthday, Wallio automatically sends a personalised message — with or without a double stamp gift. Zero effort from you." :
-                          "Le jour de l'anniversaire de votre client, Wallio envoie automatiquement un message personnalisé — avec ou sans tampon double offert. Zéro intervention de votre part.",
-                    visual: (
-                      <div style={{ background:"rgba(255,255,255,.06)", borderRadius:16, padding:"16px 18px", marginBottom:20, border:".5px solid rgba(0,122,255,.20)" }}>
-                        <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", fontWeight:600, marginBottom:10 }}>Wallio · Anniversaire · Automatique</div>
-                        <div style={{ background:"rgba(255,255,255,.08)", borderRadius:10, padding:"12px 14px" }}>
-                          <div style={{ fontSize:13, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>
-                            {lang==="ro" ? "La mulți ani ! Îți oferim un tampon dublu azi. Ne vedem curând !" :
-                             lang==="en" ? "Happy Birthday! We're giving you a double stamp today. See you soon!" :
-                             "Bon anniversaire ! On vous offre un double tampon aujourd'hui. À bientôt !"}
-                          </div>
-                        </div>
-                        <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:8 }}>
-                          <div style={{ width:7, height:7, borderRadius:"50%", background:"#34C759" }} />
-                          <span style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>
-                            {lang==="ro" ? "Trimis automat · 0 acțiuni manuale" : lang==="en" ? "Sent automatically · 0 manual actions" : "Envoyé automatiquement · 0 action manuelle"}
-                          </span>
-                        </div>
-                      </div>
-                    ),
-                  },
-                  {
-                    color:"#F97316", bg:"rgba(249,115,22,.10)", border:"rgba(249,115,22,.20)",
-                    tag: lang==="ro" ? "Reactivare" : lang==="en" ? "Re-engagement" : "Relance",
-                    title: lang==="ro" ? "Clienții inactivi revin" : lang==="en" ? "Inactive customers come back" : "Vos clients inactifs reviennent",
-                    body: lang==="ro" ? "Un client nu a mai venit de X zile ? Wallio detectează asta și trimite automat un mesaj personalizat de reactivare. Dvs. definiți intervalul, Wallio se ocupă de rest." :
-                          lang==="en" ? "A customer hasn't come back in X days? Wallio detects this and automatically sends a personalised re-engagement message. You set the interval, Wallio handles the rest." :
-                          "Un client n'est pas revenu depuis X jours ? Wallio le détecte et envoie automatiquement un message de relance personnalisé. Vous définissez l'intervalle, Wallio s'occupe du reste.",
-                    visual: (
-                      <div style={{ background:"rgba(255,255,255,.06)", borderRadius:16, padding:"16px 18px", marginBottom:20, border:".5px solid rgba(249,115,22,.20)" }}>
-                        <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", fontWeight:600, marginBottom:10 }}>
-                          {lang==="ro" ? "Wallio · Absent +30 zile · Automat" : lang==="en" ? "Wallio · Absent 30+ days · Auto" : "Wallio · Absent +30 jours · Automatique"}
-                        </div>
-                        <div style={{ background:"rgba(255,255,255,.08)", borderRadius:10, padding:"12px 14px" }}>
-                          <div style={{ fontSize:13, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>
-                            {lang==="ro" ? "Vă lipsim ? Vă mai lipsesc 2 ștampile pentru recompensa dvs. Vă așteptăm !" :
-                             lang==="en" ? "Miss us? You're only 2 stamps away from your reward. We're waiting for you!" :
-                             "Vous nous manquez ! Il vous reste 2 tampons avant votre récompense. On vous attend !"}
-                          </div>
-                        </div>
-                        <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:8 }}>
-                          <div style={{ width:7, height:7, borderRadius:"50%", background:"#F97316" }} />
-                          <span style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>
-                            {lang==="ro" ? "Detectat automat · 0 acțiuni manuale" : lang==="en" ? "Auto-detected · 0 manual actions" : "Détecté automatiquement · 0 action manuelle"}
-                          </span>
-                        </div>
-                      </div>
-                    ),
-                  },
-                ].map((a, i) => (
-                  <div key={i} data-reveal style={{ flex:1, border:`.5px solid ${a.border}`, borderRadius:24, padding:"28px 24px", background:"rgba(255,255,255,.03)" }}>
-                    <span style={{ display:"inline-block", padding:"4px 11px", borderRadius:20, fontSize:12, fontWeight:600, color:a.color, background:a.bg, marginBottom:12 }}>{a.tag}</span>
-                    <h3 style={{ fontSize:20, fontWeight:700, color:"#FFFFFF", marginBottom:10, lineHeight:1.25 }}>{a.title}</h3>
-                    {a.visual}
-                    <p style={{ fontSize:13.5, color:"rgba(255,255,255,.45)", lineHeight:1.65 }}>{a.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════
-              7. EXPÉRIENCE CLIENT
-          ══════════════════════════════════════════ */}
-          <section id="client" style={{ padding:"96px 48px", background:"#FFFFFF" }}>
-            <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:52 }}>
+              <div data-reveal="scale" style={{ marginBottom:56 }}>
                 <span className="stag">{t.clientTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", lineHeight:1.1, marginBottom:12 }}>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
                   {t.clientTitle}<br /><span className="grad">{t.clientTitle2}</span>
                 </h2>
-                <p style={{ fontSize:15.5, color:"#6E6E73", lineHeight:1.65, maxWidth:520 }}>{t.clientSub}</p>
+                <p style={{ fontSize:16, color:"#6B7280", lineHeight:1.7, maxWidth:520 }}>{t.clientSub}</p>
               </div>
-
               <div style={{ display:"flex", gap:0, alignItems:"stretch", background:"#F5F5F7", borderRadius:28, overflow:"hidden", border:".5px solid rgba(0,0,0,.07)" }} className="client-spotlight">
-                {/* Left — grand téléphone interactif */}
                 <div style={{ flex:"0 0 44%", background:"#F0F0F5", display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 32px", position:"relative", overflow:"hidden", minHeight:560 }} className="client-phone-panel">
-                  {/* Blob de fond */}
                   <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(60px)", top:-50, left:-50, pointerEvents:"none" }} />
                   <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:`rgba(${activeClient===2?"249,115,22":"99,102,241"},.07)`, filter:"blur(50px)", bottom:-30, right:-30, pointerEvents:"none", transition:"background .5s" }} />
-                  {/* Téléphone */}
-                  <Image
-                    key={activeClient}
-                    src={["/iphone_client.webp","/iphone_messages.webp","/iphone_decouvrir.webp"][activeClient]}
-                    alt={t.clientFeats[activeClient]?.title ?? ""}
-                    width={340} height={680}
-                    className="screen-enter"
-                    style={{ width:"auto", height:"min(72vh, 520px)", display:"block", position:"relative", zIndex:1, filter:"drop-shadow(0 24px 48px rgba(0,0,0,.18))" }}
-                  />
-                  {/* Indicateur */}
+                  <Image key={activeClient} src={["/iphone_client.webp","/iphone_messages.webp","/iphone_decouvrir.webp"][activeClient]} alt={t.clientFeats[activeClient]?.title ?? ""} width={340} height={680} className="screen-enter"
+                    style={{ width:"auto", height:"min(72vh, 520px)", display:"block", position:"relative", zIndex:1, filter:"drop-shadow(0 24px 48px rgba(0,0,0,.18))" }} />
                   <div style={{ position:"absolute", bottom:20, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
-                    {[0,1,2].map(i=>(
-                      <div key={i} onClick={()=>setActiveClient(i)} style={{ width: activeClient===i ? 20 : 6, height:6, borderRadius:3, background: activeClient===i ? "#007AFF" : "rgba(0,0,0,.18)", transition:"all .3s", cursor:"pointer" }} />
-                    ))}
+                    {[0,1,2].map(i=>( <div key={i} onClick={()=>setActiveClient(i)} style={{ width: activeClient===i ? 20 : 6, height:6, borderRadius:3, background: activeClient===i ? "#007AFF" : "rgba(0,0,0,.18)", transition:"all .3s", cursor:"pointer" }} /> ))}
                   </div>
                 </div>
-
-                {/* Right — 3 features + sous-items pour feature 0 */}
                 <div style={{ flex:1, padding:"40px 36px", display:"flex", flexDirection:"column", justifyContent:"center", gap:4 }}>
                   {t.clientFeats.slice(0, 3).map((f,i) => {
                     const active = activeClient === i;
@@ -1553,29 +1321,18 @@ export default function LandingPage() {
                     ];
                     return (
                       <div key={i}>
-                        <div
-                          onMouseEnter={() => setActiveClient(i)}
-                          onClick={() => setActiveClient(i)}
-                          style={{
-                            padding:"18px 20px", borderRadius:16, cursor:"pointer",
-                            background: active ? "#FFFFFF" : "transparent",
-                            border: active ? ".5px solid rgba(0,122,255,.15)" : ".5px solid transparent",
-                            boxShadow: active ? "0 4px 20px rgba(0,0,0,.07)" : "none",
-                            transition:"all .25s cubic-bezier(.16,1,.3,1)",
-                          }}>
+                        <div onMouseEnter={() => setActiveClient(i)} onClick={() => setActiveClient(i)}
+                          style={{ padding:"18px 20px", borderRadius:16, cursor:"pointer", background: active ? "#FFFFFF" : "transparent", border: active ? ".5px solid rgba(0,122,255,.15)" : ".5px solid transparent", boxShadow: active ? "0 4px 20px rgba(0,0,0,.07)" : "none", transition:"all .25s cubic-bezier(.16,1,.3,1)" }}>
                           <div style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
                             <div style={{ width:36, height:36, borderRadius:10, background: active ? "rgba(0,122,255,.10)" : "rgba(0,0,0,.05)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background .2s" }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={active?"#007AFF":"#8E8E93"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                {icons[i]}
-                              </svg>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={active?"#007AFF":"#8E8E93"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{icons[i]}</svg>
                             </div>
                             <div style={{ flex:1 }}>
-                              <h4 style={{ fontSize:14.5, fontWeight:700, color: active ? "#1D1D1F" : "#6E6E73", marginBottom: active ? 5 : 0, lineHeight:1.3, transition:"color .2s" }}>{f.title}</h4>
-                              <p style={{ fontSize:13, color:"#6E6E73", lineHeight:1.6, maxHeight: active ? "80px" : 0, overflow:"hidden", opacity: active ? 1 : 0, transition:"max-height .3s ease, opacity .2s" }}>{f.body}</p>
+                              <h4 style={{ fontSize:14.5, fontWeight:700, color: active ? "#09090B" : "#6B7280", marginBottom: active ? 5 : 0, lineHeight:1.3, transition:"color .2s" }}>{f.title}</h4>
+                              <p style={{ fontSize:13, color:"#6B7280", lineHeight:1.6, maxHeight: active ? "80px" : 0, overflow:"hidden", opacity: active ? 1 : 0, transition:"max-height .3s ease, opacity .2s" }}>{f.body}</p>
                             </div>
                           </div>
                         </div>
-                        {/* Sous-items Y aller + Parrainage uniquement pour feature 0 */}
                         {i === 0 && (
                           <div style={{ marginLeft:30, marginTop:4, display:"flex", flexDirection:"column", gap:4 }}>
                             {t.clientFeats.slice(3, 5).map((sub, si) => (
@@ -1584,8 +1341,8 @@ export default function LandingPage() {
                                   {si===0 ? <><polyline points="5 12 12 5 19 12"/><path d="M12 5v14"/></> : <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
                                 </svg>
                                 <div>
-                                  <div style={{ fontSize:13, fontWeight:700, color:"#1D1D1F", marginBottom:3 }}>{sub.title}</div>
-                                  <div style={{ fontSize:12, color:"#6E6E73", lineHeight:1.55 }}>{sub.body}</div>
+                                  <div style={{ fontSize:13, fontWeight:700, color:"#09090B", marginBottom:3 }}>{sub.title}</div>
+                                  <div style={{ fontSize:12, color:"#6B7280", lineHeight:1.55 }}>{sub.body}</div>
                                 </div>
                               </div>
                             ))}
@@ -1600,31 +1357,247 @@ export default function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════
-              8. PERSONNALISATION + VRAIES CARTES
+              6. MODES DE RÉCOMPENSES
           ══════════════════════════════════════════ */}
-          <section id="carte" style={{ padding:"96px 48px", background:"#F7F8FF" }}>
+          <section id="recompenses" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:56 }}>
-                <span className="stag">{t.customTag}</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,52px)", fontWeight:700, letterSpacing:-1.6, color:"#1D1D1F", lineHeight:1.08 }}>
-                  {t.customTitle}<br /><span className="grad">{t.customTitle2}</span>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
+                <span className="stag">{t.rewardTag}</span>
+                <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", marginBottom:14 }}>
+                  {t.rewardTitle}<br /><span className="grad">{t.rewardTitle2}</span>
                 </h2>
-                <p style={{ fontSize:16, color:"#6E6E73", marginTop:12, maxWidth:440 }}>{t.customSub}</p>
+                <p style={{ fontSize:16, color:"#6B7280", maxWidth:440, margin:"0 auto" }}>{t.rewardSub}</p>
+              </div>
+              <div style={{ display:"flex", gap:16, alignItems:"stretch" }} className="reward-cols">
+                {[
+                  { data: t.rewardCyclic, accent:"#007AFF", bg:"rgba(0,122,255,.08)", border:"rgba(0,122,255,.20)",
+                    visual: <div key="cyc" style={{ background:"#F0F5FF", borderRadius:14, padding:"16px 18px" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                        <span style={{ fontSize:12, color:"#007AFF", fontWeight:600 }}>Nomade Café · Cycle en cours</span>
+                        <span style={{ fontSize:13, fontWeight:700, color:"#09090B" }}>6/10</span>
+                      </div>
+                      <div style={{ height:6, background:"rgba(0,0,0,.08)", borderRadius:99, overflow:"hidden", marginBottom:12 }}>
+                        <div style={{ height:"100%", width:"60%", borderRadius:99, background:"linear-gradient(90deg,#007AFF,#8B5CF6)", animation:"fillProg .9s cubic-bezier(.16,1,.3,1) .2s both" }} />
+                      </div>
+                      <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:10 }}>
+                        {Array.from({length:10}).map((_,i)=>( <div key={i} style={{ width:24, height:24, borderRadius:"50%", background: i<6 ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "rgba(0,0,0,.08)", animation:i<6?`stampPop .4s cubic-bezier(.34,1.5,.64,1) ${.3+i*.05}s both`:"none" }} /> ))}
+                      </div>
+                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"#8E8E93" }}>
+                        <span>Récompense : Café offert</span><span>+4 restants</span>
+                      </div>
+                    </div>
+                  },
+                  { data: t.rewardProg, accent:"#5B6CF6", bg:"rgba(91,108,246,.08)", border:"rgba(91,108,246,.20)",
+                    visual: <div key="prog" style={{ background:"#F3F0FF", borderRadius:14, padding:"16px 18px" }}>
+                      <div style={{ fontSize:12, color:"#5B6CF6", fontWeight:600, marginBottom:14 }}>Comptoir de l'Homme · Paliers</div>
+                      {[{n:3,r:"Réduction -10%",done:true,pct:100},{n:7,r:"Soin offert",done:true,pct:100},{n:12,r:"Statut VIP",done:false,pct:42}].map((p,i)=>(
+                        <div key={i} style={{ marginBottom:i<2?12:0 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                            <span style={{ fontSize:12, fontWeight:600, color: p.done?"#5B6CF6":"#09090B" }}>{p.r}</span>
+                            <span style={{ fontSize:11, color:"#8E8E93" }}>{p.n} tampons</span>
+                          </div>
+                          <div style={{ height:4, background:"rgba(0,0,0,.08)", borderRadius:99, overflow:"hidden" }}>
+                            <div style={{ height:"100%", width:`${p.pct}%`, background:p.done?"linear-gradient(90deg,#5B6CF6,#8B5CF6)":"rgba(91,108,246,.35)", borderRadius:99, animation:`fillProg .8s cubic-bezier(.16,1,.3,1) ${.2+i*.15}s both` }}/>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  },
+                  { data: t.rewardFlex, accent:"#8B5CF6", bg:"rgba(139,92,246,.08)", border:"rgba(139,92,246,.20)",
+                    visual: <div key="flex" style={{ background:"#F5F0FF", borderRadius:14, padding:"16px 18px" }}>
+                      <div style={{ fontSize:12, color:"#8B5CF6", fontWeight:600, marginBottom:10 }}>Yumi · À mi-parcours (5/10)</div>
+                      <div style={{ background:"rgba(139,92,246,.08)", borderRadius:10, padding:"12px 14px", marginBottom:10, border:"1.5px solid rgba(139,92,246,.25)", animation:"cardSlide .5s .2s both" }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:"#8B5CF6", marginBottom:4 }}>Récompense intermédiaire</div>
+                        <div style={{ fontSize:13, color:"#09090B" }}>Boisson chaude offerte → reset à 5</div>
+                      </div>
+                      <div style={{ textAlign:"center", fontSize:11, color:"#8E8E93", marginBottom:8 }}>ou continuer pour :</div>
+                      <div style={{ background:"linear-gradient(135deg,rgba(139,92,246,.10),rgba(0,122,255,.10))", borderRadius:10, padding:"12px 14px", border:"1.5px solid rgba(139,92,246,.20)", animation:"cardSlide .5s .45s both" }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:"#5B6CF6", marginBottom:4 }}>Grande récompense</div>
+                        <div style={{ fontSize:13, color:"#09090B" }}>Menu complet offert → reset à 0</div>
+                      </div>
+                    </div>
+                  },
+                ].map(({ data, accent, bg, border, visual }, i) => {
+                  const active = activeReward === i;
+                  return (
+                    <div key={i} data-reveal onMouseEnter={() => setActiveReward(i)} onClick={() => setActiveReward(i)}
+                      style={{ flex: active ? "2.2" : "1", background:"#fff", borderRadius:24,
+                        padding: active ? "28px 28px" : "28px 20px",
+                        border: active ? `1.5px solid ${border}` : ".5px solid rgba(0,0,0,.07)",
+                        boxShadow: active ? `0 12px 40px rgba(0,0,0,.08), 0 0 0 4px ${bg}` : "0 2px 12px rgba(0,0,0,.04)",
+                        transition:"flex .4s cubic-bezier(.16,1,.3,1), box-shadow .3s, border-color .3s, padding .3s",
+                        cursor:"pointer", overflow:"hidden" }}>
+                      <span className="reward-pill" style={{ color:accent, background:bg }}>{data.tag}</span>
+                      <p style={{ fontSize:12, color:"#8E8E93", marginBottom:12 }}>{data.sub}</p>
+                      <div style={{ overflow:"hidden", maxHeight: active ? "320px" : 0, opacity: active ? 1 : 0, transition:"max-height .4s cubic-bezier(.16,1,.3,1), opacity .3s" }}>
+                        {active && visual}
+                      </div>
+                      <p style={{ fontSize:13.5, color:"#6B7280", lineHeight:1.65, marginBottom:14, marginTop: active ? 16 : 0 }}>{data.desc}</p>
+                      <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
+                        {data.bullets.map((b,bi) => (
+                          <div key={bi} className="feat-item">
+                            <div className="feat-dot" style={{ background: accent }} />
+                            <span style={{ fontSize:13, color:"#374151", lineHeight:1.5 }}>{b}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              7. OUTILS GÉRANT (consolidé)
+          ══════════════════════════════════════════ */}
+          <section id="dashboard" style={{ padding:"120px 64px", background:"#09090B" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ marginBottom:60 }}>
+                <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.outilsTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#FFFFFF", lineHeight:1.05, marginBottom:14 }}>
+                  {t.outilsTitle}<br /><span className="grad">{t.outilsTitle2}</span>
+                </h2>
+                <p style={{ fontSize:16, color:"rgba(255,255,255,.45)", lineHeight:1.7, maxWidth:520 }}>{t.outilsSub}</p>
               </div>
 
-              {/* Features grid */}
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:60 }} className="feats-2col custom-feats-grid">
+              {/* Dashboard interactif */}
+              <div data-reveal className="dash-spotlight" style={{ background:"rgba(255,255,255,.04)", border:".5px solid rgba(255,255,255,.08)", marginBottom:52 }}>
+                <div className="dash-feat-list" style={{ borderRight:".5px solid rgba(255,255,255,.07)" }}>
+                  {t.dashFeats.map((f,i) => (
+                    <div key={i} className={`feat-row${activeDash===i?" feat-active":""}`}
+                      onMouseEnter={() => setActiveDash(i)} onClick={() => setActiveDash(i)}
+                      style={{ borderColor: activeDash===i ? "rgba(0,122,255,.4)" : "transparent" }}>
+                      <div style={{ width:7,height:7,borderRadius:"50%",background:activeDash===i?"#60A5FA":"rgba(255,255,255,.22)",flexShrink:0,marginTop:5,transition:"background .15s" }} />
+                      <div>
+                        <h4 style={{ fontSize:14,fontWeight:700,color:activeDash===i?"#FFFFFF":"rgba(255,255,255,.50)",marginBottom:activeDash===i?5:0,lineHeight:1.3,transition:"color .15s" }}>{f.title}</h4>
+                        <p style={{ fontSize:12.5,color:"rgba(255,255,255,.35)",lineHeight:1.55,maxHeight:activeDash===i?"80px":0,overflow:"hidden",opacity:activeDash===i?1:0,transition:"max-height .28s ease,opacity .2s ease",marginTop:activeDash===i?2:0 }}>{f.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"rgba(0,0,0,.2)", borderRadius:"0 24px 24px 0" }}>
+                  {(() => {
+                    const configs = [
+                      { src:"/iphone_accueil.webp",   scale:1.65, ty:-16 },
+                      { src:"/iphone_clients.webp",   scale:1,    ty:0   },
+                      { src:"/iphone_notifs.webp",    scale:1,    ty:0   },
+                      { src:"/iphone_accueil2.webp",  scale:1,    ty:0   },
+                      { src:"/iphone_scanner.webp",   scale:1,    ty:0   },
+                    ];
+                    const cfg = configs[Math.min(activeDash, configs.length - 1)];
+                    return (
+                      <div style={{ position:"relative", overflow:"hidden", borderRadius:28, boxShadow:"0 32px 80px rgba(0,0,0,.55)", height:640, width:"auto" }}>
+                        <Image key={cfg.src + activeDash} src={cfg.src} alt={t.dashFeats[activeDash]?.title ?? ""} width={280} height={560} className="screen-enter"
+                          style={{ display:"block", height:640, width:"auto", transform:`scale(${cfg.scale}) translateY(${cfg.ty}%)`, transition:"transform .7s cubic-bezier(.16,1,.3,1)", transformOrigin:"center center" }} />
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Automatisations */}
+              <div data-reveal style={{ marginBottom:48 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24, flexWrap:"wrap", gap:12 }}>
+                  <div>
+                    <span className="stag" style={{ background:"rgba(249,115,22,.12)", color:"#F97316", marginBottom:8 }}>
+                      {lang==="ro" ? "Automatizări" : lang==="en" ? "Automations" : "Automatisations"}
+                    </span>
+                    <p style={{ fontSize:14, color:"rgba(255,255,255,.40)" }}>{t.autoHook}</p>
+                  </div>
+                  <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"7px 14px", background:"rgba(52,199,89,.12)", borderRadius:20, border:".5px solid rgba(52,199,89,.25)" }}>
+                    <div style={{ width:7, height:7, borderRadius:"50%", background:"#34C759" }} />
+                    <span style={{ fontSize:12, fontWeight:600, color:"#34C759" }}>365j/an · 0 action manuelle</span>
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:16 }} className="steps-row">
+                  {[
+                    { color:"#007AFF", bg:"rgba(0,122,255,.10)", border:"rgba(0,122,255,.20)",
+                      tag: lang==="ro" ? "Zi de naștere" : lang==="en" ? "Birthday" : "Anniversaire",
+                      title: lang==="ro" ? "Un mesaj în ziua lor" : lang==="en" ? "A message on their day" : "Un message le jour J",
+                      body: lang==="ro" ? "Wallio detectează ziua și trimite automat un mesaj personalizat." :
+                            lang==="en" ? "Wallio detects the birthday and automatically sends a personalised message." :
+                            "Wallio détecte l'anniversaire et envoie automatiquement un message personnalisé.",
+                      preview: lang==="ro" ? "La mulți ani ! Îți oferim un tampon dublu azi." :
+                               lang==="en" ? "Happy Birthday! We're giving you a double stamp today." :
+                               "Bon anniversaire ! On vous offre un double tampon aujourd'hui.",
+                      label: lang==="ro" ? "Wallio · Zi naștere · Auto" : lang==="en" ? "Wallio · Birthday · Auto" : "Wallio · Anniversaire · Auto",
+                    },
+                    { color:"#F97316", bg:"rgba(249,115,22,.10)", border:"rgba(249,115,22,.20)",
+                      tag: lang==="ro" ? "Reactivare" : lang==="en" ? "Re-engagement" : "Relance",
+                      title: lang==="ro" ? "Clienții inactivi revin" : lang==="en" ? "Inactive customers come back" : "Vos clients inactifs reviennent",
+                      body: lang==="ro" ? "Un client absent de X zile ? Wallio detectează și trimite automat un mesaj de reactivare." :
+                            lang==="en" ? "A customer absent for X days? Wallio detects this and automatically sends a re-engagement message." :
+                            "Un client absent depuis X jours ? Wallio le détecte et envoie automatiquement un message de relance.",
+                      preview: lang==="ro" ? "Vă lipsim ? Vă mai lipsesc 2 ștampile pentru recompensă !" :
+                               lang==="en" ? "Miss us? You're only 2 stamps away from your reward!" :
+                               "Vous nous manquez ! Il vous reste 2 tampons avant votre récompense !",
+                      label: lang==="ro" ? "Wallio · +30 zile · Auto" : lang==="en" ? "Wallio · 30+ days · Auto" : "Wallio · +30 jours · Auto",
+                    },
+                  ].map((a, i) => (
+                    <div key={i} style={{ flex:1, border:`.5px solid ${a.border}`, borderRadius:20, padding:"24px 20px", background:"rgba(255,255,255,.03)" }}>
+                      <span style={{ display:"inline-block", padding:"4px 11px", borderRadius:20, fontSize:12, fontWeight:600, color:a.color, background:a.bg, marginBottom:12 }}>{a.tag}</span>
+                      <h3 style={{ fontSize:18, fontWeight:700, color:"#FFFFFF", marginBottom:12, lineHeight:1.25 }}>{a.title}</h3>
+                      <div style={{ background:"rgba(255,255,255,.06)", borderRadius:14, padding:"14px 16px", marginBottom:16, border:`.5px solid ${a.border}` }}>
+                        <div style={{ fontSize:11, color:"rgba(255,255,255,.30)", fontWeight:600, marginBottom:8 }}>{a.label}</div>
+                        <div style={{ background:"rgba(255,255,255,.08)", borderRadius:10, padding:"10px 12px", fontSize:13, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>{a.preview}</div>
+                      </div>
+                      <p style={{ fontSize:13, color:"rgba(255,255,255,.40)", lineHeight:1.65 }}>{a.body}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Équipe & Wallio Pro */}
+              <div data-reveal style={{ background:"rgba(255,255,255,.03)", borderRadius:24, padding:"40px 36px", border:".5px solid rgba(255,255,255,.08)" }}>
+                <div style={{ marginBottom:32 }}>
+                  <span className="stag" style={{ background:"rgba(255,255,255,.08)", color:"rgba(255,255,255,.60)", marginBottom:12 }}>{t.teamTag}</span>
+                  <h3 style={{ fontSize:"clamp(22px,2.5vw,32px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", marginBottom:10 }}>
+                    {t.teamTitle} <span className="grad">{t.teamTitle2}</span>
+                  </h3>
+                  <p style={{ fontSize:15, color:"rgba(255,255,255,.40)", maxWidth:520 }}>{t.teamSub}</p>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28 }} className="feats-2col">
+                  {t.teamFeats.map((f,i) => (
+                    <div key={i} style={{ background:"rgba(255,255,255,.04)", borderRadius:14, padding:"20px 18px", border:".5px solid rgba(255,255,255,.07)" }}>
+                      <h4 style={{ fontSize:14, fontWeight:700, color:"#FFFFFF", marginBottom:7 }}>{f.title}</h4>
+                      <p style={{ fontSize:13, color:"rgba(255,255,255,.40)", lineHeight:1.6 }}>{f.body}</p>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:13, color:"rgba(255,255,255,.35)" }}>{lang==="ro" ? "Disponibil pe" : lang==="en" ? "Available on" : "Disponible sur"} :</span>
+                  <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.55 }} />
+                  <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,.35)", padding:"6px 14px", background:"rgba(255,255,255,.06)", borderRadius:20 }}>
+                    {lang==="ro" ? "Browser web" : lang==="en" ? "Web browser" : "Navigateur web"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              8. PERSONNALISATION + VRAIES CARTES
+          ══════════════════════════════════════════ */}
+          <section id="carte" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ marginBottom:60 }}>
+                <span className="stag">{t.customTag}</span>
+                <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
+                  {t.customTitle}<br /><span className="grad">{t.customTitle2}</span>
+                </h2>
+                <p style={{ fontSize:16, color:"#6B7280", marginTop:14, maxWidth:440 }}>{t.customSub}</p>
+              </div>
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:64 }} className="feats-2col custom-feats-grid">
                 {t.customFeats.map((f,i) => (
-                  <div key={i} style={{ background:"#fff", borderRadius:16, padding:"22px 20px", border:".5px solid rgba(0,0,0,.07)" }}>
-                    <h4 style={{ fontSize:14, fontWeight:700, color:"#1D1D1F", marginBottom:7 }}>{f.title}</h4>
-                    <p style={{ fontSize:13, color:"#6E6E73", lineHeight:1.6 }}>{f.body}</p>
+                  <div key={i} style={{ background:"#fff", borderRadius:16, padding:"24px 22px", border:".5px solid rgba(0,0,0,.07)" }}>
+                    <h4 style={{ fontSize:14.5, fontWeight:700, color:"#09090B", marginBottom:8 }}>{f.title}</h4>
+                    <p style={{ fontSize:13.5, color:"#6B7280", lineHeight:1.65 }}>{f.body}</p>
                   </div>
                 ))}
               </div>
-
-              {/* Vraies cartes Wallet */}
-              <div data-reveal style={{ marginBottom:20 }}>
-                <p style={{ fontSize:13, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", color:"#AEAEB2", marginBottom:24 }}>{t.cardsTitle}</p>
+              <div data-reveal style={{ marginBottom:24 }}>
+                <p style={{ fontSize:12, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"#AEAEB2", marginBottom:28 }}>{t.cardsTitle}</p>
               </div>
               <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }} className="cards-grid">
                 {[
@@ -1633,10 +1606,10 @@ export default function LandingPage() {
                   { src:"/carte_wallet_maisonmatcha.png", name:"Maison Matcha" },
                   { src:"/carte_wallet_yumi.png", name:"Yumi" },
                 ].map(c => (
-                  <div key={c.src} style={{ borderRadius:14, overflow:"hidden", boxShadow:"0 12px 32px rgba(0,0,0,.12)" }} className="card-hover">
+                  <div key={c.src} style={{ borderRadius:14, overflow:"hidden", boxShadow:"0 8px 32px rgba(0,0,0,.12)" }} className="card-hover">
                     <Image src={c.src} alt={`Carte Wallio ${c.name}`} width={375} height={180} style={{ width:"100%", height:"auto", display:"block" }} />
                     <div style={{ background:"#fff", padding:"10px 14px" }}>
-                      <span style={{ fontSize:12, fontWeight:600, color:"#1D1D1F" }}>{c.name}</span>
+                      <span style={{ fontSize:12, fontWeight:600, color:"#09090B" }}>{c.name}</span>
                     </div>
                   </div>
                 ))}
@@ -1647,32 +1620,28 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9. TÉMOIGNAGES
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"96px 48px", background:"#0C0C10", position:"relative", overflow:"hidden" }}>
+          <section id="temoignages" style={{ padding:"120px 64px", background:"#09090B", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(100px)", top:-100, right:-100, pointerEvents:"none" }} />
             <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(139,92,246,.06)", filter:"blur(80px)", bottom:-80, left:-80, pointerEvents:"none" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
-              <div data-reveal="scale" style={{ marginBottom:52 }}>
+              <div data-reveal="scale" style={{ marginBottom:56 }}>
                 <span className="stag" style={{ background:"rgba(249,115,22,.12)", color:"#F97316" }}>{t.testTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:800, letterSpacing:-1.5, color:"#FFFFFF", lineHeight:1.1 }}>
-                  {t.testTitle}
-                </h2>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:800, letterSpacing:"-0.04em", color:"#FFFFFF", lineHeight:1.05 }}>{t.testTitle}</h2>
               </div>
               <div data-stagger style={{ display:"flex", gap:20 }} className="steps-row">
                 {t.testimonials.map((testi, i) => (
-                  <div key={i} data-reveal style={{ flex:1, background:"rgba(255,255,255,.04)", border:".5px solid rgba(255,255,255,.08)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", gap:0 }}>
-                    <div style={{ display:"flex", gap:3, marginBottom:16 }}>
-                      {[0,1,2,3,4].map(s => (
-                        <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F97316"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                      ))}
+                  <div key={i} data-reveal style={{ flex:1, background:"rgba(255,255,255,.04)", border:".5px solid rgba(255,255,255,.08)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column" }}>
+                    <div style={{ display:"flex", gap:3, marginBottom:18 }}>
+                      {[0,1,2,3,4].map(s => ( <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F97316"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ))}
                     </div>
-                    <p style={{ fontSize:14, color:"rgba(255,255,255,.70)", lineHeight:1.75, marginBottom:24, flex:1, fontStyle:"italic" }}>"{testi.quote}"</p>
+                    <p style={{ fontSize:14, color:"rgba(255,255,255,.68)", lineHeight:1.78, marginBottom:24, flex:1, fontStyle:"italic" }}>"{testi.quote}"</p>
                     <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                       <div style={{ width:40, height:40, borderRadius:10, overflow:"hidden", background:"rgba(255,255,255,.08)", flexShrink:0, border:".5px solid rgba(255,255,255,.12)" }}>
                         <Image src={testi.logo} alt={testi.business} width={40} height={40} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
                       </div>
                       <div>
                         <div style={{ fontSize:13, fontWeight:700, color:"#FFFFFF" }}>{testi.name}</div>
-                        <div style={{ fontSize:12, color:"rgba(255,255,255,.40)" }}>{testi.role} · {testi.business}</div>
+                        <div style={{ fontSize:12, color:"rgba(255,255,255,.38)" }}>{testi.role} · {testi.business}</div>
                       </div>
                     </div>
                   </div>
@@ -1684,22 +1653,22 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9b. ACCOMPAGNEMENT
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"96px 48px", background:"#F7F8FF" }}>
+          <section id="accom" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ marginBottom:60 }}>
-                <span className="stag" style={{ background:"rgba(0,122,255,.08)", color:"#007AFF" }}>{t.accomTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", lineHeight:1.1, marginBottom:14 }}>
+              <div data-reveal="scale" style={{ marginBottom:64 }}>
+                <span className="stag">{t.accomTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
                   {t.accomTitle}<br /><span className="grad">{t.accomTitle2}</span>
                 </h2>
-                <p style={{ fontSize:15.5, color:"#6E6E73", lineHeight:1.65, maxWidth:520 }}>{t.accomSub}</p>
+                <p style={{ fontSize:16, color:"#6B7280", lineHeight:1.7, maxWidth:520 }}>{t.accomSub}</p>
               </div>
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20, marginBottom:48 }} className="feats-2col">
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20, marginBottom:52 }} className="feats-2col">
                 {t.accomSteps.map((s,i) => (
-                  <div key={i} style={{ background:"#FFFFFF", borderRadius:20, padding:"28px 24px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden" }}>
-                    <div style={{ fontSize:40, fontWeight:800, letterSpacing:-1.5, color:"rgba(0,122,255,.10)", lineHeight:1, marginBottom:16 }}>{s.n}</div>
+                  <div key={i} style={{ background:"#FFFFFF", borderRadius:20, padding:"32px 28px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
+                    <div style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:"rgba(0,122,255,.09)", lineHeight:1, marginBottom:18 }}>{s.n}</div>
                     <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:"linear-gradient(180deg,#007AFF,transparent)" }} />
-                    <h3 style={{ fontSize:16, fontWeight:700, color:"#1D1D1F", marginBottom:10, lineHeight:1.35 }}>{s.title}</h3>
-                    <p style={{ fontSize:13.5, color:"#6E6E73", lineHeight:1.65 }}>{s.body}</p>
+                    <h3 style={{ fontSize:16.5, fontWeight:700, color:"#09090B", marginBottom:10, lineHeight:1.3 }}>{s.title}</h3>
+                    <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{s.body}</p>
                   </div>
                 ))}
               </div>
@@ -1715,88 +1684,61 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               10. TARIFS
           ══════════════════════════════════════════ */}
-          <section id="tarifs" style={{ padding:"96px 48px", background:"#F5F5F7", position:"relative", overflow:"hidden" }}>
+          <section id="tarifs" style={{ padding:"120px 64px", background:"#FAFAFA" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:60 }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
                 <span className="stag">{t.tarifsTag}</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,52px)", fontWeight:700, letterSpacing:-1.6, color:"#1D1D1F", marginBottom:12 }}>
-                  {t.tarifsTitle}
-                </h2>
-                <p style={{ fontSize:16, color:"#6E6E73", maxWidth:440, margin:"0 auto" }}>{t.tarifsSub}</p>
+                <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", marginBottom:14 }}>{t.tarifsTitle}</h2>
+                <p style={{ fontSize:16, color:"#6B7280", maxWidth:440, margin:"0 auto" }}>{t.tarifsSub}</p>
               </div>
-
               <div style={{ display:"flex", gap:16, alignItems:"stretch" }} className="pricing-grid">
-                {/* Mensuel */}
                 <div data-reveal style={{ flex:1 }} className="pricing-card card-hover">
-                  <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:4 }}>{t.tarifsMonthly}</p>
+                  <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase" as const, color:"#8E8E93", marginBottom:4 }}>{t.tarifsMonthly}</p>
                   <p style={{ fontSize:11, color:"#AEAEB2", marginBottom:20 }}>{t.tarifsNoCommit}</p>
                   <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:8 }}>
-                    <span style={{ fontSize:40, fontWeight:800, letterSpacing:-1.5, color:"#1D1D1F" }}>{monthly}</span>
-                    <span style={{ fontSize:16, fontWeight:500, color:"#6E6E73" }}>{currency}</span>
+                    <span style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:"#09090B" }}>{monthly}</span>
+                    <span style={{ fontSize:16, fontWeight:500, color:"#6B7280" }}>{currency}</span>
                   </div>
-                  <p style={{ fontSize:12, color:"#AEAEB2", marginBottom:28 }}>{t.tarifsMonthEquiv(monthly, currency)}</p>
-                  <a href={wa(t.tarifsWaMo(monthly, currency))} target="_blank" rel="noopener noreferrer"
-                    className="btn-ghost" style={{ width:"100%", textAlign:"center", padding:"13px 0", borderRadius:12, fontSize:14, display:"block" }}>
-                    {t.tarifsCta}
-                  </a>
+                  <p style={{ fontSize:12, color:"#AEAEB2", marginBottom:32 }}>{t.tarifsMonthEquiv(monthly, currency)}</p>
+                  <a href={wa(t.tarifsWaMo(monthly, currency))} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ width:"100%", textAlign:"center" as const, padding:"13px 0", borderRadius:12, fontSize:14, display:"block" }}>{t.tarifsCta}</a>
                 </div>
-
-                {/* 6 mois */}
                 <div data-reveal style={{ flex:1, transitionDelay:".07s" }} className="pricing-card card-hover">
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
-                    <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", color:"#8E8E93" }}>{t.tarifsSix}</p>
-                    <span style={{ background:"rgba(0,122,255,.10)", color:"#007AFF", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:10 }}>
-                      {`-${pct6}%`}
-                    </span>
+                    <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase" as const, color:"#8E8E93" }}>{t.tarifsSix}</p>
+                    <span style={{ background:"rgba(0,122,255,.10)", color:"#007AFF", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:10 }}>{`-${pct6}%`}</span>
                   </div>
-                  <p style={{ fontSize:11, color:"#AEAEB2", marginBottom:20 }}>
-                    <span style={{ textDecoration:"line-through", marginRight:4 }}>{strikethrough6} {currency}</span>
-                  </p>
+                  <p style={{ fontSize:11, color:"#AEAEB2", marginBottom:20 }}><span style={{ textDecoration:"line-through", marginRight:4 }}>{strikethrough6} {currency}</span></p>
                   <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:8 }}>
-                    <span style={{ fontSize:40, fontWeight:800, letterSpacing:-1.5, color:"#1D1D1F" }}>{sixMonths}</span>
-                    <span style={{ fontSize:16, fontWeight:500, color:"#6E6E73" }}>{currency}</span>
+                    <span style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:"#09090B" }}>{sixMonths}</span>
+                    <span style={{ fontSize:16, fontWeight:500, color:"#6B7280" }}>{currency}</span>
                   </div>
-                  <p style={{ fontSize:12, color:"#AEAEB2", marginBottom:28 }}>{t.tarifsMonthEquiv(monthlyEquiv6, currency)}</p>
-                  <a href={wa(t.tarifsWa6(sixMonths, currency))} target="_blank" rel="noopener noreferrer"
-                    className="btn-ghost" style={{ width:"100%", textAlign:"center", padding:"13px 0", borderRadius:12, fontSize:14, display:"block" }}>
-                    {t.tarifsCta}
-                  </a>
+                  <p style={{ fontSize:12, color:"#AEAEB2", marginBottom:32 }}>{t.tarifsMonthEquiv(monthlyEquiv6, currency)}</p>
+                  <a href={wa(t.tarifsWa6(sixMonths, currency))} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ width:"100%", textAlign:"center" as const, padding:"13px 0", borderRadius:12, fontSize:14, display:"block" }}>{t.tarifsCta}</a>
                 </div>
-
-                {/* Annuel — featured */}
                 <div data-reveal style={{ flex:1, transitionDelay:".14s" }} className="pricing-card pricing-featured card-hover">
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
-                    <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", color:"rgba(255,255,255,.45)" }}>{t.tarifsAnnual}</p>
-                    <span style={{ background:"#F97316", color:"#fff", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:10 }}>
-                      {t.tarifsRecommended}
-                    </span>
+                    <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase" as const, color:"rgba(255,255,255,.45)" }}>{t.tarifsAnnual}</p>
+                    <span style={{ background:"#F97316", color:"#fff", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:10 }}>{t.tarifsRecommended}</span>
                   </div>
                   <p style={{ fontSize:11, color:"rgba(255,255,255,.25)", marginBottom:20 }}>
                     <span style={{ textDecoration:"line-through", marginRight:4 }}>{strikethroughAnnual} {currency}</span>
                     <span style={{ color:"rgba(255,255,255,.45)" }}>{`-${pctAnnual}%`}</span>
                   </p>
                   <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:8 }}>
-                    <span style={{ fontSize:40, fontWeight:800, letterSpacing:-1.5, color:"#fff" }}>{annual}</span>
+                    <span style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:"#fff" }}>{annual}</span>
                     <span style={{ fontSize:16, fontWeight:500, color:"rgba(255,255,255,.5)" }}>{currency}</span>
                   </div>
-                  <p style={{ fontSize:12, color:"rgba(255,255,255,.35)", marginBottom:28 }}>{t.tarifsMonthEquiv(monthlyEquivAnnual, currency)}</p>
-                  <a href={wa(t.tarifsWaAn(annual, currency))} target="_blank" rel="noopener noreferrer"
-                    className="btn-wa" style={{ width:"100%", justifyContent:"center", padding:"13px 0", borderRadius:12, fontSize:14 }}>
-                    {t.tarifsCta}
-                  </a>
+                  <p style={{ fontSize:12, color:"rgba(255,255,255,.35)", marginBottom:32 }}>{t.tarifsMonthEquiv(monthlyEquivAnnual, currency)}</p>
+                  <a href={wa(t.tarifsWaAn(annual, currency))} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ width:"100%", justifyContent:"center", padding:"13px 0", borderRadius:12, fontSize:14 }}>{t.tarifsCta}</a>
                 </div>
               </div>
-
-              {/* Inclus */}
-              <div data-reveal style={{ background:"#fff", borderRadius:20, padding:"32px 36px", marginTop:32, border:".5px solid rgba(0,0,0,.07)" }}>
-                <p style={{ fontSize:13, fontWeight:700, letterSpacing:".07em", textTransform:"uppercase", color:"#AEAEB2", marginBottom:20 }}>{t.tarifsIncludedTitle}</p>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"12px 24px" }} className="feats-2col">
+              <div data-reveal style={{ background:"#fff", borderRadius:20, padding:"36px 40px", marginTop:32, border:".5px solid rgba(0,0,0,.07)" }}>
+                <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase" as const, color:"#AEAEB2", marginBottom:24 }}>{t.tarifsIncludedTitle}</p>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"14px 32px" }} className="feats-2col">
                   {t.tarifsIncluded.map((item,i) => (
-                    <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-                      <div className="check-icon">
-                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#007AFF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </div>
-                      <span style={{ fontSize:13.5, color:"#3C3C43", lineHeight:1.5 }}>{item}</span>
+                    <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
+                      <div className="check-icon"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#007AFF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+                      <span style={{ fontSize:14, color:"#374151", lineHeight:1.5 }}>{item}</span>
                     </div>
                   ))}
                 </div>
@@ -1807,33 +1749,29 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               11. FAQ
           ══════════════════════════════════════════ */}
-          <section id="faq" style={{ padding:"96px 48px", background:"#FFFFFF" }}>
+          <section id="faq" style={{ padding:"120px 64px", background:"#FFFFFF" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:52 }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
                 <span className="stag">{t.faqTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:700, letterSpacing:-1.4, color:"#1D1D1F" }}>
-                  {t.faqTitle}
-                </h2>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B" }}>{t.faqTitle}</h2>
               </div>
               <div style={{ maxWidth:720, margin:"0 auto" }}>
                 {t.faqs.map((f,i) => (
                   <div key={i} className="faq-item" data-reveal>
                     <button className="faq-btn" onClick={() => setOpenFaq(openFaq===i ? null : i)}>
-                      <span className="faq-q" style={{ fontSize:15.5, fontWeight:600, color:"#1D1D1F", lineHeight:1.4, transition:"color .15s" }}>{f.q}</span>
+                      <span className="faq-q" style={{ fontSize:16, fontWeight:600, color:"#09090B", lineHeight:1.4, transition:"color .15s" }}>{f.q}</span>
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink:0, transition:"transform .25s", transform: openFaq===i ? "rotate(45deg)" : "none" }}>
                         <path d="M10 4v12M4 10h12" stroke="#8E8E93" strokeWidth="1.6" strokeLinecap="round"/>
                       </svg>
                     </button>
-                    <div style={{ overflow:"hidden", maxHeight: openFaq===i ? 400 : 0, transition:"max-height .3s cubic-bezier(.4,0,.2,1)", paddingBottom: openFaq===i ? 20 : 0 }}>
-                      <p style={{ fontSize:14.5, color:"#6E6E73", lineHeight:1.7 }}>{f.a}</p>
+                    <div style={{ overflow:"hidden", maxHeight: openFaq===i ? 400 : 0, transition:"max-height .3s cubic-bezier(.4,0,.2,1)", paddingBottom: openFaq===i ? 24 : 0 }}>
+                      <p style={{ fontSize:15, color:"#6B7280", lineHeight:1.75 }}>{f.a}</p>
                     </div>
                   </div>
                 ))}
               </div>
-              <div data-reveal style={{ textAlign:"center", marginTop:40 }}>
-                <a href={wa(t.faqWa)} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize:14 }}>
-                  {t.faqCta}
-                </a>
+              <div data-reveal style={{ textAlign:"center", marginTop:48 }}>
+                <a href={wa(t.faqWa)} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize:14 }}>{t.faqCta}</a>
               </div>
             </div>
           </section>
@@ -1841,19 +1779,15 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               12. CTA FINAL
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"80px 48px" }}>
+          <section style={{ padding:"96px 64px" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", borderRadius:28, padding:"64px 48px", textAlign:"center" }}>
-                <h2 className="cta-title" style={{ fontSize:"clamp(28px,4vw,48px)", fontWeight:700, letterSpacing:-1.5, color:"#fff", marginBottom:14 }}>
-                  {t.ctaTitle}
-                </h2>
-                <p style={{ fontSize:16, color:"rgba(255,255,255,.75)", maxWidth:400, margin:"0 auto 36px" }}>
-                  {t.ctaSub}
-                </p>
+              <div data-reveal="scale" style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", borderRadius:32, padding:"80px 64px", textAlign:"center" }}>
+                <h2 className="cta-title" style={{ fontSize:"clamp(32px,4.5vw,56px)", fontWeight:800, letterSpacing:"-0.04em", color:"#fff", marginBottom:16, lineHeight:1.0 }}>{t.ctaTitle}</h2>
+                <p style={{ fontSize:17, color:"rgba(255,255,255,.72)", maxWidth:400, margin:"0 auto 44px", lineHeight:1.65 }}>{t.ctaSub}</p>
                 <a href={wa(t.ctaWa)} target="_blank" rel="noopener noreferrer"
-                  style={{ display:"inline-flex", alignItems:"center", gap:9, background:"#fff", color:"#1D1D1F", padding:"15px 32px", borderRadius:14, fontSize:15, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px rgba(0,0,0,.15)", transition:"transform .15s,box-shadow .15s" }}
-                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-2px)";(e.currentTarget as HTMLElement).style.boxShadow="0 14px 36px rgba(0,0,0,.20)";}}
-                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="";(e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(0,0,0,.15)";}}>
+                  style={{ display:"inline-flex", alignItems:"center", gap:9, background:"#fff", color:"#09090B", padding:"17px 36px", borderRadius:14, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px rgba(0,0,0,.18)", transition:"transform .15s,box-shadow .15s", letterSpacing:"-.01em" }}
+                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-2px)";(e.currentTarget as HTMLElement).style.boxShadow="0 16px 40px rgba(0,0,0,.24)";}}
+                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="";(e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(0,0,0,.18)";}}>
                   <svg width="17" height="17" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
                   {t.ctaBtn}
                 </a>
@@ -1861,28 +1795,26 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* ══════════════════════════════════════════
-              FOOTER
-          ══════════════════════════════════════════ */}
-          <footer style={{ background:"#1D1D1F", padding:"32px 48px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <Image src="/wallio-instagram-profil.png" alt="Wallio" width={28} height={28} style={{ borderRadius:6, opacity:.9 }} />
-              <span style={{ fontSize:14, fontWeight:700, color:"rgba(255,255,255,.65)", letterSpacing:".10em" }}>WALLIO</span>
-            </div>
-            <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
-              {t.footerLinks.map(l => (
-                <Link key={l.href} href={l.href} style={{ fontSize:12.5, color:"rgba(255,255,255,.35)", textDecoration:"none", transition:"color .15s" }}
-                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,.7)";}}
-                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,.35)";}}>
-                  {l.label}
-                </Link>
-              ))}
-            </div>
-            <span style={{ fontSize:12, color:"rgba(255,255,255,.2)" }}>© {new Date().getFullYear()} Wallio</span>
-          </footer>
-
         </div>
       </div>
+
+      <footer style={{ background:"#09090B", padding:"36px 64px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:9 }}>
+          <Image src="/wallio-instagram-profil.png" alt="Wallio" width={28} height={28} style={{ borderRadius:6, opacity:.85 }} />
+          <span style={{ fontSize:14, fontWeight:700, color:"rgba(255,255,255,.60)", letterSpacing:".12em" }}>WALLIO</span>
+        </div>
+        <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
+          {t.footerLinks.map(l => (
+            <Link key={l.href} href={l.href} style={{ fontSize:12.5, color:"rgba(255,255,255,.32)", textDecoration:"none", transition:"color .15s" }}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,.65)";}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,.32)";}}>
+              {l.label}
+            </Link>
+          ))}
+        </div>
+        <span style={{ fontSize:12, color:"rgba(255,255,255,.18)" }}>© {new Date().getFullYear()} Wallio</span>
+      </footer>
+
     </>
   );
 }
