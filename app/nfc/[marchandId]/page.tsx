@@ -623,11 +623,11 @@ function ResultScreen({ result, marchand, walletId, telephone, paliersValides, h
         {/* Mini header commerçant */}
         <div className="flex flex-col items-center mb-8">
           {mn.logo_url ? (
-            <img src={mn.logo_url as string} alt={marchand.nom}
-              className="w-12 h-12 rounded-xl mb-2.5 object-cover"
+            <img src={(mn.logo_shape === "round" && mn.logo_circle_url) ? mn.logo_circle_url as string : mn.logo_url as string} alt={marchand.nom}
+              className={`w-12 h-12 mb-2.5 object-contain ${mn.logo_shape === "round" ? "rounded-full" : "rounded-xl"}`}
               style={{ boxShadow: `0 4px 16px ${hexToRgba(couleur, 0.25)}` }} />
           ) : (
-            <div className="w-12 h-12 rounded-xl mb-2.5 flex items-center justify-center text-[20px] font-bold"
+            <div className={`w-12 h-12 mb-2.5 flex items-center justify-center text-[20px] font-bold ${mn.logo_shape === "round" ? "rounded-full" : "rounded-xl"}`}
               style={{ background: couleur, color: badgeTextColor, boxShadow: `0 4px 16px ${hexToRgba(couleur, 0.25)}` }}>
               {marchand.nom.charAt(0).toUpperCase()}
             </div>
@@ -1167,17 +1167,18 @@ const PAYS = [
 
 function MarchandHeader({ marchand }: { marchand: Marchand }) {
   const m = marchand as Record<string, unknown>;
-  const logo = m.logo_url as string | undefined;
+  const isRound = m.logo_shape === "round";
+  const logo = (isRound && m.logo_circle_url) ? m.logo_circle_url as string : (m.logo_url as string | undefined);
   const couleur = marchand.couleur_principale || "#007AFF";
   return (
     <div className="text-center mb-10">
       <div className="flex justify-center mb-4">
         {logo ? (
           <img src={logo} alt={marchand.nom}
-            className="w-16 h-16 rounded-2xl object-cover"
+            className={`w-16 h-16 object-contain ${isRound ? "rounded-full" : "rounded-2xl"}`}
             style={{ boxShadow: `0 8px 24px ${couleur}40` }} />
         ) : (
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-[26px] font-bold text-white"
+          <div className={`w-16 h-16 flex items-center justify-center text-[26px] font-bold text-white ${isRound ? "rounded-full" : "rounded-2xl"}`}
             style={{ background: couleur, boxShadow: `0 8px 24px ${couleur}40` }}>
             {marchand.nom.charAt(0).toUpperCase()}
           </div>

@@ -111,7 +111,17 @@ export default function NotificationsPage() {
       haptic("success");
       triggerAmbientPulse();
       setSuccessBanner(true);
-      setTimeout(() => { setSendState("idle"); setSuccessBanner(false); }, 3000);
+      setTimeout(() => {
+        setSendState("idle");
+        setSuccessBanner(false);
+        setTitle("");
+        setBody("");
+        setSegment("tous");
+        setSelectedIds(new Set());
+        setExpiresDate("");
+        setExpiresTime("23:00");
+        setResult(null);
+      }, 3000);
     } catch {
       setSendState("error");
     }
@@ -215,8 +225,10 @@ export default function NotificationsPage() {
 
       {/* Toast succès */}
       {successBanner && result && (
-        <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: "50%", transform: "translateX(-50%)", zIndex: 999, background: "rgba(52,199,89,0.92)", backdropFilter: "blur(12px)", padding: "10px 18px", borderRadius: 100, animation: "toast-in 0.25s ease", whiteSpace: "nowrap" }}>
-          <p style={{ color: "white", fontSize: 13, fontWeight: 600 }}>Envoyée à {result.sent} client{result.sent > 1 ? "s" : ""}</p>
+        <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none", animation: "toast-in 0.25s ease" }}>
+          <div style={{ background: "rgba(52,199,89,0.92)", backdropFilter: "blur(12px)", padding: "10px 18px", borderRadius: 100, whiteSpace: "nowrap" }}>
+            <p style={{ color: "white", fontSize: 13, fontWeight: 600 }}>Envoyée à {result.sent} client{result.sent > 1 ? "s" : ""}</p>
+          </div>
         </div>
       )}
 
