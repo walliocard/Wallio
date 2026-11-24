@@ -1219,7 +1219,7 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"transparent", borderRadius:"0 24px 24px 0" }}>
+                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"#F0F0F5", borderRadius:"0 24px 24px 0" }}>
                   {(() => {
                     const configs = [
                       { src:"/iphone_accueil.webp",   scale:1.65, ty:-16 },
