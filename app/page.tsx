@@ -1106,17 +1106,19 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               1. HERO V2
           ══════════════════════════════════════════ */}
-          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#F8F7FF" }}>
-            {/* Blob bleu électrique — haut gauche, bien visible */}
-            <div style={{ position:"absolute", width:900, height:800, borderRadius:"50%", background:"rgba(37,99,235,.46)", filter:"blur(88px)", top:-140, left:-200, pointerEvents:"none", zIndex:0 }} />
-            {/* Blob violet — haut droit */}
-            <div style={{ position:"absolute", width:780, height:780, borderRadius:"50%", background:"rgba(124,58,237,.42)", filter:"blur(90px)", top:-200, right:-180, pointerEvents:"none", zIndex:0 }} />
-            {/* Arc lumineux violet — haut droit */}
-            <div style={{ position:"absolute", width:520, height:520, borderRadius:"50%", background:"transparent", border:"1.5px solid rgba(167,139,250,.48)", filter:"blur(6px)", top:-80, right:-30, pointerEvents:"none", zIndex:0 }} />
-            {/* Halo blanc central fort */}
-            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 60% 54% at 44% 46%, rgba(255,255,255,.96) 0%, rgba(255,255,255,.68) 42%, transparent 70%)", pointerEvents:"none", zIndex:1 }} />
-            {/* Transition douce vers la section suivante */}
-            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:160, background:"linear-gradient(to bottom, transparent, #F5F5F7)", pointerEvents:"none", zIndex:3 }} />
+          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FFFFFF" }}>
+            {/* Blob bleu — centre gauche, effet vague */}
+            <div style={{ position:"absolute", width:750, height:750, borderRadius:"50%", background:"rgba(37,99,235,.54)", filter:"blur(80px)", top:"28%", left:-160, pointerEvents:"none", zIndex:0 }} />
+            {/* Blob violet — coin supérieur droit */}
+            <div style={{ position:"absolute", width:720, height:720, borderRadius:"50%", background:"rgba(124,58,237,.46)", filter:"blur(82px)", top:-180, right:-160, pointerEvents:"none", zIndex:0 }} />
+            {/* Violet léger — coin inférieur droit */}
+            <div style={{ position:"absolute", width:480, height:480, borderRadius:"50%", background:"rgba(167,139,250,.22)", filter:"blur(70px)", bottom:-80, right:60, pointerEvents:"none", zIndex:0 }} />
+            {/* Arc lumineux — haut droit */}
+            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.58)", filter:"blur(7px)", top:-70, right:-20, pointerEvents:"none", zIndex:0 }} />
+            {/* Halo blanc supérieur gauche + centre dominant */}
+            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 72% 62% at 32% 42%, rgba(255,255,255,1) 0%, rgba(255,255,255,.88) 40%, rgba(255,255,255,.30) 65%, transparent 80%)", pointerEvents:"none", zIndex:1 }} />
+            {/* Transition douce vers bandeau noir */}
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, transparent, #09090B)", pointerEvents:"none", zIndex:3 }} />
             <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:2, height:"100%" }} className="hero-split">
               <div style={{ flex:"0 0 46%", maxWidth:520, minWidth:0 }}>
                 <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(40px,5.5vw,72px)", fontWeight:800, lineHeight:1.0, letterSpacing:"-0.04em", color:"#09090B", marginBottom:24 }}>
@@ -1178,25 +1180,25 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               2. PROOF BAR
           ══════════════════════════════════════════ */}
-          <div style={{ background:"#F5F5F7", borderTop:".5px solid rgba(0,0,0,.06)", borderBottom:".5px solid rgba(0,0,0,.06)" }}>
-            <div style={{ ...MAX, padding:"20px 64px", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }} className="proof-bar">
-              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(0,0,0,.35)" }}>{t.proofLabel}</span>
+          <div style={{ background:"#09090B" }}>
+            <div style={{ ...MAX, padding:"22px 64px", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }} className="proof-bar">
+              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(255,255,255,.35)" }}>{t.proofLabel}</span>
               <div style={{ display:"flex", alignItems:"center", gap:20, flexWrap:"wrap", justifyContent:"center" }}>
                 {[
-                  { src:"/logo-8am.jpg", alt:"8AM Coffeehouse", name:"8AM Coffeehouse & More", fit:"cover" as const, bg:"rgba(0,0,0,.04)" },
-                  { src:"/logo-maison-matcha.png", alt:"Maison Matcha", name:"Maison Matcha", fit:"contain" as const, bg:"#FFFFFF" },
-                  { src:"/logo-comptoir-homme.jpg", alt:"Comptoir de l'Homme", name:"Comptoir de l'Homme", fit:"cover" as const, bg:"rgba(0,0,0,.04)" },
-                  { src:"/logo-yumi.jpg", alt:"Yumi", name:"Yumi", fit:"cover" as const, bg:"rgba(0,0,0,.04)" },
+                  { src:"/logo-8am.jpg", alt:"8AM Coffeehouse", name:"8AM Coffeehouse & More", fit:"cover" as const },
+                  { src:"/logo-maison-matcha.png", alt:"Maison Matcha", name:"Maison Matcha", fit:"contain" as const },
+                  { src:"/logo-comptoir-homme.jpg", alt:"Comptoir de l'Homme", name:"Comptoir de l'Homme", fit:"cover" as const },
+                  { src:"/logo-yumi.jpg", alt:"Yumi", name:"Yumi", fit:"cover" as const },
                 ].map(c => (
                   <div key={c.name} style={{ display:"flex", alignItems:"center", gap:9 }}>
-                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, background:c.bg, border:".5px solid rgba(0,0,0,.08)" }}>
+                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, border:".5px solid rgba(255,255,255,.12)" }}>
                       <Image src={c.src} alt={c.alt} width={32} height={32} style={{ width:"100%", height:"100%", objectFit:c.fit }} />
                     </div>
-                    <span style={{ fontSize:13, fontWeight:600, color:"#374151", letterSpacing:-.2 }}>{c.name}</span>
+                    <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.75)", letterSpacing:-.2 }}>{c.name}</span>
                   </div>
                 ))}
               </div>
-              <div style={{ width:.5, height:24, background:"rgba(0,0,0,.12)" }} />
+              <div style={{ width:.5, height:24, background:"rgba(255,255,255,.15)" }} />
               <span style={{ fontSize:13, fontWeight:700, color:"#F97316" }}>{t.proofStat}</span>
             </div>
           </div>
@@ -1263,21 +1265,6 @@ export default function LandingPage() {
                     <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:`linear-gradient(180deg,${["#007AFF","#5B6CF6","#F97316"][i]}, transparent)` }} />
                   </div>
                 ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════
-              4b. SECTEURS
-          ══════════════════════════════════════════ */}
-          <section style={{ padding:"72px 64px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.06)" }} className="amb">
-            <div style={{ ...MAX, textAlign:"center" }}>
-              <div data-reveal>
-                <span className="stag">{t.sectorsTag}</span>
-                <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", marginBottom:32 }}>{t.sectorsTitle}</h2>
-              </div>
-              <div data-stagger style={{ display:"flex", flexWrap:"wrap", gap:12, justifyContent:"center" }}>
-                {t.sectors.map((s, i) => <span key={i} className="sector-pill">{s}</span>)}
               </div>
             </div>
           </section>
