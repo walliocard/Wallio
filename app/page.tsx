@@ -952,8 +952,12 @@ export default function LandingPage() {
       .mini-cta-row { flex-direction:column!important; align-items:flex-start!important; }
       footer { padding:28px 20px!important; }
       .present-nav { display:none!important; }
+      .hero-anim-5 { justify-content:center!important; }
+      .cta-inner { padding:52px 28px!important; border-radius:24px!important; }
     }
     @media (max-width:1024px) {
+      section { padding:96px 40px!important; }
+      .hero-split { gap:28px!important; }
       .dash-preview-panel > div { height:auto!important; }
       .dash-preview-panel img { height:min(44vw, 560px)!important; width:auto!important; }
     }
@@ -1781,7 +1785,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <section style={{ padding:"96px 64px" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", borderRadius:32, padding:"80px 64px", textAlign:"center" }}>
+              <div data-reveal="scale" className="cta-inner" style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", borderRadius:32, padding:"80px 64px", textAlign:"center" }}>
                 <h2 className="cta-title" style={{ fontSize:"clamp(32px,4.5vw,56px)", fontWeight:800, letterSpacing:"-0.04em", color:"#fff", marginBottom:16, lineHeight:1.0 }}>{t.ctaTitle}</h2>
                 <p style={{ fontSize:17, color:"rgba(255,255,255,.72)", maxWidth:400, margin:"0 auto 44px", lineHeight:1.65 }}>{t.ctaSub}</p>
                 <a href={wa(t.ctaWa)} target="_blank" rel="noopener noreferrer"
