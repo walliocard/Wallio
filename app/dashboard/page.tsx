@@ -225,6 +225,7 @@ export default function AccueilPage() {
   const [flexStats, setFlexStats] = useState<{ petit: number; grand: number; total: number } | null>(null);
   const [clientRows, setClientRows] = useState<ClientRow[]>([]);
   const [openSheet, setOpenSheet] = useState<"visites" | "clients" | "tampons" | "recompenses" | null>(null);
+  const sheetOverlayRef = useRef<HTMLDivElement>(null);
 
   const objectifRef = useRef<number>(marchand?.objectif_tampons || 10);
   const marchandModeRef = useRef<string>("cyclique");
@@ -352,6 +353,14 @@ export default function AccueilPage() {
   useEffect(() => {
     if (!loading && !user) router.replace("/choisir");
   }, [loading, user, router]);
+
+  useEffect(() => {
+    const el = sheetOverlayRef.current;
+    if (!el) return;
+    const block = (e: TouchEvent) => e.preventDefault();
+    el.addEventListener("touchmove", block, { passive: false });
+    return () => el.removeEventListener("touchmove", block);
+  }, [openSheet]);
 
   useEffect(() => {
     if (openSheet) {
@@ -780,7 +789,7 @@ export default function AccueilPage() {
       }
 
       return (
-        <div className="fixed inset-0 z-50 flex items-end" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)", touchAction: "none" }} onClick={() => setOpenSheet(null)}>
+        <div ref={sheetOverlayRef} className="fixed inset-0 z-50 flex items-end" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)", touchAction: "none" }} onClick={() => setOpenSheet(null)}>
           <div className="w-full" style={{ background: "var(--bg)", borderRadius: "24px 24px 0 0", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "calc(var(--tab-h, 49px) + env(safe-area-inset-bottom, 0px) + 12px)", display: "flex", flexDirection: "column", touchAction: "none" }} onClick={e => e.stopPropagation()}>
 
             {/* Header */}
