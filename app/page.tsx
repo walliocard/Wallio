@@ -1217,7 +1217,7 @@ export default function LandingPage() {
               </div>
 
               {/* Dashboard interactif */}
-              <div data-reveal className="dash-spotlight" style={{ background:"rgba(9,9,11,.04)", border:".5px solid rgba(9,9,11,.08)", marginBottom:52 }}>
+              <div data-reveal className="dash-spotlight" style={{ marginBottom:52 }}>
                 <div className="dash-feat-list" style={{ borderRight:".5px solid rgba(9,9,11,.08)" }}>
                   {t.dashFeats.map((f, i) => (
                     <div key={i} className={`feat-row${activeDash===i?" feat-active":""}`}
@@ -1231,7 +1231,7 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"rgba(9,9,11,.04)", borderRadius:"0 24px 24px 0" }}>
+                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"transparent", borderRadius:"0 24px 24px 0" }}>
                   {(() => {
                     const configs = [
                       { src:"/iphone_accueil.webp",   scale:1.65, ty:-16 },
