@@ -1,23 +1,432 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLang } from "@/lib/lang-context";
 import { REGIONS } from "@/lib/regions";
 
-const WA_BASE = "https://wa.me/212654768191";
-const WA_MSGS: Record<string, string> = {
-  fr: "Bonjour, je souhaite découvrir Wallio pour mon commerce.",
-  en: "Hello, I'd like to discover Wallio for my business.",
-  ro: "Bună ziua, doresc să descopăr Wallio pentru afacerea mea.",
-  es: "Hola, me gustaría descubrir Wallio para mi negocio.",
-};
+const WA_NUMBER = "212654768191";
+const WA_BASE = `https://wa.me/${WA_NUMBER}`;
+const wa = (msg: string) => `${WA_BASE}?text=${encodeURIComponent(msg)}`;
+
+type Lang = "fr" | "en" | "ro";
+
+const T = {
+  fr: {
+    navLogin: "Connexion", navCta: "Nous contacter",
+    anchors: [
+      { id: "comment", label: "Comment ça marche" },
+      { id: "recompenses", label: "Récompenses" },
+      { id: "dashboard", label: "Dashboard" },
+      { id: "client", label: "Expérience client" },
+      { id: "carte", label: "Personnalisation" },
+      { id: "tarifs", label: "Tarifs" },
+      { id: "faq", label: "FAQ" },
+    ],
+    heroBadge: "Apple Wallet · Google Wallet · NFC · QR Code",
+    heroTitle1: "Vos habitués ne devraient pas",
+    heroTitle2: "être des inconnus.",
+    heroSub: "Wallio crée une carte de fidélité digitale pour chaque client qui scanne votre QR code ou approche son téléphone du tag NFC. Elle atterrit dans son Apple ou Google Wallet. Sans application à installer, ni pour vous ni pour lui.",
+    heroCta1: "Découvrir sur WhatsApp",
+    heroCta2: "Connexion",
+    heroWa: "Bonjour, je souhaite découvrir Wallio pour mon commerce.",
+    proofLabel: "Ils nous font confiance",
+    proofStat: "200+ clients fidélisés · 4 commerces",
+    problemTag: "Le constat",
+    problemTitle1: "Vos clients viennent.",
+    problemTitle2: "Peu reviennent.",
+    problemPains: [
+      { title: "La carte papier, personne ne la garde", body: "Elle finit au fond d'un tiroir. Votre client repart sans lien avec votre établissement." },
+      { title: "Vos meilleurs clients vous sont invisibles", body: "Vous ne savez pas qui revient souvent, qui s'est arrêté, ni qui mérite une attention particulière." },
+      { title: "Impossible de les relancer", body: "Sans données, vous ne pouvez ni envoyer un message de relance, ni récompenser ceux qui méritent de l'être." },
+    ],
+    problemSolution: "Wallio résout exactement ça.",
+    howTag: "Fonctionnement",
+    howTitle: "Trois étapes.",
+    howTitle2: "Zéro friction.",
+    howSub: "Le client n'installe rien. Vous ne changez pas vos habitudes.",
+    howSteps: [
+      { n: "01", title: "Le client scanne ou approche son téléphone", body: "Le QR code est imprimé sur votre carte comptoir. Le tag NFC est intégré dedans. Un seul geste suffit." },
+      { n: "02", title: "Sa carte est créée en 30 secondes", body: "Il entre son prénom et son numéro. Sa carte apparaît directement dans son Apple ou Google Wallet." },
+      { n: "03", title: "À chaque visite, son tampon est crédité", body: "Il présente sa carte Wallet, vous validez. Dès qu'il atteint son objectif, il reçoit sa récompense." },
+    ],
+    rewardTag: "Modes de récompenses",
+    rewardTitle: "Un programme adapté",
+    rewardTitle2: "à chaque commerce.",
+    rewardSub: "Trois modes de fidélisation, configurables depuis votre dashboard en quelques secondes.",
+    rewardCyclic: {
+      tag: "Cyclique", sub: "Le classique amélioré",
+      desc: "Un objectif, une récompense. Une fois l'objectif atteint, le compteur repart à zéro.",
+      bullets: ["Simple à configurer et à expliquer", "Idéal pour les produits récurrents", "Un seul objectif à définir"],
+    },
+    rewardProg: {
+      tag: "Progressif", sub: "Paliers cumulatifs",
+      desc: "Les tampons s'accumulent définitivement. Chaque palier atteint débloque une récompense différente.",
+      bullets: ["Engage les clients sur le long terme", "Paliers et récompenses entièrement configurables", "Les tampons ne se remettent jamais à zéro"],
+    },
+    rewardFlex: {
+      tag: "Flex", sub: "Le choix revient au client",
+      desc: "À mi-parcours, le client peut prendre une petite récompense immédiate ou continuer pour obtenir la grande.",
+      bullets: ["Plus de liberté pour le client", "Deux récompenses à définir", "Idéal pour les établissements avec une offre variée"],
+    },
+    dashTag: "Dashboard gérant",
+    dashTitle: "Tout ce dont vous avez besoin,",
+    dashTitle2: "dans votre poche.",
+    dashSub: "Wallio Pro est l'application du gérant, disponible sur iPhone et navigateur. Elle centralise tout ce qu'il vous faut pour piloter votre programme de fidélité.",
+    dashFeats: [
+      { title: "Statistiques et segmentation", body: "Activité sur 7 ou 30 jours, nombre de tampons distribués, meilleurs clients du mois. Segmentation automatique : actifs (revenus dans les 30 jours) vs inactifs (absents depuis plus de 30 jours)." },
+      { title: "Suivi clients", body: "Chaque client a sa fiche : tampons actuels, historique des visites, date d'inscription. Ajustez ses tampons manuellement en cas d'erreur ou pour une attention particulière." },
+      { title: "Notifications push", body: "Envoyez un message à tous vos clients, uniquement aux actifs ou uniquement aux inactifs. Un tap depuis votre dashboard — le message arrive directement sur leur téléphone." },
+      { title: "Gestion de l'équipe", body: "Chaque membre de votre équipe a un accès PIN personnel. Ils peuvent valider les tampons et les récompenses via le scanner, sans accéder à votre dashboard ni à vos données commerciales." },
+      { title: "Scanner intégré", body: "Validez les tampons et les récompenses directement depuis Wallio Pro, via le scanner QR intégré. Aucun matériel supplémentaire, aucune caisse enregistreuse à modifier." },
+    ],
+    clientTag: "Expérience client",
+    clientTitle: "Vos clients ont tout",
+    clientTitle2: "pour revenir.",
+    clientSub: "Wallio crée un vrai lien entre vos clients et votre établissement. Carte de fidélité, messages, annuaire, parrainage — tout dans une application web, sans téléchargement.",
+    clientFeats: [
+      { title: "Carte Apple et Google Wallet", body: "Après le premier scan, le client ajoute sa carte en un tap dans son Apple ou Google Wallet. Elle se met à jour automatiquement à chaque tampon et envoie une notification. Aucune application à télécharger." },
+      { title: "Messages de votre établissement", body: "Vous envoyez un message depuis votre dashboard, il arrive directement dans l'app de vos clients. Offres spéciales, actualités, messages personnalisés — lus au bon moment." },
+      { title: "Découvrir", body: "Un annuaire des établissements Wallio, filtrable par secteur et ville. Vos nouveaux clients vous trouvent ici même sans vous connaître. Votre commerce est visible par tous les utilisateurs de la plateforme." },
+      { title: "Y aller", body: "Un bouton \"Y aller\" est visible directement sur la carte de fidélité. Un tap ouvre Google Maps et guide votre client jusqu'à votre établissement." },
+      { title: "Parrainage intégré", body: "Depuis sa carte, votre client voit un bouton \"Inviter un ami\". Il partage un lien unique. L'ami clique, scanne sa première carte, et tous les deux reçoivent automatiquement un tampon. Sans aucune action de votre part." },
+    ],
+    customTag: "Personnalisation",
+    customTitle: "Votre carte,",
+    customTitle2: "à votre image.",
+    customSub: "Chaque détail est configurable depuis votre dashboard. Les modifications s'appliquent instantanément sur les cartes de vos clients.",
+    customFeats: [
+      { title: "Couleurs et logo", body: "Couleur de fond, de texte, de tampons, et votre logo en tête de carte." },
+      { title: "Nombre de tampons", body: "Entre 5 et 50 tampons par cycle, selon votre programme." },
+      { title: "Style des tampons", body: "Point, anneau, check, cœur, étoile, texte ou votre propre logo." },
+      { title: "Bannière personnalisée", body: "Uploadez une photo de votre établissement. Elle apparaît comme fond de carte, avec les tampons dessinés dessus." },
+      { title: "Champs informatifs", body: "Horaires, numéro, liens, directement visibles sur la carte." },
+      { title: "Anti-doublon", body: "Délai minimum configurable entre deux tampons valides : 15 min, 1h, 4h, 8h ou 1 jour." },
+    ],
+    cardsTitle: "Quelques cartes créées avec Wallio",
+    sectorsTag: "Secteurs", sectorsTitle: "Pour tous les commerces de proximité.",
+    sectors: ["Café & Coffee shop", "Restaurant", "Barber shop", "Salon de beauté", "Boutique", "Salle de sport", "Boulangerie", "Institut & Spa"],
+    tarifsTag: "Tarifs", tarifsTitle: "Simple et transparent.",
+    tarifsSub: "Un seul abonnement, tout inclus. Plus vous vous engagez, plus vous économisez.",
+    tarifsMonthly: "Mensuel", tarifsSix: "6 mois", tarifsAnnual: "Annuel",
+    tarifsNoCommit: "Sans engagement", tarifsRecommended: "Recommandé",
+    tarifsMonthEquiv: (p: number, c: string) => `${p} ${c}/mois`,
+    tarifsCta: "Choisir cette formule",
+    tarifsWaMo: (p: number, c: string) => `Bonjour, je suis intéressé par la formule mensuelle Wallio à ${p} ${c}/mois.`,
+    tarifsWa6: (p: number, c: string) => `Bonjour, je suis intéressé par la formule 6 mois Wallio à ${p} ${c}.`,
+    tarifsWaAn: (p: number, c: string) => `Bonjour, je suis intéressé par la formule annuelle Wallio à ${p} ${c}/an.`,
+    tarifsIncludedTitle: "Tout inclus dans les trois formules",
+    tarifsIncluded: [
+      "Carte de fidélité Apple Wallet et Google Wallet",
+      "Carte comptoir haute résolution (QR code + NFC optionnel)",
+      "Dashboard gérant sur iPhone et navigateur",
+      "Notifications push illimitées",
+      "Automatisations anniversaire et relance",
+      "Gestion de l'équipe avec accès PIN",
+      "Annuaire Wallio",
+      "Support dédié sur WhatsApp",
+    ],
+    faqTag: "FAQ", faqTitle: "Questions fréquentes",
+    faqCta: "Autre question ? Discutons sur WhatsApp",
+    faqWa: "Bonjour, j'ai une question sur Wallio.",
+    faqs: [
+      { q: "Mes clients doivent-ils télécharger une application ?", a: "Non. Vos clients accèdent à leur carte via un lien web, directement depuis leur navigateur. La carte peut ensuite être ajoutée en un tap dans Apple Wallet ou Google Wallet, sans passer par l'App Store." },
+      { q: "Comment fonctionne le tag NFC ?", a: "Le client approche son téléphone à environ 4 cm du tag NFC intégré à votre carte comptoir. En moins d'une seconde, sa carte de fidélité est créée ou mise à jour. Aucune application n'est nécessaire." },
+      { q: "Qu'est-ce que la carte comptoir ?", a: "C'est un fichier d'impression haute résolution que Wallio génère pour vous. Vous l'imprimez et le posez sur votre comptoir. Il contient votre QR code unique et peut intégrer un tag NFC. C'est le seul support physique dont vous avez besoin." },
+      { q: "Quelle est la différence entre les trois modes de récompenses ?", a: "Le mode cyclique remet le compteur à zéro après chaque récompense. Le mode progressif accumule les tampons définitivement et débloque des paliers successifs. Le mode Flex laisse le choix au client à mi-parcours : petite récompense maintenant ou continuer pour la grande." },
+      { q: "Comment mes employés peuvent-ils valider des tampons ?", a: "Chaque membre de l'équipe dispose d'un accès PIN via l'application Wallio Pro. Ils valident les tampons via le scanner QR intégré, sans accéder à vos données commerciales ni à votre dashboard complet." },
+      { q: "Puis-je personnaliser ma carte de fidélité ?", a: "Oui, entièrement. Depuis votre dashboard, vous choisissez les couleurs, uploadez votre logo, définissez le nombre de tampons et leur style, et uploadez une photo de votre établissement comme bannière. Chaque modification s'applique instantanément." },
+      { q: "Les notifications sont-elles automatiques ?", a: "Oui. Apple Wallet envoie une notification à chaque nouveau tampon. Pour les messages marketing, Wallio envoie automatiquement un message d'anniversaire ou une relance si un client n'est pas revenu depuis X jours." },
+      { q: "Comment commencer avec Wallio ?", a: "Contactez-nous sur WhatsApp. Nous configurons votre compte, générons votre carte comptoir et vous accompagnons lors de vos premières utilisations. L'installation prend moins d'une heure." },
+    ],
+    ctaTitle: "Prêt à fidéliser vos clients ?",
+    ctaSub: "Opérationnel en moins d'une heure. Sans matériel, sans installation.",
+    ctaBtn: "Démarrer sur WhatsApp",
+    ctaWa: "Bonjour, je souhaite démarrer avec Wallio pour mon commerce.",
+    footerLinks: [
+      { href: "/privacy", label: "Confidentialité" }, { href: "/terms", label: "CGU" },
+      { href: "/legal", label: "Mentions légales" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
+    ],
+  },
+  en: {
+    navLogin: "Sign in", navCta: "Contact us",
+    anchors: [
+      { id: "comment", label: "How it works" },
+      { id: "recompenses", label: "Rewards" },
+      { id: "dashboard", label: "Dashboard" },
+      { id: "client", label: "Client experience" },
+      { id: "carte", label: "Customization" },
+      { id: "tarifs", label: "Pricing" },
+      { id: "faq", label: "FAQ" },
+    ],
+    heroBadge: "Apple Wallet · Google Wallet · NFC · QR Code",
+    heroTitle1: "Your regulars shouldn't",
+    heroTitle2: "be strangers.",
+    heroSub: "Wallio automatically creates a digital loyalty card for every customer who scans your QR code or taps your NFC tag. It lands in their Apple or Google Wallet. No app to install, for you or for them.",
+    heroCta1: "Discover on WhatsApp",
+    heroCta2: "Sign in",
+    heroWa: "Hello, I'd like to discover Wallio for my business.",
+    proofLabel: "Trusted by",
+    proofStat: "200+ customers enrolled · 4 businesses",
+    problemTag: "The reality",
+    problemTitle1: "Customers come in.",
+    problemTitle2: "Few come back.",
+    problemPains: [
+      { title: "Paper cards get lost", body: "They end up in a drawer. Your customer leaves with no connection to your business." },
+      { title: "Your best customers are invisible", body: "You don't know who comes back often, who stopped, or who deserves special attention." },
+      { title: "No way to re-engage them", body: "Without data, you can't send a re-engagement message or reward the customers who deserve it." },
+    ],
+    problemSolution: "Wallio solves exactly that.",
+    howTag: "How it works",
+    howTitle: "Three steps.",
+    howTitle2: "Zero friction.",
+    howSub: "Customers install nothing. You change nothing about your routine.",
+    howSteps: [
+      { n: "01", title: "The customer scans or taps their phone", body: "The QR code is printed on your counter card. The NFC tag is built right in. One gesture is all it takes." },
+      { n: "02", title: "Their card is created in 30 seconds", body: "They enter their name and phone number. Their card appears directly in Apple or Google Wallet." },
+      { n: "03", title: "Every visit, their stamp is credited", body: "They show their Wallet card, you validate. Once they hit their goal, they receive their reward." },
+    ],
+    rewardTag: "Reward modes",
+    rewardTitle: "A programme built for",
+    rewardTitle2: "every business.",
+    rewardSub: "Three loyalty modes, configurable from your dashboard in seconds.",
+    rewardCyclic: {
+      tag: "Cyclic", sub: "The classic, improved",
+      desc: "One goal, one reward. Once the target is reached, the counter resets and the cycle starts again.",
+      bullets: ["Simple to set up and explain", "Perfect for recurring purchases", "Just one goal to define"],
+    },
+    rewardProg: {
+      tag: "Progressive", sub: "Cumulative tiers",
+      desc: "Stamps accumulate permanently. Each tier unlocked brings a different reward.",
+      bullets: ["Builds long-term engagement", "Fully configurable tiers and rewards", "Stamps never reset"],
+    },
+    rewardFlex: {
+      tag: "Flex", sub: "The customer chooses",
+      desc: "At the halfway point, the customer can take a small immediate reward or keep going for the bigger one.",
+      bullets: ["More freedom for the customer", "Two rewards to define", "Great for businesses with a varied offer"],
+    },
+    dashTag: "Manager dashboard",
+    dashTitle: "Everything you need,",
+    dashTitle2: "in your pocket.",
+    dashSub: "Wallio Pro is the manager app, available on iPhone and browser. It centralises everything you need to run your loyalty programme.",
+    dashFeats: [
+      { title: "Stats and segmentation", body: "7 or 30-day activity, stamps distributed, top customers. Automatic segmentation: active (back within 30 days) vs inactive (absent for more than 30 days)." },
+      { title: "Customer tracking", body: "Each customer has a profile: current stamps, visit history, registration date. Adjust stamps manually for corrections or special attention." },
+      { title: "Targeted push notifications", body: "Send a message to all your customers, only active ones, or only inactive ones. One tap from your dashboard — it lands directly on their phone." },
+      { title: "Team management", body: "Each team member has a personal PIN access. They can validate stamps and rewards via the scanner, without accessing your dashboard or business data." },
+      { title: "Built-in scanner", body: "Validate stamps and rewards directly from Wallio Pro via the built-in QR scanner. No extra hardware, no changes to your checkout." },
+    ],
+    clientTag: "Client experience",
+    clientTitle: "Your customers have everything",
+    clientTitle2: "to come back.",
+    clientSub: "Wallio creates a real connection between your customers and your business. Loyalty card, messages, directory, referral — all in a web app, no download.",
+    clientFeats: [
+      { title: "Apple and Google Wallet card", body: "After the first scan, the customer adds their card with one tap in Apple or Google Wallet. It updates automatically with every stamp and sends a notification. No app to download." },
+      { title: "Messages from your business", body: "You send a message from your dashboard, it arrives directly in your customers' app. Special offers, news, personalised messages — read at the right moment." },
+      { title: "Discover", body: "A directory of Wallio venues, filterable by sector and city. New customers find you here even without knowing you. Your business is visible to all platform users." },
+      { title: "Get Directions", body: "On every venue page, a \"Get Directions\" button opens GPS navigation straight to your address. One tap, and your customer is guided to your door." },
+      { title: "Built-in referral", body: "From their card, your customer sees an \"Invite a friend\" button. They share a unique link. The friend clicks, scans their first card, and both automatically receive a stamp. No action needed from you." },
+    ],
+    customTag: "Customization",
+    customTitle: "Your card,",
+    customTitle2: "your identity.",
+    customSub: "Every detail is configurable from your dashboard. Changes apply instantly on your customers' cards.",
+    customFeats: [
+      { title: "Colors and logo", body: "Background color, text color, stamp color, and your logo at the top of the card." },
+      { title: "Number of stamps", body: "Between 5 and 50 stamps per cycle, depending on your programme." },
+      { title: "Stamp style", body: "Dot, ring, check, heart, star, text or your own logo." },
+      { title: "Custom banner", body: "Upload a photo of your venue. It appears as the card background, with stamps drawn on top." },
+      { title: "Info fields", body: "Opening hours, phone number, links, directly visible on the card." },
+      { title: "Dedup protection", body: "Minimum delay between valid stamps: 15 min, 1h, 4h, 8h or 1 day." },
+    ],
+    cardsTitle: "A few cards built with Wallio",
+    sectorsTag: "Industries", sectorsTitle: "For every local business.",
+    sectors: ["Café & Coffee shop", "Restaurant", "Barber shop", "Beauty salon", "Boutique", "Gym", "Bakery", "Spa & Wellness"],
+    tarifsTag: "Pricing", tarifsTitle: "Simple and transparent.",
+    tarifsSub: "One subscription, everything included. The longer you commit, the more you save.",
+    tarifsMonthly: "Monthly", tarifsSix: "6 months", tarifsAnnual: "Annual",
+    tarifsNoCommit: "No commitment", tarifsRecommended: "Recommended",
+    tarifsMonthEquiv: (p: number, c: string) => `${p} ${c}/month`,
+    tarifsCta: "Choose this plan",
+    tarifsWaMo: (p: number, c: string) => `Hello, I'm interested in the Wallio monthly plan at ${p} ${c}/month.`,
+    tarifsWa6: (p: number, c: string) => `Hello, I'm interested in the Wallio 6-month plan at ${p} ${c}.`,
+    tarifsWaAn: (p: number, c: string) => `Hello, I'm interested in the Wallio annual plan at ${p} ${c}/year.`,
+    tarifsIncludedTitle: "Everything included in all three plans",
+    tarifsIncluded: [
+      "Apple Wallet and Google Wallet loyalty card",
+      "High-resolution counter card (QR code + optional NFC)",
+      "Manager dashboard on iPhone and browser",
+      "Unlimited push notifications",
+      "Birthday and re-engagement automations",
+      "Team management with PIN access",
+      "Wallio directory listing",
+      "Dedicated WhatsApp support",
+    ],
+    faqTag: "FAQ", faqTitle: "Frequently asked questions",
+    faqCta: "Another question? Let's chat on WhatsApp",
+    faqWa: "Hello, I have a question about Wallio.",
+    faqs: [
+      { q: "Do my customers need to download an app?", a: "No. Customers access their card via a web link, directly from their browser. The card can then be added with one tap to Apple Wallet or Google Wallet, no App Store required." },
+      { q: "How does the NFC tag work?", a: "The customer holds their phone about 4 cm from the NFC tag built into your counter card. In under a second, their loyalty card is created or updated. No app needed." },
+      { q: "What is the counter card?", a: "It's a high-resolution print file Wallio generates for you. You print it and place it on your counter. It contains your unique QR code and can include an NFC tag. It's the only physical support you need." },
+      { q: "What's the difference between the three reward modes?", a: "Cyclic resets the counter after each reward. Progressive accumulates stamps permanently and unlocks successive tiers. Flex lets the customer choose at the halfway point: small reward now or continue for the bigger one." },
+      { q: "How can my staff validate stamps?", a: "Each team member has a PIN access via the Wallio Pro app. They validate stamps with the built-in QR scanner, without accessing your business data or full dashboard." },
+      { q: "Can I customise my loyalty card?", a: "Yes, fully. From your dashboard you choose colors, upload your logo, define the number of stamps and their style, and upload a photo as a banner. Every change applies instantly." },
+      { q: "Are notifications automatic?", a: "Yes. Apple Wallet sends a notification with every new stamp. For marketing, Wallio automatically sends a birthday message or re-engagement if a customer hasn't returned in X days." },
+      { q: "How do I get started with Wallio?", a: "Contact us on WhatsApp. We configure your account, generate your counter card and guide you through the first uses. Setup takes less than an hour." },
+    ],
+    ctaTitle: "Ready to build customer loyalty?",
+    ctaSub: "Up and running in under an hour. No hardware, no installation.",
+    ctaBtn: "Start on WhatsApp",
+    ctaWa: "Hello, I'd like to get started with Wallio for my business.",
+    footerLinks: [
+      { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" },
+      { href: "/legal", label: "Legal" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
+    ],
+  },
+  ro: {
+    navLogin: "Autentificare", navCta: "Contactați-ne",
+    anchors: [
+      { id: "comment", label: "Cum funcționează" },
+      { id: "recompenses", label: "Recompense" },
+      { id: "dashboard", label: "Dashboard" },
+      { id: "client", label: "Experiența clientului" },
+      { id: "carte", label: "Personalizare" },
+      { id: "tarifs", label: "Tarife" },
+      { id: "faq", label: "FAQ" },
+    ],
+    heroBadge: "Apple Wallet · Google Wallet · NFC · QR Code",
+    heroTitle1: "Clienții fideli nu ar trebui",
+    heroTitle2: "să fie străini.",
+    heroSub: "Wallio creează automat un card de fidelitate digital pentru fiecare client care scanează codul QR sau apropie telefonul de tag-ul NFC. Cardul ajunge în Apple sau Google Wallet, fără nicio aplicație de instalat.",
+    heroCta1: "Descoperiți pe WhatsApp",
+    heroCta2: "Autentificare",
+    heroWa: "Bună ziua, doresc să descopăr Wallio pentru afacerea mea.",
+    proofLabel: "Ne acordă încredere",
+    proofStat: "200+ clienți fidelizați · 4 afaceri",
+    problemTag: "Realitatea",
+    problemTitle1: "Clienții vin.",
+    problemTitle2: "Puțini revin.",
+    problemPains: [
+      { title: "Cardul de hârtie se pierde", body: "Ajunge în fundul unui sertar. Clientul pleacă fără nicio legătură cu afacerea dvs." },
+      { title: "Cei mai buni clienți sunt invizibili", body: "Nu știți cine revine des, cine s-a oprit sau cine merită o atenție specială." },
+      { title: "Imposibil să îi contactați", body: "Fără date, nu puteți trimite un mesaj de reactivare sau recompensa clienții care merită." },
+    ],
+    problemSolution: "Wallio rezolvă exact asta.",
+    howTag: "Funcționare",
+    howTitle: "Trei pași.",
+    howTitle2: "Zero fricțiune.",
+    howSub: "Clientul nu instalează nimic. Dvs. nu vă schimbați obiceiurile.",
+    howSteps: [
+      { n: "01", title: "Clientul scanează sau apropie telefonul", body: "Codul QR este imprimat pe cardul de tejghea. Tag-ul NFC este integrat în el. Un singur gest este suficient." },
+      { n: "02", title: "Cardul este creat în 30 de secunde", body: "Introduce prenumele și numărul de telefon. Cardul apare direct în Apple sau Google Wallet." },
+      { n: "03", title: "La fiecare vizită, ștampila este creditată", body: "Prezintă cardul Wallet, dvs. validați. Când atinge obiectivul, primește recompensa." },
+    ],
+    rewardTag: "Moduri de recompensă",
+    rewardTitle: "Un program adaptat",
+    rewardTitle2: "fiecărei afaceri.",
+    rewardSub: "Trei moduri de fidelizare, configurabile din dashboard în câteva secunde.",
+    rewardCyclic: {
+      tag: "Ciclic", sub: "Clasicul îmbunătățit",
+      desc: "Un obiectiv, o recompensă. Odată atins obiectivul, contorul repornește.",
+      bullets: ["Simplu de configurat și explicat", "Ideal pentru produse recurente", "Un singur obiectiv de definit"],
+    },
+    rewardProg: {
+      tag: "Progresiv", sub: "Niveluri cumulative",
+      desc: "Ștampilele se acumulează definitiv. Fiecare nivel atins deblochează o recompensă diferită.",
+      bullets: ["Angajament pe termen lung", "Niveluri și recompense complet configurabile", "Ștampilele nu se resetează niciodată"],
+    },
+    rewardFlex: {
+      tag: "Flex", sub: "Clientul alege",
+      desc: "La jumătatea parcursului, clientul poate lua o mică recompensă imediată sau continua pentru cea mare.",
+      bullets: ["Mai multă libertate pentru client", "Două recompense de definit", "Ideal pentru afaceri cu ofertă variată"],
+    },
+    dashTag: "Dashboard manager",
+    dashTitle: "Tot ce aveți nevoie,",
+    dashTitle2: "în buzunar.",
+    dashSub: "Wallio Pro este aplicația managerului, disponibilă pe iPhone și browser. Centralizează tot ce aveți nevoie pentru programul de fidelitate.",
+    dashFeats: [
+      { title: "Statistici și segmentare", body: "Activitate pe 7 sau 30 de zile, ștampile distribuite, cei mai buni clienți. Segmentare automată: activi (reveniți în 30 de zile) vs inactivi (absenți de peste 30 de zile)." },
+      { title: "Urmărire clienți", body: "Fiecare client are o fișă: ștampile curente, istoricul vizitelor, data înscrierii. Ajustați ștampilele manual pentru corecții sau atenție specială." },
+      { title: "Notificări push țintite", body: "Trimiteți un mesaj tuturor clienților, doar activi sau doar inactivi. Un tap din dashboard — ajunge direct pe telefonul lor." },
+      { title: "Gestionarea echipei", body: "Fiecare membru al echipei are acces PIN personal. Pot valida ștampile și recompense prin scanner, fără acces la dashboard sau date comerciale." },
+      { title: "Scanner integrat", body: "Validați ștampile și recompense direct din Wallio Pro, prin scanerul QR integrat. Niciun echipament suplimentar, nicio modificare la casă." },
+    ],
+    clientTag: "Experiența clientului",
+    clientTitle: "Clienții dvs. au tot",
+    clientTitle2: "ca să revină.",
+    clientSub: "Wallio creează o legătură reală între clienții dvs. și localul dvs. Card de fidelitate, mesaje, director, recomandare — totul într-o aplicație web, fără descărcare.",
+    clientFeats: [
+      { title: "Card Apple și Google Wallet", body: "După prima scanare, clientul adaugă cardul cu un tap în Apple sau Google Wallet. Se actualizează automat la fiecare ștampilă și trimite o notificare. Nicio aplicație de descărcat." },
+      { title: "Mesaje de la localul dvs.", body: "Trimiteți un mesaj din dashboard, ajunge direct în aplicația clienților. Oferte speciale, noutăți, mesaje personalizate — citite la momentul potrivit." },
+      { title: "Descoperă", body: "Un director al localurilor Wallio, filtrabil pe sector și oraș. Clienți noi vă găsesc chiar fără să vă cunoască. Localul dvs. este vizibil tuturor utilizatorilor platformei." },
+      { title: "Mergi acolo", body: "Pe fiecare fișă de local, un buton \"Mergi acolo\" deschide navigarea GPS direct spre adresa dvs. Un singur tap și clientul este ghidat până la dvs." },
+      { title: "Recomandare integrată", body: "Din cardul său, clientul vede un buton \"Invită un prieten\". Distribuie un link unic. Prietenul dă clic, scanează primul card, și amândoi primesc automat o ștampilă. Fără nicio acțiune din partea dvs." },
+    ],
+    customTag: "Personalizare",
+    customTitle: "Cardul dvs.,",
+    customTitle2: "imaginea dvs.",
+    customSub: "Fiecare detaliu este configurabil din dashboard. Modificările se aplică instant pe cardurile clienților.",
+    customFeats: [
+      { title: "Culori și logo", body: "Culoarea fondului, textului, ștampilelor și logo-ul dvs. în capul cardului." },
+      { title: "Număr de ștampile", body: "Între 5 și 50 de ștampile pe ciclu, în funcție de programul dvs." },
+      { title: "Stilul ștampilelor", body: "Punct, inel, bifare, inimă, stea, text sau propriul logo." },
+      { title: "Banner personalizat", body: "Încărcați o fotografie a localului. Apare ca fond de card, cu ștampilele desenate deasupra." },
+      { title: "Câmpuri informative", body: "Program, număr de telefon, linkuri, direct vizibile pe card." },
+      { title: "Protecție anti-duplicare", body: "Interval minim configurabil: 15 min, 1h, 4h, 8h sau 1 zi." },
+    ],
+    cardsTitle: "Câteva carduri create cu Wallio",
+    sectorsTag: "Sectoare", sectorsTitle: "Pentru toate localurile de proximitate.",
+    sectors: ["Cafenea & Coffee shop", "Restaurant", "Frizerie", "Salon de frumusețe", "Boutique", "Sală de sport", "Brutărie", "Institut & Spa"],
+    tarifsTag: "Tarife", tarifsTitle: "Simplu și transparent.",
+    tarifsSub: "Un singur abonament, totul inclus. Cu cât vă angajați mai mult, cu atât economisiți.",
+    tarifsMonthly: "Lunar", tarifsSix: "6 luni", tarifsAnnual: "Anual",
+    tarifsNoCommit: "Fără angajament", tarifsRecommended: "Recomandat",
+    tarifsMonthEquiv: (p: number, c: string) => `${p} ${c}/lună`,
+    tarifsCta: "Alegeți această formulă",
+    tarifsWaMo: (p: number, c: string) => `Bună ziua, sunt interesat de formula lunară Wallio la ${p} ${c}/lună.`,
+    tarifsWa6: (p: number, c: string) => `Bună ziua, sunt interesat de formula 6 luni Wallio la ${p} ${c}.`,
+    tarifsWaAn: (p: number, c: string) => `Bună ziua, sunt interesat de formula anuală Wallio la ${p} ${c}/an.`,
+    tarifsIncludedTitle: "Totul inclus în toate trei formulele",
+    tarifsIncluded: [
+      "Card de fidelitate Apple Wallet și Google Wallet",
+      "Card tejghea înaltă rezoluție (cod QR + NFC opțional)",
+      "Dashboard manager pe iPhone și browser",
+      "Notificări push nelimitate",
+      "Automatizări zi de naștere și reactivare",
+      "Gestionarea echipei cu acces PIN",
+      "Listing în directorul Wallio",
+      "Suport dedicat pe WhatsApp",
+    ],
+    faqTag: "FAQ", faqTitle: "Întrebări frecvente",
+    faqCta: "Altă întrebare? Discutați pe WhatsApp",
+    faqWa: "Bună ziua, am o întrebare despre Wallio.",
+    faqs: [
+      { q: "Clienții mei trebuie să descarce o aplicație?", a: "Nu. Clienții accesează cardul printr-un link web, direct din browser. Cardul poate fi adăugat cu un tap în Apple Wallet sau Google Wallet, fără App Store." },
+      { q: "Cum funcționează tag-ul NFC?", a: "Clientul apropie telefonul la aproximativ 4 cm de tag-ul NFC integrat în cardul de tejghea. În mai puțin de o secundă, cardul de fidelitate este creat sau actualizat. Nicio aplicație necesară." },
+      { q: "Ce este cardul de tejghea?", a: "Este un fișier de imprimare înaltă rezoluție pe care Wallio îl generează pentru dvs. Îl imprimați și îl puneți pe tejghea. Conține codul QR unic și poate include un tag NFC. Este singurul suport fizic de care aveți nevoie." },
+      { q: "Care este diferența dintre cele trei moduri de recompensă?", a: "Ciclic resetează contorul după fiecare recompensă. Progresiv acumulează ștampilele definitiv și deblochează niveluri succesive. Flex lasă clientul să aleagă la jumătatea parcursului: mică recompensă acum sau continuă pentru cea mare." },
+      { q: "Cum pot angajații mei să valideze ștampilele?", a: "Fiecare membru al echipei are acces PIN prin aplicația Wallio Pro. Validează ștampile cu scanerul QR integrat, fără acces la datele dvs. comerciale." },
+      { q: "Pot personaliza cardul de fidelitate?", a: "Da, complet. Din dashboard alegeți culorile, încărcați logo-ul, definiți numărul și stilul ștampilelor, și o fotografie ca banner. Fiecare modificare se aplică instant." },
+      { q: "Notificările sunt automate?", a: "Da. Apple Wallet trimite o notificare la fiecare ștampilă nouă. Wallio trimite automat un mesaj de ziua clientului sau o reactivare dacă nu a mai venit de X zile." },
+      { q: "Cum încep cu Wallio?", a: "Contactați-ne pe WhatsApp. Configurăm contul, generăm cardul de tejghea și vă ghidăm la primele utilizări. Instalarea durează mai puțin de o oră." },
+    ],
+    ctaTitle: "Gata să vă fidelizați clienții?",
+    ctaSub: "Funcțional în mai puțin de o oră. Fără echipament, fără instalare.",
+    ctaBtn: "Începeți pe WhatsApp",
+    ctaWa: "Bună ziua, doresc să încep cu Wallio pentru afacerea mea.",
+    footerLinks: [
+      { href: "/privacy", label: "Confidențialitate" }, { href: "/terms", label: "Termeni" },
+      { href: "/legal", label: "Mențiuni legale" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
+    ],
+  },
+} satisfies Record<Lang, object>;
 
 function useReveal() {
   useEffect(() => {
     document.querySelectorAll("[data-stagger]").forEach(parent => {
       Array.from(parent.children).forEach((child, i) => {
-        (child as HTMLElement).style.transitionDelay = `${i * 0.04}s`;
+        (child as HTMLElement).style.transitionDelay = `${i * 0.07}s`;
         child.setAttribute("data-reveal", "");
       });
     });
@@ -29,1536 +438,448 @@ function useReveal() {
           io.unobserve(e.target);
         }
       }),
-      { threshold: 0.12, rootMargin: "0px 0px -24px 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px -16px 0px" }
     );
     els.forEach(el => io.observe(el));
     return () => io.disconnect();
   }, []);
 }
 
-function WalletCardMock({
-  bg = "#1C1C1E", fg = "#FFFFFF", labelClr = "rgba(255,255,255,0.5)",
-  name = "Mon Café", logoInitial = "MC",
-  stamps = 7, total = 10, reward = "Café offert",
-  stampColor = "#FFFFFF", stripBg = "rgba(255,255,255,0.08)", stripImageUrl,
-  aux1 = "Ouv. 8h-18h", aux2 = "Lundi-Samedi",
-}: {
-  bg?: string; fg?: string; labelClr?: string; name?: string; logoInitial?: string;
-  stamps?: number; total?: number; reward?: string; stampColor?: string;
-  stripBg?: string; stripImageUrl?: string; aux1?: string; aux2?: string;
-}) {
-  const sep = `1px solid rgba(${fg === "#FFFFFF" ? "255,255,255" : "0,0,0"},0.10)`;
-  const perRow = total <= 8 ? total : Math.ceil(total / 2);
-  const rows = Math.ceil(total / perRow);
-  const scale = 260 / 375;
-  const gap1x = Math.round(Math.max(6, 10));
-  const baseSize1x = Math.min(36, Math.floor((343 - (perRow - 1) * gap1x) / perRow));
-  const s1x = Math.max(14, baseSize1x);
-  const s = s1x * scale;
-  const gap = gap1x * scale;
-  const thick = Math.max(0.5, s * 0.06);
-  return (
-    <div style={{
-      width: 260, flexShrink: 0, background: bg, borderRadius: 14,
-      overflow: "hidden", fontFamily: "-apple-system,'SF Pro Display',sans-serif",
-      boxShadow: "0 24px 64px rgba(0,0,0,0.30)",
-    }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 12px 8px" }}>
-        <div style={{ width: 21, height: 21, borderRadius: 4, background: "rgba(255,255,255,0.18)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: fg }}>{logoInitial}</span>
+const QR_DOTS = [1,0,1,0,1,1,0,1,0,0,1,1,0,0,1,1,0,1,0,1,1,0,0,1,0,0,1,1,0,0,1,0,1,0,1,0,0,1,1,0,1,0,0,1,1,0,0,1];
+
+function DashPreview({ feat }: { feat: number }) {
+  const C: React.CSSProperties = { width:"100%", display:"flex", flexDirection:"column" };
+  const previews: React.ReactNode[] = [
+    // 0 — Suivi clients
+    <div style={{ background:"#fff",borderRadius:20,padding:24,boxShadow:"0 8px 32px rgba(0,0,0,.08)",display:"flex",flexDirection:"column",gap:0 }}>
+      <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:20 }}>
+        <div style={{ width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg,#EEF0FF,#C7D2FE)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,color:"#4B4FD6",animation:"fadeUp .4s .1s both",flexShrink:0 }}>FB</div>
+        <div style={{ flex:1,animation:"fadeUp .4s .18s both" }}>
+          <div style={{ fontSize:14,fontWeight:700,color:"#1D1D1F" }}>Fatima B.</div>
+          <div style={{ fontSize:12,color:"#8E8E93" }}>Dernière visite il y a 2j</div>
         </div>
-        <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <div style={{ fontSize: 6.5, color: labelClr, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 1 }}>TAMPONS</div>
-          <div style={{ fontSize: 10, fontWeight: 600, color: fg }}>{stamps}/{total}</div>
+        <div style={{ background:"rgba(52,199,89,.10)",color:"#34C759",fontSize:11,fontWeight:700,padding:"3px 10px",borderRadius:20,animation:"fadeUp .4s .26s both",flexShrink:0 }}>Actif</div>
+      </div>
+      <div style={{ animation:"fadeUp .4s .32s both" }}>
+        <div style={{ display:"flex",justifyContent:"space-between",marginBottom:8 }}>
+          <span style={{ fontSize:12,color:"#6E6E73" }}>Tampons</span>
+          <span style={{ fontSize:12,fontWeight:700 }}>7 / 10</span>
+        </div>
+        <div style={{ height:5,background:"rgba(0,0,0,.08)",borderRadius:99,overflow:"hidden",marginBottom:14 }}>
+          <div style={{ height:"100%",width:"70%",background:"linear-gradient(90deg,#007AFF,#8B5CF6)",borderRadius:99,animation:"fillProg .8s cubic-bezier(.16,1,.3,1) .5s both" }} />
+        </div>
+        <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
+          {Array.from({length:10}).map((_,i)=><div key={i} style={{ width:22,height:22,borderRadius:"50%",background:i<7?"linear-gradient(135deg,#007AFF,#8B5CF6)":"rgba(0,0,0,.08)",animation:i<7?`stampPop .4s cubic-bezier(.34,1.5,.64,1) ${.5+i*.05}s both`:"none" }} />)}
         </div>
       </div>
+    </div>,
 
-      {/* Strip avec tampons */}
-      <div style={{ width: 260, height: 100, overflow: "hidden", position: "relative", background: stripBg }}>
-        {stripImageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={stripImageUrl} alt="" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center" }} />
-        )}
-        {stripImageUrl && <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />}
-        {!stripImageUrl && (
-          <div style={{
-            position: "absolute", inset: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap }}>
-              {Array.from({ length: rows }).map((_, row) => {
-                const count = Math.min(perRow, total - row * perRow);
-                return (
-                  <div key={row} style={{ display: "flex", gap }}>
-                    {Array.from({ length: count }).map((_, col) => {
-                      const idx = row * perRow + col;
-                      const filled = idx < stamps;
-                      return (
-                        <div key={col} style={{
-                          width: s, height: s, borderRadius: "50%", flexShrink: 0,
-                          background: filled ? stampColor + "22" : "transparent",
-                          border: `${thick}px solid ${filled ? stampColor : stampColor + "44"}`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
-                          {filled && <div style={{ width: s * 0.36, height: s * 0.36, borderRadius: "50%", background: stampColor }} />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Champs */}
-      <div style={{ display: "flex", padding: "8px 12px 10px", gap: 6 }}>
-        {[
-          { label: "Récompense", value: reward },
-          { label: "Membre", value: "Client fidèle" },
-          { label: "Info", value: aux1 },
-          { label: "Info", value: aux2 },
-        ].slice(0, total > 8 ? 4 : 3).map((f, i) => (
-          <div key={i} style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 6.5, color: labelClr, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>{f.label}</div>
-            <div style={{ fontSize: 9.5, fontWeight: 500, color: fg, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.value}</div>
+    // 1 — Stats
+    <div style={{ background:"#fff",borderRadius:20,padding:24,boxShadow:"0 8px 32px rgba(0,0,0,.08)" }}>
+      <div style={{ fontSize:11,fontWeight:700,color:"#8E8E93",letterSpacing:".07em",textTransform:"uppercase",marginBottom:20,animation:"fadeUp .4s .1s both" }}>Activité — 7 derniers jours</div>
+      <div style={{ display:"flex",alignItems:"flex-end",gap:6,height:84,marginBottom:16 }}>
+        {[38,52,31,67,44,58,29].map((v,i)=>(
+          <div key={i} style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:5 }}>
+            <div style={{ width:"100%",background:i===3?"linear-gradient(180deg,#007AFF,#8B5CF6)":"rgba(0,122,255,.13)",borderRadius:"4px 4px 0 0",height:`${v/67*72}px`,transformOrigin:"bottom",animation:`scaleBarUp .55s cubic-bezier(.16,1,.3,1) ${.15+i*.07}s both` }} />
+            <span style={{ fontSize:9,color:"#AEAEB2",fontWeight:600 }}>{"LMMJVSD"[i]}</span>
           </div>
         ))}
       </div>
-
-      {/* Séparateur + QR */}
-      <div style={{ height: "0.5px", background: sep, margin: "0 12px" }} />
-      <div style={{ display: "flex", justifyContent: "center", padding: "10px 12px 12px" }}>
-        <div style={{ background: "#FFFFFF", borderRadius: 4, padding: 4, width: 46, height: 46, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="38" height="38" viewBox="0 0 21 21" fill="none">
-            <rect width="21" height="21" fill="white"/>
-            {/* Finder TL */}
-            <rect x="0" y="0" width="7" height="7" fill="#1D1D1F"/>
-            <rect x="1" y="1" width="5" height="5" fill="white"/>
-            <rect x="2" y="2" width="3" height="3" fill="#1D1D1F"/>
-            {/* Finder TR */}
-            <rect x="14" y="0" width="7" height="7" fill="#1D1D1F"/>
-            <rect x="15" y="1" width="5" height="5" fill="white"/>
-            <rect x="16" y="2" width="3" height="3" fill="#1D1D1F"/>
-            {/* Finder BL */}
-            <rect x="0" y="14" width="7" height="7" fill="#1D1D1F"/>
-            <rect x="1" y="15" width="5" height="5" fill="white"/>
-            <rect x="2" y="16" width="3" height="3" fill="#1D1D1F"/>
-            {/* Timing row */}
-            <rect x="8" y="6" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="10" y="6" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="12" y="6" width="1" height="1" fill="#1D1D1F"/>
-            {/* Timing col */}
-            <rect x="6" y="8" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="6" y="10" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="6" y="12" width="1" height="1" fill="#1D1D1F"/>
-            {/* Format info */}
-            <rect x="8" y="0" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="2" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="4" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="5" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="0" y="8" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="3" y="8" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="5" y="8" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="13" width="1" height="1" fill="#1D1D1F"/>
-            {/* Data */}
-            <rect x="9" y="8" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="12" y="8" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="14" y="8" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="18" y="8" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="20" y="8" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="9" y="9" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="11" y="9" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="15" y="9" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="17" y="9" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="20" y="9" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="10" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="10" y="10" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="14" y="10" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="18" y="10" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="9" y="11" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="12" y="11" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="16" y="11" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="20" y="11" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="12" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="11" y="12" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="13" y="12" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="17" y="12" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="19" y="12" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="9" y="13" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="14" y="13" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="16" y="13" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="19" y="13" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="14" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="12" y="14" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="15" y="14" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="18" y="14" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="20" y="14" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="9" y="15" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="11" y="15" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="14" y="15" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="16" y="15" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="20" y="15" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="16" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="10" y="16" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="14" y="16" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="18" y="16" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="9" y="17" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="12" y="17" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="15" y="17" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="17" y="17" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="20" y="17" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="18" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="11" y="18" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="15" y="18" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="19" y="18" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="9" y="19" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="12" y="19" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="14" y="19" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="18" y="19" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="20" y="19" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="8" y="20" width="3" height="1" fill="#1D1D1F"/>
-            <rect x="12" y="20" width="2" height="1" fill="#1D1D1F"/>
-            <rect x="15" y="20" width="1" height="1" fill="#1D1D1F"/>
-            <rect x="17" y="20" width="3" height="1" fill="#1D1D1F"/>
-          </svg>
+      <div style={{ display:"flex",gap:10,animation:"fadeUp .4s .7s both" }}>
+        <div style={{ flex:1,background:"rgba(52,199,89,.08)",borderRadius:12,padding:"10px 12px" }}>
+          <div style={{ fontSize:11,color:"#34C759",fontWeight:700,marginBottom:2 }}>Actifs</div>
+          <div style={{ fontSize:24,fontWeight:800,color:"#1D1D1F",letterSpacing:-.5 }}>78%</div>
+        </div>
+        <div style={{ flex:1,background:"rgba(249,115,22,.08)",borderRadius:12,padding:"10px 12px" }}>
+          <div style={{ fontSize:11,color:"#F97316",fontWeight:700,marginBottom:2 }}>À risque</div>
+          <div style={{ fontSize:24,fontWeight:800,color:"#1D1D1F",letterSpacing:-.5 }}>14</div>
         </div>
       </div>
-    </div>
-  );
-}
+    </div>,
 
-function IPhoneFrame({ mode, phase }: { mode:"tap"|"scan"; phase:number }) {
-  // iPhone 15 : ratio ~1:2.07, coins ~14% de la largeur
-  // 150 × 311px → borderRadius 22px
-  const W = 150, H = 311, R = 22, BEZEL = 6;
-  const zoomed = phase >= 3;
-  return (
-    <div style={{
-      position:"relative",
-      transform: zoomed ? "scale(1.55)" : "scale(1)",
-      transformOrigin:"center center",
-      transition:"transform 0.95s cubic-bezier(0.34,1.05,0.64,1)",
-    }}>
-      {/* Boîtier — aluminium brossé côtés plats */}
-      <div style={{
-        width:W, height:H,
-        borderRadius:R,
-        background:"linear-gradient(160deg,#636363 0%,#3D3D3D 30%,#262626 65%,#141414 100%)",
-        padding:BEZEL,
-        position:"relative",
-        boxShadow:[
-          `inset 0 1.5px 0 rgba(255,255,255,0.28)`,
-          `inset 0 -1.5px 0 rgba(255,255,255,0.08)`,
-          `inset 1.5px 0 0 rgba(255,255,255,0.14)`,
-          `inset -1.5px 0 0 rgba(255,255,255,0.06)`,
-          `0 0 0 1px rgba(0,0,0,0.75)`,
-          `0 60px 140px rgba(0,0,0,0.55)`,
-          `0 20px 50px rgba(0,0,0,0.30)`,
-        ].join(","),
-      }}>
-        {/* Bouton volume haut */}
-        <div style={{ position:"absolute",left:-4,top:68,width:4,height:32,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#707070,#505050)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.30)" }} />
-        {/* Bouton volume bas */}
-        <div style={{ position:"absolute",left:-4,top:112,width:4,height:32,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#707070,#505050)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.30)" }} />
-        {/* Bouton silence */}
-        <div style={{ position:"absolute",left:-4,top:44,width:4,height:20,borderRadius:"3px 0 0 3px",background:"linear-gradient(90deg,#707070,#505050)" }} />
-        {/* Bouton power */}
-        <div style={{ position:"absolute",right:-4,top:92,width:4,height:52,borderRadius:"0 3px 3px 0",background:"linear-gradient(270deg,#707070,#505050)",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.30)" }} />
-
-        {/* Écran */}
-        <div style={{
-          width:"100%", height:"100%",
-          borderRadius:R-BEZEL+2,
-          overflow:"hidden",
-          position:"relative",
-          background: phase>=3 ? "#1C1C1E"
-            : mode==="scan" ? "#050505"
-            : "linear-gradient(160deg,#141430 0%,#080818 55%,#000 100%)",
-          transition:"background 0.5s ease",
-          display:"flex", flexDirection:"column",
-          alignItems:"center", justifyContent:"center",
-        }}>
-          {/* Dynamic Island */}
-          <div style={{
-            position:"absolute", top:11, left:"50%",
-            transform:"translateX(-50%)",
-            width:52, height:13,
-            background:"#000", borderRadius:7, zIndex:5,
-            boxShadow:"0 0 0 1px rgba(80,80,80,0.4)",
-          }} />
-
-          {/* Phase 0-2 */}
-          {phase < 3 && (
-            mode==="scan" ? (
-              <div style={{ position:"relative",width:"68%",height:"52%",opacity:phase>=1?1:0,transition:"opacity 0.5s",marginTop:12 }}>
-                {([
-                  {top:0,left:0,borderTop:"3px solid rgba(255,255,255,0.88)",borderLeft:"3px solid rgba(255,255,255,0.88)"},
-                  {top:0,right:0,borderTop:"3px solid rgba(255,255,255,0.88)",borderRight:"3px solid rgba(255,255,255,0.88)"},
-                  {bottom:0,left:0,borderBottom:"3px solid rgba(255,255,255,0.88)",borderLeft:"3px solid rgba(255,255,255,0.88)"},
-                  {bottom:0,right:0,borderBottom:"3px solid rgba(255,255,255,0.88)",borderRight:"3px solid rgba(255,255,255,0.88)"},
-                ] as React.CSSProperties[]).map((s,i)=>(
-                  <div key={i} style={{ position:"absolute",width:14,height:14,...s }} />
-                ))}
-                <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:18,height:1,background:"rgba(255,255,255,0.22)" }} />
-                <div style={{ position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:1,height:18,background:"rgba(255,255,255,0.22)" }} />
-              </div>
-            ) : (
-              <div style={{ textAlign:"center",marginTop:16 }}>
-                {/* Vrai logo Wallio */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ width:52,height:52,borderRadius:14,margin:"0 auto 10px",display:"block",boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }} />
-                <div style={{ fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.75)",letterSpacing:2.5 }}>WALLIO</div>
-                {phase>=1 && (
-                  <div style={{ marginTop:14,fontSize:8,color:"rgba(255,255,255,0.35)",animation:"sceneFadeIn 0.4s ease both" }}>
-                    {mode==="tap" ? "Lecture NFC…" : "Ouverture caméra…"}
-                  </div>
-                )}
-              </div>
-            )
-          )}
-
-          {/* Phase 3 — vraie carte Mori Matcha via WalletCardMock */}
-          {phase>=3 && (
-            <div style={{
-              position:"absolute", inset:0,
-              opacity:0, animation:"sceneFadeIn 0.5s ease 0.2s both",
-              overflow:"hidden",
-              display:"flex", alignItems:"flex-start", justifyContent:"center",
-            }}>
-              <div style={{ transform:"scale(0.535)", transformOrigin:"top center", flexShrink:0 }}>
-                <WalletCardMock
-                  stamps={7} total={10}
-                  bg="#1A2920"
-                  name="Mori Matcha"
-                  logoInitial="MM"
-                  reward="Matcha offert"
-                  aux1="Matcha café"
-                  aux2="Casablanca"
-                  stampColor="#A8D5A2"
-                />
-              </div>
-            </div>
-          )}
-
-          <div style={{ position:"absolute",top:0,left:0,right:0,height:60,borderRadius:`${R-BEZEL+2}px ${R-BEZEL+2}px 0 0`,background:"linear-gradient(180deg,rgba(255,255,255,0.07) 0%,transparent 100%)",pointerEvents:"none",zIndex:4 }} />
-        </div>
-
-        <div style={{ position:"absolute",inset:0,borderRadius:R,background:"linear-gradient(160deg,rgba(255,255,255,0.10) 0%,transparent 40%)",pointerEvents:"none" }} />
-      </div>
-    </div>
-  );
-}
-
-function AccesScene({ t }: { t: { accesSceneTitle: string; accesModeTap: string; accesModeQr: string } }) {
-  const [mode, setMode] = useState<"tap" | "scan">("tap");
-  const [phase, setPhase] = useState(0);
-
-  useEffect(() => {
-    const ts: ReturnType<typeof setTimeout>[] = [];
-    setPhase(0);
-    ts.push(setTimeout(() => setPhase(1), 700));
-    ts.push(setTimeout(() => setPhase(2), 1900));
-    ts.push(setTimeout(() => setPhase(3), 2700));
-    ts.push(setTimeout(() => setMode(m => m === "tap" ? "scan" : "tap"), 5600));
-    return () => ts.forEach(clearTimeout);
-  }, [mode]);
-
-  const handleSwitch = (m: "tap" | "scan") => { if (m !== mode) setMode(m); };
-
-  // [left, top, rotation] — phone 150×311
-  const pos: Record<"tap"|"scan", Record<0|1|2|3,[number,number,number]>> = {
-    tap:  { 0:[620,65,0], 1:[52,65,-7], 2:[44,63,-7], 3:[240,65,0]  },
-    scan: { 0:[280,-125,0], 1:[280,35,-5], 2:[280,32,-5], 3:[260,55,0] },
-  };
-  const [px, py, pr] = pos[mode][Math.min(phase,3) as 0|1|2|3];
-
-  return (
-    <div style={{ display:"flex", gap:60, alignItems:"center", flexWrap:"wrap" }}>
-
-      {/* Gauche */}
-      <div style={{ flex:"0 0 260px", minWidth:200 }}>
-        <h2 style={{ fontSize:"clamp(24px,2.8vw,38px)", fontWeight:700, letterSpacing:-0.8, color:"#1D1D1F", lineHeight:1.2, marginBottom:32 }}>
-          {t.accesSceneTitle}
-        </h2>
-        <div style={{ display:"flex", gap:10 }}>
-          {(["tap","scan"] as const).map(m => (
-            <button key={m} onClick={() => handleSwitch(m)} style={{
-              padding:"11px 24px", borderRadius:50, fontSize:14, fontWeight:600, cursor:"pointer",
-              border: mode===m ? "none" : "1.5px solid rgba(0,0,0,0.12)",
-              background: mode===m ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "white",
-              color: mode===m ? "white" : "#6E6E73",
-              boxShadow: mode===m ? "0 4px 18px rgba(0,122,255,0.24)" : "none",
-              transition:"all 0.3s ease",
-            }}>
-              {m === "tap" ? t.accesModeTap : t.accesModeQr}
-            </button>
-          ))}
+    // 2 — Notifications
+    <div style={{ background:"#1D1D1F",borderRadius:20,padding:20,overflow:"hidden" }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,animation:"fadeUp .3s .05s both" }}>
+        <span style={{ fontSize:11,color:"rgba(255,255,255,.45)",fontWeight:600 }}>9:41</span>
+        <div style={{ display:"flex",gap:3 }}>
+          {[12,10,16].map((w,i)=><div key={i} style={{ width:w,height:4,background:`rgba(255,255,255,${i===2?.85:.35})`,borderRadius:2 }}/>)}
         </div>
       </div>
+      {[
+        {delay:.35,title:"Wallio · Nomade Café",body:"Nouveau tampon ! Il vous reste 3 avant votre café offert."},
+        {delay:.7,title:"Wallio · Bon anniversaire",body:"Double tampon offert aujourd'hui. Profitez-en !"},
+      ].map((n,i)=>(
+        <div key={i} style={{ background:"rgba(255,255,255,.10)",borderRadius:14,padding:"12px 14px",marginBottom:8,animation:`notifDrop .5s cubic-bezier(.16,1,.3,1) ${n.delay}s both` }}>
+          <div style={{ fontSize:11,fontWeight:700,color:"rgba(255,255,255,.45)",marginBottom:5 }}>{n.title}</div>
+          <div style={{ fontSize:12,color:"rgba(255,255,255,.85)",lineHeight:1.5 }}>{n.body}</div>
+        </div>
+      ))}
+    </div>,
 
-      {/* Droite — scène */}
-      <div className="acces-scene-wrap" style={{ flex:1, minWidth:340, display:"flex", justifyContent:"center" }}>
-        <div className="acces-scene" style={{ width:660, height:440, position:"relative", flexShrink:0 }}>
+    // 3 — Automatisations
+    <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+      {[
+        {delay:.2,color:"#007AFF",tag:"Anniversaire · Automatique",msg:"Bon anniversaire ! On vous offre un double tampon aujourd'hui."},
+        {delay:.5,color:"#F97316",tag:"Relance · +30 jours inactif",msg:"Vous nous manquez ! Il vous reste 2 tampons avant votre prochaine récompense."},
+      ].map((a,i)=>(
+        <div key={i} style={{ background:"#fff",borderRadius:16,padding:"16px 18px",borderLeft:`3px solid ${a.color}`,boxShadow:"0 4px 16px rgba(0,0,0,.06)",animation:`cardSlide .5s cubic-bezier(.16,1,.3,1) ${a.delay}s both` }}>
+          <div style={{ fontSize:11,fontWeight:700,color:a.color,marginBottom:5,letterSpacing:".04em" }}>{a.tag}</div>
+          <div style={{ fontSize:13,color:"#1D1D1F",lineHeight:1.5 }}>{a.msg}</div>
+        </div>
+      ))}
+      <div style={{ background:"rgba(0,0,0,.03)",borderRadius:12,padding:"11px 14px",display:"flex",alignItems:"center",gap:10,animation:"fadeUp .4s .9s both" }}>
+        <div style={{ width:7,height:7,borderRadius:"50%",background:"#34C759",flexShrink:0 }}/>
+        <span style={{ fontSize:11.5,color:"#6E6E73" }}>2 automatisations actives · 0 action manuelle</span>
+      </div>
+    </div>,
 
-          {/* Carte comptoir 3D */}
-          <div style={{
-            position:"absolute", top:"50%", left:"50%",
-            transform:`translate(-50%,-52%) perspective(1100px) rotateX(20deg) rotateY(-10deg) rotateZ(2deg)`,
-            animation:"cardFloat 4s ease-in-out infinite",
-            opacity: phase>=3 ? 0.35 : 1,
-            transition:"opacity 0.8s ease",
-          }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/wallio-carte-comptoir.png" alt="" style={{
-              width:430, display:"block", borderRadius:20,
-              boxShadow:"0 48px 120px rgba(0,0,0,0.30), 0 12px 32px rgba(0,0,0,0.14)",
-            }} />
-
-            {/* Ondes NFC */}
-            {mode==="tap" && phase===2 && [0,1,2].map(i => (
-              <div key={i} style={{
-                position:"absolute", top:"48%", left:"18%",
-                width:32, height:32, borderRadius:"50%",
-                border:"2.5px solid #007AFF",
-                transform:"translate(-50%,-50%)",
-                animation:`nfcWave 1.1s ease-out ${i*0.28}s infinite`,
-                pointerEvents:"none",
-              }} />
-            ))}
-
-            {/* Ligne scan */}
-            {mode==="scan" && phase===2 && (
-              <div style={{
-                position:"absolute", top:"18%", right:"9%",
-                width:"35%", height:"63%",
-                overflow:"hidden", borderRadius:6,
-                border:"1px solid rgba(0,122,255,0.3)",
-                pointerEvents:"none",
-              }}>
-                <div style={{ height:2.5, background:"linear-gradient(90deg,transparent,#007AFF,#8B5CF6,transparent)", animation:"scanLine 0.85s ease-in-out infinite", boxShadow:"0 0 12px rgba(0,122,255,0.6)" }} />
-              </div>
-            )}
+    // 4 — Équipe
+    <div style={{ background:"#fff",borderRadius:20,padding:24,boxShadow:"0 8px 32px rgba(0,0,0,.08)" }}>
+      <div style={{ fontSize:13,fontWeight:700,color:"#1D1D1F",marginBottom:22,animation:"fadeUp .4s .1s both" }}>Équipe — 3 membres</div>
+      <div style={{ display:"flex",gap:10,marginBottom:28 }}>
+        {[{n:"Sara",r:"Barista",c:"#007AFF",bg:"rgba(0,122,255,.10)"},{n:"Ahmed",r:"Barista",c:"#8B5CF6",bg:"rgba(139,92,246,.10)"},{n:"Leila",r:"Manager",c:"#F97316",bg:"rgba(249,115,22,.10)"}].map((m,i)=>(
+          <div key={i} style={{ flex:1,textAlign:"center",animation:`fadeUp .4s cubic-bezier(.16,1,.3,1) ${.2+i*.12}s both` }}>
+            <div style={{ width:48,height:48,borderRadius:"50%",background:m.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:m.c,margin:"0 auto 8px" }}>{m.n[0]}</div>
+            <div style={{ fontSize:12,fontWeight:600,color:"#1D1D1F" }}>{m.n}</div>
+            <div style={{ fontSize:11,color:"#8E8E93" }}>{m.r}</div>
           </div>
-
-          {/* iPhone */}
-          <div style={{
-            position:"absolute", left:px, top:py,
-            transform:`rotate(${pr}deg)`,
-            transition:"left 1s cubic-bezier(0.34,1.08,0.64,1), top 1s cubic-bezier(0.34,1.08,0.64,1), transform 0.8s ease",
-            zIndex:10,
-          }}>
-            <IPhoneFrame mode={mode} phase={phase} />
-          </div>
-
+        ))}
+      </div>
+      <div style={{ animation:"fadeUp .4s .58s both" }}>
+        <div style={{ fontSize:11,color:"#8E8E93",textAlign:"center",marginBottom:12 }}>Validation PIN en cours</div>
+        <div style={{ display:"flex",gap:10,justifyContent:"center" }}>
+          {[0,1,2,3].map(i=><div key={i} style={{ width:13,height:13,borderRadius:"50%",background:i<3?"#007AFF":"rgba(0,0,0,.12)",animation:i<3?`pinFill .35s cubic-bezier(.34,1.5,.64,1) ${.65+i*.15}s both`:"none" }} />)}
         </div>
       </div>
-    </div>
-  );
-}
+    </div>,
 
-function AccesVideoBlock({ t }: { t: Record<string, unknown> }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [activeMode, setActiveMode] = useState<"nfc"|"qr">("nfc");
-  const QR_START = 5.0;
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      v.removeAttribute("autoplay"); v.pause(); return;
-    }
-    const onTime = () => setActiveMode(v.currentTime >= QR_START ? "qr" : "nfc");
-    v.addEventListener("timeupdate", onTime);
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
-    }, { threshold: 0.25 });
-    io.observe(v);
-    return () => { v.removeEventListener("timeupdate", onTime); io.disconnect(); };
-  }, []);
-
-  const seekTo = (time: number) => {
-    const v = videoRef.current; if (!v) return;
-    v.currentTime = time; v.play().catch(() => {});
-    setActiveMode(time >= QR_START ? "qr" : "nfc");
-  };
-
-  const tt = t as Record<string, string>;
-  const btnStyle = (active: boolean): React.CSSProperties => ({
-    padding:"11px 24px", borderRadius:50, fontSize:14, fontWeight:600, cursor:"pointer",
-    border: active ? "none" : "1.5px solid rgba(0,0,0,0.12)",
-    background: active ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "white",
-    color: active ? "white" : "#6E6E73",
-    boxShadow: active ? "0 4px 18px rgba(0,122,255,0.24)" : "none",
-    transition:"all 0.3s ease",
-  });
-
-  return (
-    <div className="acces-v2-layout" style={{ display:"flex", gap:56, alignItems:"center" }}>
-      {/* Gauche */}
-      <div style={{ flex:"0 0 280px", minWidth:220 }}>
-        <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:700, letterSpacing:-0.8, color:"#1D1D1F", lineHeight:1.18, marginBottom:28 }}>
-          {tt.accesTitle1}<br />
-          <span style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
-            {tt.accesTitle2}
-          </span>
-        </h2>
-        <div style={{ display:"flex", gap:10, marginBottom:40 }}>
-          <button data-mode="nfc" onClick={() => seekTo(0)} style={btnStyle(activeMode==="nfc")}>{tt.accesModeTap}</button>
-          <button data-mode="qr"  onClick={() => seekTo(QR_START)} style={btnStyle(activeMode==="qr")}>{tt.accesModeQr}</button>
-        </div>
-        {/* 3 stats */}
-        <div style={{ display:"flex", gap:28 }}>
-          {[
-            { value:"< 1 s",  label: tt.accesStatA },
-            { value:"0 app",  label: tt.accesStatB },
-            { value:"100 %",  label: tt.accesStatC },
-          ].map(s => (
-            <div key={s.value}>
-              <div style={{ fontSize:26, fontWeight:700, letterSpacing:-0.5, color:"#1D1D1F", lineHeight:1 }}>{s.value}</div>
-              <div style={{ fontSize:11, color:"#86868B", marginTop:4, lineHeight:1.4 }}>{s.label}</div>
-            </div>
-          ))}
+    // 5 — Scanner
+    <div style={{ background:"#0A0A0A",borderRadius:20,padding:28,display:"flex",flexDirection:"column",alignItems:"center",gap:16 }}>
+      <div style={{ position:"relative",width:160,height:160,animation:"fadeUp .4s .2s both",flexShrink:0 }}>
+        {([
+          {top:0,left:0,borderTop:"2.5px solid #007AFF",borderLeft:"2.5px solid #007AFF"},
+          {top:0,right:0,borderTop:"2.5px solid #007AFF",borderRight:"2.5px solid #007AFF"},
+          {bottom:0,left:0,borderBottom:"2.5px solid #007AFF",borderLeft:"2.5px solid #007AFF"},
+          {bottom:0,right:0,borderBottom:"2.5px solid #007AFF",borderRight:"2.5px solid #007AFF"},
+        ] as React.CSSProperties[]).map((s,i)=><div key={i} style={{ position:"absolute",width:22,height:22,...s }} />)}
+        <div style={{ position:"absolute",left:4,right:4,height:2,background:"linear-gradient(90deg,transparent,#007AFF,transparent)",animation:"scanLn 1.6s ease-in-out .4s infinite",boxShadow:"0 0 10px rgba(0,122,255,.5)",top:4 }} />
+        <div style={{ position:"absolute",inset:16,display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,opacity:.18 }}>
+          {QR_DOTS.map((v,i)=><div key={i} style={{ background:v?"rgba(255,255,255,.9)":"transparent",borderRadius:1 }}/>)}
         </div>
       </div>
-      {/* Droite — vidéo */}
-      <div style={{ flex:1, minWidth:300 }}>
-        <video
-          ref={videoRef} id="accessVideo"
-          autoPlay muted loop playsInline preload="metadata"
-          poster="/Wallio_Landing_v2_poster.jpg"
-          style={{ width:"100%", height:"auto", display:"block" }}
-        >
-          <source src="/Wallio_Landing_v2.webm" type="video/webm" />
-          <source src="/Wallio_Landing_v2.mp4" type="video/mp4" />
-        </video>
+      <div style={{ textAlign:"center",animation:"fadeUp .4s .35s both" }}>
+        <div style={{ fontSize:12,color:"rgba(255,255,255,.45)",marginBottom:4 }}>Pointez la caméra vers le QR code</div>
+        <div style={{ fontSize:11,color:"#007AFF" }}>Détection automatique</div>
       </div>
-    </div>
-  );
-}
-
-type Lang = "fr" | "en" | "ro" | "es";
-
-const T = {
-  fr: {
-    navLogin: "Connexion", navContact: "Nous contacter",
-    anchors: [
-      { id:"acces", label:"Accès" }, { id:"comment", label:"Comment ça marche" },
-      { id:"personnalisation", label:"Personnalisation" }, { id:"notifications", label:"Notifications" },
-      { id:"dashboard", label:"Dashboard" }, { id:"presence", label:"Présence" },
-      { id:"tarifs", label:"Tarifs" }, { id:"faq", label:"FAQ" },
-    ],
-    heroTitle1:"La fidélité client,", heroTitle2:"réinventée.",
-    heroSub:"Un tap NFC ou un scan QR suffit. Vos clients accumulent des tampons, vous gardez leur fidélité, sans application à installer.",
-    heroCta1:"Démarrer maintenant", heroCta2:"Se connecter",
-    heroStamps:"Tampons", heroReward:"Récompense", heroNotif:"Notification",
-    heroRewardVal:"Café offert", heroSent:"✓ Envoyée",
-    walletAvailable:"Disponible nativement sur", walletNote:"iOS · Android · sans application",
-    accesTag:"Support & accès", accesH2a:"La carte comptoir,", accesH2b:"le hub de votre fidélité",
-    accesSub:"Un seul support physique posé sur votre comptoir. Il contient les deux technologies d'accès : QR code et NFC.",
-    accesCardTag:"Carte Comptoir", accesCardBadge:"Support principal",
-    accesCardH3:"Votre support physique universel",
-    accesCardDesc:"Support universel Wallio posé sur votre comptoir. Il contient votre QR code unique et peut intégrer un tag NFC. Vos clients le scannent ou approchent leur téléphone pour recevoir leurs tampons, sans aucune installation.",
-    accesCardTags:["QR code intégré","Option tag NFC","Design Wallio standard","Aucune app nécessaire"],
-    accesConnector:"deux technologies intégrées",
-    accesNfcTag:"Tag NFC", accesNfcH3:"Tap, c'est fait",
-    accesNfcDesc:"Le client approche son téléphone à 4 cm du tag intégré à la carte comptoir. Tampon crédité en moins d'une seconde, sans ouvrir aucune app.",
-    accesNfcFeats:["Le geste le plus rapide qui existe","iPhone 7+ et tous les Android NFC","Optionnel sur la carte comptoir"],
-    accesQrTag:"QR Code", accesQrH3:"Scan, c'est fait",
-    accesQrDesc:"Le client ouvre son appareil photo et scanne le QR code imprimé sur la carte comptoir. Fonctionne avec tous les téléphones, sans aucune app.",
-    accesQrFeats:["Compatible 100 % des smartphones","Appareil photo natif, aucune app","Toujours présent sur la carte comptoir"],
-    accesSceneTitle:"Posé sur votre comptoir. Rien à installer.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
-    accesTitle1:"Posé sur votre comptoir.", accesTitle2:"Rien à installer.",
-    accesStatA:"pour ajouter un tampon", accesStatB:"à télécharger", accesStatC:"des smartphones",
-    flowTag:"Parcours client", flowH2a:"Deux scénarios.", flowH2b:"Zéro friction.",
-    flowSub:"Nouveau client ou habitué, le flux est pensé pour chacun.",
-    flowNewTitle:"Nouveau client", flowNewSub:"Première visite",
-    flowNewSteps:[
-      {title:"Voit la carte comptoir", body:"Posée sur le comptoir, bien visible. QR code ou tag NFC."},
-      {title:"Tap NFC ou scan QR", body:"Son téléphone reconnaît l'action immédiatement."},
-      {title:"Prénom + téléphone", body:"30 secondes. C'est tout ce qu'on lui demande."},
-      {title:"Carte créée, tampon crédité", body:"Sa carte de fidélité est créée automatiquement avec le 1er tampon."},
-      {title:"Ajout à Apple / Google Wallet", body:"Proposition optionnelle pour retrouver sa carte en un tap."},
-    ],
-    flowRegTitle:"Client habituel", flowRegSub:"Retour en établissement",
-    flowRegSteps:[
-      {title:"Tap NFC ou scan QR", body:"Même geste qu'à sa première visite."},
-      {title:"Reconnu en moins d'une seconde", body:"Wallio retrouve sa carte via le numéro de téléphone enregistré."},
-      {title:"Tampon crédité automatiquement", body:"Aucune action supplémentaire. Sa progression est à jour."},
-      {title:"Notif Apple Wallet", body:"Sa carte Wallet se met à jour et lui envoie une notification."},
-      {title:"Objectif atteint, récompense !", body:"Vous la validez d'un clic depuis votre dashboard."},
-    ],
-    rewardTag:"Récompenses", rewardH2a:"Cyclique ou progressif.", rewardH2b:"Vous choisissez.",
-    rewardSub:"Adaptez le programme de fidélité à votre établissement, en un clic.",
-    rewardCyclicTitle:"Cyclique", rewardCyclicSub:"Un objectif, une récompense",
-    rewardCyclicDesc:"Le compteur repart à zéro après chaque récompense obtenue.",
-    rewardCyclicBullets:["Simple à configurer","Idéal pour les produits récurrents","Un seul objectif à définir"],
-    rewardProgressTitle:"Progressif", rewardProgressSub:"Paliers cumulatifs, tampons permanents",
-    rewardProgressDesc:"Les tampons s'accumulent à vie. Chaque palier débloque une récompense différente.",
-    rewardProgressBullets:["Engagement sur le long terme","Paliers entièrement configurables","Les tampons ne remettent jamais à zéro"],
-    customTag:"Personnalisation", customH2:"Votre carte, à votre image",
-    customSub:"Chaque élément est configurable depuis votre dashboard, en temps réel.",
-    customMocks:[
-      {name:"Mori Matcha", reward:"Matcha offert", label:"Matcha café"},
-      {name:"Barba Italiana", reward:"Coupe offerte", label:"Barber shop"},
-      {name:"Hammam Royal", reward:"Soin offert", label:"Hammam & Spa"},
-    ],
-    customFeats:[
-      {title:"Couleurs & Logo", body:"Couleur de fond, texte, tampons, et votre logo affiché en tête de carte."},
-      {title:"Nombre de tampons", body:"Choisissez entre 5 et 50 tampons par cycle, avec une ou plusieurs récompenses."},
-      {title:"Style des tampons", body:"Choisissez parmi 8 styles : point, anneau, check, cœur, étoile, texte ou votre logo."},
-      {title:"Bannière personnalisée", body:"Uploadez une image de votre établissement comme bannière sur la carte, avec les tampons dessinés dessus."},
-      {title:"Champs informatifs", body:"Ajoutez vos horaires, votre numéro, vos liens, directement visibles sur la carte."},
-      {title:"Anti-doublon intelligent", body:"Configurez un délai minimum entre deux tampons (15 min, 1h, 4h, 1 jour) pour éviter les cumuls abusifs."},
-    ],
-    notifTag:"Notifications", notifH2a:"Restez présent", notifH2b:"au bon moment",
-    notifSub:"Wallet, push ciblé, automatisations, géolocalisation, quatre façons d'atteindre vos clients au bon moment.",
-    notifDate:"Dimanche 7 septembre", notifNow:"maintenant", notifAgo:"il y a 2h", notifNear:"à proximité",
-    notifWalletTitle:"Nomade Café, Nouveau tampon !", notifWalletBody:"Vous avez maintenant 8/20 tampons. Plus que 12 pour votre café offert.",
-    notifFcmTitle:"Bonne anniversaire !", notifFcmBody:"On vous offre un double tampon aujourd'hui. À bientôt !",
-    notifGeoTitle:"Vous passez par là ?", notifGeoBody:"Il vous reste 2 tampons avant votre café offert. On vous attend !",
-    notifTypes:[
-      {title:"Mise à jour Apple Wallet", desc:"À chaque nouveau tampon, la carte se met à jour automatiquement dans le Wallet du client avec une notification. Sans aucune action de votre part.", tags:["Automatique","Temps réel"]},
-      {title:"Push ciblé (FCM)", desc:"Envoyez un message à tous vos clients, ou ciblez uniquement les actifs (passés récemment) ou les inactifs (perdus depuis +30 jours) depuis votre dashboard.", tags:["Tous","Actifs","Inactifs"]},
-      {title:"Automatisations", desc:"Wallio envoie automatiquement un message le jour de l'anniversaire de votre client, ou une relance personnalisée si un client n'est pas revenu depuis X jours.", tags:["Anniversaire","Relance auto"]},
-      {title:"Géolocalisation", desc:"Déclenchez une notification push automatique quand un client se trouve à proximité de votre établissement, l'incitation parfaite à pousser la porte.", tags:["Proximité","Automatique"]},
-    ],
-    dashTag:"Dashboard", dashH2a:"La donnée qui change tout", dashH2b:"pour votre commerce",
-    dashSub:"Pour la première fois, vous savez exactement qui sont vos clients, qui revient, et qui vous êtes en train de perdre.",
-    dashDate:"7 sept. 2026", dashMerchant:"Nomade Café",
-    dashStats:[
-      {label:"Clients", value:"247", sub:"+12 ce mois", color:"#4472F5"},
-      {label:"Tampons", value:"312", sub:"ce mois", color:"#6A5AF9"},
-      {label:"Retour", value:"78%", sub:"actifs", color:"#34C759"},
-      {label:"À risque", value:"14", sub:"à relancer !", color:"#FF9500"},
-    ],
-    dashActivity:"Activité,7 derniers jours",
-    dashDays:[{v:38, d:"L"},{v:52, d:"M"},{v:31, d:"M"},{v:67, d:"J"},{v:44, d:"V"},{v:58, d:"S"},{v:29, d:"D"}],
-    dashSegTitle:"Segmentation clients",
-    dashSegs:[{label:"Actifs (≤30j)", count:193, pct:78, color:"#34C759"},{label:"Inactifs (+30j)", count:54, pct:22, color:"#FF9500"}],
-    dashInsightTitle:"14 clients absents depuis +30 jours", dashInsightBody:"Envoyez une relance ciblée, ils sont encore récupérables.",
-    dashTopTitle:"Meilleurs clients ce mois",
-    dashTopClients:[
-      {initials:"FB", name:"Fatima B.", visits:12, stamps:10, total:10, bc:"#FF9500", badge:"Récompense"},
-      {initials:"AM", name:"Ahmed M.", visits:9, stamps:8, total:10, bc:"#34C759", badge:"Actif"},
-      {initials:"KL", name:"Karim L.", visits:7, stamps:3, total:10, bc:"#34C759", badge:"Actif"},
-    ],
-    dashVisits:"visites ce mois",
-    dashRightH3:"Ce que vous savez enfin.",
-    dashRightP:"Avant Wallio, vos clients étaient des anonymes. Vous ne saviez pas qui revenait, qui vous quittait, ni qui méritait une attention particulière. Maintenant, vous le savez.",
-    dashRightPoints:[
-      {color:"#4472F5", title:"Qui revient, et qui vous quitte", body:"Chaque client est automatiquement segmenté. Vous voyez d'un coup d'œil vos actifs et vos inactifs, sans aucune manipulation."},
-      {color:"#FF9500", title:"Vos clients à risque, identifiés", body:"14 clients absents depuis +30 jours ? Wallio vous l'indique et vous permet de les relancer en un clic, avant qu'ils aillent ailleurs."},
-      {color:"#6A5AF9", title:"Votre activité, jour par jour", body:"Tampons distribués, nouvelles inscriptions, récompenses validées, visualisés sur 7 ou 30 jours pour piloter votre commerce."},
-      {color:"#34C759", title:"Vos meilleurs clients récompensés", body:"Identifiez ceux qui viennent le plus souvent, ajustez leurs tampons, offrez-leur quelque chose d'exceptionnel directement depuis leur fiche."},
-      {color:"#8A5CF6", title:"Tout en un clic, pas de rapport à lire", body:"Chaque donnée est actionnaire. Relancer, corriger, récompenser, notifier, tout se fait depuis le dashboard, sans export ni tableur."},
-    ],
-    presenceTag:"Présence digitale", presenceH2a:"Visible.", presenceH2b:"Même sans budget pub.",
-    presenceSub:"Wallio est une application web progressive (PWA), vos clients l'installent en un tap sur leur écran d'accueil, sans passer par l'App Store. Et votre établissement est référencé dans l'annuaire Wallio, visible par tous les utilisateurs de la plateforme.",
-    presenceBenefits:[
-      {title:"Listing par catégorie et ville", body:"Votre établissement apparaît dans l'annuaire Wallio, classé par secteur. De nouveaux clients vous découvrent sans vous avoir cherché."},
-      {title:"Installable sur l'écran d'accueil", body:"L'expérience d'une vraie app native, sans App Store ni Play Store. Vos clients l'ajoutent en un tap, icône Wallio sur l'écran d'accueil, accès instantané à leur carte."},
-      {title:"Page dédiée partageable", body:"Chaque établissement reçoit un lien Wallio unique, à mettre en bio Instagram, sur vos flyers, votre vitrine. Un clic suffit pour accéder à la carte de fidélité."},
-      {title:"Push sans installation", body:"Vos notifications arrivent dans le téléphone de vos clients même sans app installée. Le web moderne, zéro friction, portée maximale."},
-    ],
-    presenceDiscover:"Découvrir", presenceSearch:"Rechercher un commerce…",
-    presenceCats:["Tout","Café","Barber","Resto","Beauté"],
-    presenceMerchants:[
-      {name:"Nomade Café", cat:"Café · Casablanca", rating:"4.9", clients:"247 clients", color:"#4472F5", initial:"N"},
-      {name:"Barba Italiana", cat:"Barber · Casablanca", rating:"4.8", clients:"183 clients", color:"#C8956C", initial:"B"},
-      {name:"Mori Matcha", cat:"Thé · Casablanca", rating:"4.7", clients:"134 clients", color:"#A8D5A2", initial:"M"},
-      {name:"Hammam Royal", cat:"Spa · Casablanca", rating:"4.6", clients:"98 clients", color:"#C9A96E", initial:"H"},
-    ],
-    presenceJoin:"Votre commerce ici", presenceJoinSub:"Rejoindre Wallio",
-    secteursTag:"Secteurs", secteursH2a:"Pour tous les commerces", secteursH2b:"de proximité",
-    secteursSub:"Une seule solution, adaptée à chaque type d'établissement.",
-    secteurs:["Café & Salon de thé","Restaurant","Barber Shop","Salon de beauté","Boutique & Mode","Salle de sport","Boulangerie","Institut & Spa"],
-    parrainageTag:"Parrainage", parrainageH2a:"Vos clients,", parrainageH2b:"vos meilleurs commerciaux.",
-    parrainageSub:"Un client satisfait partage son lien. Son ami s'inscrit, ils sont tous les deux récompensés. Zéro budget pub, zéro friction.",
-    parrainageSteps:[
-      {title:"Le client partage son lien", body:"Depuis « Mes cartes », en un tap. Le lien est unique et lié à son établissement."},
-      {title:"L'ami scanne et s'inscrit", body:"Il clique le lien, passe par l'inscription rapide, reçoit son 1er tampon immédiatement."},
-      {title:"Le parrain est récompensé", body:"Sa carte Wallet se met à jour automatiquement avec +1 tampon. Notif push incluse."},
-    ],
-    parrainageStats:[
-      {value:"x3", label:"plus de nouveaux clients", sub:"vs bouche-à-oreille classique"},
-      {value:"+1", label:"tampon pour le parrain", sub:"crédité automatiquement"},
-      {value:"0€", label:"coût d'acquisition", sub:"100% organique"},
-    ],
-    tarifsTag:"Tarifs", tarifsH2:"Simple et transparent.",
-    tarifsSub:"Plus vous vous engagez, plus vous économisez, sans frais cachés, sans engagement forcé.",
-    tarifsIncludedLabel:"Inclus dans votre accès",
-    tarifsIncluded:["Carte de fidélité Apple & Google Wallet","Carte comptoir 4K (QR + NFC optionnel)","Dashboard temps réel","Notifications push illimitées","Automatisations anniversaire & relance","Listing dans l'annuaire Wallio","Support dédié par WhatsApp"],
-    tarifsPriceLabel:"Tarif adapté à votre commerce", tarifsPrice:"Sur mesure", tarifsResponseTime:"Réponse sous 24h",
-    tarifsCtaWa:"Nous contacter sur WhatsApp",
-    tarifsNote:"Sans engagement, tarif selon\nvotre type d'établissement",
-    faqTag:"FAQ", faqH2:"Questions fréquentes", faqOther:"Une autre question ?", faqCta:"Discutons sur WhatsApp",
-    faqs:[
-      {q:"Faut-il télécharger une application ?", a:"Non, ni vous ni vos clients. Vos clients accèdent à leur carte via un lien web après le premier scan. La carte s'ajoute ensuite en un clic dans Apple Wallet ou Google Wallet, directement depuis le navigateur."},
-      {q:"Comment mes clients obtiennent-ils leur premier tampon ?", a:"Au moment du paiement, ils approchent leur téléphone du tag NFC (ou scannent le QR code de votre carte comptoir). C'est instantané, leur carte est créée automatiquement et le premier tampon est ajouté sans aucune action supplémentaire."},
-      {q:"Qu'est-ce que la carte comptoir ?", a:"C'est un fichier d'impression haute résolution (4K) que Wallio génère pour vous. Vous l'imprimez et le posez sur votre comptoir. Il contient un QR code unique à votre établissement, les clients le scannent pour accéder à leur carte de fidélité. Idéal si vous n'avez pas encore de tag NFC."},
-      {q:"Mes clients ont-ils besoin d'un compte Apple ou Google ?", a:"Pour ajouter la carte à Apple Wallet, un iPhone avec iOS 6+ suffit. Pour Google Wallet, un Android avec l'app Google Wallet. Aucun compte Wallio n'est nécessaire, la carte de fidélité fonctionne nativement dans le téléphone."},
-      {q:"Comment personnaliser ma carte de fidélité ?", a:"Depuis votre dashboard, vous choisissez les couleurs (fond, texte, tampons), uploadez votre logo, définissez le nombre de tampons et la récompense. Chaque modification se reflète immédiatement dans la prévisualisation Apple Wallet et Google Wallet. La carte de vos clients se met à jour automatiquement."},
-      {q:"Quelle est la différence entre le mode cyclique et progressif ?", a:"En mode cyclique, une fois l'objectif atteint (ex. 10 tampons → 1 café offert), le compteur repart à zéro. En mode progressif, vous définissez plusieurs paliers de récompenses, par exemple 5 tampons = remise 10%, 10 tampons = article offert, 20 tampons = statut VIP. Chaque palier est validé une fois."},
-      {q:"Les notifications sont-elles automatiques ?", a:"Oui pour les mises à jour de carte (Apple Wallet envoie une notification à chaque nouveau tampon). Pour les notifications marketing (relances, anniversaires), vous les configurez dans le dashboard : Wallio envoie automatiquement un message au bon moment à vos clients concernés."},
-      {q:"Comment fonctionne l'anti-doublon ?", a:"Wallio détecte si un client a déjà reçu un tampon récemment et bloque les cumuls abusifs. Vous configurez le délai minimum entre deux tampons valides (15 min, 1h, 4h, 8h, 1 jour…) depuis vos réglages."},
-      {q:"Puis-je modifier les tampons d'un client manuellement ?", a:"Oui. Depuis la fiche client dans votre dashboard, vous pouvez ajuster le nombre de tampons directement. Utile pour corriger une erreur ou récompenser un client exceptionnel."},
-      {q:"Est-ce que Wallio fonctionne sans internet côté client ?", a:"Le scan NFC et QR nécessitent une connexion pour enregistrer le tampon. En revanche, la carte Apple Wallet / Google Wallet reste visible hors connexion une fois ajoutée au téléphone."},
-    ],
-    ctaH2:"Prêt à fidéliser vos clients ?", ctaSub:"Commencez en quelques minutes. Sans installation, sans friction.", ctaBtn:"Démarrer sur WhatsApp",
-    footerLinks:[
-      {href:"/privacy", label:"Confidentialité"},{href:"/terms", label:"CGU"},
-      {href:"/legal", label:"Mentions légales"},{href:"mailto:wallio.card@gmail.com", label:"wallio.card@gmail.com"},
-    ],
-  },
-  en: {
-    navLogin:"Sign in", navContact:"Contact us",
-    anchors:[
-      {id:"acces", label:"Access"},{id:"comment", label:"How it works"},
-      {id:"personnalisation", label:"Customization"},{id:"notifications", label:"Notifications"},
-      {id:"dashboard", label:"Dashboard"},{id:"presence", label:"Presence"},
-      {id:"tarifs", label:"Pricing"},{id:"faq", label:"FAQ"},
-    ],
-    heroTitle1:"Customer loyalty,", heroTitle2:"reinvented.",
-    heroSub:"One NFC tap or QR scan is all it takes. Your customers collect stamps, you keep their loyalty, no app to install.",
-    heroCta1:"Get started", heroCta2:"Sign in",
-    heroStamps:"Stamps", heroReward:"Reward", heroNotif:"Notification",
-    heroRewardVal:"Free coffee", heroSent:"✓ Sent",
-    walletAvailable:"Natively available on", walletNote:"iOS · Android · no app required",
-    accesTag:"Support & access", accesH2a:"The counter card,", accesH2b:"your loyalty hub",
-    accesSub:"A single physical support on your counter. It includes both access technologies: QR code and NFC.",
-    accesCardTag:"Counter Card", accesCardBadge:"Main support",
-    accesCardH3:"Your universal physical support",
-    accesCardDesc:"A standard Wallio support placed on your counter. It contains your unique QR code and can integrate an NFC tag. Your customers scan or tap to collect stamps, no installation needed.",
-    accesCardTags:["Integrated QR code","Optional NFC tag","Standard Wallio design","No app required"],
-    accesConnector:"two integrated technologies",
-    accesNfcTag:"NFC Tag", accesNfcH3:"Tap, done.",
-    accesNfcDesc:"The customer holds their phone 4 cm from the tag on the counter card. Stamp credited in under a second, no app needed.",
-    accesNfcFeats:["The fastest gesture there is","iPhone 7+ and all NFC Androids","Optional on the counter card"],
-    accesQrTag:"QR Code", accesQrH3:"Scan, done.",
-    accesQrDesc:"The customer opens their camera and scans the QR code printed on the counter card. Works on all phones, no app needed.",
-    accesQrFeats:["Compatible with 100% of smartphones","Native camera, no app","Always on the counter card"],
-    accesSceneTitle:"On your counter. Nothing to install.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
-    accesTitle1:"On your counter.", accesTitle2:"Nothing to install.",
-    accesStatA:"to add a stamp", accesStatB:"to download", accesStatC:"of smartphones",
-    flowTag:"Customer journey", flowH2a:"Two scenarios.", flowH2b:"Zero friction.",
-    flowSub:"New customer or regular, the flow is designed for each.",
-    flowNewTitle:"New customer", flowNewSub:"First visit",
-    flowNewSteps:[
-      {title:"Sees the counter card", body:"Placed on the counter, clearly visible. QR code or NFC tag."},
-      {title:"NFC tap or QR scan", body:"Their phone recognizes the action instantly."},
-      {title:"First name + phone number", body:"30 seconds. That's all we ask."},
-      {title:"Card created, stamp credited", body:"Their loyalty card is created automatically with the 1st stamp."},
-      {title:"Add to Apple / Google Wallet", body:"Optional, to find their card with one tap."},
-    ],
-    flowRegTitle:"Regular customer", flowRegSub:"Return visit",
-    flowRegSteps:[
-      {title:"NFC tap or QR scan", body:"Same gesture as their first visit."},
-      {title:"Recognized in under a second", body:"Wallio finds their card using the registered phone number."},
-      {title:"Stamp credited automatically", body:"No extra action needed. Their progress is updated."},
-      {title:"Apple Wallet notification", body:"Their Wallet card updates and sends them a notification."},
-      {title:"Goal reached, reward!", body:"You validate it with one click from your dashboard."},
-    ],
-    rewardTag:"Rewards", rewardH2a:"Cyclic or progressive.", rewardH2b:"You choose.",
-    rewardSub:"Adapt your loyalty program to your business in one click.",
-    rewardCyclicTitle:"Cyclic", rewardCyclicSub:"One goal, one reward",
-    rewardCyclicDesc:"The counter resets to zero after each reward.",
-    rewardCyclicBullets:["Simple to configure","Perfect for recurring products","Just one goal to set"],
-    rewardProgressTitle:"Progressive", rewardProgressSub:"Multiple tiers, permanent stamps",
-    rewardProgressDesc:"Stamps accumulate permanently. Each tier unlocks a different reward.",
-    rewardProgressBullets:["Long-term customer engagement","Fully configurable tiers","Stamps never reset"],
-    customTag:"Customization", customH2:"Your card, your style",
-    customSub:"Every element is configurable from your dashboard, in real time.",
-    customMocks:[
-      {name:"Mori Matcha", reward:"Free matcha", label:"Matcha café"},
-      {name:"Barba Italiana", reward:"Free cut", label:"Barber shop"},
-      {name:"Hammam Royal", reward:"Free treatment", label:"Hammam & Spa"},
-    ],
-    customFeats:[
-      {title:"Colors & Logo", body:"Background color, text, stamps, and your logo displayed at the top of the card."},
-      {title:"Number of stamps", body:"Choose between 5 and 50 stamps per cycle, with one or more rewards."},
-      {title:"Stamp style", body:"Choose from 8 styles: dot, ring, check, heart, star, text or your logo."},
-      {title:"Custom banner", body:"Upload a photo of your venue as a banner on the card, with stamps drawn on it."},
-      {title:"Info fields", body:"Add your hours, phone number, links, directly visible on the card."},
-      {title:"Smart dedup", body:"Set a minimum delay between stamps (15 min, 1h, 4h, 1 day) to prevent abuse."},
-    ],
-    notifTag:"Notifications", notifH2a:"Stay present", notifH2b:"at the right time",
-    notifSub:"Wallet updates, targeted push, automations, geolocation, four ways to reach your customers at the right moment.",
-    notifDate:"Sunday, September 7", notifNow:"now", notifAgo:"2h ago", notifNear:"nearby",
-    notifWalletTitle:"Nomade Café, New stamp!", notifWalletBody:"You now have 8/20 stamps. 12 more to go for your free coffee.",
-    notifFcmTitle:"Happy Birthday!", notifFcmBody:"We're giving you a double stamp today. See you soon!",
-    notifGeoTitle:"Passing by?", notifGeoBody:"You have 2 stamps left before your free coffee. We're waiting for you!",
-    notifTypes:[
-      {title:"Apple Wallet update", desc:"With every new stamp, the card updates automatically in the customer's Wallet with a notification. No action needed on your part.", tags:["Automatic","Real-time"]},
-      {title:"Targeted push (FCM)", desc:"Send a message to all your customers, or target only active ones (recent visits) or inactive ones (30+ days) from your dashboard.", tags:["All","Active","Inactive"]},
-      {title:"Automations", desc:"Wallio automatically sends a message on your customer's birthday, or a personalized re-engagement if a customer hasn't returned for X days.", tags:["Birthday","Auto re-engage"]},
-      {title:"Geolocation", desc:"Trigger an automatic push notification when a customer is near your venue, the perfect nudge to walk through the door.", tags:["Proximity","Automatic"]},
-    ],
-    dashTag:"Dashboard", dashH2a:"The data that changes everything", dashH2b:"for your business",
-    dashSub:"For the first time, you know exactly who your customers are, who comes back, and who you're losing.",
-    dashDate:"Sept 7, 2026", dashMerchant:"Nomade Café",
-    dashStats:[
-      {label:"Customers", value:"247", sub:"+12 this month", color:"#4472F5"},
-      {label:"Stamps", value:"312", sub:"this month", color:"#6A5AF9"},
-      {label:"Return", value:"78%", sub:"active", color:"#34C759"},
-      {label:"At risk", value:"14", sub:"re-engage!", color:"#FF9500"},
-    ],
-    dashActivity:"Activity, last 7 days",
-    dashDays:[{v:38, d:"M"},{v:52, d:"T"},{v:31, d:"W"},{v:67, d:"T"},{v:44, d:"F"},{v:58, d:"S"},{v:29, d:"S"}],
-    dashSegTitle:"Customer segments",
-    dashSegs:[{label:"Active (≤30d)", count:193, pct:78, color:"#34C759"},{label:"Inactive (+30d)", count:54, pct:22, color:"#FF9500"}],
-    dashInsightTitle:"14 customers absent for 30+ days", dashInsightBody:"Send a targeted re-engagement, they're still recoverable.",
-    dashTopTitle:"Top customers this month",
-    dashTopClients:[
-      {initials:"FB", name:"Fatima B.", visits:12, stamps:10, total:10, bc:"#FF9500", badge:"Reward"},
-      {initials:"AM", name:"Ahmed M.", visits:9, stamps:8, total:10, bc:"#34C759", badge:"Active"},
-      {initials:"KL", name:"Karim L.", visits:7, stamps:3, total:10, bc:"#34C759", badge:"Active"},
-    ],
-    dashVisits:"visits this month",
-    dashRightH3:"What you finally know.",
-    dashRightP:"Before Wallio, your customers were anonymous. You didn't know who came back, who left, or who deserved special attention. Now you do.",
-    dashRightPoints:[
-      {color:"#4472F5", title:"Who comes back, and who's leaving", body:"Each customer is automatically segmented. You see at a glance your active and inactive customers, with no manual work."},
-      {color:"#FF9500", title:"Your at-risk customers, identified", body:"14 customers absent for 30+ days? Wallio flags them and lets you re-engage in one click, before they go elsewhere."},
-      {color:"#6A5AF9", title:"Your activity, day by day", body:"Stamps distributed, new sign-ups, rewards validated, visualized over 7 or 30 days to steer your business."},
-      {color:"#34C759", title:"Your best customers rewarded", body:"Identify your most frequent visitors, adjust their stamps, offer them something exceptional directly from their profile."},
-      {color:"#8A5CF6", title:"One click, no report to read", body:"Every data point is actionable. Re-engage, correct, reward, notify, all from the dashboard, no exports or spreadsheets."},
-    ],
-    presenceTag:"Digital presence", presenceH2a:"Visible.", presenceH2b:"Even without an ad budget.",
-    presenceSub:"Wallio is a Progressive Web App (PWA), your customers install it in one tap on their home screen, no App Store required. And your venue is listed in the Wallio directory, visible to all platform users.",
-    presenceBenefits:[
-      {title:"Listed by category and city", body:"Your venue appears in the Wallio directory, sorted by sector. New customers discover you without even looking for you."},
-      {title:"Installable on the home screen", body:"A native app experience, no App Store or Play Store. Your customers add it in one tap, Wallio icon on their home screen, instant card access."},
-      {title:"Shareable dedicated page", body:"Each venue gets a unique Wallio link, share it in your Instagram bio, on flyers, your storefront. One click to access the loyalty card."},
-      {title:"Push without install", body:"Your notifications reach your customers' phones even without the app installed. Modern web, zero friction, maximum reach."},
-    ],
-    presenceDiscover:"Discover", presenceSearch:"Search a business…",
-    presenceCats:["All","Café","Barber","Food","Beauty"],
-    presenceMerchants:[
-      {name:"Nomade Café", cat:"Café · Casablanca", rating:"4.9", clients:"247 customers", color:"#4472F5", initial:"N"},
-      {name:"Barba Italiana", cat:"Barber · Casablanca", rating:"4.8", clients:"183 customers", color:"#C8956C", initial:"B"},
-      {name:"Mori Matcha", cat:"Tea · Casablanca", rating:"4.7", clients:"134 customers", color:"#A8D5A2", initial:"M"},
-      {name:"Hammam Royal", cat:"Spa · Casablanca", rating:"4.6", clients:"98 customers", color:"#C9A96E", initial:"H"},
-    ],
-    presenceJoin:"Your business here", presenceJoinSub:"Join Wallio",
-    secteursTag:"Industries", secteursH2a:"For every local", secteursH2b:"business",
-    secteursSub:"One solution, tailored to every type of venue.",
-    secteurs:["Café & Tea room","Restaurant","Barber Shop","Beauty salon","Boutique & Fashion","Gym","Bakery","Spa & Wellness"],
-    parrainageTag:"Referral", parrainageH2a:"Your customers,", parrainageH2b:"your best salespeople.",
-    parrainageSub:"A happy customer shares their link. Their friend signs up, both get rewarded. Zero ad budget, zero friction.",
-    parrainageSteps:[
-      {title:"The customer shares their link", body:"From \"My cards\", one tap. The link is unique and tied to their venue."},
-      {title:"The friend scans and signs up", body:"They click the link, go through quick sign-up, and receive their 1st stamp instantly."},
-      {title:"The referrer is rewarded", body:"Their Wallet card updates automatically with +1 stamp. Push notification included."},
-    ],
-    parrainageStats:[
-      {value:"x3", label:"more new customers", sub:"vs classic word of mouth"},
-      {value:"+1", label:"stamp for the referrer", sub:"credited automatically"},
-      {value:"€0", label:"acquisition cost", sub:"100% organic"},
-    ],
-    tarifsTag:"Pricing", tarifsH2:"Simple and transparent.",
-    tarifsSub:"The more you commit, the more you save, no hidden fees, no forced lock-in.",
-    tarifsIncludedLabel:"Included in your plan",
-    tarifsIncluded:["Apple & Google Wallet loyalty card","4K counter card (QR + optional NFC)","Real-time dashboard","Unlimited push notifications","Birthday & re-engagement automations","Listing in Wallio directory","Dedicated WhatsApp support"],
-    tarifsPriceLabel:"Price tailored to your business", tarifsPrice:"Custom", tarifsResponseTime:"Response within 24h",
-    tarifsCtaWa:"Contact us on WhatsApp",
-    tarifsNote:"No commitment, price based on\nyour type of business",
-    faqTag:"FAQ", faqH2:"Frequently asked questions", faqOther:"Another question?", faqCta:"Chat on WhatsApp",
-    faqs:[
-      {q:"Do I need to download an app?", a:"No, neither you nor your customers. Customers access their card via a web link after the first scan. The card can then be added in one click to Apple Wallet or Google Wallet, directly from the browser."},
-      {q:"How do customers get their first stamp?", a:"At checkout, they hold their phone near the NFC tag (or scan the QR code on your counter card). It's instant, their card is created automatically and the first stamp is added with no extra steps."},
-      {q:"What is the counter card?", a:"It's a high-resolution print file (4K) that Wallio generates for you. You print it and place it on your counter. It contains a unique QR code for your venue, customers scan it to access their loyalty card. Ideal if you don't have an NFC tag yet."},
-      {q:"Do my customers need an Apple or Google account?", a:"To add the card to Apple Wallet, an iPhone with iOS 6+ is enough. For Google Wallet, an Android with the Google Wallet app. No Wallio account is needed, the loyalty card works natively on the phone."},
-      {q:"How do I customize my loyalty card?", a:"From your dashboard, you choose colors (background, text, stamps), upload your logo, set the number of stamps and the reward. Every change is instantly reflected in the Apple Wallet and Google Wallet preview. Your customers' cards update automatically."},
-      {q:"What's the difference between cyclic and progressive mode?", a:"In cyclic mode, once the goal is reached (e.g. 10 stamps → 1 free coffee), the counter resets. In progressive mode, you define multiple reward tiers, for example 5 stamps = 10% off, 10 stamps = free item, 20 stamps = VIP status. Each tier is validated once."},
-      {q:"Are notifications automatic?", a:"Yes for card updates (Apple Wallet sends a notification with every new stamp). For marketing notifications (re-engagements, birthdays), you configure them in the dashboard: Wallio automatically sends a message at the right moment to the right customers."},
-      {q:"How does the dedup system work?", a:"Wallio detects if a customer has already received a stamp recently and blocks abuse. You configure the minimum delay between valid stamps (15 min, 1h, 4h, 8h, 1 day…) in your settings."},
-      {q:"Can I manually adjust a customer's stamps?", a:"Yes. From the customer profile in your dashboard, you can adjust the number of stamps directly. Useful for correcting a mistake or rewarding an exceptional customer."},
-      {q:"Does Wallio work offline for customers?", a:"NFC and QR scanning require a connection to record the stamp. However, the Apple Wallet / Google Wallet card remains visible offline once added to the phone."},
-    ],
-    ctaH2:"Ready to build customer loyalty?", ctaSub:"Get started in minutes. No installation, no friction.", ctaBtn:"Start on WhatsApp",
-    footerLinks:[
-      {href:"/privacy", label:"Privacy"},{href:"/terms", label:"Terms"},
-      {href:"/legal", label:"Legal"},{href:"mailto:wallio.card@gmail.com", label:"wallio.card@gmail.com"},
-    ],
-  },
-  ro: {
-    navLogin:"Autentificare", navContact:"Contactați-ne",
-    anchors:[
-      {id:"acces", label:"Acces"},{id:"comment", label:"Cum funcționează"},
-      {id:"personnalisation", label:"Personalizare"},{id:"notifications", label:"Notificări"},
-      {id:"dashboard", label:"Dashboard"},{id:"presence", label:"Prezență"},
-      {id:"tarifs", label:"Tarife"},{id:"faq", label:"FAQ"},
-    ],
-    heroTitle1:"Fidelizarea clienților,", heroTitle2:"reinventată.",
-    heroSub:"Un singur tap NFC sau scanare QR. Clienții acumulează ștampile, dvs. le câștigați loialitatea, fără nicio aplicație de instalat.",
-    heroCta1:"Începeți acum", heroCta2:"Autentificare",
-    heroStamps:"Ștampile", heroReward:"Recompensă", heroNotif:"Notificare",
-    heroRewardVal:"Cafea gratuită", heroSent:"✓ Trimisă",
-    walletAvailable:"Disponibil nativ pe", walletNote:"iOS · Android · fără aplicație",
-    accesTag:"Suport & acces", accesH2a:"Cardul de tejghea,", accesH2b:"centrul fidelității dvs.",
-    accesSub:"Un singur suport fizic pus pe tejgheaua dvs. Conține ambele tehnologii de acces: cod QR și NFC.",
-    accesCardTag:"Card Tejghea", accesCardBadge:"Suport principal",
-    accesCardH3:"Suportul dvs. fizic universal",
-    accesCardDesc:"Suport standard Wallio pus pe tejgheaua dvs. Conține codul QR unic și poate integra un tag NFC. Clienții îl scanează sau apropie telefonul pentru a primi ștampile, fără nicio instalare.",
-    accesCardTags:["Cod QR integrat","Tag NFC opțional","Design standard Wallio","Nicio aplicație necesară"],
-    accesConnector:"două tehnologii integrate",
-    accesNfcTag:"Tag NFC", accesNfcH3:"Tap, gata.",
-    accesNfcDesc:"Clientul apropie telefonul la 4 cm de tag. Ștampilă creditată în mai puțin de o secundă, fără nicio aplicație.",
-    accesNfcFeats:["Gestul cel mai rapid posibil","iPhone 7+ și toate Android NFC","Opțional pe cardul de tejghea"],
-    accesQrTag:"Cod QR", accesQrH3:"Scanare, gata.",
-    accesQrDesc:"Clientul deschide camera și scanează codul QR de pe cardul de tejghea. Funcționează pe orice telefon, fără nicio aplicație.",
-    accesQrFeats:["Compatible cu 100% dintre smartphone-uri","Camera nativă, nicio aplicație","Mereu prezent pe cardul de tejghea"],
-    accesSceneTitle:"Pe tejgheaua dvs. Fără instalare.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
-    accesTitle1:"Pe tejgheaua dvs.", accesTitle2:"Fără instalare.",
-    accesStatA:"pentru o ștampilă", accesStatB:"de descărcat", accesStatC:"din smartphone-uri",
-    flowTag:"Parcursul clientului", flowH2a:"Două scenarii.", flowH2b:"Zero fricțiune.",
-    flowSub:"Client nou sau fidel, fluxul este gândit pentru fiecare.",
-    flowNewTitle:"Client nou", flowNewSub:"Prima vizită",
-    flowNewSteps:[
-      {title:"Vede cardul de tejghea", body:"Pus pe tejghea, bine vizibil. Cod QR sau tag NFC."},
-      {title:"Tap NFC sau scanare QR", body:"Telefonul recunoaște acțiunea instantaneu."},
-      {title:"Prenume + telefon", body:"30 de secunde. Atât cerem."},
-      {title:"Card creat, ștampilă creditată", body:"Cardul de fidelitate este creat automat cu prima ștampilă."},
-      {title:"Adăugare în Apple / Google Wallet", body:"Opțional, pentru a regăsi cardul cu un singur tap."},
-    ],
-    flowRegTitle:"Client fidel", flowRegSub:"Revenire la local",
-    flowRegSteps:[
-      {title:"Tap NFC sau scanare QR", body:"Același gest ca la prima vizită."},
-      {title:"Recunoscut în mai puțin de o secundă", body:"Wallio găsește cardul prin numărul de telefon înregistrat."},
-      {title:"Ștampilă creditată automat", body:"Nicio acțiune suplimentară. Progresul este actualizat."},
-      {title:"Notificare Apple Wallet", body:"Cardul Wallet se actualizează și trimite o notificare."},
-      {title:"Obiectiv atins, recompensă!", body:"O validați cu un clic din dashboard-ul dvs."},
-    ],
-    rewardTag:"Recompense", rewardH2a:"Ciclic sau progresiv.", rewardH2b:"Dumneavoastră alegeți.",
-    rewardSub:"Adaptați programul de fidelitate la afacerea dvs. cu un singur clic.",
-    rewardCyclicTitle:"Ciclic", rewardCyclicSub:"Un obiectiv, o recompensă",
-    rewardCyclicDesc:"Contorul se resetează la zero după fiecare recompensă obținută.",
-    rewardCyclicBullets:["Simplu de configurat","Ideal pentru produse recurente","Un singur obiectiv de setat"],
-    rewardProgressTitle:"Progresiv", rewardProgressSub:"Niveluri cumulative, ștampile permanente",
-    rewardProgressDesc:"Ștampilele se acumulează permanent. Fiecare nivel deblochează o recompensă diferită.",
-    rewardProgressBullets:["Angajament pe termen lung","Niveluri complet configurabile","Ștampilele nu se resetează niciodată"],
-    customTag:"Personalizare", customH2:"Cardul dvs., imaginea dvs.",
-    customSub:"Fiecare element este configurabil din dashboard, în timp real.",
-    customMocks:[
-      {name:"Mori Matcha", reward:"Matcha gratuit", label:"Cafenea Matcha"},
-      {name:"Barba Italiana", reward:"Tunsoare gratuită", label:"Frizerie"},
-      {name:"Hammam Royal", reward:"Tratament gratuit", label:"Hammam & Spa"},
-    ],
-    customFeats:[
-      {title:"Culori & Logo", body:"Culoarea fondului, textului, ștampilelor,și logo-ul dvs. afișat în capul cardului."},
-      {title:"Număr de ștampile", body:"Alegeți între 5 și 50 de ștampile pe ciclu, cu una sau mai multe recompense."},
-      {title:"Stilul ștampilelor", body:"Alegeți dintre 8 stiluri: punct, inel, bifare, inimă, stea, text sau logo-ul dvs."},
-      {title:"Banner personalizat", body:"Încărcați o fotografie a localului ca banner pe card, cu ștampilele desenate pe el."},
-      {title:"Câmpuri informative", body:"Adăugați orarul, numărul de telefon, linkurile, direct vizibile pe card."},
-      {title:"Anti-duplicare inteligent", body:"Configurați un interval minim între două ștampile (15 min, 1h, 4h, 1 zi) pentru a preveni abuzurile."},
-    ],
-    notifTag:"Notificări", notifH2a:"Rămâneți prezent", notifH2b:"la momentul potrivit",
-    notifSub:"Wallet, push țintit, automatizări, geolocalizare, patru moduri de a ajunge la clienți la momentul potrivit.",
-    notifDate:"Duminică, 7 septembrie", notifNow:"acum", notifAgo:"acum 2h", notifNear:"în apropiere",
-    notifWalletTitle:"Nomade Café,Ștampilă nouă!", notifWalletBody:"Ai acum 8/20 ștampile. Încă 12 pentru cafeaua ta gratuită.",
-    notifFcmTitle:"La mulți ani!", notifFcmBody:"Îți oferim o ștampilă dublă azi. Ne vedem curând!",
-    notifGeoTitle:"Treci pe-aici?", notifGeoBody:"Îți mai lipsesc 2 ștampile pentru cafeaua gratuită. Te așteptăm!",
-    notifTypes:[
-      {title:"Actualizare Apple Wallet", desc:"La fiecare ștampilă nouă, cardul se actualizează automat în Wallet-ul clientului cu o notificare. Fără nicio acțiune din partea dvs.", tags:["Automat","Timp real"]},
-      {title:"Push țintit (FCM)", desc:"Trimiteți un mesaj tuturor clienților, sau targetați doar pe cei activi (vizite recente) sau inactivi (+30 zile) din dashboard.", tags:["Toți","Activi","Inactivi"]},
-      {title:"Automatizări", desc:"Wallio trimite automat un mesaj de ziua clientului, sau o reangajare personalizată dacă un client nu a mai venit de X zile.", tags:["Zi de naștere","Reangajare auto"]},
-      {title:"Geolocalizare", desc:"Declanșați o notificare push automată când un client se află în apropierea localului dvs., stimulul perfect.", tags:["Proximitate","Automat"]},
-    ],
-    dashTag:"Dashboard", dashH2a:"Datele care schimbă totul", dashH2b:"pentru afacerea dvs.",
-    dashSub:"Pentru prima dată, știți exact cine sunt clienții dvs., cine revine și pe cine îi pierdeți.",
-    dashDate:"7 sept. 2026", dashMerchant:"Nomade Café",
-    dashStats:[
-      {label:"Clienți", value:"247", sub:"+12 luna aceasta", color:"#4472F5"},
-      {label:"Ștampile", value:"312", sub:"luna aceasta", color:"#6A5AF9"},
-      {label:"Revenire", value:"78%", sub:"activi", color:"#34C759"},
-      {label:"La risc", value:"14", sub:"de reangajat!", color:"#FF9500"},
-    ],
-    dashActivity:"Activitate, ultimele 7 zile",
-    dashDays:[{v:38, d:"L"},{v:52, d:"M"},{v:31, d:"M"},{v:67, d:"J"},{v:44, d:"V"},{v:58, d:"S"},{v:29, d:"D"}],
-    dashSegTitle:"Segmentare clienți",
-    dashSegs:[{label:"Activi (≤30z)", count:193, pct:78, color:"#34C759"},{label:"Inactivi (+30z)", count:54, pct:22, color:"#FF9500"}],
-    dashInsightTitle:"14 clienți absenți de peste 30 de zile", dashInsightBody:"Trimiteți o reangajare țintită, sunt încă recuperabili.",
-    dashTopTitle:"Cei mai buni clienți luna aceasta",
-    dashTopClients:[
-      {initials:"FB", name:"Fatima B.", visits:12, stamps:10, total:10, bc:"#FF9500", badge:"Recompensă"},
-      {initials:"AM", name:"Ahmed M.", visits:9, stamps:8, total:10, bc:"#34C759", badge:"Activ"},
-      {initials:"KL", name:"Karim L.", visits:7, stamps:3, total:10, bc:"#34C759", badge:"Activ"},
-    ],
-    dashVisits:"vizite luna aceasta",
-    dashRightH3:"Ce știți în sfârșit.",
-    dashRightP:"Înainte de Wallio, clienții dvs. erau anonimi. Nu știați cine revine, cine pleacă, nici cine merită atenție specială. Acum știți.",
-    dashRightPoints:[
-      {color:"#4472F5", title:"Cine revine,și cine pleacă", body:"Fiecare client este segmentat automat. Vedeți dintr-o privire clienții activi și inactivi, fără nicio manipulare."},
-      {color:"#FF9500", title:"Clienții dvs. la risc, identificați", body:"14 clienți absenți de peste 30 de zile? Wallio vă semnalează și vă permite să îi reangajați cu un clic."},
-      {color:"#6A5AF9", title:"Activitatea dvs., zi de zi", body:"Ștampile distribuite, înregistrări noi, recompense validate, vizualizate pe 7 sau 30 de zile."},
-      {color:"#34C759", title:"Cei mai buni clienți recompensați", body:"Identificați cei mai fideli, ajustați ștampilele, oferiți-le ceva excepțional direct din fișa lor."},
-      {color:"#8A5CF6", title:"Totul dintr-un clic, niciun raport de citit", body:"Fiecare dată este acționabilă. Reangajați, corectați, recompensați, notificați, totul din dashboard."},
-    ],
-    presenceTag:"Prezență digitală", presenceH2a:"Vizibil.", presenceH2b:"Chiar și fără buget publicitar.",
-    presenceSub:"Wallio este o aplicație web progresivă (PWA), clienții o instalează cu un tap pe ecranul de start, fără App Store. Iar localul dvs. este listat în directorul Wallio, vizibil de toți utilizatorii platformei.",
-    presenceBenefits:[
-      {title:"Listing pe categorie și oraș", body:"Localul dvs. apare în directorul Wallio, sortat pe sector. Clienți noi vă descoperă fără să vă fi căutat."},
-      {title:"Instalabil pe ecranul de start", body:"Experiența unei aplicații native, fără App Store. Clienții o adaugă cu un tap, acces instant la cardul lor."},
-      {title:"Pagină dedicată partajabilă", body:"Fiecare local primește un link unic Wallio, în bio Instagram, pe flyere, vitrină. Un clic pentru accesul la cardul de fidelitate."},
-      {title:"Push fără instalare", body:"Notificările dvs. ajung pe telefonul clienților chiar și fără aplicație instalată. Web modern, zero fricțiune."},
-    ],
-    presenceDiscover:"Descoperă", presenceSearch:"Caută un local…",
-    presenceCats:["Toate","Cafea","Frizerie","Restaurant","Frumusețe"],
-    presenceMerchants:[
-      {name:"Nomade Café", cat:"Cafea · Cluj-Napoca", rating:"4.9", clients:"247 clienți", color:"#4472F5", initial:"N"},
-      {name:"Barba Italiana", cat:"Frizerie · Cluj-Napoca", rating:"4.8", clients:"183 clienți", color:"#C8956C", initial:"B"},
-      {name:"Mori Matcha", cat:"Ceai · Cluj-Napoca", rating:"4.7", clients:"134 clienți", color:"#A8D5A2", initial:"M"},
-      {name:"Hammam Royal", cat:"Spa · Cluj-Napoca", rating:"4.6", clients:"98 clienți", color:"#C9A96E", initial:"H"},
-    ],
-    presenceJoin:"Localul dvs. aici", presenceJoinSub:"Alăturați-vă Wallio",
-    secteursTag:"Sectoare", secteursH2a:"Pentru toate localurile", secteursH2b:"de proximitate",
-    secteursSub:"O singură soluție, adaptată fiecărui tip de local.",
-    secteurs:["Cafenea & Salon de ceai","Restaurant","Frizerie","Salon de frumusețe","Boutique & Modă","Sală de sport","Brutărie","Institut & Spa"],
-    parrainageTag:"Recomandare", parrainageH2a:"Clienții dvs.,", parrainageH2b:"cei mai buni agenți de vânzări.",
-    parrainageSub:"Un client mulțumit își distribuie linkul. Prietenul se înregistrează, ambii sunt recompensați. Zero buget publicitar, zero fricțiune.",
-    parrainageSteps:[
-      {title:"Clientul distribuie linkul", body:"Din «Cardurile mele», cu un tap. Linkul este unic și legat de localul său."},
-      {title:"Prietenul scanează și se înregistrează", body:"Dă clic pe link, trece prin înregistrarea rapidă, primește prima ștampilă instant."},
-      {title:"Cel care recomandă este recompensat", body:"Cardul Wallet se actualizează automat cu +1 ștampilă. Notificare push inclusă."},
-    ],
-    parrainageStats:[
-      {value:"x3", label:"mai mulți clienți noi", sub:"vs recomandare clasică"},
-      {value:"+1", label:"ștampilă pentru cel care recomandă", sub:"creditată automat"},
-      {value:"0 RON", label:"cost de achiziție", sub:"100% organic"},
-    ],
-    tarifsTag:"Tarife", tarifsH2:"Simplu și transparent.",
-    tarifsSub:"Cu cât vă angajați mai mult, cu atât economisiți, fără costuri ascunse, fără angajament forțat.",
-    tarifsIncludedLabel:"Inclus în abonamentul dvs.",
-    tarifsIncluded:["Card de fidelitate Apple & Google Wallet","Card tejghea 4K (QR + NFC opțional)","Dashboard în timp real","Notificări push nelimitate","Automatizări zi de naștere & reangajare","Listing în directorul Wallio","Suport dedicat pe WhatsApp"],
-    tarifsPriceLabel:"Tarif adaptat localului dvs.", tarifsPrice:"Personalizat", tarifsResponseTime:"Răspuns în 24h",
-    tarifsCtaWa:"Contactați-ne pe WhatsApp",
-    tarifsNote:"Fără angajament, tarif în funcție de\ntipul localului dvs.",
-    faqTag:"FAQ", faqH2:"Întrebări frecvente", faqOther:"Altă întrebare?", faqCta:"Discutați pe WhatsApp",
-    faqs:[
-      {q:"Trebuie să descarc o aplicație?", a:"Nu, nici dvs., nici clienții. Clienții accesează cardul printr-un link web după prima scanare. Cardul se poate adăuga apoi cu un clic în Apple Wallet sau Google Wallet, direct din browser."},
-      {q:"Cum primesc clienții prima ștampilă?", a:"La plată, apropie telefonul de tag-ul NFC (sau scanează codul QR de pe cardul de tejghea). Este instant, cardul este creat automat și prima ștampilă este adăugată fără nicio altă acțiune."},
-      {q:"Ce este cardul de tejghea?", a:"Este un fișier de imprimare de înaltă rezoluție (4K) generat de Wallio. Îl imprimați și îl puneți pe tejghea. Conține un cod QR unic al localului dvs., clienții îl scanează pentru a-și accesa cardul de fidelitate."},
-      {q:"Clienții mei au nevoie de un cont Apple sau Google?", a:"Pentru a adăuga cardul în Apple Wallet, un iPhone cu iOS 6+ este suficient. Pentru Google Wallet, un Android cu aplicația Google Wallet. Nu este necesar niciun cont Wallio."},
-      {q:"Cum îmi personalizez cardul de fidelitate?", a:"Din dashboard, alegeți culorile (fond, text, ștampile), încărcați logo-ul, setați numărul de ștampile și recompensa. Fiecare modificare se reflectă imediat în previzualizarea Apple Wallet și Google Wallet."},
-      {q:"Care este diferența între modul ciclic și progresiv?", a:"În modul ciclic, odată atins obiectivul (ex. 10 ștampile → 1 cafea gratuită), contorul repornește. În modul progresiv, definiți mai multe niveluri de recompense, de exemplu 5 ștampile = reducere 10%, 10 ștampile = articol gratuit, 20 ștampile = statut VIP."},
-      {q:"Notificările sunt automate?", a:"Da pentru actualizările de card (Apple Wallet trimite o notificare la fiecare ștampilă nouă). Pentru notificările de marketing, le configurați în dashboard: Wallio trimite automat mesajul potrivit la momentul potrivit."},
-      {q:"Cum funcționează anti-duplicarea?", a:"Wallio detectează dacă un client a primit deja o ștampilă recent și blochează cumulurile abuzive. Configurați intervalul minim între două ștampile valide (15 min, 1h, 4h, 8h, 1 zi) din setări."},
-      {q:"Pot modifica manual ștampilele unui client?", a:"Da. Din fișa clientului în dashboard, puteți ajusta numărul de ștampile direct. Util pentru a corecta o eroare sau a recompensa un client excepțional."},
-      {q:"Funcționează Wallio fără internet pentru clienți?", a:"Scanarea NFC și QR necesită o conexiune pentru a înregistra ștampila. Cardul Apple Wallet / Google Wallet rămâne vizibil offline odată adăugat pe telefon."},
-    ],
-    ctaH2:"Gata să vă fidelizați clienții?", ctaSub:"Începeți în câteva minute. Fără instalare, fără fricțiune.", ctaBtn:"Începeți pe WhatsApp",
-    footerLinks:[
-      {href:"/privacy", label:"Confidențialitate"},{href:"/terms", label:"Termeni"},
-      {href:"/legal", label:"Mențiuni legale"},{href:"mailto:wallio.card@gmail.com", label:"wallio.card@gmail.com"},
-    ],
-  },
-  es: {
-    navLogin:"Iniciar sesión", navContact:"Contáctenos",
-    anchors:[
-      {id:"acces",label:"Acceso"},{id:"comment",label:"Cómo funciona"},
-      {id:"personnalisation",label:"Personalización"},{id:"notifications",label:"Notificaciones"},
-      {id:"dashboard",label:"Dashboard"},{id:"presence",label:"Presencia"},
-      {id:"tarifs",label:"Precios"},{id:"faq",label:"FAQ"},
-    ],
-    heroTitle1:"La fidelización de clientes,", heroTitle2:"reinventada.",
-    heroSub:"Un tap NFC o un escaneo QR es suficiente. Tus clientes acumulan sellos, tú conservas su fidelidad, sin ninguna app que instalar.",
-    heroCta1:"Empezar ahora", heroCta2:"Iniciar sesión",
-    heroStamps:"Sellos", heroReward:"Recompensa", heroNotif:"Notificación",
-    heroRewardVal:"Café gratis", heroSent:"✓ Enviada",
-    walletAvailable:"Disponible de forma nativa en", walletNote:"iOS · Android · sin app",
-    accesTag:"Soporte & acceso", accesH2a:"La tarjeta de mostrador,", accesH2b:"el hub de tu fidelidad",
-    accesSub:"Un único soporte físico en tu mostrador. Incluye las dos tecnologías de acceso: código QR y NFC.",
-    accesCardTag:"Tarjeta Mostrador", accesCardBadge:"Soporte principal",
-    accesCardH3:"Tu soporte físico universal",
-    accesCardDesc:"Soporte universal Wallio colocado en tu mostrador. Contiene tu código QR único y puede integrar un tag NFC. Tus clientes lo escanean o acercan su teléfono para recibir sus sellos, sin ninguna instalación.",
-    accesCardTags:["Código QR integrado","Tag NFC opcional","Diseño Wallio estándar","Sin app necesaria"],
-    accesConnector:"dos tecnologías integradas",
-    accesNfcTag:"Tag NFC", accesNfcH3:"Tap, listo.",
-    accesNfcDesc:"El cliente acerca su teléfono a 4 cm del tag. Sello acreditado en menos de un segundo, sin abrir ninguna app.",
-    accesNfcFeats:["El gesto más rápido que existe","iPhone 7+ y todos los Android NFC","Opcional en la tarjeta de mostrador"],
-    accesQrTag:"Código QR", accesQrH3:"Escaneo, listo.",
-    accesQrDesc:"El cliente abre su cámara y escanea el código QR de la tarjeta de mostrador. Funciona con todos los teléfonos, sin ninguna app.",
-    accesQrFeats:["Compatible con el 100% de los smartphones","Cámara nativa, sin app","Siempre en la tarjeta de mostrador"],
-    accesSceneTitle:"En tu mostrador. Nada que instalar.", accesModeTap:"Tap NFC", accesModeQr:"Scan QR",
-    accesTitle1:"En tu mostrador.", accesTitle2:"Nada que instalar.",
-    accesStatA:"para añadir un sello", accesStatB:"para descargar", accesStatC:"de los smartphones",
-    flowTag:"Recorrido del cliente", flowH2a:"Dos escenarios.", flowH2b:"Cero fricción.",
-    flowSub:"Cliente nuevo o habitual, el flujo está pensado para cada uno.",
-    flowNewTitle:"Cliente nuevo", flowNewSub:"Primera visita",
-    flowNewSteps:[
-      {title:"Ve la tarjeta de mostrador",body:"Colocada en el mostrador, bien visible. Código QR o tag NFC."},
-      {title:"Tap NFC o escaneo QR",body:"Su teléfono reconoce la acción al instante."},
-      {title:"Nombre + teléfono",body:"30 segundos. Es todo lo que pedimos."},
-      {title:"Tarjeta creada, sello acreditado",body:"Su tarjeta de fidelidad se crea automáticamente con el 1er sello."},
-      {title:"Añadir a Apple / Google Wallet",body:"Opcional, para encontrar su tarjeta con un tap."},
-    ],
-    flowRegTitle:"Cliente habitual", flowRegSub:"Vuelta al establecimiento",
-    flowRegSteps:[
-      {title:"Tap NFC o escaneo QR",body:"El mismo gesto que en su primera visita."},
-      {title:"Reconocido en menos de un segundo",body:"Wallio encuentra su tarjeta mediante el número de teléfono registrado."},
-      {title:"Sello acreditado automáticamente",body:"Sin acción adicional. Su progreso está actualizado."},
-      {title:"Notificación Apple Wallet",body:"Su tarjeta Wallet se actualiza y le envía una notificación."},
-      {title:"Objetivo alcanzado, ¡recompensa!",body:"La validas con un clic desde tu dashboard."},
-    ],
-    rewardTag:"Recompensas", rewardH2a:"Cíclico o progresivo.", rewardH2b:"Tú decides.",
-    rewardSub:"Adapta tu programa de fidelidad a tu negocio con un solo clic.",
-    rewardCyclicTitle:"Cíclico", rewardCyclicSub:"Un objetivo, una recompensa",
-    rewardCyclicDesc:"El contador se reinicia a cero después de cada recompensa obtenida.",
-    rewardCyclicBullets:["Simple de configurar","Ideal para productos recurrentes","Solo un objetivo que definir"],
-    rewardProgressTitle:"Progresivo", rewardProgressSub:"Niveles acumulativos, sellos permanentes",
-    rewardProgressDesc:"Los sellos se acumulan para siempre. Cada nivel desbloquea una recompensa diferente.",
-    rewardProgressBullets:["Compromiso a largo plazo","Niveles totalmente configurables","Los sellos nunca se reinician"],
-    customTag:"Personalización", customH2:"Tu tarjeta, a tu imagen",
-    customSub:"Cada elemento es configurable desde tu dashboard, en tiempo real.",
-    customMocks:[
-      {name:"Mori Matcha",reward:"Matcha gratis",label:"Café Matcha"},
-      {name:"Barba Italiana",reward:"Corte gratis",label:"Barbería"},
-      {name:"Hammam Royal",reward:"Tratamiento gratis",label:"Hammam & Spa"},
-    ],
-    customFeats:[
-      {title:"Colores & Logo",body:"Color de fondo, texto, sellos, y tu logo en la cabecera de la tarjeta."},
-      {title:"Número de sellos",body:"Elige entre 5 y 50 sellos por ciclo, con una o varias recompensas."},
-      {title:"Estilo de los sellos",body:"Elige entre 8 estilos: punto, anillo, check, corazón, estrella, texto o tu logo."},
-      {title:"Banner personalizado",body:"Sube una foto de tu local como banner en la tarjeta, con los sellos dibujados encima."},
-      {title:"Campos informativos",body:"Añade tu horario, tu número, tus enlaces, directamente visibles en la tarjeta."},
-      {title:"Anti-duplicado inteligente",body:"Configura un tiempo mínimo entre dos sellos (15 min, 1h, 4h, 1 día) para evitar abusos."},
-    ],
-    notifTag:"Notificaciones", notifH2a:"Mantente presente", notifH2b:"en el momento justo",
-    notifSub:"Wallet, push segmentado, automatizaciones, geolocalización, cuatro formas de llegar a tus clientes en el momento oportuno.",
-    notifDate:"Domingo 7 septiembre", notifNow:"ahora", notifAgo:"hace 2h", notifNear:"cerca",
-    notifWalletTitle:"Nomade Café, ¡Nuevo sello!", notifWalletBody:"Ahora tienes 8/20 sellos. ¡Solo 12 más para tu café gratis!",
-    notifFcmTitle:"¡Feliz cumpleaños!", notifFcmBody:"Te regalamos un sello doble hoy. ¡Hasta pronto!",
-    notifGeoTitle:"¿Pasas por aquí?", notifGeoBody:"Te faltan 2 sellos para tu café gratis. ¡Te esperamos!",
-    notifTypes:[
-      {title:"Actualización Apple Wallet",desc:"Con cada nuevo sello, la tarjeta se actualiza automáticamente en el Wallet del cliente con una notificación. Sin ninguna acción de tu parte.",tags:["Automático","Tiempo real"]},
-      {title:"Push segmentado (FCM)",desc:"Envía un mensaje a todos tus clientes, o dirige solo a los activos (visitas recientes) o inactivos (+30 días) desde tu dashboard.",tags:["Todos","Activos","Inactivos"]},
-      {title:"Automatizaciones",desc:"Wallio envía automáticamente un mensaje el día del cumpleaños de tu cliente, o un recordatorio si un cliente no ha vuelto en X días.",tags:["Cumpleaños","Re-enganche auto"]},
-      {title:"Geolocalización",desc:"Activa una notificación push automática cuando un cliente esté cerca de tu local, el incentivo perfecto para que entre.",tags:["Proximidad","Automático"]},
-    ],
-    dashTag:"Dashboard", dashH2a:"Los datos que lo cambian todo", dashH2b:"para tu negocio",
-    dashSub:"Por primera vez, sabes exactamente quiénes son tus clientes, quién vuelve y a quién estás perdiendo.",
-    dashDate:"7 sept. 2026", dashMerchant:"Nomade Café",
-    dashStats:[
-      {label:"Clientes",value:"247",sub:"+12 este mes",color:"#4472F5"},
-      {label:"Sellos",value:"312",sub:"este mes",color:"#6A5AF9"},
-      {label:"Retorno",value:"78%",sub:"activos",color:"#34C759"},
-      {label:"En riesgo",value:"14",sub:"¡a re-enganchar!",color:"#FF9500"},
-    ],
-    dashActivity:"Actividad, últimos 7 días",
-    dashDays:[{v:38,d:"L"},{v:52,d:"M"},{v:31,d:"X"},{v:67,d:"J"},{v:44,d:"V"},{v:58,d:"S"},{v:29,d:"D"}],
-    dashSegTitle:"Segmentación de clientes",
-    dashSegs:[{label:"Activos (≤30d)",count:193,pct:78,color:"#34C759"},{label:"Inactivos (+30d)",count:54,pct:22,color:"#FF9500"}],
-    dashInsightTitle:"14 clientes ausentes desde hace +30 días", dashInsightBody:"Envía un re-enganche dirigido, todavía son recuperables.",
-    dashTopTitle:"Mejores clientes este mes",
-    dashTopClients:[
-      {initials:"FB",name:"Fatima B.",visits:12,stamps:10,total:10,bc:"#FF9500",badge:"Recompensa"},
-      {initials:"AM",name:"Ahmed M.",visits:9,stamps:8,total:10,bc:"#34C759",badge:"Activo"},
-      {initials:"KL",name:"Karim L.",visits:7,stamps:3,total:10,bc:"#34C759",badge:"Activo"},
-    ],
-    dashVisits:"visitas este mes",
-    dashRightH3:"Lo que por fin sabes.",
-    dashRightP:"Antes de Wallio, tus clientes eran anónimos. No sabías quién volvía, quién te dejaba, ni quién merecía atención especial. Ahora lo sabes.",
-    dashRightPoints:[
-      {color:"#4472F5",title:"Quién vuelve y quién te deja",body:"Cada cliente se segmenta automáticamente. Ves de un vistazo tus activos e inactivos, sin ninguna manipulación."},
-      {color:"#FF9500",title:"Tus clientes en riesgo, identificados",body:"¿14 clientes ausentes desde hace +30 días? Wallio te lo indica y te permite re-engancharlos con un clic."},
-      {color:"#6A5AF9",title:"Tu actividad, día a día",body:"Sellos distribuidos, nuevas inscripciones, recompensas validadas, visualizados en 7 o 30 días."},
-      {color:"#34C759",title:"Tus mejores clientes recompensados",body:"Identifica los que vienen más, ajusta sus sellos, ofréceles algo excepcional directamente desde su ficha."},
-      {color:"#8A5CF6",title:"Todo en un clic, sin informes que leer",body:"Cada dato es accionable. Re-engancha, corrige, recompensa, notifica, todo desde el dashboard."},
-    ],
-    presenceTag:"Presencia digital", presenceH2a:"Visible.", presenceH2b:"Incluso sin presupuesto publicitario.",
-    presenceSub:"Wallio es una aplicación web progresiva (PWA), tus clientes la instalan con un tap en su pantalla de inicio, sin pasar por el App Store. Y tu local está listado en el directorio Wallio, visible para todos los usuarios de la plataforma.",
-    presenceBenefits:[
-      {title:"Listing por categoría y ciudad",body:"Tu local aparece en el directorio Wallio, clasificado por sector. Nuevos clientes te descubren sin haberte buscado."},
-      {title:"Instalable en la pantalla de inicio",body:"La experiencia de una app nativa, sin App Store. Tus clientes la añaden con un tap, acceso instantáneo a su tarjeta."},
-      {title:"Página dedicada compartible",body:"Cada local recibe un enlace Wallio único, para poner en la bio de Instagram, en flyers, en tu escaparate. Un clic para acceder a la tarjeta de fidelidad."},
-      {title:"Push sin instalación",body:"Tus notificaciones llegan al teléfono de tus clientes incluso sin app instalada. Web moderno, cero fricción."},
-    ],
-    presenceDiscover:"Descubrir", presenceSearch:"Buscar un negocio…",
-    presenceCats:["Todo","Café","Barbería","Restaurante","Belleza"],
-    presenceMerchants:[
-      {name:"Nomade Café",cat:"Café · Madrid",rating:"4.9",clients:"247 clientes",color:"#4472F5",initial:"N"},
-      {name:"Barba Italiana",cat:"Barbería · Madrid",rating:"4.8",clients:"183 clientes",color:"#C8956C",initial:"B"},
-      {name:"Mori Matcha",cat:"Té · Madrid",rating:"4.7",clients:"134 clientes",color:"#A8D5A2",initial:"M"},
-      {name:"Hammam Royal",cat:"Spa · Madrid",rating:"4.6",clients:"98 clientes",color:"#C9A96E",initial:"H"},
-    ],
-    presenceJoin:"Tu negocio aquí", presenceJoinSub:"Únete a Wallio",
-    secteursTag:"Sectores", secteursH2a:"Para todos los negocios", secteursH2b:"de proximidad",
-    secteursSub:"Una sola solución, adaptada a cada tipo de establecimiento.",
-    secteurs:["Café & Salón de té","Restaurante","Barbería","Salón de belleza","Boutique & Moda","Gimnasio","Panadería","Instituto & Spa"],
-    parrainageTag:"Referidos", parrainageH2a:"Tus clientes,", parrainageH2b:"tus mejores comerciales.",
-    parrainageSub:"Un cliente satisfecho comparte su enlace. Su amigo se registra, los dos son recompensados. Cero presupuesto publicitario, cero fricción.",
-    parrainageSteps:[
-      {title:"El cliente comparte su enlace",body:"Desde «Mis tarjetas», con un tap. El enlace es único y vinculado a su establecimiento."},
-      {title:"El amigo escanea y se registra",body:"Hace clic en el enlace, pasa por el registro rápido, recibe su 1er sello al instante."},
-      {title:"El que refiere es recompensado",body:"Su tarjeta Wallet se actualiza automáticamente con +1 sello. Notificación push incluida."},
-    ],
-    parrainageStats:[
-      {value:"x3",label:"más clientes nuevos",sub:"vs boca a boca clásico"},
-      {value:"+1",label:"sello para el que refiere",sub:"acreditado automáticamente"},
-      {value:"0 €",label:"coste de adquisición",sub:"100% orgánico"},
-    ],
-    tarifsTag:"Precios", tarifsH2:"Simple y transparente.",
-    tarifsSub:"Cuanto más te comprometes, más ahorras, sin costes ocultos, sin compromiso forzado.",
-    tarifsIncludedLabel:"Incluido en tu acceso",
-    tarifsIncluded:["Tarjeta de fidelidad Apple & Google Wallet","Tarjeta mostrador 4K (QR + NFC opcional)","Dashboard en tiempo real","Notificaciones push ilimitadas","Automatizaciones cumpleaños & re-enganche","Listing en el directorio Wallio","Soporte dedicado por WhatsApp"],
-    tarifsPriceLabel:"Tarifa adaptada a tu negocio", tarifsPrice:"A medida", tarifsResponseTime:"Respuesta en 24h",
-    tarifsCtaWa:"Contáctanos en WhatsApp",
-    tarifsNote:"Sin compromiso, tarifa según\ntu tipo de establecimiento",
-    faqTag:"FAQ", faqH2:"Preguntas frecuentes", faqOther:"¿Otra pregunta?", faqCta:"Hablemos en WhatsApp",
-    faqs:[
-      {q:"¿Hay que descargar una aplicación?",a:"No, ni tú ni tus clientes. Tus clientes acceden a su tarjeta mediante un enlace web después del primer escaneo. La tarjeta se puede añadir luego con un clic en Apple Wallet o Google Wallet, directamente desde el navegador."},
-      {q:"¿Cómo obtienen los clientes su primer sello?",a:"En el momento del pago, acercan su teléfono al tag NFC (o escanean el código QR de tu tarjeta de mostrador). Es instantáneo, su tarjeta se crea automáticamente y el primer sello se añade sin ninguna acción adicional."},
-      {q:"¿Qué es la tarjeta de mostrador?",a:"Es un archivo de impresión de alta resolución (4K) que Wallio genera para ti. Lo imprimes y lo colocas en tu mostrador. Contiene un código QR único de tu local, los clientes lo escanean para acceder a su tarjeta de fidelidad."},
-      {q:"¿Mis clientes necesitan una cuenta Apple o Google?",a:"Para añadir la tarjeta a Apple Wallet, un iPhone con iOS 6+ es suficiente. Para Google Wallet, un Android con la app Google Wallet. No se necesita ninguna cuenta Wallio."},
-      {q:"¿Cómo personalizo mi tarjeta de fidelidad?",a:"Desde tu dashboard, eliges los colores (fondo, texto, sellos), subes tu logo, defines el número de sellos y la recompensa. Cada cambio se refleja inmediatamente en la vista previa de Apple Wallet y Google Wallet. Las tarjetas de tus clientes se actualizan automáticamente."},
-      {q:"¿Cuál es la diferencia entre el modo cíclico y progresivo?",a:"En el modo cíclico, una vez alcanzado el objetivo (ej. 10 sellos → 1 café gratis), el contador se reinicia. En el modo progresivo, defines varios niveles de recompensas, por ejemplo 5 sellos = 10% de descuento, 10 sellos = artículo gratis, 20 sellos = estatus VIP."},
-      {q:"¿Las notificaciones son automáticas?",a:"Sí para las actualizaciones de tarjeta (Apple Wallet envía una notificación con cada nuevo sello). Para las notificaciones de marketing, las configuras en el dashboard: Wallio envía automáticamente el mensaje adecuado en el momento oportuno."},
-      {q:"¿Cómo funciona el sistema anti-duplicado?",a:"Wallio detecta si un cliente ya ha recibido un sello recientemente y bloquea los abusos. Configuras el tiempo mínimo entre dos sellos válidos (15 min, 1h, 4h, 8h, 1 día) en tus ajustes."},
-      {q:"¿Puedo modificar manualmente los sellos de un cliente?",a:"Sí. Desde la ficha del cliente en tu dashboard, puedes ajustar el número de sellos directamente. Útil para corregir un error o recompensar a un cliente excepcional."},
-      {q:"¿Funciona Wallio sin internet para los clientes?",a:"El escaneo NFC y QR requieren conexión para registrar el sello. Sin embargo, la tarjeta Apple Wallet / Google Wallet permanece visible sin conexión una vez añadida al teléfono."},
-    ],
-    ctaH2:"¿Listo para fidelizar a tus clientes?", ctaSub:"Empieza en pocos minutos. Sin instalación, sin fricción.", ctaBtn:"Empezar en WhatsApp",
-    footerLinks:[
-      {href:"/privacy",label:"Privacidad"},{href:"/terms",label:"CGU"},
-      {href:"/legal",label:"Aviso legal"},{href:"mailto:wallio.card@gmail.com",label:"wallio.card@gmail.com"},
-    ],
-  },
-} satisfies Record<Lang, object>;
-
-function PhoneMock({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{
-      width: 200, background: "#1D1D1F", borderRadius: 36,
-      padding: "14px 8px", boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
-      position: "relative", ...style
-    }}>
-      <div style={{ background: "#000", borderRadius: 28, overflow: "hidden", position: "relative" }}>
-        <div style={{ height: 10, background: "#1D1D1F", display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <div style={{ width: 48, height: 4, background: "#2C2C2E", borderRadius: 2 }} />
-        </div>
-        {children}
-      </div>
-    </div>
-  );
+    </div>,
+  ];
+  void C;
+  return <div key={feat} style={{ width:"100%" }}>{previews[feat]}</div>;
 }
 
 export default function LandingPage() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [navVisible, setNavVisible] = useState(false);
   const [activeAnchor, setActiveAnchor] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [anchorOpen, setAnchorOpen] = useState(false);
+  const [activeDash, setActiveDash] = useState(0);
+  const [activeReward, setActiveReward] = useState(0);
+  const [activeClient, setActiveClient] = useState(0);
   const { region, lang: contextLang, setLang: setContextLang } = useLang();
   const [lang, setLang] = useState<Lang>("fr");
-  const [anchorOpen, setAnchorOpen] = useState(false);
   const t = T[lang];
+  const pricing = REGIONS[region];
 
-  // Sync local lang with context (browser/localStorage auto-detection)
   useEffect(() => {
-    if (contextLang === "ro" || contextLang === "es") setLang(contextLang);
+    if (contextLang === "ro") setLang("ro");
   }, [contextLang]);
 
   function changeLang(l: Lang) {
     setLang(l);
-    if (l !== "en") setContextLang(l as "fr" | "ro" | "es");
+    if (l !== "en") setContextLang(l as "fr" | "ro");
   }
-  const WA = `${WA_BASE}?text=${encodeURIComponent(WA_MSGS[lang] || WA_MSGS.fr)}`;
-  const pricing = REGIONS[region];
+
+  const heroWA = wa(t.heroWa);
+  const { monthly, sixMonths, annual, monthlyEquiv6, monthlyEquivAnnual, strikethrough6, strikethroughAnnual, currency } = pricing;
+  const pct6 = Math.round((1 - sixMonths / strikethrough6) * 100);
+  const pctAnnual = Math.round((1 - annual / strikethroughAnnual) * 100);
+
   useReveal();
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
-      setNavVisible(window.scrollY > window.innerHeight * 0.65);
+      setNavVisible(window.scrollY > window.innerHeight * 0.7);
     };
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    const ids = ["acces", "comment", "personnalisation", "notifications", "dashboard", "presence", "tarifs", "faq"];
+    const ids = t.anchors.map(a => a.id);
     const io = new IntersectionObserver(
       entries => { entries.forEach(e => { if (e.isIntersecting) setActiveAnchor(e.target.id); }); },
       { threshold: 0.2 }
     );
     ids.forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
     return () => io.disconnect();
-  }, []);
+  }, [t.anchors]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
-    let frame = 0, raf: number;
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    resize();
-    window.addEventListener("resize", resize);
-    const isMobile = window.innerWidth < 768;
-    let last = 0;
-    const draw = (ts: number) => {
-      raf = requestAnimationFrame(draw);
-      if (isMobile && ts - last < 33) return;
-      last = ts;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const cx = canvas.width * 0.75, cy = canvas.height * 0.45, t = frame / 200;
-      const arcs = isMobile ? 4 : 6;
-      for (let i = 0; i < arcs; i++) {
-        const r = 50 + i * 75 + Math.sin(t + i * 0.7) * 10;
-        const a = (0.04 - i * 0.006) * (0.5 + 0.5 * Math.sin(t * 0.3 + i));
-        ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI * 0.6, Math.PI * 0.6);
-        ctx.strokeStyle = `rgba(68,114,245,${a})`; ctx.lineWidth = 1.5; ctx.lineCap = "round"; ctx.stroke();
-      }
-      frame++;
-    };
-    raf = requestAnimationFrame(draw);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, []);
+  const CSS = `
+    @keyframes fadeUp    { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+    @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes shimmer   { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+    @keyframes heroImgIn { from{opacity:0;transform:translateX(28px) scale(.97)} to{opacity:1;transform:translateX(0) scale(1)} }
+    @keyframes scaleBarUp{ from{transform:scaleY(0)} to{transform:scaleY(1)} }
+    @keyframes notifDrop { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes stampPop  { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.25)} 100%{transform:scale(1);opacity:1} }
+    @keyframes fillProg  { from{width:0} to{width:70%} }
+    @keyframes pinFill   { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+    @keyframes cardSlide { from{opacity:0;transform:translateX(-14px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes scanLn    { 0%,100%{top:4px} 50%{top:calc(100% - 6px)} }
+    @keyframes screenZoom { from{opacity:0;transform:scale(1.06)} to{opacity:1;transform:scale(1)} }
+    .screen-enter { animation:screenZoom .55s cubic-bezier(.16,1,.3,1) both; }
 
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; scroll-padding-top:72px; }
+
+    [data-reveal]        { opacity:0; transform:translate3d(0,18px,0);   transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1); backface-visibility:hidden; }
+    [data-reveal="left"] { opacity:0; transform:translate3d(-20px,0,0);  transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1); }
+    [data-reveal="right"]{ opacity:0; transform:translate3d(20px,0,0);   transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1); }
+    [data-reveal="scale"]{ opacity:0; transform:translate3d(0,10px,0) scale3d(.97,.97,1); transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1); }
+    [data-reveal="fade"] { opacity:0; transition:opacity .7s ease; }
+    .revealed { opacity:1!important; transform:translate3d(0,0,0) scale3d(1,1,1)!important; }
+
+    .grad { background:linear-gradient(135deg,#007AFF,#8B5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .grad-bg { background:linear-gradient(135deg,#007AFF,#8B5CF6); }
+
+    .hero-anim-1 { animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .05s both; }
+    .hero-anim-3 { animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .58s both; }
+    .hero-anim-4 { animation:fadeUp .8s cubic-bezier(.16,1,.3,1) .70s both; }
+    .hero-img-enter { animation:heroImgIn .95s cubic-bezier(.16,1,.3,1) .18s both; }
+    .hero-word { animation:fadeUp .65s cubic-bezier(.16,1,.3,1) var(--wd,0s) both; }
+
+    .pain-line { padding:28px 0; border-top:.5px solid rgba(0,0,0,.08); display:grid; grid-template-columns:40px 1fr; gap:20px; align-items:flex-start; }
+    .pain-line:last-child { border-bottom:.5px solid rgba(0,0,0,.08); }
+
+    .feat-row { padding:14px 16px; border-radius:12px; cursor:pointer; border:1.5px solid transparent; transition:background .15s,border-color .15s; display:flex; gap:14px; align-items:flex-start; }
+    .feat-row:hover { background:rgba(0,0,0,.03); }
+    .feat-row.feat-active { background:rgba(0,122,255,.05); border-color:rgba(0,122,255,.20); }
+    .dash-spotlight { display:flex; background:#fff; border-radius:24px; border:.5px solid rgba(0,0,0,.07); overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,.06); }
+    .dash-feat-list { flex:0 0 42%; padding:8px; border-right:.5px solid rgba(0,0,0,.07); }
+    .dash-preview-panel { flex:1; padding:28px; min-height:480px; display:flex; align-items:center; justify-content:center; }
+
+    .btn-wa {
+      background:linear-gradient(135deg,#007AFF,#8B5CF6);
+      color:#fff; padding:14px 26px; border-radius:14px; font-size:15px; font-weight:600;
+      text-decoration:none; display:inline-flex; align-items:center; gap:9px;
+      transition:transform .15s,box-shadow .15s; border:none; cursor:pointer;
+    }
+    .btn-wa:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,122,255,.28); }
+    .btn-ghost {
+      background:rgba(0,0,0,.06); color:#1D1D1F; padding:14px 26px; border-radius:14px;
+      font-size:15px; font-weight:500; text-decoration:none; display:inline-block;
+      transition:background .15s; border:none; cursor:pointer;
+    }
+    .btn-ghost:hover { background:rgba(0,0,0,.10); }
+
+    .stag { display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:.08em;
+      text-transform:uppercase; color:#007AFF; background:rgba(0,122,255,.08);
+      padding:5px 13px; border-radius:20px; margin-bottom:18px; }
+
+    .lp-nav { padding:0 48px; }
+    .anchor-nav::-webkit-scrollbar { display:none; }
+    .anchor-nav { scrollbar-width:none; }
+
+    .lang-btn { padding:4px 10px; border-radius:18px; border:none; cursor:pointer;
+      font-size:11px; font-weight:700; letter-spacing:.06em; transition:all .15s; }
+
+    .feat-item { display:flex; gap:14px; align-items:flex-start; }
+    .feat-dot  { width:7px; height:7px; border-radius:50%; background:linear-gradient(135deg,#007AFF,#8B5CF6);
+      flex-shrink:0; margin-top:6px; }
+
+    .card-hover { transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s; }
+    .card-hover:hover { transform:translateY(-4px); box-shadow:0 24px 48px rgba(0,0,0,.10)!important; }
+
+    .reward-pill { display:inline-block; padding:4px 11px; border-radius:20px;
+      font-size:12px; font-weight:600; margin-bottom:10px; }
+
+    .faq-btn { width:100%; background:none; border:none; cursor:pointer; display:flex;
+      align-items:center; justify-content:space-between; padding:20px 0; text-align:left; gap:16px; }
+    .faq-btn:hover .faq-q { color:#007AFF; }
+    .faq-item { border-bottom:.5px solid rgba(0,0,0,.08); }
+
+    .pricing-card { background:#fff; border-radius:24px; padding:32px 28px;
+      border:.5px solid rgba(0,0,0,.08); transition:transform .2s,box-shadow .2s; }
+    .pricing-card:hover { transform:translateY(-4px); box-shadow:0 24px 48px rgba(0,0,0,.10); }
+    .pricing-featured { background:#1D1D1F; border-color:#1D1D1F; }
+
+    .sector-pill { display:inline-block; padding:9px 18px; border-radius:20px; font-size:13px;
+      font-weight:500; color:#3C3C43; background:#fff; border:.5px solid rgba(0,0,0,.09);
+      transition:transform .22s cubic-bezier(.16,1,.3,1); cursor:default; }
+    .sector-pill:hover { transform:scale(1.12); }
+
+    .check-icon { width:18px; height:18px; border-radius:50%; display:flex; align-items:center;
+      justify-content:center; flex-shrink:0; background:rgba(0,122,255,.10); }
+
+    @media (max-width:1024px) { .lp-nav { padding:0 24px; } }
+    @media (max-width:768px) {
+      .lp-nav { padding:0 20px; }
+      .hero-split { flex-direction:column!important; text-align:center; align-items:center!important; height:auto!important; padding-top:88px!important; }
+      .hero-split .hero-ctas { justify-content:center!important; }
+      .hero-img-wrap { width:100%!important; max-width:460px!important; margin:0 auto; height:auto!important; flex:unset!important; }
+      .hero-img-wrap img { max-height:46vw!important; }
+      .nav-right { display:none!important; }
+      .nav-mobile-lang { display:flex!important; }
+      .nav-mobile-title { display:block!important; }
+      .nav-logo { display:none!important; }
+      section { padding:72px 20px!important; }
+      .split-left,.split-right { width:100%!important; }
+      .steps-row { flex-direction:column!important; }
+      .steps-row > div { flex:unset!important; }
+      .reward-cols { flex-direction:column!important; }
+      .dash-split { flex-direction:column!important; }
+      .client-split { flex-direction:column!important; }
+      .screens-grid { grid-template-columns:1fr 1fr!important; }
+      .pricing-grid { flex-direction:column!important; }
+      .pricing-grid > div { width:100%!important; }
+      .cards-grid { grid-template-columns:1fr 1fr!important; }
+      .btn-wa,.btn-ghost { padding:13px 22px; font-size:14px; }
+      .cta-title { font-size:clamp(28px,8vw,42px)!important; }
+      .anchor-nav-desktop { display:none!important; }
+      .anchor-nav-mobile { display:flex!important; }
+      .feats-2col { grid-template-columns:1fr 1fr!important; }
+      .steps-row { grid-template-columns:1fr!important; }
+      .reward-cols { flex-direction:column!important; }
+      .reward-cols > div { flex:1!important; }
+      .custom-feats-grid { grid-template-columns:1fr 1fr!important; }
+      .prob-split { flex-direction:column!important; gap:36px!important; }
+      .prob-left { flex:unset!important; width:100%!important; }
+      .prob-right { flex:unset!important; width:100%!important; }
+      .client-spotlight { flex-direction:column!important; }
+      .client-phone-panel { flex:unset!important; width:100%!important; min-height:320px!important; padding:28px!important; }
+      .client-phone-panel img { height:min(50vw,320px)!important; }
+      .client-screens { grid-template-columns:1fr 1fr 1fr!important; }
+      .dash-spotlight { flex-direction:column!important; }
+      .dash-feat-list { border-right:none!important; border-bottom:.5px solid rgba(0,0,0,.07)!important; flex:unset!important; }
+      .dash-preview-panel { min-height:unset!important; padding:24px 20px!important; }
+      .dash-preview-panel > div { height:auto!important; }
+      .dash-preview-panel img { height:min(78vw, 480px)!important; width:auto!important; }
+      .proof-bar { padding:16px 20px!important; gap:16px!important; }
+      footer { padding:28px 20px!important; }
+    }
+    @media (max-width:1024px) {
+      .dash-preview-panel > div { height:auto!important; }
+      .dash-preview-panel img { height:min(44vw, 560px)!important; width:auto!important; }
+    }
+    @media (max-width:480px) {
+      .cards-grid { grid-template-columns:1fr!important; }
+      .screens-grid { grid-template-columns:1fr!important; }
+      .hero-title { font-size:clamp(32px,10vw,52px)!important; }
+      .pricing-grid > div { padding:28px 22px!important; }
+      .custom-feats-grid { grid-template-columns:1fr!important; }
+      .feats-2col { grid-template-columns:1fr!important; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      *, *::before, *::after { animation-duration:.01ms!important; transition-duration:.01ms!important; }
+    }
+  `;
+
+  const MAX = { maxWidth: 1040, margin: "0 auto" } as const;
 
   return (
     <>
-      <style>{`
-        @keyframes fadeUp  { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes float   { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-7px); } }
-        @keyframes shimmer { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
-        @keyframes nfcPulse { 0%,100% { opacity:0.15; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.08); } }
+      <style>{CSS}</style>
+      <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue',sans-serif", background:"#F5F5F7", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
 
-        * { box-sizing:border-box; margin:0; padding:0; }
-
-        .hero-badge { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.00s both; }
-        .hero-title { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.10s both; }
-        .hero-sub   { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.25s both; }
-        .hero-cta   { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.40s both; }
-        .hero-card  { animation: fadeUp 0.9s cubic-bezier(.16,1,.3,1) 0.55s both; }
-        .hero-float { animation: float 5s ease-in-out infinite; }
-
-        [data-reveal],[data-reveal="left"],[data-reveal="right"],[data-reveal="scale"],[data-reveal="fade"] {
-          backface-visibility:hidden; -webkit-backface-visibility:hidden;
-        }
-        [data-reveal]         { opacity:0; transform:translate3d(0,12px,0);   transition:opacity 0.68s cubic-bezier(0.16,1,0.3,1), transform 0.68s cubic-bezier(0.16,1,0.3,1); }
-        [data-reveal="left"]  { opacity:0; transform:translate3d(-16px,0,0);  transition:opacity 0.68s cubic-bezier(0.16,1,0.3,1), transform 0.68s cubic-bezier(0.16,1,0.3,1); }
-        [data-reveal="right"] { opacity:0; transform:translate3d(16px,0,0);   transition:opacity 0.68s cubic-bezier(0.16,1,0.3,1), transform 0.68s cubic-bezier(0.16,1,0.3,1); }
-        [data-reveal="scale"] { opacity:0; transform:translate3d(0,8px,0) scale3d(0.97,0.97,1); transition:opacity 0.72s cubic-bezier(0.16,1,0.3,1), transform 0.72s cubic-bezier(0.16,1,0.3,1); }
-        [data-reveal="fade"]  { opacity:0; transition:opacity 0.68s ease; }
-        .revealed { opacity:1 !important; transform:translate3d(0,0,0) scale3d(1,1,1) !important; }
-
-        .grad-text { background:linear-gradient(92deg,#4472F5,#6A5AF9,#8A5CF6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-size:200% 200%; animation:shimmer 4s ease infinite; }
-        .glass { background:rgba(255,255,255,0.88); backdrop-filter:blur(28px); -webkit-backdrop-filter:blur(28px); border:0.5px solid rgba(255,255,255,0.90); }
-        .btn-primary { background:#1D1D1F; color:white; padding:14px 32px; border-radius:14px; font-size:15px; font-weight:600; text-decoration:none; letter-spacing:-0.2px; transition:transform 0.15s, box-shadow 0.15s; display:inline-block; }
-        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,0,0,0.25); }
-        .btn-ghost  { background:rgba(0,0,0,0.05); color:#1D1D1F; padding:14px 32px; border-radius:14px; font-size:15px; font-weight:500; text-decoration:none; transition:background 0.15s; display:inline-block; }
-        .btn-ghost:hover { background:rgba(0,0,0,0.09); }
-        .card-hover { transition:transform 0.25s cubic-bezier(.16,1,.3,1), box-shadow 0.25s; }
-        .card-hover:hover { transform:translateY(-4px); box-shadow:0 24px 48px rgba(0,0,0,0.10) !important; }
-        .feature-tag { display:inline-block; font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#4472F5; background:rgba(68,114,245,0.09); padding:7px 18px; border-radius:20px; margin-bottom:24px; }
-        .lp-nav { padding:0 48px; }
-        .float-card { padding:28px 36px; display:inline-flex; align-items:center; gap:24px; }
-        .float-card-sep { width:1px; height:48px; background:rgba(0,0,0,0.08); }
-        .cta-section { padding:88px 48px; }
-        .lp-footer { padding:36px 48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
-
-        .nfc-ring-1 { animation: nfcPulse 2s ease-in-out infinite 0.0s; }
-        .nfc-ring-2 { animation: nfcPulse 2s ease-in-out infinite 0.3s; }
-        .nfc-ring-3 { animation: nfcPulse 2s ease-in-out infinite 0.6s; }
-
-        @keyframes cardFloat {
-          0%,100% { transform:translate(-50%,-52%) perspective(900px) rotateX(18deg) rotateY(-8deg) rotateZ(1deg) translateY(0); }
-          50%      { transform:translate(-50%,-52%) perspective(900px) rotateX(18deg) rotateY(-8deg) rotateZ(1deg) translateY(-8px); }
-        }
-        @keyframes nfcWave {
-          0%   { opacity:0.85; transform:translate(-50%,-50%) scale(1); }
-          100% { opacity:0;    transform:translate(-50%,-50%) scale(4); }
-        }
-        @keyframes scanLine {
-          0%,100% { transform:translateY(0); }
-          50%     { transform:translateY(120px); }
-        }
-        @keyframes walletAppear {
-          0%   { opacity:0; transform:translateX(-50%) translateY(28px) scale(0.93); }
-          100% { opacity:1; transform:translateX(-50%) translateY(0)    scale(1); }
-        }
-        @keyframes sceneFadeIn { from { opacity:0; } to { opacity:1; } }
-        .acces-scene-wrap { overflow:visible; }
-        @media (max-width:768px) {
-          .acces-v2-layout { flex-direction:column-reverse !important; }
-          .acces-v2-layout > div:first-child { flex:unset !important; width:100%; }
-        }
-        @media (max-width:1100px) {
-          .acces-scene { transform:scale(0.80); transform-origin:top center; }
-          .acces-scene-wrap { height:calc(420px * 0.80) !important; }
-        }
-        @media (max-width:900px) {
-          .acces-scene { transform:scale(0.65); transform-origin:top center; }
-          .acces-scene-wrap { height:calc(420px * 0.65) !important; }
-        }
-        @media (max-width:600px) {
-          .acces-scene { transform:scale(0.48); transform-origin:top center; }
-          .acces-scene-wrap { height:calc(420px * 0.48) !important; }
-        }
-
-        .faq-item { border-bottom:0.5px solid rgba(0,0,0,0.08); }
-        .faq-btn { width:100%; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:20px 0; text-align:left; gap:16px; }
-        .faq-btn:hover .faq-q { color:#4472F5; }
-
-        @media (max-width: 900px) {
-          .scan-grid   { grid-template-columns:1fr !important; }
-          .custom-grid { flex-direction:column !important; }
-          .custom-cards { justify-content:center !important; flex-wrap:wrap !important; }
-          .notif-grid  { grid-template-columns:1fr !important; }
-          .dash-split  { grid-template-columns:1fr !important; }
-        }
-        @media (max-width: 768px) {
-          .lp-nav { padding:0 24px; }
-          .hero-float { display:none; }
-          .features-grid { grid-template-columns:repeat(2,1fr) !important; }
-          .sectors-grid  { grid-template-columns:repeat(2,1fr) !important; }
-          .steps-grid    { grid-template-columns:1fr !important; }
-          .cta-section   { padding:56px 28px; border-radius:24px !important; }
-          .lp-footer     { padding:28px 24px; flex-direction:column; text-align:center; gap:20px; }
-          .lp-footer > div { justify-content:center; }
-          section { padding-left:20px !important; padding-right:20px !important; }
-        }
-        html { scroll-behavior:smooth; scroll-padding-top:108px; }
-        .anchor-nav { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-        .anchor-nav::-webkit-scrollbar { display:none; }
-        .anchor-link { transition:all 0.18s; white-space:nowrap; flex-shrink:0; }
-        .anchor-link:hover { color:#1D1D1F !important; }
-        .dash-row { border-bottom:0.5px solid rgba(0,0,0,0.06); }
-        .dash-row:last-child { border-bottom:none; }
-        @media (max-width: 768px) {
-          .wallet-badges-inner { padding:20px 20px !important; }
-          .custom-cards > div { transform:none !important; }
-          .anchor-nav { padding:0 16px !important; }
-          .dash-stats { grid-template-columns:1fr !important; }
-          .pwa-grid { flex-direction:column !important; align-items:center !important; }
-          .custom-grid-3 { grid-template-columns:repeat(2,1fr) !important; }
-        }
-        @media (max-width: 480px) {
-          .custom-grid-3 { grid-template-columns:1fr !important; }
-          .pricing-inner { flex-direction:column !important; }
-        }
-        @media (max-width: 900px) {
-          .pricing-grid { grid-template-columns:1fr !important; }
-          .included-grid { grid-template-columns:1fr !important; }
-          .counter-card-band { flex-direction:column !important; padding:32px 28px !important; }
-        }
-        @media (max-width: 900px) {
-          .counter-card-band img { width:180px !important; transform:none !important; }
-        }
-        @media (max-width: 480px) {
-          .lp-nav { padding:0 16px; }
-          .lp-nav .nav-contact { display:none; }
-          .lp-nav .nav-login { display:none; }
-          .lp-nav .lang-pill { padding:3px 7px !important; font-size:10px !important; }
-          .lp-nav-logo { display:none !important; }
-          .lp-nav-wallio { display:block !important; }
-          .lp-nav-right { display:none !important; }
-          .lp-nav-lang-mobile { display:flex !important; }
-          .anchor-nav-desktop { display:none !important; }
-          .anchor-nav-mobile { display:flex !important; }
-          .btn-primary, .btn-ghost { padding:12px 22px; font-size:14px; border-radius:12px; }
-          .feature-tag { font-size:11px; padding:6px 14px; }
-          .features-grid { grid-template-columns:1fr !important; }
-          .sectors-grid  { grid-template-columns:1fr !important; }
-          .cta-section   { padding:44px 20px; border-radius:20px !important; margin:0 12px !important; }
-          .cta-section h2 { font-size:28px !important; }
-          .hero-cta { flex-direction:column; align-items:center; }
-          .hero-cta a { width:100%; text-align:center; }
-          section { padding-top:64px !important; padding-bottom:64px !important; }
-          .hero-badge span { font-size:9px !important; letter-spacing:0.06em !important; }
-        }
-      `}</style>
-
-      <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue',sans-serif", background:"#F2F2F7", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
-
-        <canvas ref={canvasRef} style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0 }} />
-        <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0, background:"radial-gradient(ellipse 80% 60% at 70% 40%, rgba(100,130,255,0.07) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 20% 80%, rgba(140,100,255,0.05) 0%, transparent 50%)" }} />
-
-        {/* ── Bouton WhatsApp flottant ── */}
-        <a href={WA} target="_blank" rel="noopener noreferrer"
-          style={{
-            position:"fixed", bottom:24, right:24, zIndex:50,
-            width:56, height:56, borderRadius:"50%",
-            background:"#25D366", boxShadow:"0 8px 24px rgba(37,211,102,0.45)",
-            display:"flex", alignItems:"center", justifyContent:"center",
-            transition:"transform 0.2s, box-shadow 0.2s",
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.08)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 32px rgba(37,211,102,0.55)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(37,211,102,0.45)"; }}
-          aria-label="Nous contacter sur WhatsApp"
-        >
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="white">
+        {/* ── WhatsApp float ── */}
+        <a href={heroWA} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+          style={{ position:"fixed", bottom:24, right:24, zIndex:50, width:52, height:52, borderRadius:"50%",
+            background:"#25D366", display:"flex", alignItems:"center", justifyContent:"center",
+            boxShadow:"0 8px 24px rgba(37,211,102,.40)", transition:"transform .2s,box-shadow .2s" }}
+          onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="scale(1.08)";}}
+          onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="";}}>
+          <svg width="26" height="26" viewBox="0 0 32 32" fill="white">
             <path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1.0 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9zm0 22.9c-2.0 0-3.9-.5-5.5-1.5l-.4-.2-4.4 1.1 1.2-4.2-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.7 0-5.9 4.8-10.8 10.8-10.8 2.9 0 5.6 1.1 7.6 3.2 2.0 2.0 3.2 4.7 3.2 7.6 0 5.9-4.8 10.9-10.5 10.9zm5.8-8.1c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.7-1.6-2.0-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.2-.7-1.7-1.0-2.4-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1.1 1.0-1.1 2.5s1.1 2.9 1.3 3.1c.2.2 2.2 3.4 5.4 4.7.8.3 1.4.5 1.8.6.8.2 1.5.2 2.0.1.6-.1 1.8-.7 2.1-1.4.3-.7.3-1.2.2-1.4-.1-.2-.3-.3-.6-.4z"/>
           </svg>
         </a>
 
-        {/* ── Nav ── */}
-        <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:20, height:58, display:"flex", alignItems:"center", justifyContent:"space-between", background: scrolled ? "rgba(242,242,247,0.85)" : "transparent", backdropFilter: scrolled ? "blur(24px)" : "none", borderBottom: scrolled ? "0.5px solid rgba(0,0,0,0.09)" : "none", transition:"all 0.3s" }}>
-          {/* Logo — caché sur mobile */}
-          <div className="lp-nav-logo" style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <Image src="/wallio-instagram-profil.png" alt="Wallio" width={36} height={36} unoptimized style={{ borderRadius:8 }} />
+        {/* ── NAV ── */}
+        <nav className="lp-nav" style={{ position:"fixed", top:0, left:0, right:0, zIndex:30, height:58,
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+          background: scrolled ? "rgba(245,245,247,.88)" : "transparent",
+          backdropFilter: scrolled ? "blur(24px)" : "none",
+          borderBottom: scrolled ? ".5px solid rgba(0,0,0,.09)" : "none",
+          transition:"all .3s" }}>
+          <div className="nav-logo" style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <Image src="/wallio-instagram-profil.png" alt="Wallio" width={34} height={34} style={{ borderRadius:8 }} priority />
           </div>
-          {/* WALLIO centré — visible uniquement sur mobile */}
-          <div className="lp-nav-wallio" style={{ display:"none", position:"absolute", left:0, right:0, textAlign:"center", pointerEvents:"none" }}>
-            <span style={{ fontSize:17, fontWeight:700, letterSpacing:"0.12em", color:"#1D1D1F" }}>WALLIO</span>
+          <div className="nav-mobile-title" style={{ display:"none", position:"absolute", left:0, right:0, textAlign:"center", pointerEvents:"none" }}>
+            <span style={{ fontSize:16, fontWeight:700, letterSpacing:".12em", color:"#1D1D1F" }}>WALLIO</span>
           </div>
-          {/* Toggle langue mobile — cycle simple */}
-          <button
-            className="lp-nav-lang-mobile"
-            onClick={() => changeLang(lang === "fr" ? "en" : lang === "en" ? "ro" : lang === "ro" ? "es" : "fr")}
-            style={{ display:"none", alignItems:"center", justifyContent:"center", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,0.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", color:"#1D1D1F" }}>
+          <button className="nav-mobile-lang" onClick={() => changeLang(lang==="fr"?"en":lang==="en"?"ro":"fr")}
+            style={{ display:"none", width:36, height:36, borderRadius:"50%", background:"rgba(0,0,0,.06)", border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:".06em", color:"#1D1D1F", alignItems:"center", justifyContent:"center" }}>
             {lang.toUpperCase()}
           </button>
-          {/* Droite — cachée sur mobile */}
-          <div className="lp-nav-right" style={{ display:"flex", gap:8, alignItems:"center" }}>
-            <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,0.06)", borderRadius:20, padding:"2px" }}>
-              {(["fr","en","ro","es"] as const).map(l => (
-                <button key={l} onClick={() => changeLang(l)}
-                  className="lang-pill"
-                  style={{ padding:"4px 10px", borderRadius:18, border:"none", cursor:"pointer", fontSize:11, fontWeight:700, letterSpacing:"0.06em", background: lang === l ? "#1D1D1F" : "transparent", color: lang === l ? "white" : "#6E6E73", transition:"all 0.15s" }}>
+          <div className="nav-right" style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <div style={{ display:"flex", gap:1, background:"rgba(0,0,0,.06)", borderRadius:20, padding:2 }}>
+              {(["fr","en","ro"] as const).map(l => (
+                <button key={l} className="lang-btn" onClick={() => changeLang(l)}
+                  style={{ background: lang===l ? "#1D1D1F" : "transparent", color: lang===l ? "#fff" : "#6E6E73" }}>
                   {l.toUpperCase()}
                 </button>
               ))}
             </div>
-            <Link href="/choisir" className="nav-login" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px", minWidth:120, textAlign:"center", display:"inline-block" }}>{t.navLogin}</Link>
-            <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary nav-contact" style={{ padding:"7px 18px", fontSize:13, borderRadius:20 }}>
-              {t.navContact}
+            <Link href="/choisir" style={{ fontSize:14, fontWeight:400, color:"#6E6E73", textDecoration:"none", padding:"6px 16px" }}>
+              {t.navLogin}
+            </Link>
+            <a href={heroWA} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ padding:"7px 16px", fontSize:13, borderRadius:20 }}>
+              {t.navCta}
             </a>
           </div>
         </nav>
 
-        {/* ── Anchor nav ── */}
-        <div style={{ position:"fixed", top: navVisible ? 58 : -50, left:0, right:0, zIndex:19, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", transition:"top 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
-          {/* Desktop : toutes les ancres */}
+        {/* ── ANCHOR NAV ── */}
+        <div style={{ position:"fixed", top: navVisible ? 58 : -48, left:0, right:0, zIndex:29,
+          background:"rgba(245,245,247,.97)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
+          borderBottom:".5px solid rgba(0,0,0,.09)", transition:"top .4s cubic-bezier(.16,1,.3,1)" }}>
           <div className="anchor-nav anchor-nav-desktop" style={{ maxWidth:1040, margin:"0 auto", padding:"0 32px" }}>
-            <div style={{ display:"flex", gap:2, height:42, alignItems:"center", justifyContent:"center" }}>
+            <div style={{ display:"flex", gap:2, height:40, alignItems:"center", justifyContent:"center" }}>
               {t.anchors.map(a => (
-                <a key={a.id} href={`#${a.id}`} className="anchor-link" style={{ fontSize:13, fontWeight: activeAnchor === a.id ? 600 : 400, color: activeAnchor === a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none", padding:"4px 12px", borderRadius:20, background: activeAnchor === a.id ? "rgba(0,0,0,0.08)" : "transparent" }}>{a.label}</a>
+                <a key={a.id} href={`#${a.id}`}
+                  style={{ fontSize:12.5, fontWeight: activeAnchor===a.id ? 600 : 400,
+                    color: activeAnchor===a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none",
+                    padding:"4px 11px", borderRadius:20,
+                    background: activeAnchor===a.id ? "rgba(0,0,0,.08)" : "transparent",
+                    whiteSpace:"nowrap", transition:"all .15s" }}>
+                  {a.label}
+                </a>
               ))}
             </div>
           </div>
-          {/* Mobile : ancre courante + dropdown */}
-          <div className="anchor-nav-mobile" style={{ display:"none", position:"relative", width:"100%" }}>
-            <button
-              onClick={() => setAnchorOpen(o => !o)}
-              style={{ width:"100%", height:42, display:"flex", alignItems:"center", justifyContent:"center", gap:6, background:"none", border:"none", cursor:"pointer" }}>
+          <div className="anchor-nav anchor-nav-mobile" style={{ display:"none", position:"relative" }}>
+            <button onClick={() => setAnchorOpen(o=>!o)}
+              style={{ width:"100%", height:40, display:"flex", alignItems:"center", justifyContent:"center",
+                gap:6, background:"none", border:"none", cursor:"pointer" }}>
               <span style={{ fontSize:13, fontWeight:600, color:"#1D1D1F" }}>
-                {t.anchors.find(a => a.id === activeAnchor)?.label ?? t.anchors[0]?.label}
+                {t.anchors.find(a=>a.id===activeAnchor)?.label ?? t.anchors[0]?.label}
               </span>
-              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transition:"transform 0.2s", transform: anchorOpen ? "rotate(180deg)" : "none" }}>
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transform: anchorOpen ? "rotate(180deg)" : "none", transition:"transform .2s" }}>
                 <path d="M1 1l4 4 4-4" stroke="#6E6E73" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             </button>
             {anchorOpen && (
-              <div style={{ position:"absolute", top:42, left:0, right:0, background:"rgba(242,242,247,0.97)", backdropFilter:"blur(20px)", borderBottom:"0.5px solid rgba(0,0,0,0.09)", zIndex:18 }}>
+              <div style={{ position:"absolute", top:40, left:0, right:0, zIndex:18,
+                background:"rgba(245,245,247,.97)", backdropFilter:"blur(20px)",
+                borderBottom:".5px solid rgba(0,0,0,.09)" }}>
                 {t.anchors.map(a => (
-                  <a key={a.id} href={`#${a.id}`}
-                    onClick={() => setAnchorOpen(false)}
-                    style={{ display:"block", padding:"13px 24px", fontSize:14, fontWeight: activeAnchor === a.id ? 600 : 400, color: activeAnchor === a.id ? "#1D1D1F" : "#6E6E73", textDecoration:"none", borderBottom:"0.5px solid rgba(0,0,0,0.06)" }}>
+                  <a key={a.id} href={`#${a.id}`} onClick={() => setAnchorOpen(false)}
+                    style={{ display:"block", padding:"13px 24px", fontSize:14,
+                      fontWeight: activeAnchor===a.id ? 600 : 400,
+                      color: activeAnchor===a.id ? "#1D1D1F" : "#6E6E73",
+                      textDecoration:"none", borderBottom:".5px solid rgba(0,0,0,.06)" }}>
                     {a.label}
                   </a>
                 ))}
@@ -1569,998 +890,762 @@ export default function LandingPage() {
 
         <div style={{ position:"relative", zIndex:1 }}>
 
-          {/* ── HERO ── */}
-          <section style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"140px 32px 80px" }}>
-            <div className="hero-badge" style={{ marginBottom:28 }}>
-              <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:"#4472F5", background:"rgba(68,114,245,0.08)", padding:"6px 16px", borderRadius:20 }}>
-                NFC · QR Code · Apple Wallet · Google Wallet
-              </span>
-            </div>
-            <h1 className="hero-title" style={{ fontSize:"clamp(40px,6vw,88px)", fontWeight:700, lineHeight:1.02, letterSpacing:-3, color:"#1D1D1F", maxWidth:820, marginBottom:28 }}>
-              {t.heroTitle1}<br />
-              <span className="grad-text">{t.heroTitle2}</span>
-            </h1>
-            <p className="hero-sub" style={{ fontSize:20, fontWeight:400, lineHeight:1.6, color:"#6E6E73", maxWidth:520, marginBottom:44 }}>
-              {t.heroSub}
-            </p>
-            <div className="hero-cta" style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
-              <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-primary">{t.heroCta1}</a>
-              <Link href="/choisir" className="btn-ghost">{t.heroCta2}</Link>
-            </div>
-
-            <div className="hero-card hero-float" style={{ marginTop:72 }}>
-              <div className="glass float-card" style={{ borderRadius:28, boxShadow:"0 24px 64px rgba(0,0,0,0.09)" }}>
-                <div style={{ textAlign:"left" }}>
-                  <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:4 }}>{t.heroStamps}</p>
-                  <p style={{ fontSize:36, fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", lineHeight:1 }}>7<span style={{ fontSize:22, fontWeight:400, color:"#C7C7CC" }}>/10</span></p>
+          {/* ══════════════════════════════════════════
+              1. HERO
+          ══════════════════════════════════════════ */}
+          <section style={{ height:"100dvh", minHeight:640, display:"flex", alignItems:"center", padding:"80px 48px 60px", position:"relative", overflow:"hidden", background:"#F7F8FF" }}>
+            {/* Blobs fondus */}
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(99,102,241,.18)", filter:"blur(90px)", top:-200, left:-150, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.13)", filter:"blur(80px)", top:50, right:-100, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(249,115,22,.09)", filter:"blur(70px)", bottom:-80, right:280, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:32, justifyContent:"space-between", position:"relative", zIndex:1, height:"100%" }} className="hero-split">
+              {/* Left */}
+              <div style={{ flex:"0 0 46%", maxWidth:500, minWidth:0 }}>
+                <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(26px,3vw,44px)", fontWeight:800, lineHeight:1.1, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:20 }}>
+                  {t.heroTitle1.split(" ").map((w,i)=>(
+                    <span key={i} className="hero-word" style={{"--wd":`${0.08+i*0.065}s`} as React.CSSProperties}>{w}{" "}</span>
+                  ))}
+                  <br />
+                  <span className="grad">
+                    {t.heroTitle2.split(" ").map((w,i)=>(
+                      <span key={i} className="hero-word" style={{"--wd":`${0.08+(t.heroTitle1.split(" ").length+i)*0.065}s`} as React.CSSProperties}>{w}{i<t.heroTitle2.split(" ").length-1?" ":""}</span>
+                    ))}
+                  </span>
+                </h1>
+                <p className="hero-anim-3" style={{ fontSize:17, lineHeight:1.65, color:"#6E6E73", maxWidth:480, marginBottom:36 }}>
+                  {t.heroSub}
+                </p>
+                <div className="hero-anim-4 hero-ctas" style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                  <a href={heroWA} target="_blank" rel="noopener noreferrer" className="btn-wa">
+                    <svg width="17" height="17" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
+                    {t.heroCta1}
+                  </a>
+                  <Link href="/choisir" className="btn-ghost">{t.heroCta2}</Link>
                 </div>
-                <div className="float-card-sep" />
-                <div style={{ textAlign:"left" }}>
-                  <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:4 }}>{t.heroReward}</p>
-                  <p style={{ fontSize:16, fontWeight:600, color:"#1D1D1F" }}>{t.heroRewardVal}</p>
-                </div>
-                <div className="float-card-sep" />
-                <div style={{ textAlign:"left" }}>
-                  <p style={{ fontSize:11, fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:4 }}>{t.heroNotif}</p>
-                  <p style={{ fontSize:13, fontWeight:500, color:"#34C759" }}>{t.heroSent}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ── WALLET BADGES ── */}
-          <div style={{ background:"#1D1D1F" }}>
-            <div className="wallet-badges-inner" style={{ maxWidth:1040, margin:"0 auto", padding:"28px 32px", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }}>
-              <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,0.5)", letterSpacing:"0.04em" }}>{t.walletAvailable}</span>
-              <div style={{ display:"flex", alignItems:"center", gap:20 }}>
-                <Image src="/apple-wallet-badge.svg" alt="Apple Wallet" width={130} height={40} style={{ opacity:0.9 }} />
-                <div style={{ width:"0.5px", height:28, background:"rgba(255,255,255,0.15)" }} />
-                <Image src="/google-wallet-badge.svg" alt="Google Wallet" width={130} height={40} style={{ opacity:0.9 }} />
-              </div>
-              <span style={{ fontSize:13, color:"rgba(255,255,255,0.35)", letterSpacing:"0.04em" }}>{t.walletNote}</span>
-            </div>
-          </div>
-
-          {/* ── ILS NOUS FONT CONFIANCE ── */}
-          <div style={{ background:"#F7F7FA", borderTop:"0.5px solid rgba(0,0,0,0.06)", borderBottom:"0.5px solid rgba(0,0,0,0.06)", padding:"20px 32px" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }}>
-              <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#AEAEB2" }}>
-                {lang === "fr" ? "Ils nous font confiance" : "Trusted by"}
-              </span>
-              <div style={{ display:"flex", alignItems:"center", gap:24, flexWrap:"wrap", justifyContent:"center" }}>
-                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <img src="/logo-8am.jpg" alt="8AM Coffeehouse & More" style={{ width:36, height:36, borderRadius:9, objectFit:"cover", border:"0.5px solid rgba(0,0,0,0.08)" }} />
-                  <span style={{ fontSize:14, fontWeight:600, color:"#1D1D1F", letterSpacing:-0.2 }}>8AM Coffeehouse & More</span>
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <img src="/logo-maison-matcha.png" alt="Maison Matcha" style={{ width:36, height:36, borderRadius:9, objectFit:"contain", background:"white", border:"0.5px solid rgba(0,0,0,0.08)", padding:3 }} />
-                  <span style={{ fontSize:14, fontWeight:600, color:"#1D1D1F", letterSpacing:-0.2 }}>Maison Matcha</span>
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <img src="/logo-comptoir-homme.jpg" alt="Comptoir de l'Homme" style={{ width:36, height:36, borderRadius:9, objectFit:"cover", border:"0.5px solid rgba(0,0,0,0.08)" }} />
-                  <span style={{ fontSize:14, fontWeight:600, color:"#1D1D1F", letterSpacing:-0.2 }}>Comptoir de l'Homme</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── ACCÈS ── */}
-          <section id="acces" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ marginBottom:56 }}>
-                <span className="feature-tag">{t.accesTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.accesH2a}<br />{t.accesH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93" }}>{t.accesSub}</p>
-              </div>
-              <AccesVideoBlock t={t as unknown as Record<string,unknown>} />
-            </div>
-          </section>
-
-          {/* ── FLOW CLIENT ── */}
-          <section id="comment" style={{ padding:"96px 32px" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">{t.flowTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.flowH2a}<br />{t.flowH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto", textAlign:"center" }}>{t.flowSub}</p>
-              </div>
-
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:24 }} className="steps-grid">
-
-                {/* Nouveau client */}
-                <div data-reveal="left" style={{ background:"white", borderRadius:28, padding:"36px 32px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 24px rgba(0,0,0,0.05)" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:32 }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize:17, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.3 }}>{t.flowNewTitle}</h3>
-                      <span style={{ fontSize:12, color:"#8E8E93" }}>{t.flowNewSub}</span>
-                    </div>
-                  </div>
-                  {t.flowNewSteps.map((s, i, arr) => (
-                    <div key={i} style={{ display:"flex", gap:16, paddingBottom: i < arr.length-1 ? 20 : 0 }}>
-                      <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
-                        <div style={{ width:28, height:28, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:12, fontWeight:700, color:"#4472F5" }}>{i+1}</div>
-                        {i < arr.length-1 && <div style={{ width:"1px", flex:1, background:"rgba(68,114,245,0.15)", margin:"4px 0" }} />}
-                      </div>
-                      <div style={{ paddingTop:3, paddingBottom: i < arr.length-1 ? 4 : 0 }}>
-                        <div style={{ fontSize:14, fontWeight:650, color:"#1D1D1F", marginBottom:2 }}>{s.title}</div>
-                        <div style={{ fontSize:13, color:"#8E8E93", lineHeight:1.5 }}>{s.body}</div>
-                      </div>
+                {/* Stats hero */}
+                <div className="hero-anim-4" style={{ display:"flex", gap:24, marginTop:36, marginBottom:32 }}>
+                  {[
+                    { v:"200+", l: lang==="ro" ? "clienți fidelizați" : lang==="en" ? "customers enrolled" : "clients fidélisés", c:"#007AFF" },
+                    { v:"4", l: lang==="ro" ? "comercianți" : lang==="en" ? "businesses" : "commerces", c:"#8B5CF6" },
+                    { v:"< 1s", l: lang==="ro" ? "per ștampilă" : lang==="en" ? "per stamp" : "par tampon", c:"#F97316" },
+                  ].map(s=>(
+                    <div key={s.v}>
+                      <div style={{ fontSize:24, fontWeight:800, color:s.c, letterSpacing:-.5, lineHeight:1 }}>{s.v}</div>
+                      <div style={{ fontSize:11, color:"#6E6E73", marginTop:3 }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
-
-                {/* Client habituel */}
-                <div data-reveal="right" style={{ background:"white", borderRadius:28, padding:"36px 32px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 24px rgba(0,0,0,0.05)" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:32 }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A5CF6" strokeWidth="1.8" strokeLinecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize:17, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.3 }}>{t.flowRegTitle}</h3>
-                      <span style={{ fontSize:12, color:"#8E8E93" }}>{t.flowRegSub}</span>
-                    </div>
-                  </div>
-                  {t.flowRegSteps.map((s, i, arr) => (
-                    <div key={i} style={{ display:"flex", gap:16, paddingBottom: i < arr.length-1 ? 20 : 0 }}>
-                      <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
-                        <div style={{ width:28, height:28, borderRadius:"50%", background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:12, fontWeight:700, color:"#8A5CF6" }}>{i+1}</div>
-                        {i < arr.length-1 && <div style={{ width:"1px", flex:1, background:"rgba(138,92,246,0.15)", margin:"4px 0" }} />}
-                      </div>
-                      <div style={{ paddingTop:3, paddingBottom: i < arr.length-1 ? 4 : 0 }}>
-                        <div style={{ fontSize:14, fontWeight:650, color:"#1D1D1F", marginBottom:2 }}>{s.title}</div>
-                        <div style={{ fontSize:13, color:"#8E8E93", lineHeight:1.5 }}>{s.body}</div>
-                      </div>
-                    </div>
-                  ))}
+                {/* Wallet badges */}
+                <div className="hero-anim-4" style={{ display:"flex", alignItems:"center", gap:16, opacity:.65 }}>
+                  <Image src="/apple-wallet-badge.svg" alt="Apple Wallet" width={110} height={34} />
+                  <div style={{ width:.5, height:24, background:"rgba(0,0,0,.18)" }} />
+                  <Image src="/google-wallet-badge.svg" alt="Google Wallet" width={110} height={34} />
                 </div>
-
+              </div>
+              {/* Right — hero image transparent */}
+              <div className="hero-img-wrap" style={{ flex:"0 0 52%", maxWidth:580, display:"flex", alignItems:"center", justifyContent:"center", height:"100%" }}>
+                <Image
+                  src="/visuels_hero_trio_transparent.webp"
+                  alt="Wallio — cartes de fidélité digitales sur iPhone"
+                  width={960} height={660}
+                  priority
+                  className="hero-img-enter"
+                  style={{ width:"100%", height:"auto", maxHeight:"78vh", objectFit:"contain", display:"block" }}
+                />
               </div>
             </div>
           </section>
 
-          {/* ── RÉCOMPENSES ── */}
-          <section id="recompenses" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">{t.rewardTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.rewardH2a}<br />{t.rewardH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>{t.rewardSub}</p>
-              </div>
-
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:24 }} className="steps-grid">
-
-                {/* Cyclique */}
-                <div data-reveal="left" style={{ background:"white", borderRadius:28, padding:"36px 32px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 24px rgba(0,0,0,0.05)" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:28 }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize:17, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.3 }}>{t.rewardCyclicTitle}</h3>
-                      <span style={{ fontSize:12, color:"#8E8E93" }}>{t.rewardCyclicSub}</span>
-                    </div>
-                  </div>
-
-                  {/* Visuel cyclique */}
-                  <div style={{ background:"#F5F5F7", borderRadius:20, padding:"20px 20px 16px", marginBottom:24 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-                      <span style={{ fontSize:12, color:"#8E8E93", fontWeight:600 }}>Café Volta</span>
-                      <span style={{ fontSize:13, fontWeight:700, color:"#1D1D1F" }}>6/10</span>
-                    </div>
-                    <div style={{ height:6, background:"rgba(0,0,0,0.08)", borderRadius:99, overflow:"hidden", marginBottom:12 }}>
-                      <div style={{ height:"100%", width:"60%", borderRadius:99, background:"linear-gradient(90deg,#4472F5,#8A5CF6)" }} />
-                    </div>
-                    <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
-                      {Array.from({length:10}).map((_,i) => (
-                        <div key={i} style={{ width:24, height:24, borderRadius:"50%", background: i < 6 ? "linear-gradient(135deg,#4472F5,#8A5CF6)" : "rgba(0,0,0,0.08)" }} />
-                      ))}
-                    </div>
-                    <div style={{ marginTop:12, display:"flex", alignItems:"center", gap:6 }}>
-                      <div style={{ height:"1px", flex:1, background:"rgba(0,0,0,0.08)" }} />
-                      <span style={{ fontSize:11, color:"#8E8E93", fontWeight:500 }}>→ Café offert</span>
-                      <div style={{ height:"1px", flex:1, background:"rgba(0,0,0,0.08)" }} />
-                    </div>
-                  </div>
-
-                  <p style={{ fontSize:14, color:"#8E8E93", lineHeight:1.6, marginBottom:20 }}>{t.rewardCyclicDesc}</p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                    {t.rewardCyclicBullets.map((b,i) => (
-                      <div key={i} style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(68,114,245,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                          <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#4472F5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </div>
-                        <span style={{ fontSize:13, color:"#3C3C43" }}>{b}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Progressif */}
-                <div data-reveal="right" style={{ background:"white", borderRadius:28, padding:"36px 32px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 24px rgba(0,0,0,0.05)" }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:28 }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize:17, fontWeight:700, color:"#1D1D1F", letterSpacing:-0.3 }}>{t.rewardProgressTitle}</h3>
-                      <span style={{ fontSize:12, color:"#8E8E93" }}>{t.rewardProgressSub}</span>
-                    </div>
-                  </div>
-
-                  {/* Visuel progressif — paliers */}
-                  <div style={{ background:"#F5F5F7", borderRadius:20, padding:"20px", marginBottom:24 }}>
-                    {[
-                      { seuil:4,  reward:"Boisson",  done:true  },
-                      { seuil:7,  reward:"Dessert",   done:true  },
-                      { seuil:10, reward:"Plat",      done:false },
-                    ].map((palier, i, arr) => (
-                      <div key={i}>
-                        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                          <div style={{
-                            width:30, height:30, borderRadius:"50%", flexShrink:0,
-                            background: palier.done ? "linear-gradient(135deg,#34C759,#30D158)" : "rgba(138,92,246,0.12)",
-                            border: palier.done ? "none" : "1.5px solid rgba(138,92,246,0.35)",
-                            display:"flex", alignItems:"center", justifyContent:"center",
-                          }}>
-                            {palier.done
-                              ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3L11.5 3.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                              : <span style={{ fontSize:10, fontWeight:700, color:"#8A5CF6" }}>{palier.seuil}</span>
-                            }
-                          </div>
-                          <div style={{ flex:1 }}>
-                            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                              <span style={{ fontSize:13, fontWeight:600, color:"#1D1D1F" }}>{palier.reward}</span>
-                              <span style={{ fontSize:11, color: palier.done ? "#34C759" : "#8E8E93", fontWeight:500 }}>
-                                {palier.done ? "✓ Validé" : `${palier.seuil} tampons`}
-                              </span>
-                            </div>
-                            {!palier.done && (
-                              <div style={{ height:4, background:"rgba(0,0,0,0.07)", borderRadius:99, overflow:"hidden", marginTop:5 }}>
-                                <div style={{ height:"100%", width:"70%", borderRadius:99, background:"linear-gradient(90deg,#8A5CF6,#4472F5)" }} />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        {i < arr.length - 1 && (
-                          <div style={{ width:1, height:14, background:"rgba(0,0,0,0.08)", margin:"4px 0 4px 14px" }} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <p style={{ fontSize:14, color:"#8E8E93", lineHeight:1.6, marginBottom:20 }}>{t.rewardProgressDesc}</p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                    {t.rewardProgressBullets.map((b,i) => (
-                      <div key={i} style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(138,92,246,0.10)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                          <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#8A5CF6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </div>
-                        <span style={{ fontSize:13, color:"#3C3C43" }}>{b}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </section>
-
-          {/* ── PERSONNALISATION ── */}
-          <section id="personnalisation" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)", overflow:"hidden" }}>
-            <div style={{ maxWidth:1120, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">{t.customTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.customH2}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.customSub}</p>
-              </div>
-
-              {/* Cards showcase */}
-              <div data-reveal style={{ display:"flex", gap:24, justifyContent:"center", alignItems:"flex-start", marginBottom:64, flexWrap:"wrap" }} className="custom-cards">
-                <div style={{ transform:"translateY(20px)", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
-                  <WalletCardMock
-                    bg="#082B16" fg="#FFFFFF" labelClr="rgba(110,220,140,0.55)"
-                    name={t.customMocks[0].name} logoInitial="M"
-                    stamps={5} total={10} reward={t.customMocks[0].reward}
-                    stampColor="#5DCC80"
-                    stripImageUrl="/strip-matcha.jpg"
-                    aux1="7j/7" aux2="9h–20h"
-                  />
-                  <div style={{ borderRadius:12, padding:"8px 16px", fontSize:12, fontWeight:600, color:"#5DCC80", background:"rgba(8,43,22,0.08)", border:"0.5px solid rgba(93,204,128,0.25)" }}>{t.customMocks[0].label}</div>
-                </div>
-                <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
-                  <WalletCardMock
-                    bg="#2C0D04" fg="#FFFFFF" labelClr="rgba(220,140,90,0.55)"
-                    name={t.customMocks[1].name} logoInitial="BI"
-                    stamps={4} total={8} reward={t.customMocks[1].reward}
-                    stampColor="#D4875A"
-                    stripImageUrl="/strip-barber.jpg"
-                    aux1="Lun–Sam" aux2="9h–20h"
-                  />
-                  <div style={{ borderRadius:12, padding:"8px 16px", fontSize:12, fontWeight:600, color:"#C8703C", background:"rgba(44,13,4,0.07)", border:"0.5px solid rgba(212,135,90,0.25)" }}>{t.customMocks[1].label}</div>
-                </div>
-                <div style={{ transform:"translateY(20px)", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
-                  <WalletCardMock
-                    bg="#11102E" fg="#FFFFFF" labelClr="rgba(210,180,90,0.55)"
-                    name={t.customMocks[2].name} logoInitial="HR"
-                    stamps={5} total={10} reward={t.customMocks[2].reward}
-                    stampColor="#E8BF50"
-                    stripImageUrl="/strip-hammam.jpg"
-                    aux1="Sur RDV" aux2="10h–20h"
-                  />
-                  <div style={{ borderRadius:12, padding:"8px 16px", fontSize:12, fontWeight:600, color:"#C9A030", background:"rgba(17,16,46,0.07)", border:"0.5px solid rgba(232,191,80,0.30)" }}>{t.customMocks[2].label}</div>
-                </div>
-              </div>
-
-              {/* Customization options */}
-              <div data-stagger className="custom-grid-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
+          {/* ══════════════════════════════════════════
+              2. PROOF BAR
+          ══════════════════════════════════════════ */}
+          <div style={{ background:"#1D1D1F", borderTop:".5px solid rgba(255,255,255,.06)" }}>
+            <div style={{ ...MAX, padding:"22px 48px", display:"flex", alignItems:"center", justifyContent:"center", gap:36, flexWrap:"wrap" }} className="proof-bar">
+              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase", color:"rgba(255,255,255,.35)" }}>
+                {t.proofLabel}
+              </span>
+              <div style={{ display:"flex", alignItems:"center", gap:20, flexWrap:"wrap", justifyContent:"center" }}>
                 {[
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="13.5" cy="6.5" r="2.5"/><path d="M17 4.5a9 9 0 1 1-12.73 12.73"/><path d="M2 2l20 20"/></svg>, color:"#4472F5" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10"/><path d="M12 6v6l4 2"/><path d="M20 14l-5 5 5 5"/></svg>, color:"#6A5AF9" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>, color:"#8A5CF6" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 9v12"/></svg>, color:"#4472F5" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>, color:"#6A5AF9" },
-                  { icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, color:"#8A5CF6" },
-                ].map((f, i) => ({ ...f, ...t.customFeats[i] })).map(f => (
-                  <div key={f.title} style={{ background:"white", borderRadius:20, padding:"24px 22px", border:"0.5px solid rgba(0,0,0,0.07)", display:"flex", gap:16 }}>
-                    <div style={{ width:38, height:38, borderRadius:12, background:`${f.color}12`, color:f.color, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      {f.icon}
+                  { src:"/logo-8am.jpg", alt:"8AM Coffeehouse", name:"8AM Coffeehouse & More", fit:"cover" as const, bg:"rgba(255,255,255,.08)" },
+                  { src:"/logo-maison-matcha.png", alt:"Maison Matcha", name:"Maison Matcha", fit:"contain" as const, bg:"#FFFFFF" },
+                  { src:"/logo-comptoir-homme.jpg", alt:"Comptoir de l'Homme", name:"Comptoir de l'Homme", fit:"cover" as const, bg:"rgba(255,255,255,.08)" },
+                  { src:"/logo-yumi.jpg", alt:"Yumi", name:"Yumi", fit:"cover" as const, bg:"rgba(255,255,255,.08)" },
+                ].map(c => (
+                  <div key={c.name} style={{ display:"flex", alignItems:"center", gap:9 }}>
+                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, background:c.bg, border:".5px solid rgba(255,255,255,.12)" }}>
+                      <Image src={c.src} alt={c.alt} width={32} height={32} style={{ width:"100%", height:"100%", objectFit:c.fit }} />
                     </div>
-                    <div>
-                      <h3 style={{ fontSize:15, fontWeight:650, color:"#1D1D1F", marginBottom:6, letterSpacing:-0.2 }}>{f.title}</h3>
-                      <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{f.body}</p>
-                    </div>
+                    <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.75)", letterSpacing:-.2 }}>{c.name}</span>
                   </div>
                 ))}
               </div>
+              <div style={{ width:.5, height:24, background:"rgba(255,255,255,.12)" }} />
+              <span style={{ fontSize:13, fontWeight:700, color:"#F97316" }}>{t.proofStat}</span>
             </div>
-          </section>
+          </div>
 
-          {/* ── NOTIFICATIONS ── */}
-          <section id="notifications" style={{ padding:"96px 32px" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">{t.notifTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.notifH2a}<br />{t.notifH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.notifSub}</p>
-              </div>
-
-              <div className="notif-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:32, alignItems:"center" }}>
-
-                {/* Phone mockup */}
-                <div data-reveal="left" style={{ display:"flex", justifyContent:"center" }}>
-                  <div style={{ position:"relative" }}>
-                    <PhoneMock style={{ width:270 }}>
-                      {/* Lock screen */}
-                      <div style={{ background:"linear-gradient(160deg,#1A2744,#0D1829)", minHeight:460, padding:"20px 0 20px" }}>
-                        {/* Time */}
-                        <div style={{ textAlign:"center", marginBottom:24 }}>
-                          <div style={{ fontSize:48, fontWeight:300, color:"white", letterSpacing:-2 }}>12:47</div>
-                          <div style={{ fontSize:13, color:"rgba(255,255,255,0.6)" }}>{t.notifDate}</div>
-                        </div>
-
-                        {/* Wallet notification */}
-                        <div style={{ margin:"0 8px 10px", background:"rgba(255,255,255,0.14)", backdropFilter:"blur(20px)", borderRadius:14, padding:"10px 12px", border:"0.5px solid rgba(255,255,255,0.18)" }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
-                            <div style={{ width:28, height:28, borderRadius:7, background:"#1A1209", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E8C97A" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
-                            </div>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:11, fontWeight:600, color:"white" }}>Wallet</div>
-                            </div>
-                            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>{t.notifNow}</div>
-                          </div>
-                          <div style={{ fontSize:12, fontWeight:600, color:"white", marginBottom:2 }}>{t.notifWalletTitle}</div>
-                          <div style={{ fontSize:11, color:"rgba(255,255,255,0.65)" }}>{t.notifWalletBody}</div>
-                        </div>
-
-                        {/* FCM notification */}
-                        <div style={{ margin:"0 8px", background:"rgba(255,255,255,0.14)", backdropFilter:"blur(20px)", borderRadius:14, padding:"10px 12px", border:"0.5px solid rgba(255,255,255,0.18)" }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
-                            <div style={{ width:28, height:28, borderRadius:7, overflow:"hidden", flexShrink:0 }}>
-                              <div style={{ width:"100%", height:"100%", background:"#1A1209", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                                <span style={{ fontSize:10, fontWeight:700, color:"#E8C97A" }}>NC</span>
-                              </div>
-                            </div>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:11, fontWeight:600, color:"white" }}>Nomade Café</div>
-                            </div>
-                            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>{t.notifAgo}</div>
-                          </div>
-                          <div style={{ fontSize:12, fontWeight:600, color:"white", marginBottom:2 }}>{t.notifFcmTitle}</div>
-                          <div style={{ fontSize:11, color:"rgba(255,255,255,0.65)" }}>{t.notifFcmBody}</div>
-                        </div>
-
-                        {/* Géolocalisation notification */}
-                        <div style={{ margin:"10px 8px 0", background:"rgba(48,209,88,0.15)", backdropFilter:"blur(20px)", borderRadius:14, padding:"10px 12px", border:"0.5px solid rgba(48,209,88,0.25)" }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
-                            <div style={{ width:28, height:28, borderRadius:7, background:"rgba(48,209,88,0.20)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#30D158" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            </div>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:11, fontWeight:600, color:"white" }}>Nomade Café</div>
-                            </div>
-                            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>{t.notifNear}</div>
-                          </div>
-                          <div style={{ fontSize:12, fontWeight:600, color:"white", marginBottom:2 }}>{t.notifGeoTitle}</div>
-                          <div style={{ fontSize:11, color:"rgba(255,255,255,0.65)" }}>{t.notifGeoBody}</div>
-                        </div>
-                      </div>
-                    </PhoneMock>
+          {/* ══════════════════════════════════════════
+              3. LE PROBLÈME
+          ══════════════════════════════════════════ */}
+          <section style={{ padding:"96px 48px", background:"#0C0C10", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.09)", filter:"blur(100px)", top:-150, right:-100, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(99,102,241,.07)", filter:"blur(80px)", bottom:-80, left:-60, pointerEvents:"none" }} />
+            <div style={{ ...MAX, position:"relative", zIndex:1 }}>
+              <div style={{ display:"flex", gap:80, alignItems:"flex-start" }} className="prob-split">
+                {/* Left */}
+                <div style={{ flex:"0 0 40%" }} className="prob-left">
+                  <div data-reveal>
+                    <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.problemTag}</span>
+                    <h2 style={{ fontSize:"clamp(36px,4.5vw,62px)", fontWeight:800, letterSpacing:-2, color:"#FFFFFF", lineHeight:1.05, marginBottom:28 }}>
+                      {t.problemTitle1}<br />
+                      <span className="grad">{t.problemTitle2}</span>
+                    </h2>
+                    <p style={{ fontSize:15, color:"rgba(255,255,255,.4)", lineHeight:1.7, maxWidth:320 }}>
+                      {lang==="ro" ? "Clienții fideli sunt invizibili. Nu știți cine vine, cine pleacă, nici cum să îi aduceți înapoi." :
+                       lang==="en" ? "Your regulars are invisible. You don't know who comes back, who left, or how to bring them back." :
+                       "Vos habitués sont invisibles. Vous ne savez pas qui revient, qui est parti, ni comment les faire revenir."}
+                    </p>
                   </div>
                 </div>
-
-                {/* Notification types */}
-                <div data-reveal="right" style={{ display:"flex", flexDirection:"column", gap:20 }}>
-                  {[
-                    { color:"#4472F5", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg> },
-                    { color:"#6A5AF9", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> },
-                    { color:"#8A5CF6", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
-                    { color:"#30D158", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> },
-                  ].map((ico, i) => ({ ...ico, ...t.notifTypes[i] })).map(n => (
-                    <div key={n.title} style={{ background:"white", borderRadius:20, padding:"22px 22px", border:"0.5px solid rgba(0,0,0,0.07)", boxShadow:"0 4px 16px rgba(0,0,0,0.04)" }}>
-                      <div style={{ display:"flex", gap:14 }}>
-                        <div style={{ width:40, height:40, borderRadius:12, background:`${n.color}12`, color:n.color, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                          {n.icon}
+                {/* Right — 3 pains */}
+                <div style={{ flex:1 }} className="prob-right">
+                  <div data-stagger style={{ display:"flex", flexDirection:"column", gap:0 }}>
+                    {t.problemPains.map((p,i) => (
+                      <div key={i} data-reveal style={{
+                        padding:"28px 0",
+                        borderBottom: i < 2 ? ".5px solid rgba(255,255,255,.08)" : "none",
+                        display:"flex", gap:20, alignItems:"flex-start",
+                      }}>
+                        <span style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.2)", letterSpacing:".06em", paddingTop:4, flexShrink:0, minWidth:28 }}>0{i+1}</span>
+                        <div>
+                          <h3 style={{ fontSize:20, fontWeight:700, lineHeight:1.25, marginBottom:8,
+                            color: i===2 ? "#F97316" : i===0 ? "#FFFFFF" : "rgba(255,255,255,.65)" }}>
+                            {p.title}
+                          </h3>
+                          <p style={{ fontSize:14, color:"rgba(255,255,255,.35)", lineHeight:1.65 }}>{p.body}</p>
                         </div>
-                        <div style={{ flex:1 }}>
-                          <h3 style={{ fontSize:15, fontWeight:650, color:"#1D1D1F", marginBottom:6 }}>{n.title}</h3>
-                          <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93", marginBottom:10 }}>{n.desc}</p>
-                          <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                            {n.tags.map(tag => (
-                              <span key={tag} style={{ fontSize:11, fontWeight:600, color:n.color, background:`${n.color}10`, padding:"3px 10px", borderRadius:20 }}>{tag}</span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ── DASHBOARD ── */}
-          <section id="dashboard" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">{t.dashTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.dashH2a}<br />{t.dashH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:560, margin:"0 auto" }}>{t.dashSub}</p>
-              </div>
-
-              <div style={{ display:"grid", gridTemplateColumns:"1.15fr 1fr", gap:48, alignItems:"start" }} className="dash-split">
-
-                {/* Mockup enrichi */}
-                <div data-reveal="left" style={{ background:"white", borderRadius:24, border:"0.5px solid rgba(0,0,0,0.09)", boxShadow:"0 8px 48px rgba(0,0,0,0.09)", overflow:"hidden" }}>
-
-                  {/* Header */}
-                  <div style={{ padding:"16px 24px", borderBottom:"0.5px solid rgba(0,0,0,0.07)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                      <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z" opacity=".5"/></svg>
-                      </div>
-                      <span style={{ fontSize:13, fontWeight:650, color:"#1D1D1F" }}>{t.dashMerchant}</span>
-                    </div>
-                    <span style={{ fontSize:11, color:"#8E8E93" }}>{t.dashDate}</span>
-                  </div>
-
-                  {/* 4 stats,dont "À risque" en orange */}
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-                    {t.dashStats.map((s, i) => (
-                      <div key={s.label} style={{ padding:"14px 16px", borderRight: i < 3 ? "0.5px solid rgba(0,0,0,0.07)" : "none", background: i === 3 ? "rgba(255,149,0,0.03)" : "transparent" }}>
-                        <div style={{ fontSize:10, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:4 }}>{s.label}</div>
-                        <div style={{ fontSize:22, fontWeight:700, color: i === 3 ? "#FF9500" : "#1D1D1F", letterSpacing:-0.5, lineHeight:1 }}>{s.value}</div>
-                        <div style={{ fontSize:11, color:s.color, marginTop:3 }}>{s.sub}</div>
                       </div>
                     ))}
                   </div>
+                  <div data-reveal style={{ marginTop:32, display:"inline-flex", alignItems:"center", gap:10, background:"rgba(249,115,22,.10)", border:"1px solid rgba(249,115,22,.22)", borderRadius:12, padding:"12px 20px" }}>
+                    <div style={{ width:7, height:7, borderRadius:"50%", background:"#F97316", flexShrink:0 }} />
+                    <p style={{ fontSize:15, fontWeight:700, color:"#F97316" }}>{t.problemSolution}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
-                  {/* Activité 7 jours */}
-                  <div style={{ padding:"16px 24px", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-                    <div style={{ fontSize:10, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:10 }}>{t.dashActivity}</div>
-                    <div style={{ display:"flex", gap:4, alignItems:"flex-end", height:44 }}>
-                      {t.dashDays.map((b, i) => (
-                        <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
-                          <div style={{ width:"100%", height: Math.round((b.v/67)*40), background: i === 3 ? "linear-gradient(180deg,#4472F5,#6A5AF9)" : "rgba(68,114,245,0.15)", borderRadius:"3px 3px 0 0", minHeight:4 }} />
-                          <span style={{ fontSize:9, color:"#C7C7CC" }}>{b.d}</span>
+          {/* ══════════════════════════════════════════
+              4. COMMENT ÇA MARCHE
+          ══════════════════════════════════════════ */}
+          <section id="comment" style={{ padding:"96px 48px", background:"#FAFBFF" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ marginBottom:64 }}>
+                <span className="stag">{t.howTag}</span>
+                <h2 style={{ fontSize:"clamp(34px,4vw,56px)", fontWeight:700, letterSpacing:-1.8, color:"#1D1D1F", lineHeight:1.08 }}>
+                  {t.howTitle}<br /><span className="grad">{t.howTitle2}</span>
+                </h2>
+                <p style={{ fontSize:16, color:"#6E6E73", marginTop:12, maxWidth:420 }}>{t.howSub}</p>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, marginBottom:56 }} className="steps-row">
+                {t.howSteps.map((s,i) => (
+                  <div key={i} data-reveal style={{ background:"#fff", borderRadius:24, padding:"32px 28px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden" }}>
+                    <div style={{ fontSize:52, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.10)`,`rgba(91,108,246,.10)`,`rgba(249,115,22,.12)`][i], lineHeight:1, marginBottom:20, fontVariantNumeric:"tabular-nums" }}>{s.n}</div>
+                    <h3 style={{ fontSize:16, fontWeight:700, color:"#1D1D1F", marginBottom:10, lineHeight:1.35 }}>{s.title}</h3>
+                    <p style={{ fontSize:13.5, color:"#6E6E73", lineHeight:1.65 }}>{s.body}</p>
+                    <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:`linear-gradient(180deg,${["#007AFF","#5B6CF6","#F97316"][i]},transparent)` }} />
+                  </div>
+                ))}
+              </div>
+              {/* Video demo */}
+              <div data-reveal="scale">
+                <video autoPlay muted loop playsInline preload="metadata"
+                  poster="/Wallio_Landing_v2_poster.jpg"
+                  style={{ width:"100%", borderRadius:20, display:"block", boxShadow:"0 24px 64px rgba(0,0,0,.12)" }}>
+                  <source src="/Wallio_Landing_v2.webm" type="video/webm" />
+                  <source src="/Wallio_Landing_v2.mp4" type="video/mp4" />
+                </video>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              5. MODES DE RÉCOMPENSES
+          ══════════════════════════════════════════ */}
+          <section id="recompenses" style={{ padding:"96px 48px", background:"#FFFFFF" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:60 }}>
+                <span className="stag">{t.rewardTag}</span>
+                <h2 style={{ fontSize:"clamp(32px,4vw,52px)", fontWeight:700, letterSpacing:-1.6, color:"#1D1D1F", marginBottom:12 }}>
+                  {t.rewardTitle}<br /><span className="grad">{t.rewardTitle2}</span>
+                </h2>
+                <p style={{ fontSize:16, color:"#6E6E73", maxWidth:440, margin:"0 auto" }}>{t.rewardSub}</p>
+              </div>
+              <div style={{ display:"flex", gap:16, alignItems:"stretch" }} className="reward-cols">
+                {[
+                  { data: t.rewardCyclic, accent:"#007AFF", bg:"rgba(0,122,255,.08)", border:"rgba(0,122,255,.20)",
+                    visual: <div key="cyc" style={{ background:"#F0F5FF", borderRadius:14, padding:"16px 18px" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                        <span style={{ fontSize:12, color:"#007AFF", fontWeight:600 }}>Nomade Café · Cycle en cours</span>
+                        <span style={{ fontSize:13, fontWeight:700, color:"#1D1D1F" }}>6/10</span>
+                      </div>
+                      <div style={{ height:6, background:"rgba(0,0,0,.08)", borderRadius:99, overflow:"hidden", marginBottom:12 }}>
+                        <div style={{ height:"100%", width:"60%", borderRadius:99, background:"linear-gradient(90deg,#007AFF,#8B5CF6)", animation:"fillProg .9s cubic-bezier(.16,1,.3,1) .2s both" }} />
+                      </div>
+                      <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:10 }}>
+                        {Array.from({length:10}).map((_,i)=>(
+                          <div key={i} style={{ width:24, height:24, borderRadius:"50%", background: i<6 ? "linear-gradient(135deg,#007AFF,#8B5CF6)" : "rgba(0,0,0,.08)", animation:i<6?`stampPop .4s cubic-bezier(.34,1.5,.64,1) ${.3+i*.05}s both`:"none" }} />
+                        ))}
+                      </div>
+                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"#8E8E93" }}>
+                        <span>Récompense : Café offert</span><span>+4 restants</span>
+                      </div>
+                    </div>
+                  },
+                  { data: t.rewardProg, accent:"#5B6CF6", bg:"rgba(91,108,246,.08)", border:"rgba(91,108,246,.20)",
+                    visual: <div key="prog" style={{ background:"#F3F0FF", borderRadius:14, padding:"16px 18px" }}>
+                      <div style={{ fontSize:12, color:"#5B6CF6", fontWeight:600, marginBottom:14 }}>Comptoir de l'Homme · Paliers</div>
+                      {[{n:3,r:"Réduction -10%",done:true,pct:100},{n:7,r:"Soin offert",done:true,pct:100},{n:12,r:"Statut VIP",done:false,pct:42}].map((p,i)=>(
+                        <div key={i} style={{ marginBottom:i<2?12:0 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                            <span style={{ fontSize:12, fontWeight:600, color: p.done?"#5B6CF6":"#1D1D1F" }}>{p.r}</span>
+                            <span style={{ fontSize:11, color:"#8E8E93" }}>{p.n} tampons</span>
+                          </div>
+                          <div style={{ height:4, background:"rgba(0,0,0,.08)", borderRadius:99, overflow:"hidden" }}>
+                            <div style={{ height:"100%", width:`${p.pct}%`, background:p.done?"linear-gradient(90deg,#5B6CF6,#8B5CF6)":"rgba(91,108,246,.35)", borderRadius:99, animation:`fillProg .8s cubic-bezier(.16,1,.3,1) ${.2+i*.15}s both` }}/>
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  {/* Segments */}
-                  <div style={{ padding:"14px 24px", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-                    <div style={{ fontSize:10, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:10 }}>{t.dashSegTitle}</div>
-                    {t.dashSegs.map(seg => (
-                      <div key={seg.label} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-                        <span style={{ fontSize:11, color:"#6E6E73", width:88, flexShrink:0 }}>{seg.label}</span>
-                        <div style={{ flex:1, height:5, background:"#F2F2F7", borderRadius:3 }}>
-                          <div style={{ width:`${seg.pct}%`, height:"100%", background:seg.color, borderRadius:3 }} />
-                        </div>
-                        <span style={{ fontSize:11, fontWeight:600, color:seg.color, width:24, textAlign:"right", flexShrink:0 }}>{seg.count}</span>
+                  },
+                  { data: t.rewardFlex, accent:"#8B5CF6", bg:"rgba(139,92,246,.08)", border:"rgba(139,92,246,.20)",
+                    visual: <div key="flex" style={{ background:"#F5F0FF", borderRadius:14, padding:"16px 18px" }}>
+                      <div style={{ fontSize:12, color:"#8B5CF6", fontWeight:600, marginBottom:10 }}>Yumi · À mi-parcours (5/10)</div>
+                      <div style={{ background:"rgba(139,92,246,.08)", borderRadius:10, padding:"12px 14px", marginBottom:10, border:"1.5px solid rgba(139,92,246,.25)", animation:"cardSlide .5s .2s both" }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:"#8B5CF6", marginBottom:4 }}>Récompense intermédiaire</div>
+                        <div style={{ fontSize:13, color:"#1D1D1F" }}>Boisson chaude offerte → reset à 5</div>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Insight alert actionnable */}
-                  <div style={{ padding:"12px 24px", background:"rgba(255,149,0,0.05)", display:"flex", alignItems:"flex-start", gap:10 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <div>
-                      <div style={{ fontSize:12, fontWeight:600, color:"#FF9500" }}>{t.dashInsightTitle}</div>
-                      <div style={{ fontSize:11, color:"#8E8E93", marginTop:1 }}>{t.dashInsightBody}</div>
+                      <div style={{ textAlign:"center", fontSize:11, color:"#8E8E93", marginBottom:8 }}>ou continuer pour :</div>
+                      <div style={{ background:"linear-gradient(135deg,rgba(139,92,246,.10),rgba(0,122,255,.10))", borderRadius:10, padding:"12px 14px", border:"1.5px solid rgba(139,92,246,.20)", animation:"cardSlide .5s .45s both" }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:"#5B6CF6", marginBottom:4 }}>Grande récompense</div>
+                        <div style={{ fontSize:13, color:"#1D1D1F" }}>Menu complet offert → reset à 0</div>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Top clients */}
-                  <div style={{ padding:"14px 24px" }}>
-                    <div style={{ fontSize:10, fontWeight:600, color:"#8E8E93", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:10 }}>{t.dashTopTitle}</div>
-                    {t.dashTopClients.map((c, i) => (
-                      <div key={c.name} className="dash-row" style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0" }}>
-                        <div style={{ width:30, height:30, borderRadius:"50%", background:"rgba(68,114,245,0.08)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                          <span style={{ fontSize:10, fontWeight:700, color:"#4472F5" }}>{c.initials}</span>
-                        </div>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                            <span style={{ fontSize:12, fontWeight:600, color:"#1D1D1F" }}>{c.name}</span>
-                            <span style={{ fontSize:10, fontWeight:600, color:c.bc, background:`${c.bc}15`, padding:"1px 7px", borderRadius:20 }}>{c.badge}</span>
-                          </div>
-                          <div style={{ fontSize:10, color:"#8E8E93" }}>{c.visits} {t.dashVisits}</div>
-                        </div>
-                        <div style={{ textAlign:"right", flexShrink:0 }}>
-                          <div style={{ fontSize:11, fontWeight:600, color:"#1D1D1F", marginBottom:2 }}>{c.stamps}/{c.total}</div>
-                          <div style={{ width:60, height:3, background:"#F2F2F7", borderRadius:2 }}>
-                            <div style={{ width:`${(c.stamps/c.total)*100}%`, height:"100%", background:"linear-gradient(90deg,#4472F5,#8A5CF6)", borderRadius:2 }} />
-                          </div>
-                        </div>
+                  },
+                ].map(({ data, accent, bg, border, visual }, i) => {
+                  const active = activeReward === i;
+                  return (
+                    <div key={i} data-reveal
+                      onMouseEnter={() => setActiveReward(i)}
+                      onClick={() => setActiveReward(i)}
+                      style={{
+                        flex: active ? "2.2" : "1",
+                        background:"#fff", borderRadius:24,
+                        padding: active ? "28px 28px" : "28px 20px",
+                        border: active ? `1.5px solid ${border}` : ".5px solid rgba(0,0,0,.07)",
+                        boxShadow: active ? `0 12px 40px rgba(0,0,0,.08), 0 0 0 4px ${bg}` : "0 2px 12px rgba(0,0,0,.04)",
+                        transition:"flex .4s cubic-bezier(.16,1,.3,1), box-shadow .3s, border-color .3s, padding .3s",
+                        cursor:"pointer", overflow:"hidden",
+                      }}>
+                      <span className="reward-pill" style={{ color:accent, background:bg }}>{data.tag}</span>
+                      <p style={{ fontSize:12, color:"#8E8E93", marginBottom:12 }}>{data.sub}</p>
+                      <div style={{ overflow:"hidden", maxHeight: active ? "320px" : 0, opacity: active ? 1 : 0, transition:"max-height .4s cubic-bezier(.16,1,.3,1), opacity .3s" }}>
+                        {active && visual}
                       </div>
-                    ))}
-                  </div>
-
-                </div>
-
-                {/* Valeur ajoutée,droite */}
-                <div data-reveal="right" style={{ display:"flex", flexDirection:"column", gap:0 }}>
-                  <h3 style={{ fontSize:"clamp(22px,2.5vw,28px)", fontWeight:700, letterSpacing:-0.5, color:"#1D1D1F", marginBottom:16, lineHeight:1.2 }}>
-                    {t.dashRightH3}
-                  </h3>
-                  <p style={{ fontSize:15, lineHeight:1.7, color:"#6E6E73", marginBottom:36 }}>
-                    {t.dashRightP}
-                  </p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:24 }}>
-                    {t.dashRightPoints.map((v, i) => (
-                      <div key={i} style={{ display:"flex", gap:16, alignItems:"flex-start" }}>
-                        <div style={{ width:3, borderRadius:2, background:v.color, flexShrink:0, alignSelf:"stretch", minHeight:40 }} />
-                        <div>
-                          <h4 style={{ fontSize:14, fontWeight:700, color:"#1D1D1F", marginBottom:4, letterSpacing:-0.2 }}>{v.title}</h4>
-                          <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{v.body}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </section>
-
-          {/* ── PRÉSENCE / PWA ── */}
-          <section id="presence" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div style={{ display:"flex", gap:64, alignItems:"center", flexWrap:"wrap" }} className="pwa-grid">
-
-                {/* Phone mockup,listing Wallio */}
-                <div data-reveal="left" style={{ flex:"0 0 auto", display:"flex", justifyContent:"center" }}>
-                  <PhoneMock style={{ width:300 }}>
-                    <div style={{ background:"#F2F2F7", minHeight:440 }}>
-                      {/* Header */}
-                      <div style={{ padding:"16px 18px 12px", background:"white", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-                        <div style={{ fontSize:10, fontWeight:700, letterSpacing:"0.10em", textTransform:"uppercase", color:"#8E8E93", marginBottom:8 }}>{t.presenceDiscover}</div>
-                        <div style={{ background:"#F2F2F7", borderRadius:10, padding:"8px 12px", display:"flex", alignItems:"center", gap:8 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                          <span style={{ fontSize:11, color:"#8E8E93" }}>{t.presenceSearch}</span>
-                        </div>
-                        <div style={{ display:"flex", gap:6, marginTop:10, overflowX:"auto" }}>
-                          {t.presenceCats.map((c, i) => (
-                            <span key={c} style={{ fontSize:10, fontWeight:600, padding:"4px 10px", borderRadius:20, flexShrink:0, background: i===0 ? "#1D1D1F" : "#F2F2F7", color: i===0 ? "white" : "#6E6E73" }}>{c}</span>
-                          ))}
-                        </div>
-                      </div>
-                      {/* Merchant list */}
-                      <div style={{ padding:"12px 14px", display:"flex", flexDirection:"column", gap:8 }}>
-                        {t.presenceMerchants.map(m => (
-                          <div key={m.name} style={{ background:"white", borderRadius:14, padding:"12px 14px", display:"flex", alignItems:"center", gap:12, boxShadow:"0 1px 8px rgba(0,0,0,0.07)" }}>
-                            <div style={{ width:40, height:40, borderRadius:12, background:`${m.color}22`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                              <span style={{ fontSize:15, fontWeight:700, color:m.color }}>{m.initial}</span>
-                            </div>
-                            <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ fontSize:13, fontWeight:600, color:"#1D1D1F", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.name}</div>
-                              <div style={{ fontSize:11, color:"#8E8E93", marginTop:2 }}>{m.cat}</div>
-                            </div>
-                            <div style={{ textAlign:"right", flexShrink:0 }}>
-                              <div style={{ fontSize:11, fontWeight:600, color:"#FF9500" }}>★ {m.rating}</div>
-                              <div style={{ fontSize:10, color:"#8E8E93" }}>{m.clients}</div>
-                            </div>
+                      <p style={{ fontSize:13.5, color:"#6E6E73", lineHeight:1.65, marginBottom:14, marginTop: active ? 16 : 0 }}>{data.desc}</p>
+                      <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
+                        {data.bullets.map((b,bi) => (
+                          <div key={bi} className="feat-item">
+                            <div className="feat-dot" style={{ background: accent }} />
+                            <span style={{ fontSize:13, color:"#3C3C43", lineHeight:1.5 }}>{b}</span>
                           </div>
                         ))}
-                        <div style={{ background:"linear-gradient(135deg,#4472F5,#8A5CF6)", borderRadius:14, padding:"12px 14px", display:"flex", alignItems:"center", gap:12 }}>
-                          <div style={{ width:40, height:40, borderRadius:12, background:"rgba(255,255,255,0.20)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                          </div>
-                          <div style={{ flex:1 }}>
-                            <div style={{ fontSize:13, fontWeight:600, color:"white" }}>{t.presenceJoin}</div>
-                            <div style={{ fontSize:11, color:"rgba(255,255,255,0.7)" }}>{t.presenceJoinSub}</div>
-                          </div>
-                        </div>
                       </div>
                     </div>
-                  </PhoneMock>
-                </div>
-
-                {/* Text + benefits */}
-                <div data-reveal="right" style={{ flex:"1 1 400px", minWidth:0 }}>
-                  <span className="feature-tag">{t.presenceTag}</span>
-                  <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:16 }}>{t.presenceH2a}<br />{t.presenceH2b}</h2>
-                  <p style={{ fontSize:17, lineHeight:1.7, color:"#6E6E73", marginBottom:40, maxWidth:480 }}>
-                    {t.presenceSub}
-                  </p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-                    {[
-                      { color:"#4472F5", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> },
-                      { color:"#6A5AF9", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18" strokeWidth="2.5" strokeLinecap="round"/></svg> },
-                      { color:"#8A5CF6", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> },
-                      { color:"#30D158", icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> },
-                    ].map((ico, i) => ({ ...ico, ...t.presenceBenefits[i] })).map(b => (
-                      <div key={b.title} style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
-                        <div style={{ width:38, height:38, borderRadius:12, background:`${b.color}12`, color:b.color, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{b.icon}</div>
-                        <div>
-                          <h3 style={{ fontSize:15, fontWeight:650, color:"#1D1D1F", marginBottom:4, letterSpacing:-0.2 }}>{b.title}</h3>
-                          <p style={{ fontSize:13, lineHeight:1.6, color:"#8E8E93" }}>{b.body}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
+                  );
+                })}
               </div>
             </div>
           </section>
 
-          {/* ── SECTEURS ── */}
-          <section id="secteurs" style={{ padding:"96px 32px", overflow:"hidden", position:"relative" }}>
-            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 70% 80% at 50% 50%, rgba(68,114,245,0.05) 0%, transparent 70%)", pointerEvents:"none" }} />
-            <div style={{ maxWidth:1040, margin:"0 auto", position:"relative" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
-                <span className="feature-tag">{t.secteursTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>{t.secteursH2a}<br />{t.secteursH2b}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:480, margin:"0 auto" }}>{t.secteursSub}</p>
+          {/* ══════════════════════════════════════════
+              6. DASHBOARD GÉRANT
+          ══════════════════════════════════════════ */}
+          <section id="dashboard" style={{ padding:"96px 48px", background:"#0C0C10" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ marginBottom:52 }}>
+                <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.dashTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)",fontWeight:700,letterSpacing:-1.5,color:"#FFFFFF",lineHeight:1.1,marginBottom:12 }}>
+                  {t.dashTitle}<br /><span className="grad">{t.dashTitle2}</span>
+                </h2>
+                <p style={{ fontSize:15.5,color:"rgba(255,255,255,.5)",lineHeight:1.65,maxWidth:520 }}>{t.dashSub}</p>
               </div>
-              <div data-stagger className="sectors-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:12 }}>
+              <div data-reveal className="dash-spotlight" style={{ background:"rgba(255,255,255,.04)", border:".5px solid rgba(255,255,255,.08)" }}>
+                {/* Feature list */}
+                <div className="dash-feat-list" style={{ borderRight:".5px solid rgba(255,255,255,.08)" }}>
+                  {t.dashFeats.map((f,i) => (
+                    <div key={i}
+                      className={`feat-row${activeDash===i?" feat-active":""}`}
+                      onMouseEnter={() => setActiveDash(i)}
+                      onClick={() => setActiveDash(i)}
+                      style={{ borderColor: activeDash===i ? "rgba(0,122,255,.4)" : "transparent" }}
+                    >
+                      <div style={{ width:7,height:7,borderRadius:"50%",background:activeDash===i?"#60A5FA":"rgba(255,255,255,.25)",flexShrink:0,marginTop:5,transition:"background .15s" }} />
+                      <div>
+                        <h4 style={{ fontSize:14,fontWeight:700,color:activeDash===i?"#FFFFFF":"rgba(255,255,255,.55)",marginBottom:activeDash===i?5:0,lineHeight:1.3,transition:"color .15s" }}>{f.title}</h4>
+                        <p style={{ fontSize:12.5,color:"rgba(255,255,255,.4)",lineHeight:1.55,maxHeight:activeDash===i?"80px":0,overflow:"hidden",opacity:activeDash===i?1:0,transition:"max-height .28s ease,opacity .2s ease",marginTop:activeDash===i?2:0 }}>{f.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Phone avec zoom par feature */}
+                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"rgba(0,0,0,.2)", borderRadius:"0 20px 20px 0" }}>
+                  {(() => {
+                    const configs = [
+                      { src:"/iphone_accueil.webp",    scale:1.65, ty:-16 },
+                      { src:"/iphone_clients.webp",    scale:1,    ty:0   },
+                      { src:"/iphone_notifs.webp",     scale:1,    ty:0   },
+                      { src:"/iphone_accueil2.webp",   scale:1,    ty:0   },
+                      { src:"/iphone_scanner.webp",    scale:1,    ty:0   },
+                    ];
+                    const cfg = configs[Math.min(activeDash, configs.length - 1)];
+                    return (
+                      <div style={{ position:"relative", overflow:"hidden", borderRadius:32, boxShadow:"0 32px 80px rgba(0,0,0,.55)", height:640, width:"auto" }}>
+                        <Image
+                          key={cfg.src + activeDash}
+                          src={cfg.src}
+                          alt={t.dashFeats[activeDash]?.title ?? ""}
+                          width={280} height={560}
+                          className="screen-enter"
+                          style={{ display:"block", height:640, width:"auto",
+                            transform:`scale(${cfg.scale}) translateY(${cfg.ty}%)`,
+                            transition:"transform .7s cubic-bezier(.16,1,.3,1)",
+                            transformOrigin:"center center" }}
+                        />
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              6b. AUTOMATISATIONS
+          ══════════════════════════════════════════ */}
+          <section style={{ padding:"96px 48px", background:"#0C0C10", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(100px)", top:-100, left:-100, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(249,115,22,.07)", filter:"blur(80px)", bottom:-80, right:-80, pointerEvents:"none" }} />
+            <div style={{ ...MAX, position:"relative", zIndex:1 }}>
+              <div data-reveal="scale" style={{ marginBottom:60 }}>
+                <span className="stag" style={{ background:"rgba(249,115,22,.12)", color:"#F97316" }}>
+                  {lang==="ro" ? "Automatizări" : lang==="en" ? "Automations" : "Automatisations"}
+                </span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:800, letterSpacing:-1.5, color:"#FFFFFF", lineHeight:1.1, marginBottom:14 }}>
+                  {lang==="ro" ? <>Wallio lucrează pentru dvs.<br /><span className="grad">chiar și când dormiti.</span></> :
+                   lang==="en" ? <>Wallio works for you,<br /><span className="grad">even while you sleep.</span></> :
+                   <>Wallio travaille pour vous,<br /><span className="grad">même quand vous dormez.</span></>}
+                </h2>
+                <p style={{ fontSize:15, color:"rgba(255,255,255,.45)", maxWidth:480 }}>
+                  {lang==="ro" ? "Configurați o dată. Wallio trimite mesajele potrivite la momentul potrivit, fără nicio acțiune din partea dvs." :
+                   lang==="en" ? "Set it once. Wallio sends the right messages at the right time, with no action needed from you." :
+                   "Configurez une fois. Wallio envoie les bons messages au bon moment, sans aucune action de votre part."}
+                </p>
+              </div>
+
+              <div style={{ display:"flex", gap:20 }} className="steps-row">
                 {[
-                  <svg key="0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
-                  <svg key="1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3v7"/></svg>,
-                  <svg key="2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M20 17v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><line x1="12" y1="12" x2="12" y2="21"/></svg>,
-                  <svg key="3" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>,
-                  <svg key="4" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
-                  <svg key="5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M6 5v14M18 5v14"/><path d="M2 9h8M2 15h8M14 9h8M14 15h8"/><path d="M6 12h12"/></svg>,
-                  <svg key="6" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 11a8 8 0 0 1 16 0v8H4v-8z"/><path d="M8 19v-4M12 19v-5M16 19v-4"/></svg>,
-                  <svg key="7" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22V12"/><path d="M12 12c0 0-5-2-5-7 1.5-.5 3-.5 5 2 2-2.5 3.5-2.5 5-2 0 5-5 7-5 7z"/><path d="M5 17c2 2 4 3 7 3s5-1 7-3"/></svg>,
-                ].map((icon, i) => ({ icon, label: t.secteurs[i] })).map(s => (
-                  <div key={s.label} className="glass card-hover" style={{ borderRadius:18, padding:"20px 18px", display:"flex", alignItems:"center", gap:14, boxShadow:"0 4px 16px rgba(0,0,0,0.05)" }}>
-                    <div style={{ width:36, height:36, borderRadius:10, background:"rgba(68,114,245,0.10)", color:"#4472F5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{s.icon}</div>
-                    <span style={{ fontSize:14, fontWeight:500, color:"#1D1D1F" }}>{s.label}</span>
+                  {
+                    color:"#007AFF", bg:"rgba(0,122,255,.10)", border:"rgba(0,122,255,.20)",
+                    tag: lang==="ro" ? "Zi de naștere" : lang==="en" ? "Birthday" : "Anniversaire",
+                    title: lang==="ro" ? "Un mesaj în ziua lor" : lang==="en" ? "A message on their day" : "Un message le jour J",
+                    body: lang==="ro" ? "În ziua de naștere a clientului dvs., Wallio trimite automat un mesaj personalizat — cu sau fără un tampon dublu cadou. Zero intervenție din partea dvs." :
+                          lang==="en" ? "On your customer's birthday, Wallio automatically sends a personalised message — with or without a double stamp gift. Zero effort from you." :
+                          "Le jour de l'anniversaire de votre client, Wallio envoie automatiquement un message personnalisé — avec ou sans tampon double offert. Zéro intervention de votre part.",
+                    visual: (
+                      <div style={{ background:"rgba(255,255,255,.06)", borderRadius:16, padding:"16px 18px", marginBottom:20, border:".5px solid rgba(0,122,255,.20)" }}>
+                        <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", fontWeight:600, marginBottom:10 }}>Wallio · Anniversaire · Automatique</div>
+                        <div style={{ background:"rgba(255,255,255,.08)", borderRadius:10, padding:"12px 14px" }}>
+                          <div style={{ fontSize:13, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>
+                            {lang==="ro" ? "La mulți ani ! Îți oferim un tampon dublu azi. Ne vedem curând !" :
+                             lang==="en" ? "Happy Birthday! We're giving you a double stamp today. See you soon!" :
+                             "Bon anniversaire ! On vous offre un double tampon aujourd'hui. À bientôt !"}
+                          </div>
+                        </div>
+                        <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:8 }}>
+                          <div style={{ width:7, height:7, borderRadius:"50%", background:"#34C759" }} />
+                          <span style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>
+                            {lang==="ro" ? "Trimis automat · 0 acțiuni manuale" : lang==="en" ? "Sent automatically · 0 manual actions" : "Envoyé automatiquement · 0 action manuelle"}
+                          </span>
+                        </div>
+                      </div>
+                    ),
+                  },
+                  {
+                    color:"#F97316", bg:"rgba(249,115,22,.10)", border:"rgba(249,115,22,.20)",
+                    tag: lang==="ro" ? "Reactivare" : lang==="en" ? "Re-engagement" : "Relance",
+                    title: lang==="ro" ? "Clienții inactivi revin" : lang==="en" ? "Inactive customers come back" : "Vos clients inactifs reviennent",
+                    body: lang==="ro" ? "Un client nu a mai venit de X zile ? Wallio detectează asta și trimite automat un mesaj personalizat de reactivare. Dvs. definiți intervalul, Wallio se ocupă de rest." :
+                          lang==="en" ? "A customer hasn't come back in X days? Wallio detects this and automatically sends a personalised re-engagement message. You set the interval, Wallio handles the rest." :
+                          "Un client n'est pas revenu depuis X jours ? Wallio le détecte et envoie automatiquement un message de relance personnalisé. Vous définissez l'intervalle, Wallio s'occupe du reste.",
+                    visual: (
+                      <div style={{ background:"rgba(255,255,255,.06)", borderRadius:16, padding:"16px 18px", marginBottom:20, border:".5px solid rgba(249,115,22,.20)" }}>
+                        <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", fontWeight:600, marginBottom:10 }}>
+                          {lang==="ro" ? "Wallio · Absent +30 zile · Automat" : lang==="en" ? "Wallio · Absent 30+ days · Auto" : "Wallio · Absent +30 jours · Automatique"}
+                        </div>
+                        <div style={{ background:"rgba(255,255,255,.08)", borderRadius:10, padding:"12px 14px" }}>
+                          <div style={{ fontSize:13, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>
+                            {lang==="ro" ? "Vă lipsim ? Vă mai lipsesc 2 ștampile pentru recompensa dvs. Vă așteptăm !" :
+                             lang==="en" ? "Miss us? You're only 2 stamps away from your reward. We're waiting for you!" :
+                             "Vous nous manquez ! Il vous reste 2 tampons avant votre récompense. On vous attend !"}
+                          </div>
+                        </div>
+                        <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:8 }}>
+                          <div style={{ width:7, height:7, borderRadius:"50%", background:"#F97316" }} />
+                          <span style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>
+                            {lang==="ro" ? "Detectat automat · 0 acțiuni manuale" : lang==="en" ? "Auto-detected · 0 manual actions" : "Détecté automatiquement · 0 action manuelle"}
+                          </span>
+                        </div>
+                      </div>
+                    ),
+                  },
+                ].map((a, i) => (
+                  <div key={i} data-reveal style={{ flex:1, border:`.5px solid ${a.border}`, borderRadius:24, padding:"28px 24px", background:"rgba(255,255,255,.03)" }}>
+                    <span style={{ display:"inline-block", padding:"4px 11px", borderRadius:20, fontSize:12, fontWeight:600, color:a.color, background:a.bg, marginBottom:12 }}>{a.tag}</span>
+                    <h3 style={{ fontSize:20, fontWeight:700, color:"#FFFFFF", marginBottom:10, lineHeight:1.25 }}>{a.title}</h3>
+                    {a.visual}
+                    <p style={{ fontSize:13.5, color:"rgba(255,255,255,.45)", lineHeight:1.65 }}>{a.body}</p>
                   </div>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* ── PARRAINAGE ── */}
-          <section style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-            <div style={{ maxWidth:1040, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">{t.parrainageTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:14 }}>
-                  {t.parrainageH2a}<br /><span className="grad-text">{t.parrainageH2b}</span>
+          {/* ══════════════════════════════════════════
+              7. EXPÉRIENCE CLIENT
+          ══════════════════════════════════════════ */}
+          <section id="client" style={{ padding:"96px 48px", background:"#FFFFFF" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ marginBottom:52 }}>
+                <span className="stag">{t.clientTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", lineHeight:1.1, marginBottom:12 }}>
+                  {t.clientTitle}<br /><span className="grad">{t.clientTitle2}</span>
                 </h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.parrainageSub}</p>
+                <p style={{ fontSize:15.5, color:"#6E6E73", lineHeight:1.65, maxWidth:520 }}>{t.clientSub}</p>
               </div>
 
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:48, alignItems:"center" }} className="dash-split">
-
-                {/* Étapes */}
-                <div data-reveal="left" style={{ display:"flex", flexDirection:"column", gap:0 }}>
-                  {t.parrainageSteps.map((s, i, arr) => (
-                    <div key={i} style={{ display:"flex", gap:20, paddingBottom: i < arr.length-1 ? 32 : 0 }}>
-                      <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
-                        <div style={{ width:36, height:36, borderRadius:"50%", background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:14, fontWeight:700, color:"white" }}>{i+1}</div>
-                        {i < arr.length-1 && <div style={{ width:2, flex:1, background:"linear-gradient(180deg,rgba(68,114,245,0.3),rgba(138,92,246,0.1))", margin:"8px 0", borderRadius:2 }} />}
-                      </div>
-                      <div style={{ paddingTop:6 }}>
-                        <h3 style={{ fontSize:16, fontWeight:700, color:"#1D1D1F", marginBottom:6, letterSpacing:-0.2 }}>{s.title}</h3>
-                        <p style={{ fontSize:14, lineHeight:1.65, color:"#8E8E93" }}>{s.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Stats + mockup */}
-                <div data-reveal="right" style={{ display:"flex", flexDirection:"column", gap:16 }}>
-                  {/* Stats */}
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
-                    {t.parrainageStats.map(s => (
-                      <div key={s.label} style={{ background:"linear-gradient(135deg,rgba(68,114,245,0.06),rgba(138,92,246,0.04))", border:"0.5px solid rgba(68,114,245,0.15)", borderRadius:20, padding:"20px 16px", textAlign:"center" }}>
-                        <div style={{ fontSize:32, fontWeight:700, letterSpacing:-1, color:"#4472F5", lineHeight:1, marginBottom:6 }}>{s.value}</div>
-                        <div style={{ fontSize:12, fontWeight:600, color:"#1D1D1F", marginBottom:4, lineHeight:1.3 }}>{s.label}</div>
-                        <div style={{ fontSize:11, color:"#AEAEB2", lineHeight:1.3 }}>{s.sub}</div>
-                      </div>
+              <div style={{ display:"flex", gap:0, alignItems:"stretch", background:"#F5F5F7", borderRadius:28, overflow:"hidden", border:".5px solid rgba(0,0,0,.07)" }} className="client-spotlight">
+                {/* Left — grand téléphone interactif */}
+                <div style={{ flex:"0 0 44%", background:"#F0F0F5", display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 32px", position:"relative", overflow:"hidden", minHeight:560 }} className="client-phone-panel">
+                  {/* Blob de fond */}
+                  <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(60px)", top:-50, left:-50, pointerEvents:"none" }} />
+                  <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:`rgba(${activeClient===2?"249,115,22":"99,102,241"},.07)`, filter:"blur(50px)", bottom:-30, right:-30, pointerEvents:"none", transition:"background .5s" }} />
+                  {/* Téléphone */}
+                  <Image
+                    key={activeClient}
+                    src={["/iphone_client.webp","/iphone_messages.webp","/iphone_decouvrir.webp"][activeClient]}
+                    alt={t.clientFeats[activeClient]?.title ?? ""}
+                    width={340} height={680}
+                    className="screen-enter"
+                    style={{ width:"auto", height:"min(72vh, 520px)", display:"block", position:"relative", zIndex:1, filter:"drop-shadow(0 24px 48px rgba(0,0,0,.18))" }}
+                  />
+                  {/* Indicateur */}
+                  <div style={{ position:"absolute", bottom:20, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
+                    {[0,1,2].map(i=>(
+                      <div key={i} onClick={()=>setActiveClient(i)} style={{ width: activeClient===i ? 20 : 6, height:6, borderRadius:3, background: activeClient===i ? "#007AFF" : "rgba(0,0,0,.18)", transition:"all .3s", cursor:"pointer" }} />
                     ))}
                   </div>
-
-                  {/* Mockup notification parrain */}
-                  <div style={{ background:"#1D1D1F", borderRadius:24, padding:"24px 24px", position:"relative", overflow:"hidden" }}>
-                    <div style={{ position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:"rgba(68,114,245,0.08)", pointerEvents:"none" }} />
-                    <div style={{ fontSize:11, fontWeight:600, color:"rgba(255,255,255,0.4)", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:16 }}>Notification parrain</div>
-                    <div style={{ background:"rgba(255,255,255,0.08)", borderRadius:16, padding:"14px 16px", border:"0.5px solid rgba(255,255,255,0.12)" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
-                        <div style={{ width:32, height:32, borderRadius:8, background:"linear-gradient(135deg,#4472F5,#8A5CF6)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
-                        </div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize:12, fontWeight:600, color:"white" }}>Wallet</div>
-                        </div>
-                        <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>maintenant</div>
-                      </div>
-                      <div style={{ fontSize:13, fontWeight:600, color:"white", marginBottom:3 }}>Votre filleul vient de s&apos;inscrire !</div>
-                      <div style={{ fontSize:12, color:"rgba(255,255,255,0.6)" }}>+1 tampon crédité sur votre carte Nomade Café. 8/10 tampons.</div>
-                    </div>
-                    <div style={{ marginTop:14, display:"flex", alignItems:"center", gap:8 }}>
-                      <div style={{ width:8, height:8, borderRadius:"50%", background:"#34C759", flexShrink:0 }} />
-                      <span style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>Carte mise à jour automatiquement dans Wallet</span>
-                    </div>
-                  </div>
                 </div>
 
+                {/* Right — 3 features + sous-items pour feature 0 */}
+                <div style={{ flex:1, padding:"40px 36px", display:"flex", flexDirection:"column", justifyContent:"center", gap:4 }}>
+                  {t.clientFeats.slice(0, 3).map((f,i) => {
+                    const active = activeClient === i;
+                    const icons = [
+                      <><rect key="a" x="2" y="5" width="20" height="14" rx="3"/><path key="b" d="M2 10h20"/></>,
+                      <path key="c" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>,
+                      <><circle key="d" cx="12" cy="10" r="3"/><path key="e" d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/></>,
+                    ];
+                    return (
+                      <div key={i}>
+                        <div
+                          onMouseEnter={() => setActiveClient(i)}
+                          onClick={() => setActiveClient(i)}
+                          style={{
+                            padding:"18px 20px", borderRadius:16, cursor:"pointer",
+                            background: active ? "#FFFFFF" : "transparent",
+                            border: active ? ".5px solid rgba(0,122,255,.15)" : ".5px solid transparent",
+                            boxShadow: active ? "0 4px 20px rgba(0,0,0,.07)" : "none",
+                            transition:"all .25s cubic-bezier(.16,1,.3,1)",
+                          }}>
+                          <div style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
+                            <div style={{ width:36, height:36, borderRadius:10, background: active ? "rgba(0,122,255,.10)" : "rgba(0,0,0,.05)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background .2s" }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={active?"#007AFF":"#8E8E93"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                {icons[i]}
+                              </svg>
+                            </div>
+                            <div style={{ flex:1 }}>
+                              <h4 style={{ fontSize:14.5, fontWeight:700, color: active ? "#1D1D1F" : "#6E6E73", marginBottom: active ? 5 : 0, lineHeight:1.3, transition:"color .2s" }}>{f.title}</h4>
+                              <p style={{ fontSize:13, color:"#6E6E73", lineHeight:1.6, maxHeight: active ? "80px" : 0, overflow:"hidden", opacity: active ? 1 : 0, transition:"max-height .3s ease, opacity .2s" }}>{f.body}</p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Sous-items Y aller + Parrainage uniquement pour feature 0 */}
+                        {i === 0 && (
+                          <div style={{ marginLeft:30, marginTop:4, display:"flex", flexDirection:"column", gap:4 }}>
+                            {t.clientFeats.slice(3, 5).map((sub, si) => (
+                              <div key={si} style={{ padding:"12px 16px", background:"rgba(0,122,255,.04)", borderRadius:12, borderLeft:"2px solid rgba(0,122,255,.20)", display:"flex", gap:10, alignItems:"flex-start" }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, marginTop:1 }}>
+                                  {si===0 ? <><polyline points="5 12 12 5 19 12"/><path d="M12 5v14"/></> : <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
+                                </svg>
+                                <div>
+                                  <div style={{ fontSize:13, fontWeight:700, color:"#1D1D1F", marginBottom:3 }}>{sub.title}</div>
+                                  <div style={{ fontSize:12, color:"#6E6E73", lineHeight:1.55 }}>{sub.body}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
 
-          {/* ── TARIFS ── */}
-          <section id="tarifs" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)", borderBottom:"0.5px solid rgba(0,0,0,0.07)" }}>
-            <div style={{ maxWidth:960, margin:"0 auto" }}>
-
-              {/* Header */}
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:64 }}>
-                <span className="feature-tag">{t.tarifsTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", marginBottom:16 }}>{t.tarifsH2}</h2>
-                <p style={{ fontSize:17, color:"#8E8E93", maxWidth:520, margin:"0 auto" }}>{t.tarifsSub}</p>
+          {/* ══════════════════════════════════════════
+              8. PERSONNALISATION + VRAIES CARTES
+          ══════════════════════════════════════════ */}
+          <section id="carte" style={{ padding:"96px 48px", background:"#F7F8FF" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ marginBottom:56 }}>
+                <span className="stag">{t.customTag}</span>
+                <h2 style={{ fontSize:"clamp(32px,4vw,52px)", fontWeight:700, letterSpacing:-1.6, color:"#1D1D1F", lineHeight:1.08 }}>
+                  {t.customTitle}<br /><span className="grad">{t.customTitle2}</span>
+                </h2>
+                <p style={{ fontSize:16, color:"#6E6E73", marginTop:12, maxWidth:440 }}>{t.customSub}</p>
               </div>
 
-              {/* Plans */}
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:40, alignItems:"end" }} className="pricing-grid">
+              {/* Features grid */}
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:60 }} className="feats-2col custom-feats-grid">
+                {t.customFeats.map((f,i) => (
+                  <div key={i} style={{ background:"#fff", borderRadius:16, padding:"22px 20px", border:".5px solid rgba(0,0,0,.07)" }}>
+                    <h4 style={{ fontSize:14, fontWeight:700, color:"#1D1D1F", marginBottom:7 }}>{f.title}</h4>
+                    <p style={{ fontSize:13, color:"#6E6E73", lineHeight:1.6 }}>{f.body}</p>
+                  </div>
+                ))}
+              </div>
 
+              {/* Vraies cartes Wallet */}
+              <div data-reveal style={{ marginBottom:20 }}>
+                <p style={{ fontSize:13, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", color:"#AEAEB2", marginBottom:24 }}>{t.cardsTitle}</p>
+              </div>
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }} className="cards-grid">
+                {[
+                  { src:"/carte_wallet_8am.png", name:"8AM Coffeehouse" },
+                  { src:"/carte_wallet_comptoir.png", name:"Comptoir de l'Homme" },
+                  { src:"/carte_wallet_maisonmatcha.png", name:"Maison Matcha" },
+                  { src:"/carte_wallet_yumi.png", name:"Yumi" },
+                ].map(c => (
+                  <div key={c.src} style={{ borderRadius:14, overflow:"hidden", boxShadow:"0 12px 32px rgba(0,0,0,.12)" }} className="card-hover">
+                    <Image src={c.src} alt={`Carte Wallio ${c.name}`} width={375} height={180} style={{ width:"100%", height:"auto", display:"block" }} />
+                    <div style={{ background:"#fff", padding:"10px 14px" }}>
+                      <span style={{ fontSize:12, fontWeight:600, color:"#1D1D1F" }}>{c.name}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              9. SECTEURS
+          ══════════════════════════════════════════ */}
+          <section style={{ padding:"64px 48px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.07)" }}>
+            <div style={{ ...MAX, textAlign:"center" }}>
+              <div data-reveal>
+                <span className="stag">{t.sectorsTag}</span>
+                <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:700, letterSpacing:-1.2, color:"#1D1D1F", marginBottom:28 }}>
+                  {t.sectorsTitle}
+                </h2>
+              </div>
+              <div data-stagger style={{ display:"flex", flexWrap:"wrap", gap:10, justifyContent:"center" }}>
+                {t.sectors.map((s,i) => (
+                  <span key={i} className="sector-pill">{s}</span>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              10. TARIFS
+          ══════════════════════════════════════════ */}
+          <section id="tarifs" style={{ padding:"96px 48px", background:"#F5F5F7", position:"relative", overflow:"hidden" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:60 }}>
+                <span className="stag">{t.tarifsTag}</span>
+                <h2 style={{ fontSize:"clamp(32px,4vw,52px)", fontWeight:700, letterSpacing:-1.6, color:"#1D1D1F", marginBottom:12 }}>
+                  {t.tarifsTitle}
+                </h2>
+                <p style={{ fontSize:16, color:"#6E6E73", maxWidth:440, margin:"0 auto" }}>{t.tarifsSub}</p>
+              </div>
+
+              <div style={{ display:"flex", gap:16, alignItems:"stretch" }} className="pricing-grid">
                 {/* Mensuel */}
-                <div style={{ background:"#F5F5F7", borderRadius:24, padding:"32px 28px" }}>
-                  <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"#8E8E93", marginBottom:28 }}>
-                    {lang === "fr" ? "Mensuel" : "Monthly"}
+                <div data-reveal style={{ flex:1 }} className="pricing-card card-hover">
+                  <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:4 }}>{t.tarifsMonthly}</p>
+                  <p style={{ fontSize:11, color:"#AEAEB2", marginBottom:20 }}>{t.tarifsNoCommit}</p>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:8 }}>
+                    <span style={{ fontSize:40, fontWeight:800, letterSpacing:-1.5, color:"#1D1D1F" }}>{monthly}</span>
+                    <span style={{ fontSize:16, fontWeight:500, color:"#6E6E73" }}>{currency}</span>
                   </div>
-                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:6 }}>
-                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"#1D1D1F", lineHeight:1 }}>{pricing.monthly}</span>
-                    <span style={{ fontSize:16, color:"#8E8E93", fontWeight:500, marginLeft:4 }}>{pricing.currency} / {lang === "fr" ? "mois" : "month"}</span>
-                  </div>
-                  <div style={{ fontSize:13, color:"#8E8E93", marginBottom:32 }}>
-                    {lang === "fr" ? "Sans engagement" : "No commitment"}
-                  </div>
-                  <a href={WA} target="_blank" rel="noopener noreferrer"
-                    style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"#1D1D1F", color:"white", fontSize:14, fontWeight:600, textDecoration:"none", transition:"opacity 0.15s" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity="0.8"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity="1"; }}>
-                    {lang === "fr" ? "Commencer" : "Get started"}
+                  <p style={{ fontSize:12, color:"#AEAEB2", marginBottom:28 }}>{t.tarifsMonthEquiv(monthly, currency)}</p>
+                  <a href={wa(t.tarifsWaMo(monthly, currency))} target="_blank" rel="noopener noreferrer"
+                    className="btn-ghost" style={{ width:"100%", textAlign:"center", padding:"13px 0", borderRadius:12, fontSize:14, display:"block" }}>
+                    {t.tarifsCta}
                   </a>
                 </div>
 
                 {/* 6 mois */}
-                <div style={{ background:"#F5F5F7", borderRadius:24, padding:"32px 28px", position:"relative" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:28 }}>
-                    <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"#8E8E93" }}>
-                      {lang === "fr" ? "6 mois" : "6 months"}
-                    </div>
-                    <span style={{ fontSize:12, fontWeight:700, background:"rgba(52,199,89,0.14)", color:"#1C7A37", padding:"4px 10px", borderRadius:20 }}>-14%</span>
+                <div data-reveal style={{ flex:1, transitionDelay:".07s" }} className="pricing-card card-hover">
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
+                    <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", color:"#8E8E93" }}>{t.tarifsSix}</p>
+                    <span style={{ background:"rgba(0,122,255,.10)", color:"#007AFF", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:10 }}>
+                      {`-${pct6}%`}
+                    </span>
                   </div>
-                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:6 }}>
-                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"#1D1D1F", lineHeight:1 }}>{pricing.sixMonths.toLocaleString()}</span>
-                    <span style={{ fontSize:16, color:"#8E8E93", fontWeight:500, marginLeft:4 }}>{pricing.currency}</span>
+                  <p style={{ fontSize:11, color:"#AEAEB2", marginBottom:20 }}>
+                    <span style={{ textDecoration:"line-through", marginRight:4 }}>{strikethrough6} {currency}</span>
+                  </p>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:8 }}>
+                    <span style={{ fontSize:40, fontWeight:800, letterSpacing:-1.5, color:"#1D1D1F" }}>{sixMonths}</span>
+                    <span style={{ fontSize:16, fontWeight:500, color:"#6E6E73" }}>{currency}</span>
                   </div>
-                  <div style={{ marginBottom:32 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                      <span style={{ fontSize:16, color:"#B0B0B8", textDecoration:"line-through", fontWeight:500 }}>{pricing.strikethrough6.toLocaleString()} {pricing.currency}</span>
-                      <span style={{ fontSize:12, color:"#34C759", fontWeight:700 }}>-14%</span>
-                    </div>
-                    <div style={{ fontSize:13, color:"#8E8E93", fontWeight:500 }}>≈ {pricing.monthlyEquiv6} {pricing.currency} / {lang === "fr" ? "mois" : "month"}</div>
-                  </div>
-                  <a href={WA} target="_blank" rel="noopener noreferrer"
-                    style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"#1D1D1F", color:"white", fontSize:14, fontWeight:600, textDecoration:"none", transition:"opacity 0.15s" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity="0.8"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity="1"; }}>
-                    {lang === "fr" ? "Commencer" : "Get started"}
+                  <p style={{ fontSize:12, color:"#AEAEB2", marginBottom:28 }}>{t.tarifsMonthEquiv(monthlyEquiv6, currency)}</p>
+                  <a href={wa(t.tarifsWa6(sixMonths, currency))} target="_blank" rel="noopener noreferrer"
+                    className="btn-ghost" style={{ width:"100%", textAlign:"center", padding:"13px 0", borderRadius:12, fontSize:14, display:"block" }}>
+                    {t.tarifsCta}
                   </a>
                 </div>
 
-                {/* Annuel,featured */}
-                <div style={{ background:"linear-gradient(145deg,#0A0A0A 0%,#1C1C1E 60%,#2C2C2E 100%)", borderRadius:24, padding:"36px 28px 32px", position:"relative", overflow:"hidden" }}>
-                  <div style={{ position:"absolute", top:-50, right:-50, width:150, height:150, borderRadius:"50%", background:"rgba(255,255,255,0.04)", pointerEvents:"none" }} />
-                  <div style={{ position:"absolute", bottom:-30, left:-30, width:100, height:100, borderRadius:"50%", background:"rgba(255,255,255,0.03)", pointerEvents:"none" }} />
-
-                  {/* Badge meilleur rapport */}
-                  <div style={{ display:"inline-flex", alignItems:"center", gap:5, background:"rgba(255,255,255,0.10)", borderRadius:20, padding:"5px 12px", marginBottom:20, position:"relative" }}>
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"rgba(255,255,255,0.7)" }}>
-                      {lang === "fr" ? "Meilleur rapport" : "Best value"}
+                {/* Annuel — featured */}
+                <div data-reveal style={{ flex:1, transitionDelay:".14s" }} className="pricing-card pricing-featured card-hover">
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
+                    <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase", color:"rgba(255,255,255,.45)" }}>{t.tarifsAnnual}</p>
+                    <span style={{ background:"#F97316", color:"#fff", fontSize:11, fontWeight:700, padding:"3px 8px", borderRadius:10 }}>
+                      {t.tarifsRecommended}
                     </span>
                   </div>
-
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:28, position:"relative" }}>
-                    <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)" }}>
-                      {lang === "fr" ? "Annuel" : "Annual"}
-                    </div>
-                    <span style={{ fontSize:12, fontWeight:700, background:"rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.75)", padding:"4px 10px", borderRadius:20 }}>-28%</span>
+                  <p style={{ fontSize:11, color:"rgba(255,255,255,.25)", marginBottom:20 }}>
+                    <span style={{ textDecoration:"line-through", marginRight:4 }}>{strikethroughAnnual} {currency}</span>
+                    <span style={{ color:"rgba(255,255,255,.45)" }}>{`-${pctAnnual}%`}</span>
+                  </p>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:4, marginBottom:8 }}>
+                    <span style={{ fontSize:40, fontWeight:800, letterSpacing:-1.5, color:"#fff" }}>{annual}</span>
+                    <span style={{ fontSize:16, fontWeight:500, color:"rgba(255,255,255,.5)" }}>{currency}</span>
                   </div>
-
-                  <div style={{ display:"flex", alignItems:"baseline", gap:3, marginBottom:6, position:"relative" }}>
-                    <span style={{ fontSize:52, fontWeight:700, letterSpacing:-2.5, color:"white", lineHeight:1 }}>{pricing.annual.toLocaleString()}</span>
-                    <span style={{ fontSize:16, color:"rgba(255,255,255,0.45)", fontWeight:500, marginLeft:4 }}>{pricing.currency}</span>
-                  </div>
-                  <div style={{ marginBottom:32, position:"relative" }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                      <span style={{ fontSize:16, color:"rgba(255,255,255,0.35)", textDecoration:"line-through", fontWeight:500 }}>{pricing.strikethroughAnnual.toLocaleString()} {pricing.currency}</span>
-                      <span style={{ fontSize:12, color:"rgba(255,255,255,0.6)", fontWeight:700 }}>-28%</span>
-                    </div>
-                    <div style={{ fontSize:13, color:"rgba(255,255,255,0.45)", fontWeight:500 }}>≈ {pricing.monthlyEquivAnnual} {pricing.currency} / {lang === "fr" ? "mois" : "month"}</div>
-                  </div>
-
-                  <a href={WA} target="_blank" rel="noopener noreferrer"
-                    style={{ display:"block", textAlign:"center", padding:"13px 0", borderRadius:12, background:"white", color:"#0A0A0A", fontSize:14, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px rgba(0,0,0,0.35)", transition:"transform 0.15s, box-shadow 0.15s", position:"relative" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform="translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 32px rgba(0,0,0,0.45)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform=""; (e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(0,0,0,0.35)"; }}>
-                    {lang === "fr" ? "Commencer" : "Get started"}
+                  <p style={{ fontSize:12, color:"rgba(255,255,255,.35)", marginBottom:28 }}>{t.tarifsMonthEquiv(monthlyEquivAnnual, currency)}</p>
+                  <a href={wa(t.tarifsWaAn(annual, currency))} target="_blank" rel="noopener noreferrer"
+                    className="btn-wa" style={{ width:"100%", justifyContent:"center", padding:"13px 0", borderRadius:12, fontSize:14 }}>
+                    {t.tarifsCta}
                   </a>
                 </div>
               </div>
 
-              {/* Ce qui est inclus */}
-              <div data-reveal style={{ background:"#F5F5F7", borderRadius:24, padding:"36px 40px", marginBottom:24 }}>
-                <div style={{ fontSize:12, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"#8E8E93", marginBottom:20 }}>{t.tarifsIncludedLabel}</div>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"10px 32px" }} className="included-grid">
-                  {t.tarifsIncluded.map(f => (
-                    <div key={f} style={{ display:"flex", alignItems:"center", gap:10 }}>
-                      <div style={{ width:18, height:18, borderRadius:"50%", background:"rgba(68,114,245,0.12)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#4472F5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              {/* Inclus */}
+              <div data-reveal style={{ background:"#fff", borderRadius:20, padding:"32px 36px", marginTop:32, border:".5px solid rgba(0,0,0,.07)" }}>
+                <p style={{ fontSize:13, fontWeight:700, letterSpacing:".07em", textTransform:"uppercase", color:"#AEAEB2", marginBottom:20 }}>{t.tarifsIncludedTitle}</p>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"12px 24px" }} className="feats-2col">
+                  {t.tarifsIncluded.map((item,i) => (
+                    <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                      <div className="check-icon">
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#007AFF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </div>
-                      <span style={{ fontSize:14, color:"#3C3C43", lineHeight:1.4 }}>{f}</span>
+                      <span style={{ fontSize:13.5, color:"#3C3C43", lineHeight:1.5 }}>{item}</span>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Carte comptoir,GRATUITE */}
-              <div data-reveal style={{ background:"linear-gradient(135deg,#EEF2FF 0%,#E8EDF8 100%)", borderRadius:24, padding:"44px 52px", display:"flex", alignItems:"center", gap:52, overflow:"hidden", position:"relative" }} className="counter-card-band">
-                <div style={{ position:"absolute", top:-60, right:220, width:200, height:200, borderRadius:"50%", background:"rgba(68,114,245,0.07)", pointerEvents:"none" }} />
-                <div style={{ flex:1, position:"relative" }}>
-                  <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", color:"#4472F5", marginBottom:12, display:"block" }}>
-                    {lang === "fr" ? "Carte comptoir imprimable" : "Printable counter card"}
-                  </span>
-                  <h3 style={{ fontSize:"clamp(22px,2.8vw,30px)", fontWeight:700, color:"#1D1D1F", letterSpacing:-0.5, marginBottom:12, lineHeight:1.2 }}>
-                    {lang === "fr" ? "Incluse avec votre abonnement" : "Included with your plan"}
-                  </h3>
-                  <p style={{ fontSize:15, color:"#6E6E73", lineHeight:1.65, marginBottom:24, maxWidth:380 }}>
-                    {lang === "fr"
-                      ? "Support universel Wallio posé sur votre comptoir. QR code intégré et option tag NFC. Vos clients s'en servent immédiatement."
-                      : "Standard Wallio support placed on your counter. Integrated QR code and optional NFC tag. Customers use it right away."}
-                  </p>
-                  <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"white", borderRadius:14, padding:"10px 20px", boxShadow:"0 2px 16px rgba(0,0,0,0.08)", border:"1.5px solid rgba(52,199,89,0.25)" }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    <span style={{ fontSize:16, fontWeight:800, color:"#1C7A37", letterSpacing:-0.2 }}>100% GRATUITE</span>
-                  </div>
-                </div>
-                <div style={{ flexShrink:0, width:220 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/wallio-carte-comptoir.png" alt="Carte comptoir Wallio"
-                    style={{ width:"100%", borderRadius:14, boxShadow:"0 20px 48px rgba(0,0,0,0.18)", transform:"rotate(-3deg)", display:"block" }} />
-                </div>
-              </div>
-
             </div>
           </section>
 
-          {/* ── FAQ ── */}
-          <section id="faq" style={{ padding:"96px 32px", background:"#FFFFFF", borderTop:"0.5px solid rgba(0,0,0,0.07)" }}>
-            <div style={{ maxWidth:760, margin:"0 auto" }}>
-              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:56 }}>
-                <span className="feature-tag">{t.faqTag}</span>
-                <h2 style={{ fontSize:"clamp(36px,4.5vw,54px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F" }}>{t.faqH2}</h2>
+          {/* ══════════════════════════════════════════
+              11. FAQ
+          ══════════════════════════════════════════ */}
+          <section id="faq" style={{ padding:"96px 48px", background:"#FFFFFF" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ textAlign:"center", marginBottom:52 }}>
+                <span className="stag">{t.faqTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:700, letterSpacing:-1.4, color:"#1D1D1F" }}>
+                  {t.faqTitle}
+                </h2>
               </div>
-
-              <div data-stagger>
-                {t.faqs.map((faq, i) => (
-                  <div key={i} className="faq-item">
-                    <button className="faq-btn" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
-                      <span className="faq-q" style={{ fontSize:16, fontWeight:600, color:"#1D1D1F", letterSpacing:-0.2, transition:"color 0.15s" }}>
-                        {faq.q}
-                      </span>
-                      <div style={{
-                        width:28, height:28, borderRadius:"50%",
-                        display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0,
-                        transition:"transform 0.25s, background 0.15s",
-                        transform: openFaq === i ? "rotate(45deg)" : "none",
-                        background: openFaq === i ? "rgba(68,114,245,0.12)" : "rgba(0,0,0,0.06)",
-                      }}>
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M6 2v8M2 6h8" stroke={openFaq === i ? "#4472F5" : "#6E6E73"} strokeWidth="1.8" strokeLinecap="round"/>
-                        </svg>
-                      </div>
+              <div style={{ maxWidth:720, margin:"0 auto" }}>
+                {t.faqs.map((f,i) => (
+                  <div key={i} className="faq-item" data-reveal>
+                    <button className="faq-btn" onClick={() => setOpenFaq(openFaq===i ? null : i)}>
+                      <span className="faq-q" style={{ fontSize:15.5, fontWeight:600, color:"#1D1D1F", lineHeight:1.4, transition:"color .15s" }}>{f.q}</span>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink:0, transition:"transform .25s", transform: openFaq===i ? "rotate(45deg)" : "none" }}>
+                        <path d="M10 4v12M4 10h12" stroke="#8E8E93" strokeWidth="1.6" strokeLinecap="round"/>
+                      </svg>
                     </button>
-                    <div style={{
-                      overflow:"hidden", maxHeight: openFaq === i ? 300 : 0,
-                      transition:"max-height 0.35s cubic-bezier(.22,1,.36,1)",
-                    }}>
-                      <p style={{ fontSize:15, lineHeight:1.7, color:"#6E6E73", paddingBottom:20 }}>
-                        {faq.a}
-                      </p>
+                    <div style={{ overflow:"hidden", maxHeight: openFaq===i ? 400 : 0, transition:"max-height .3s cubic-bezier(.4,0,.2,1)", paddingBottom: openFaq===i ? 20 : 0 }}>
+                      <p style={{ fontSize:14.5, color:"#6E6E73", lineHeight:1.7 }}>{f.a}</p>
                     </div>
                   </div>
                 ))}
               </div>
-
-              <div data-reveal style={{ textAlign:"center", marginTop:48 }}>
-                <p style={{ fontSize:15, color:"#8E8E93", marginBottom:16 }}>{t.faqOther}</p>
-                <a href={WA} target="_blank" rel="noopener noreferrer" className="btn-ghost">
+              <div data-reveal style={{ textAlign:"center", marginTop:40 }}>
+                <a href={wa(t.faqWa)} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize:14 }}>
                   {t.faqCta}
                 </a>
               </div>
             </div>
           </section>
 
-          {/* ── CTA ── */}
-          <section style={{ padding:"0 32px 96px" }}>
-            <div data-reveal="scale" className="cta-section" style={{ maxWidth:1040, margin:"0 auto", borderRadius:32, overflow:"hidden", position:"relative", background:"linear-gradient(135deg,#4472F5 0%,#6A5AF9 52%,#8A5CF6 100%)", textAlign:"center" }}>
-              <div style={{ position:"absolute", top:-80, right:-80, width:320, height:320, borderRadius:"50%", background:"rgba(255,255,255,0.07)", pointerEvents:"none" }} />
-              <div style={{ position:"absolute", bottom:-100, left:-60, width:260, height:260, borderRadius:"50%", background:"rgba(255,255,255,0.05)", pointerEvents:"none" }} />
-              <h2 style={{ fontSize:44, fontWeight:700, color:"white", marginBottom:16, letterSpacing:-1.2, position:"relative" }}>{t.ctaH2}</h2>
-              <p style={{ fontSize:18, color:"rgba(255,255,255,0.70)", marginBottom:44, position:"relative", maxWidth:440, margin:"0 auto 44px" }}>{t.ctaSub}</p>
-              <a href={WA} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize:15, fontWeight:700, color:"#4472F5", background:"white", padding:"16px 40px", borderRadius:16, textDecoration:"none", display:"inline-block", boxShadow:"0 12px 36px rgba(0,0,0,0.22)", position:"relative", letterSpacing:-0.2, transition:"transform 0.15s, box-shadow 0.15s" }}
-                onMouseEnter={e => { (e.target as HTMLElement).style.transform = "translateY(-2px)"; (e.target as HTMLElement).style.boxShadow = "0 18px 48px rgba(0,0,0,0.28)"; }}
-                onMouseLeave={e => { (e.target as HTMLElement).style.transform = ""; (e.target as HTMLElement).style.boxShadow = "0 12px 36px rgba(0,0,0,0.22)"; }}>
-                {t.ctaBtn}
-              </a>
+          {/* ══════════════════════════════════════════
+              12. CTA FINAL
+          ══════════════════════════════════════════ */}
+          <section style={{ padding:"80px 48px" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", borderRadius:28, padding:"64px 48px", textAlign:"center" }}>
+                <h2 className="cta-title" style={{ fontSize:"clamp(28px,4vw,48px)", fontWeight:700, letterSpacing:-1.5, color:"#fff", marginBottom:14 }}>
+                  {t.ctaTitle}
+                </h2>
+                <p style={{ fontSize:16, color:"rgba(255,255,255,.75)", maxWidth:400, margin:"0 auto 36px" }}>
+                  {t.ctaSub}
+                </p>
+                <a href={wa(t.ctaWa)} target="_blank" rel="noopener noreferrer"
+                  style={{ display:"inline-flex", alignItems:"center", gap:9, background:"#fff", color:"#1D1D1F", padding:"15px 32px", borderRadius:14, fontSize:15, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 24px rgba(0,0,0,.15)", transition:"transform .15s,box-shadow .15s" }}
+                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform="translateY(-2px)";(e.currentTarget as HTMLElement).style.boxShadow="0 14px 36px rgba(0,0,0,.20)";}}
+                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform="";(e.currentTarget as HTMLElement).style.boxShadow="0 8px 24px rgba(0,0,0,.15)";}}>
+                  <svg width="17" height="17" viewBox="0 0 32 32" fill="currentColor"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
+                  {t.ctaBtn}
+                </a>
+              </div>
             </div>
           </section>
 
-          {/* ── FOOTER ── */}
-          <footer style={{ borderTop:"0.5px solid rgba(0,0,0,0.08)" }}>
-            <div className="lp-footer" style={{ maxWidth:1040, margin:"0 auto" }}>
-              <span style={{ fontSize:12, fontWeight:700, letterSpacing:"0.16em", color:"#1D1D1F" }}>WALLIO</span>
-              <div style={{ display:"flex", gap:24, flexWrap:"wrap", justifyContent:"center" }}>
-                {t.footerLinks.map(l => (
-                  <Link key={l.href} href={l.href} style={{ fontSize:13, color:"#8E8E93", textDecoration:"none" }}>{l.label}</Link>
-                ))}
-              </div>
-              <a href="https://www.instagram.com/wallio.card" target="_blank" rel="noopener noreferrer" aria-label="Instagram Wallio"
-                style={{ display:"flex", alignItems:"center", gap:6, color:"#8E8E93", textDecoration:"none", fontSize:13 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                </svg>
-                @wallio.card
-              </a>
-              <span style={{ fontSize:12, color:"#C7C7CC" }}>© 2026 Wallio</span>
+          {/* ══════════════════════════════════════════
+              FOOTER
+          ══════════════════════════════════════════ */}
+          <footer style={{ background:"#1D1D1F", padding:"32px 48px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <Image src="/wallio-instagram-profil.png" alt="Wallio" width={28} height={28} style={{ borderRadius:6, opacity:.9 }} />
+              <span style={{ fontSize:14, fontWeight:700, color:"rgba(255,255,255,.65)", letterSpacing:".10em" }}>WALLIO</span>
             </div>
+            <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
+              {t.footerLinks.map(l => (
+                <Link key={l.href} href={l.href} style={{ fontSize:12.5, color:"rgba(255,255,255,.35)", textDecoration:"none", transition:"color .15s" }}
+                  onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,.7)";}}
+                  onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color="rgba(255,255,255,.35)";}}>
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+            <span style={{ fontSize:12, color:"rgba(255,255,255,.2)" }}>© {new Date().getFullYear()} Wallio</span>
           </footer>
 
         </div>
