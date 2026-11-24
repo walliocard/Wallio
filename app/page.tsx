@@ -143,6 +143,43 @@ const T = {
     ctaSub: "Opérationnel en moins d'une heure. Sans matériel, sans installation.",
     ctaBtn: "Démarrer sur WhatsApp",
     ctaWa: "Bonjour, je souhaite démarrer avec Wallio pour mon commerce.",
+    heroNoBadge: "Sans application à installer — ni pour vous ni pour vos clients",
+    miniCtaText: "Curieux de voir comment ça fonctionne dans votre commerce ?",
+    miniCtaBtn: "En discuter sur WhatsApp",
+    miniCtaWa: "Bonjour, je voudrais voir comment Wallio fonctionne pour mon commerce.",
+    autoHook: "Configurées une fois, elles tournent 365 jours par an — zéro action manuelle.",
+    teamTag: "Équipe",
+    teamTitle: "Wallio Pro,",
+    teamTitle2: "pour vous et votre équipe.",
+    teamSub: "Téléchargeable sur App Store et accessible sur navigateur. Le gérant pilote tout depuis son dashboard. Ses employés valident les tampons via un PIN personnel — sans accès à ses données.",
+    teamFeats: [
+      { title: "PIN personnel par employé", body: "Chaque membre se connecte avec son code à 4 chiffres. Zéro partage de mot de passe, zéro risque." },
+      { title: "Scanner QR intégré", body: "Un scan, un tampon crédité en moins d'une seconde. Aucun matériel supplémentaire, aucune caisse à modifier." },
+      { title: "Données commerciales protégées", body: "Les employés accèdent uniquement au scanner. Dashboard, stats et fiches clients restent réservés au gérant." },
+      { title: "Disponible sur App Store", body: "Wallio Pro se télécharge gratuitement sur iPhone. L'accès navigateur fonctionne sur n'importe quel appareil." },
+    ],
+    testTag: "Ils l'ont adopté",
+    testTitle: "Ce qu'ils en disent.",
+    testimonials: [
+      { name: "Sarah K.", role: "Gérante", business: "8AM Coffeehouse", logo: "/logo-8am.jpg",
+        quote: "On a lancé Wallio en moins d'une heure. On a maintenant plus de 180 clients dans notre base, et les relances automatiques ramènent des habitués qu'on n'avait pas vus depuis des semaines." },
+      { name: "Leila M.", role: "Fondatrice", business: "Maison Matcha", logo: "/logo-maison-matcha.png",
+        quote: "Mes clients adorent leur carte dans Apple Wallet. Elle se met à jour toute seule après chaque passage. Plusieurs habitués m'ont dit que la notif à chaque tampon les incite vraiment à revenir." },
+      { name: "Youssef A.", role: "Gérant", business: "Comptoir de l'Homme", logo: "/logo-comptoir-homme.jpg",
+        quote: "Avant je n'avais aucune donnée sur mes habitués. Maintenant je vois en temps réel qui est actif, qui ne revient plus. C'est comme avoir un œil permanent sur ma clientèle." },
+    ],
+    accomTag: "Accompagnement",
+    accomTitle: "On s'occupe de tout,",
+    accomTitle2: "du premier jour au long terme.",
+    accomSub: "Pas de configuration seul. Wallio prépare votre compte, génère vos supports et reste disponible après le lancement.",
+    accomSteps: [
+      { n: "01", title: "On configure votre compte", body: "Programme de fidélité, couleurs, carte comptoir prête à imprimer — Wallio s'en occupe. Vous validez, c'est parti." },
+      { n: "02", title: "On forme votre équipe", body: "On vous accompagne pour le premier jour. Chaque employé a son accès PIN configuré avant l'ouverture." },
+      { n: "03", title: "Lancement en moins d'une heure", body: "Dès le premier scan, tout tourne seul. Vos clients créent leur carte en 30 secondes." },
+      { n: "04", title: "Support continu après lancement", body: "On reste joignables sur WhatsApp. Questions, ajustements, nouvelles fonctionnalités — on répond." },
+    ],
+    accomCta: "Démarrer l'accompagnement",
+    accomWa: "Bonjour, je souhaite démarrer avec Wallio et bénéficier de l'accompagnement.",
     footerLinks: [
       { href: "/privacy", label: "Confidentialité" }, { href: "/terms", label: "CGU" },
       { href: "/legal", label: "Mentions légales" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
@@ -279,6 +316,43 @@ const T = {
     ctaSub: "Up and running in under an hour. No hardware, no installation.",
     ctaBtn: "Start on WhatsApp",
     ctaWa: "Hello, I'd like to get started with Wallio for my business.",
+    heroNoBadge: "No app to install — for you or your customers",
+    miniCtaText: "Want to see how Wallio fits into your business?",
+    miniCtaBtn: "Chat on WhatsApp",
+    miniCtaWa: "Hello, I'd like to see how Wallio works for my business.",
+    autoHook: "Set up once, they run 365 days a year — zero manual action.",
+    teamTag: "Team",
+    teamTitle: "Wallio Pro,",
+    teamTitle2: "for you and your team.",
+    teamSub: "Available on the App Store and in the browser. You manage everything from your dashboard. Your staff validate stamps with a personal PIN — no access to your data.",
+    teamFeats: [
+      { title: "Personal PIN per employee", body: "Each team member logs in with their own 4-digit code. No password sharing, no risk." },
+      { title: "Built-in QR scanner", body: "One scan, one stamp in under a second. No extra hardware, no changes to your checkout." },
+      { title: "Business data protected", body: "Staff only access the scanner. Dashboard, stats and customer profiles stay reserved for the manager." },
+      { title: "Available on App Store", body: "Wallio Pro downloads for free on iPhone. Browser access works on any device." },
+    ],
+    testTag: "Early adopters",
+    testTitle: "What they say.",
+    testimonials: [
+      { name: "Sarah K.", role: "Manager", business: "8AM Coffeehouse", logo: "/logo-8am.jpg",
+        quote: "We launched Wallio in under an hour. We now have over 180 customers in our base, and the automatic re-engagement messages bring back regulars we hadn't seen in weeks." },
+      { name: "Leila M.", role: "Founder", business: "Maison Matcha", logo: "/logo-maison-matcha.png",
+        quote: "My customers love having their card in Apple Wallet. It updates itself after every visit. Several regulars told me the stamp notifications actually make them want to come back." },
+      { name: "Youssef A.", role: "Manager", business: "Comptoir de l'Homme", logo: "/logo-comptoir-homme.jpg",
+        quote: "Before Wallio I had no data on my regulars. Now I see in real time who's active, who stopped coming. It's like having a permanent eye on my customer base." },
+    ],
+    accomTag: "Onboarding",
+    accomTitle: "We handle everything,",
+    accomTitle2: "from day one and beyond.",
+    accomSub: "No solo setup. Wallio prepares your account, generates your materials and stays available after launch.",
+    accomSteps: [
+      { n: "01", title: "We configure your account", body: "Loyalty programme, colours, counter card ready to print — Wallio handles it all. You approve, that's it." },
+      { n: "02", title: "We train your team", body: "We're with you on day one. Every employee has their PIN set up before opening." },
+      { n: "03", title: "Live in under an hour", body: "From the first scan, everything runs itself. Your customers create their card in 30 seconds." },
+      { n: "04", title: "Ongoing support after launch", body: "We stay reachable on WhatsApp. Questions, adjustments, new features — we respond." },
+    ],
+    accomCta: "Start your onboarding",
+    accomWa: "Hello, I'd like to get started with Wallio and benefit from the onboarding support.",
     footerLinks: [
       { href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" },
       { href: "/legal", label: "Legal" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
@@ -415,6 +489,43 @@ const T = {
     ctaSub: "Funcțional în mai puțin de o oră. Fără echipament, fără instalare.",
     ctaBtn: "Începeți pe WhatsApp",
     ctaWa: "Bună ziua, doresc să încep cu Wallio pentru afacerea mea.",
+    heroNoBadge: "Fără aplicație de instalat — nici pentru dvs. nici pentru clienți",
+    miniCtaText: "Curioși cum funcționează Wallio în localul dvs.?",
+    miniCtaBtn: "Discutați pe WhatsApp",
+    miniCtaWa: "Bună ziua, doresc să văd cum funcționează Wallio pentru afacerea mea.",
+    autoHook: "Configurate o dată, funcționează 365 de zile pe an — zero acțiuni manuale.",
+    teamTag: "Echipă",
+    teamTitle: "Wallio Pro,",
+    teamTitle2: "pentru dvs. și echipa dvs.",
+    teamSub: "Disponibil pe App Store și în browser. Dvs. gestionați totul din dashboard. Angajații validează cu PIN personal — fără acces la datele dvs.",
+    teamFeats: [
+      { title: "PIN personal per angajat", body: "Fiecare se conectează cu codul propriu de 4 cifre. Zero partajare de parolă, zero risc." },
+      { title: "Scanner QR integrat", body: "Un scan, o ștampilă în mai puțin de o secundă. Niciun echipament suplimentar." },
+      { title: "Date comerciale protejate", body: "Angajații accesează doar scanerul. Dashboard-ul, statisticile și clienții rămân rezervate managerului." },
+      { title: "Disponibil pe App Store", body: "Wallio Pro se descarcă gratuit pe iPhone. Accesul din browser funcționează pe orice dispozitiv." },
+    ],
+    testTag: "Primii utilizatori",
+    testTitle: "Ce spun ei.",
+    testimonials: [
+      { name: "Sarah K.", role: "Manager", business: "8AM Coffeehouse", logo: "/logo-8am.jpg",
+        quote: "Am lansat Wallio în mai puțin de o oră. Avem acum peste 180 de clienți în baza noastră, iar mesajele automate aduc înapoi fideli pe care nu îi mai văzusem de săptămâni." },
+      { name: "Leila M.", role: "Fondatoare", business: "Maison Matcha", logo: "/logo-maison-matcha.png",
+        quote: "Clienții mei adoră cardul în Apple Wallet. Se actualizează singur după fiecare vizită. Mai mulți fideli mi-au spus că notificările îi motivează să revină." },
+      { name: "Youssef A.", role: "Manager", business: "Comptoir de l'Homme", logo: "/logo-comptoir-homme.jpg",
+        quote: "Înainte nu aveam nicio dată despre fideli. Acum văd în timp real cine este activ, cine a încetat să mai vină. E ca și cum aș avea un ochi permanent pe clientela mea." },
+    ],
+    accomTag: "Însoțire",
+    accomTitle: "Ne ocupăm de tot,",
+    accomTitle2: "de la prima zi și pe termen lung.",
+    accomSub: "Nicio configurare singuri. Wallio pregătește contul, generează materialele și rămâne disponibil după lansare.",
+    accomSteps: [
+      { n: "01", title: "Configurăm contul dvs.", body: "Program de fidelitate, culori, card tejghea gata de imprimat — Wallio se ocupă de tot. Dvs. validați, gata." },
+      { n: "02", title: "Formăm echipa dvs.", body: "Vă însoțim în prima zi. Fiecare angajat are PIN-ul configurat înainte de deschidere." },
+      { n: "03", title: "Lansare în mai puțin de o oră", body: "De la prima scanare, totul funcționează singur. Clienții creează cardul în 30 de secunde." },
+      { n: "04", title: "Suport continuu după lansare", body: "Rămânem disponibili pe WhatsApp. Întrebări, ajustări, funcționalități noi — răspundem." },
+    ],
+    accomCta: "Începeți însoțirea",
+    accomWa: "Bună ziua, doresc să încep cu Wallio și să beneficiez de însoțire la lansare.",
     footerLinks: [
       { href: "/privacy", label: "Confidențialitate" }, { href: "/terms", label: "Termeni" },
       { href: "/legal", label: "Mențiuni legale" }, { href: "mailto:wallio.card@gmail.com", label: "wallio.card@gmail.com" },
@@ -769,6 +880,7 @@ export default function LandingPage() {
       .dash-preview-panel > div { height:auto!important; }
       .dash-preview-panel img { height:min(78vw, 480px)!important; width:auto!important; }
       .proof-bar { padding:16px 20px!important; gap:16px!important; }
+      .mini-cta-row { flex-direction:column!important; align-items:flex-start!important; }
       footer { padding:28px 20px!important; }
     }
     @media (max-width:1024px) {
@@ -913,9 +1025,15 @@ export default function LandingPage() {
                     ))}
                   </span>
                 </h1>
-                <p className="hero-anim-3" style={{ fontSize:17, lineHeight:1.65, color:"#6E6E73", maxWidth:480, marginBottom:36 }}>
+                <p className="hero-anim-3" style={{ fontSize:17, lineHeight:1.65, color:"#6E6E73", maxWidth:480, marginBottom:20 }}>
                   {t.heroSub}
                 </p>
+                <div className="hero-anim-3" style={{ marginBottom:28 }}>
+                  <span style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"6px 14px", background:"rgba(0,122,255,.09)", borderRadius:20, fontSize:12.5, fontWeight:600, color:"#007AFF" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    {t.heroNoBadge}
+                  </span>
+                </div>
                 <div className="hero-anim-4 hero-ctas" style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                   <a href={heroWA} target="_blank" rel="noopener noreferrer" className="btn-wa">
                     <svg width="17" height="17" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
@@ -1067,6 +1185,25 @@ export default function LandingPage() {
                   <source src="/Wallio_Landing_v2.webm" type="video/webm" />
                   <source src="/Wallio_Landing_v2.mp4" type="video/mp4" />
                 </video>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              4b. SECTEURS (ici pour montrer la polyvalence tôt)
+          ══════════════════════════════════════════ */}
+          <section style={{ padding:"64px 48px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.07)" }}>
+            <div style={{ ...MAX, textAlign:"center" }}>
+              <div data-reveal>
+                <span className="stag">{t.sectorsTag}</span>
+                <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:700, letterSpacing:-1.2, color:"#1D1D1F", marginBottom:28 }}>
+                  {t.sectorsTitle}
+                </h2>
+              </div>
+              <div data-stagger style={{ display:"flex", flexWrap:"wrap", gap:10, justifyContent:"center" }}>
+                {t.sectors.map((s,i) => (
+                  <span key={i} className="sector-pill">{s}</span>
+                ))}
               </div>
             </div>
           </section>
@@ -1232,8 +1369,50 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* Mini CTA */}
+          <div style={{ background:"#0C0C10", padding:"40px 48px", borderTop:".5px solid rgba(255,255,255,.05)" }}>
+            <div style={{ ...MAX, display:"flex", alignItems:"center", justifyContent:"space-between", gap:24, flexWrap:"wrap" }} className="mini-cta-row">
+              <p style={{ fontSize:17, fontWeight:500, color:"rgba(255,255,255,.75)", margin:0 }}>{t.miniCtaText}</p>
+              <a href={wa(t.miniCtaWa)} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ flexShrink:0 }}>
+                <svg width="16" height="16" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
+                {t.miniCtaBtn}
+              </a>
+            </div>
+          </div>
+
           {/* ══════════════════════════════════════════
-              6b. AUTOMATISATIONS
+              6b. ÉQUIPE & WALLIO PRO
+          ══════════════════════════════════════════ */}
+          <section style={{ padding:"96px 48px", background:"#FFFFFF" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ marginBottom:52 }}>
+                <span className="stag">{t.teamTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", lineHeight:1.1, marginBottom:14 }}>
+                  {t.teamTitle}<br /><span className="grad">{t.teamTitle2}</span>
+                </h2>
+                <p style={{ fontSize:15.5, color:"#6E6E73", lineHeight:1.65, maxWidth:520 }}>{t.teamSub}</p>
+              </div>
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:16, marginBottom:40 }} className="feats-2col">
+                {t.teamFeats.map((f,i) => (
+                  <div key={i} style={{ background:"#F5F5F7", borderRadius:16, padding:"24px 22px", border:".5px solid rgba(0,0,0,.06)" }}>
+                    <h4 style={{ fontSize:14.5, fontWeight:700, color:"#1D1D1F", marginBottom:8 }}>{f.title}</h4>
+                    <p style={{ fontSize:13, color:"#6E6E73", lineHeight:1.6 }}>{f.body}</p>
+                  </div>
+                ))}
+              </div>
+              <div data-reveal style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                <span style={{ fontSize:13, color:"#8E8E93" }}>{lang==="ro" ? "Disponibil pe" : lang==="en" ? "Available on" : "Disponible sur"} :</span>
+                <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.65 }} />
+                <span style={{ fontSize:13, color:"#AEAEB2" }}>+</span>
+                <span style={{ fontSize:13, fontWeight:500, color:"#6E6E73", padding:"6px 14px", background:"rgba(0,0,0,.05)", borderRadius:20 }}>
+                  {lang==="ro" ? "Browser web" : lang==="en" ? "Web browser" : "Navigateur web"}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              6c. AUTOMATISATIONS
           ══════════════════════════════════════════ */}
           <section style={{ padding:"96px 48px", background:"#0C0C10", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(100px)", top:-100, left:-100, pointerEvents:"none" }} />
@@ -1248,11 +1427,15 @@ export default function LandingPage() {
                    lang==="en" ? <>Wallio works for you,<br /><span className="grad">even while you sleep.</span></> :
                    <>Wallio travaille pour vous,<br /><span className="grad">même quand vous dormez.</span></>}
                 </h2>
-                <p style={{ fontSize:15, color:"rgba(255,255,255,.45)", maxWidth:480 }}>
+                <p style={{ fontSize:15, color:"rgba(255,255,255,.45)", maxWidth:480, marginBottom:16 }}>
                   {lang==="ro" ? "Configurați o dată. Wallio trimite mesajele potrivite la momentul potrivit, fără nicio acțiune din partea dvs." :
                    lang==="en" ? "Set it once. Wallio sends the right messages at the right time, with no action needed from you." :
                    "Configurez une fois. Wallio envoie les bons messages au bon moment, sans aucune action de votre part."}
                 </p>
+                <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"7px 14px", background:"rgba(52,199,89,.12)", borderRadius:20, border:".5px solid rgba(52,199,89,.25)" }}>
+                  <div style={{ width:7, height:7, borderRadius:"50%", background:"#34C759", flexShrink:0 }} />
+                  <span style={{ fontSize:12.5, fontWeight:600, color:"#34C759" }}>{t.autoHook}</span>
+                </div>
               </div>
 
               <div style={{ display:"flex", gap:20 }} className="steps-row">
@@ -1462,20 +1645,69 @@ export default function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════
-              9. SECTEURS
+              9. TÉMOIGNAGES
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"64px 48px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.07)" }}>
-            <div style={{ ...MAX, textAlign:"center" }}>
-              <div data-reveal>
-                <span className="stag">{t.sectorsTag}</span>
-                <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:700, letterSpacing:-1.2, color:"#1D1D1F", marginBottom:28 }}>
-                  {t.sectorsTitle}
+          <section style={{ padding:"96px 48px", background:"#0C0C10", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(100px)", top:-100, right:-100, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(139,92,246,.06)", filter:"blur(80px)", bottom:-80, left:-80, pointerEvents:"none" }} />
+            <div style={{ ...MAX, position:"relative", zIndex:1 }}>
+              <div data-reveal="scale" style={{ marginBottom:52 }}>
+                <span className="stag" style={{ background:"rgba(249,115,22,.12)", color:"#F97316" }}>{t.testTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:800, letterSpacing:-1.5, color:"#FFFFFF", lineHeight:1.1 }}>
+                  {t.testTitle}
                 </h2>
               </div>
-              <div data-stagger style={{ display:"flex", flexWrap:"wrap", gap:10, justifyContent:"center" }}>
-                {t.sectors.map((s,i) => (
-                  <span key={i} className="sector-pill">{s}</span>
+              <div data-stagger style={{ display:"flex", gap:20 }} className="steps-row">
+                {t.testimonials.map((testi, i) => (
+                  <div key={i} data-reveal style={{ flex:1, background:"rgba(255,255,255,.04)", border:".5px solid rgba(255,255,255,.08)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", gap:0 }}>
+                    <div style={{ display:"flex", gap:3, marginBottom:16 }}>
+                      {[0,1,2,3,4].map(s => (
+                        <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F97316"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                      ))}
+                    </div>
+                    <p style={{ fontSize:14, color:"rgba(255,255,255,.70)", lineHeight:1.75, marginBottom:24, flex:1, fontStyle:"italic" }}>"{testi.quote}"</p>
+                    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                      <div style={{ width:40, height:40, borderRadius:10, overflow:"hidden", background:"rgba(255,255,255,.08)", flexShrink:0, border:".5px solid rgba(255,255,255,.12)" }}>
+                        <Image src={testi.logo} alt={testi.business} width={40} height={40} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:700, color:"#FFFFFF" }}>{testi.name}</div>
+                        <div style={{ fontSize:12, color:"rgba(255,255,255,.40)" }}>{testi.role} · {testi.business}</div>
+                      </div>
+                    </div>
+                  </div>
                 ))}
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              9b. ACCOMPAGNEMENT
+          ══════════════════════════════════════════ */}
+          <section style={{ padding:"96px 48px", background:"#F7F8FF" }}>
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" style={{ marginBottom:60 }}>
+                <span className="stag" style={{ background:"rgba(0,122,255,.08)", color:"#007AFF" }}>{t.accomTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,46px)", fontWeight:700, letterSpacing:-1.5, color:"#1D1D1F", lineHeight:1.1, marginBottom:14 }}>
+                  {t.accomTitle}<br /><span className="grad">{t.accomTitle2}</span>
+                </h2>
+                <p style={{ fontSize:15.5, color:"#6E6E73", lineHeight:1.65, maxWidth:520 }}>{t.accomSub}</p>
+              </div>
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20, marginBottom:48 }} className="feats-2col">
+                {t.accomSteps.map((s,i) => (
+                  <div key={i} style={{ background:"#FFFFFF", borderRadius:20, padding:"28px 24px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden" }}>
+                    <div style={{ fontSize:40, fontWeight:800, letterSpacing:-1.5, color:"rgba(0,122,255,.10)", lineHeight:1, marginBottom:16 }}>{s.n}</div>
+                    <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:"linear-gradient(180deg,#007AFF,transparent)" }} />
+                    <h3 style={{ fontSize:16, fontWeight:700, color:"#1D1D1F", marginBottom:10, lineHeight:1.35 }}>{s.title}</h3>
+                    <p style={{ fontSize:13.5, color:"#6E6E73", lineHeight:1.65 }}>{s.body}</p>
+                  </div>
+                ))}
+              </div>
+              <div data-reveal style={{ textAlign:"center" }}>
+                <a href={wa(t.accomWa)} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ fontSize:15 }}>
+                  <svg width="17" height="17" viewBox="0 0 32 32" fill="white"><path d="M16 2.9C9.0 2.9 3.4 8.5 3.4 15.4c0 2.3.6 4.5 1.8 6.4L3 29l7.4-1.9c1.8 1 3.8 1.5 5.6 1.5 6.9 0 12.5-5.6 12.5-12.5S22.9 2.9 16 2.9z"/></svg>
+                  {t.accomCta}
+                </a>
               </div>
             </div>
           </section>
