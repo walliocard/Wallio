@@ -42,6 +42,7 @@ export default function NotificationsPage() {
   const [segmentCounts, setSegmentCounts] = useState<{ tous: number; actifs: number; inactifs: number } | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showExpirySheet, setShowExpirySheet] = useState(false);
+  const [formFading, setFormFading] = useState(false);
   const [successBanner, setSuccessBanner] = useState(false);
   const [clientList, setClientList] = useState<ClientItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -111,7 +112,9 @@ export default function NotificationsPage() {
       haptic("success");
       triggerAmbientPulse();
       setSuccessBanner(true);
+      setTimeout(() => setFormFading(true), 2000);
       setTimeout(() => {
+        setFormFading(false);
         setSendState("idle");
         setSuccessBanner(false);
         setTitle("");
@@ -121,7 +124,7 @@ export default function NotificationsPage() {
         setExpiresDate("");
         setExpiresTime("23:00");
         setResult(null);
-      }, 3000);
+      }, 2500);
     } catch {
       setSendState("error");
     }
@@ -236,7 +239,8 @@ export default function NotificationsPage() {
         <h1 ref={titleRef} className="text-[34px] font-bold tracking-[-1px]" style={{ color: "var(--fg)" }}>{t.notif_title}</h1>
       </div>
 
-      {/* Aperçu en haut — SmokeCard */}
+      {/* Aperçu + formulaire — fade sur reset */}
+      <div style={{ opacity: formFading ? 0 : 1, transition: "opacity 0.4s ease", pointerEvents: formFading ? "none" : "auto" }}>
       <SmokeCard style={{ marginBottom: 20, padding: 20, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 170 }}>
         {notifPreviewCard}
       </SmokeCard>
@@ -454,6 +458,7 @@ export default function NotificationsPage() {
 
         </div>
       </div>
+      </div>{/* fin fade wrapper */}
 
       {/* Bouton fixé mobile */}
       <div className="md:hidden fixed left-0 right-0 px-5 z-30"
