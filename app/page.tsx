@@ -809,7 +809,7 @@ export default function LandingPage() {
     .feat-row { padding:16px 18px; border-radius:14px; cursor:pointer; border:1.5px solid transparent; transition:background .15s, border-color .15s; display:flex; gap:14px; align-items:flex-start; }
     .feat-row:hover { background:rgba(255,255,255,.04); }
     .feat-row.feat-active { background:rgba(0,122,255,.06); border-color:rgba(0,122,255,.22); }
-    .dash-spotlight { display:flex; background:#fff; border-radius:28px; border:.5px solid rgba(0,0,0,.07); overflow:hidden; box-shadow:0 2px 24px rgba(0,0,0,.06),0 12px 48px rgba(0,0,0,.04); }
+    .dash-spotlight { display:flex; background:#F7F7FA; border-radius:28px; border:1px solid #EEEEF3; overflow:hidden; box-shadow:0 2px 24px rgba(0,0,0,.06),0 12px 48px rgba(0,0,0,.04); }
     .dash-feat-list { flex:0 0 40%; padding:10px; border-right:.5px solid rgba(0,0,0,.06); }
     .dash-preview-panel { flex:1; padding:32px; min-height:500px; display:flex; align-items:center; justify-content:center; }
 
@@ -864,7 +864,7 @@ export default function LandingPage() {
     .pricing-card { background:#fff; border-radius:24px; padding:36px 32px;
       border:.5px solid rgba(0,0,0,.07); transition:transform .2s, box-shadow .2s; }
     .pricing-card:hover { transform:translateY(-4px); box-shadow:0 20px 48px rgba(0,0,0,.09); }
-    .pricing-featured { background:#09090B; border-color:#09090B; }
+    .pricing-featured { background:linear-gradient(135deg,#1a1060,#0f1a60); border-color:transparent; }
 
     .sector-pill { display:inline-block; padding:10px 20px; border-radius:99px; font-size:13.5px;
       font-weight:500; color:#374151; background:#fff; border:.5px solid rgba(0,0,0,.08);
@@ -973,7 +973,7 @@ export default function LandingPage() {
     <>
       <style>{CSS}</style>
 
-      <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue', sans-serif", background:"transparent", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
+      <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue', sans-serif", background:"#F7F7FA", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
 
         {/* ── WhatsApp float ── */}
         <a href={heroWA} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
@@ -1054,7 +1054,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div style={{ position:"relative", zIndex:1, background:"linear-gradient(170deg,#F0EDFF 0%,#F5F3FF 30%,#EDF0FF 60%,#F3F0FF 100%)" }}>
+        <div style={{ position:"relative", zIndex:1, background:"#F7F7FA" }}>
 
           {/* ══════════════════════════════════════════
               1. HERO V2
@@ -1071,7 +1071,7 @@ export default function LandingPage() {
             {/* Blanc pur central — contraste électrique */}
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 68% 58% at 38% 44%, #FFFFFF 0%, rgba(255,255,255,.95) 32%, rgba(255,255,255,.55) 58%, transparent 78%)", pointerEvents:"none", zIndex:1 }} />
             {/* Transition bas vers page */}
-            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, transparent, #F0EDFF)", pointerEvents:"none", zIndex:3 }} />
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, transparent, #F7F7FA)", pointerEvents:"none", zIndex:3 }} />
             <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:2, height:"100%" }} className="hero-split">
               <div style={{ flex:"0 0 46%", maxWidth:520, minWidth:0 }}>
                 <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(40px,5.5vw,72px)", fontWeight:800, lineHeight:1.0, letterSpacing:"-0.04em", color:"#09090B", marginBottom:24 }}>
@@ -1117,9 +1117,9 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="hero-img-wrap" style={{ flex:"0 0 54%", maxWidth:680, display:"flex", alignItems:"center", justifyContent:"center", height:"100%", position:"relative" }}>
+              <div className="hero-img-wrap" style={{ flex:"0 0 58%", maxWidth:780, display:"flex", alignItems:"center", justifyContent:"center", height:"100%", position:"relative" }}>
                 <Image src="/wallio_hero_ordinateur_transparent.webp" alt="Wallio — cartes de fidélité et dashboard gérant" width={1200} height={900} priority className="hero-img-enter"
-                  style={{ width:"100%", height:"auto", maxHeight:"88vh", objectFit:"contain", display:"block" }} />
+                  style={{ width:"110%", height:"auto", maxHeight:"96vh", objectFit:"contain", display:"block", marginRight:"-5%" }} />
               </div>
             </div>
           </section>
@@ -1153,7 +1153,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               3. LE PROBLÈME
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"120px 64px", background:"transparent", position:"relative", overflow:"hidden" }}>
+          <section style={{ padding:"120px 64px", background:"#F7F7FA", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.05)", filter:"blur(100px)", top:-150, right:-100, pointerEvents:"none" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
               <div style={{ display:"flex", gap:80, alignItems:"flex-start" }} className="prob-split">
@@ -1194,7 +1194,9 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               7. OUTILS GÉRANT (consolidé)
           ══════════════════════════════════════════ */}
-          <section id="dashboard" style={{ padding:"120px 64px", background:"transparent" }}>
+          <section id="dashboard" style={{ padding:"120px 64px", background:"#FFFFFF", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(90px)", top:-100, right:-100, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(139,92,246,.07)", filter:"blur(80px)", bottom:-80, right:100, pointerEvents:"none" }} />
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head sec-head-dark" style={{ marginBottom:60 }}>
                 <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.outilsTag}</span>
@@ -1292,7 +1294,7 @@ export default function LandingPage() {
               </div>
 
               {/* Équipe & Wallio Pro */}
-              <div data-reveal style={{ background:"rgba(255,255,255,.70)", borderRadius:24, padding:"40px 36px", border:".5px solid rgba(9,9,11,.09)", boxShadow:"0 4px 24px rgba(80,40,180,.07)" }}>
+              <div data-reveal style={{ background:"#F7F7FA", borderRadius:24, padding:"40px 36px", border:"1px solid #EEEEF3" }}>
                 <div style={{ display:"flex", alignItems:"flex-start", gap:20, marginBottom:28 }}>
                   <Image src="/icon-pro-512.png" alt="Wallio Pro" width={64} height={64} style={{ borderRadius:16, flexShrink:0, boxShadow:"0 4px 16px rgba(80,40,180,.18)" }} />
                   <div>
@@ -1305,7 +1307,7 @@ export default function LandingPage() {
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28 }} className="feats-2col">
                   {t.teamFeats.map((f, i) => (
-                    <div key={i} style={{ background:"#FFFFFF", borderRadius:14, padding:"20px 18px", border:".5px solid rgba(9,9,11,.08)", boxShadow:"0 2px 8px rgba(0,0,0,.04)" }}>
+                    <div key={i} style={{ background:"#FFFFFF", borderRadius:14, padding:"20px 18px", border:"1px solid #EEEEF3" }}>
                       <h4 style={{ fontSize:14, fontWeight:700, color:"#09090B", marginBottom:7 }}>{f.title}</h4>
                       <p style={{ fontSize:13, color:"rgba(9,9,11,.50)", lineHeight:1.6 }}>{f.body}</p>
                     </div>
@@ -1325,7 +1327,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               8. PERSONNALISATION + VRAIES CARTES
           ══════════════════════════════════════════ */}
-          <section id="carte" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+          <section id="carte" style={{ padding:"120px 64px", background:"#F7F7FA" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:60 }}>
                 <span className="stag">{t.customTag}</span>
@@ -1366,7 +1368,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               6. MODES DE RÉCOMPENSES
           ══════════════════════════════════════════ */}
-          <section id="recompenses" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+          <section id="recompenses" style={{ padding:"120px 64px", background:"#FFFFFF" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.rewardTag}</span>
@@ -1428,7 +1430,7 @@ export default function LandingPage() {
                   const active = activeReward === i;
                   return (
                     <div key={i} data-reveal onMouseEnter={() => setActiveReward(i)} onClick={() => setActiveReward(i)}
-                      style={{ flex: active ? "2.2" : "1", background:"#fff", borderRadius:24,
+                      style={{ flex: active ? "2.2" : "1", background:"#F7F7FA", borderRadius:24,
                         padding: active ? "28px 28px" : "28px 20px",
                         border: active ? `1.5px solid ${border}` : ".5px solid rgba(0,0,0,.07)",
                         boxShadow: active ? `0 12px 40px rgba(0,0,0,.08), 0 0 0 4px ${bg}` : "0 2px 12px rgba(0,0,0,.04)",
@@ -1458,7 +1460,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               4. COMMENT ÇA MARCHE
           ══════════════════════════════════════════ */}
-          <section id="comment" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+          <section id="comment" style={{ padding:"120px 64px", background:"#F7F7FA" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:72 }}>
                 <span className="stag">{t.howTag}</span>
@@ -1469,7 +1471,7 @@ export default function LandingPage() {
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24 }} className="steps-row">
                 {t.howSteps.map((s, i) => (
-                  <div key={i} data-reveal style={{ background:"transparent", borderRadius:24, padding:"36px 32px", border:".5px solid rgba(0,0,0,.06)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
+                  <div key={i} data-reveal style={{ background:"#FFFFFF", borderRadius:24, padding:"36px 32px", border:"1px solid #EEEEF3", position:"relative", overflow:"hidden", boxShadow:"0 2px 12px rgba(0,0,0,.05)" }}>
                     <div style={{ fontSize:56, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.28)`,`rgba(91,108,246,.28)`,`rgba(249,115,22,.28)`][i], lineHeight:1, marginBottom:24 }}>{s.n}</div>
                     <h3 style={{ fontSize:17, fontWeight:700, color:"#09090B", marginBottom:12, lineHeight:1.3 }}>{s.title}</h3>
                     <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{s.body}</p>
@@ -1483,7 +1485,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               5. EXPÉRIENCE CLIENT
           ══════════════════════════════════════════ */}
-          <section id="client" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+          <section id="client" style={{ padding:"120px 64px", background:"#FFFFFF" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
                 <span className="stag">{t.clientTag}</span>
@@ -1550,7 +1552,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9. TÉMOIGNAGES
           ══════════════════════════════════════════ */}
-          <section id="temoignages" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+          <section id="temoignages" style={{ padding:"120px 64px", background:"#F7F7FA" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
                 <span className="stag" style={{ background:"rgba(249,115,22,.10)", color:"#F97316" }}>{t.testTag}</span>
@@ -1558,7 +1560,7 @@ export default function LandingPage() {
               </div>
               <div data-stagger style={{ display:"flex", gap:20 }} className="steps-row">
                 {t.testimonials.map((testi, i) => (
-                  <div key={i} data-reveal style={{ flex:1, background:"#FFFFFF", border:".5px solid rgba(0,0,0,.07)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", boxShadow:"0 2px 16px rgba(0,0,0,.04)", borderTop:`2px solid ${["#007AFF","#8B5CF6","#F97316"][i]}` }}>
+                  <div key={i} data-reveal style={{ flex:1, background:"#FFFFFF", border:"1px solid #EEEEF3", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", boxShadow:"0 2px 12px rgba(0,0,0,.05)", borderTop:`2px solid ${["#007AFF","#8B5CF6","#F97316"][i]}` }}>
                     <div style={{ display:"flex", gap:3, marginBottom:18 }}>
                       {[0,1,2,3,4].map(s => ( <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F97316"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ))}
                     </div>
@@ -1581,7 +1583,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9b. ACCOMPAGNEMENT
           ══════════════════════════════════════════ */}
-          <section id="accom" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+          <section id="accom" style={{ padding:"120px 64px", background:"#FFFFFF" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:64 }}>
                 <span className="stag">{t.accomTag}</span>
@@ -1592,7 +1594,7 @@ export default function LandingPage() {
               </div>
               <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20, marginBottom:52 }} className="feats-2col">
                 {t.accomSteps.map((s, i) => (
-                  <div key={i} style={{ background:"transparent", borderRadius:20, padding:"32px 28px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
+                  <div key={i} style={{ background:"#F7F7FA", borderRadius:20, padding:"32px 28px", border:"1px solid #EEEEF3", position:"relative", overflow:"hidden" }}>
                     <div style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.28)`,`rgba(91,108,246,.28)`,`rgba(249,115,22,.28)`,`rgba(52,199,89,.28)`][i], lineHeight:1, marginBottom:18 }}>{s.n}</div>
                     <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:`linear-gradient(180deg,${["#007AFF","#5B6CF6","#F97316","#34C759"][i]}, transparent)` }} />
                     <h3 style={{ fontSize:16.5, fontWeight:700, color:"#09090B", marginBottom:10, lineHeight:1.3 }}>{s.title}</h3>
@@ -1612,7 +1614,9 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               10. TARIFS
           ══════════════════════════════════════════ */}
-          <section id="tarifs" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+          <section id="tarifs" style={{ padding:"120px 64px", background:"linear-gradient(135deg,#F0EEFF 0%,#F7F5FF 40%,#EEF3FF 100%)", position:"relative", overflow:"hidden" }} className="amb">
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.09)", filter:"blur(100px)", top:-200, left:-200, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.10)", filter:"blur(90px)", bottom:-150, right:-100, pointerEvents:"none" }} />
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.tarifsTag}</span>
@@ -1660,7 +1664,7 @@ export default function LandingPage() {
                   <a href={wa(t.tarifsWaAn(annual, currency))} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ width:"100%", justifyContent:"center", padding:"13px 0", borderRadius:12, fontSize:14 }}>{t.tarifsCta}</a>
                 </div>
               </div>
-              <div data-reveal style={{ background:"#fff", borderRadius:20, padding:"36px 40px", marginTop:32, border:".5px solid rgba(0,0,0,.07)" }}>
+              <div data-reveal style={{ background:"#FFFFFF", borderRadius:20, padding:"36px 40px", marginTop:32, border:"1px solid #EEEEF3", boxShadow:"0 2px 12px rgba(80,40,180,.06)" }}>
                 <p style={{ fontSize:12, fontWeight:700, letterSpacing:".08em", textTransform:"uppercase" as const, color:"#AEAEB2", marginBottom:24 }}>{t.tarifsIncludedTitle}</p>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"14px 32px" }} className="feats-2col">
                   {t.tarifsIncluded.map((item, i) => (
@@ -1677,7 +1681,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               11. FAQ
           ══════════════════════════════════════════ */}
-          <section id="faq" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+          <section id="faq" style={{ padding:"120px 64px", background:"#F7F7FA" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:56, alignItems:"center" }}>
                 <span className="stag">{t.faqTag}</span>
@@ -1707,14 +1711,14 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               11b. VIDÉO RÉCAP
           ══════════════════════════════════════════ */}
-          <section id="video" style={{ padding:"120px 64px", background:"transparent", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(120px)", top:-200, left:-200, pointerEvents:"none" }} />
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.06)", filter:"blur(100px)", bottom:-150, right:-150, pointerEvents:"none" }} />
+          <section id="video" style={{ padding:"120px 64px", background:"#0E0D1A", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(37,99,235,.22)", filter:"blur(100px)", top:-150, left:-150, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(124,58,237,.20)", filter:"blur(90px)", bottom:-100, right:-100, pointerEvents:"none" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
-              <div data-reveal="scale" className="sec-head sec-head-dark" style={{ textAlign:"center", marginBottom:52, alignItems:"center" }}>
-                <span className="stag" style={{ background:"rgba(9,9,11,.06)", color:"rgba(9,9,11,.55)" }}>{t.videoTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
-                <p style={{ fontSize:16, color:"rgba(9,9,11,.50)", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
+              <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:52, alignItems:"center" }}>
+                <span className="stag" style={{ background:"rgba(9,9,11,.06)", color:"rgba(255,255,255,.55)" }}>{t.videoTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
+                <p style={{ fontSize:16, color:"rgba(255,255,255,.50)", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
               </div>
               <div data-reveal style={{ maxWidth:860, margin:"0 auto" }}>
                 <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,.60)", border:".5px solid rgba(9,9,11,.08)" }}>
@@ -1738,7 +1742,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               12. CTA FINAL
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"96px 64px", background:"transparent" }}>
+          <section style={{ padding:"96px 64px", background:"#F7F7FA" }}>
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="cta-inner" style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", borderRadius:32, padding:"80px 64px", textAlign:"center" }}>
                 <h2 className="cta-title" style={{ fontSize:"clamp(32px,4.5vw,56px)", fontWeight:800, letterSpacing:"-0.04em", color:"#fff", marginBottom:16, lineHeight:1.0 }}>{t.ctaTitle}</h2>
