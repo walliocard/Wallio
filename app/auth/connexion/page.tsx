@@ -460,13 +460,14 @@ function ConnexionInner() {
 
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <input
-                  type="email"
-                  required
+                  type="text"
                   placeholder="Email"
                   value={email}
                   onChange={e => { setEmail(e.target.value); setError(""); }}
                   autoComplete="username"
                   autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   inputMode="email"
                   enterKeyHint="next"
                   style={inputStyle}
