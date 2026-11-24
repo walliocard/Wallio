@@ -1128,8 +1128,8 @@ export default function LandingPage() {
               2. PROOF BAR
           ══════════════════════════════════════════ */}
           <div style={{ background:"#09090B" }}>
-            <div style={{ ...MAX, padding:"22px 64px", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }} className="proof-bar">
-              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(9,9,11,.40)" }}>{t.proofLabel}</span>
+            <div style={{ ...MAX, padding:"18px 64px", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }} className="proof-bar">
+              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(255,255,255,.35)" }}>{t.proofLabel}</span>
               <div style={{ display:"flex", alignItems:"center", gap:20, flexWrap:"wrap", justifyContent:"center" }}>
                 {[
                   { src:"/logo-8am.jpg", alt:"8AM Coffeehouse", name:"8AM Coffeehouse & More", fit:"cover" as const },
@@ -1138,15 +1138,13 @@ export default function LandingPage() {
                   { src:"/logo-yumi.jpg", alt:"Yumi", name:"Yumi", fit:"cover" as const },
                 ].map(c => (
                   <div key={c.name} style={{ display:"flex", alignItems:"center", gap:9 }}>
-                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, border:".5px solid rgba(9,9,11,.10)" }}>
+                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, border:".5px solid rgba(255,255,255,.10)" }}>
                       <Image src={c.src} alt={c.alt} width={32} height={32} style={{ width:"100%", height:"100%", objectFit:c.fit }} />
                     </div>
                     <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.75)", letterSpacing:-.2 }}>{c.name}</span>
                   </div>
                 ))}
               </div>
-              <div style={{ width:.5, height:24, background:"rgba(255,255,255,.15)" }} />
-              <span style={{ fontSize:13, fontWeight:700, color:"#F97316" }}>{t.proofStat}</span>
             </div>
           </div>
 
