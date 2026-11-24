@@ -41,6 +41,7 @@ function useCountUp(target: number, duration = 700) {
 function fmt(n: number) { return n.toLocaleString("fr-FR"); }
 
 type TopClient = { prenom: string; nom: string; tampons: number; id: string };
+type ClientRow = { id: string; prenom: string; nom: string; tampons: number; date_inscription?: Date; derniere_visite?: Date; recompense_en_attente?: boolean };
 type MembreEquipe = {
   id: string; prenom: string; statut: string;
   scans_today?: number; scans_total?: number;
@@ -142,17 +143,24 @@ function HeroCard({
 
 // ── Tuile statistique compacte ─────────────────────────────────────────────────
 
-function StatTile({ value, label, trend, icon }: { value: number; label: string; trend?: string; icon: React.ReactNode }) {
+function StatTile({ value, label, trend, icon, onClick }: { value: number; label: string; trend?: string; icon: React.ReactNode; onClick?: () => void }) {
   const animated = useCountUp(value);
   return (
-    <div style={{
+    <div onClick={onClick} style={{
       background: "var(--glass-bg)", border: "1px solid var(--border)",
       borderRadius: 20, padding: 14,
       height: 104,
       display: "flex", flexDirection: "column", alignItems: "flex-start",
       boxShadow: "var(--shadow-sm)",
       overflow: "hidden",
-    }}>
+      cursor: onClick ? "pointer" : "default",
+      transition: "opacity 0.15s",
+      WebkitTapHighlightColor: "transparent",
+    }}
+    onPointerDown={e => onClick && ((e.currentTarget as HTMLDivElement).style.opacity = "0.7")}
+    onPointerUp={e => ((e.currentTarget as HTMLDivElement).style.opacity = "1")}
+    onPointerLeave={e => ((e.currentTarget as HTMLDivElement).style.opacity = "1")}
+    >
       <div style={{
         width: 32, height: 32, borderRadius: 8,
         background: "#EEF0FF",
@@ -215,6 +223,8 @@ export default function AccueilPage() {
   });
   const [membres, setMembres] = useState<MembreEquipe[]>([]);
   const [flexStats, setFlexStats] = useState<{ petit: number; grand: number; total: number } | null>(null);
+  const [clientRows, setClientRows] = useState<ClientRow[]>([]);
+  const [openSheet, setOpenSheet] = useState<"visites" | "clients" | "tampons" | "recompenses" | null>(null);
 
   const objectifRef = useRef<number>(marchand?.objectif_tampons || 10);
   const marchandModeRef = useRef<string>("cyclique");
@@ -329,6 +339,12 @@ export default function AccueilPage() {
       const total = snap.size;
       const taux_fidelite = total > 0 ? Math.round((fideles / total) * 100) : 0;
       setStats({ total, aujourd_hui, tampons_total, ce_mois, semaine, semaine_precedente, recompenses, choix_en_attente, top_client, taux_fidelite, nouvelles_semaine, proches_recompense, anniversaires_today, inactifs_30j, lastScanBeforeToday });
+      setClientRows(snap.docs.map(d => {
+        const data = d.data();
+        const dv = (data.derniere_visite?.seconds || 0) * 1000;
+        const di = (data.date_inscription?.seconds || 0) * 1000;
+        return { id: d.id, prenom: data.prenom || "", nom: data.nom || "", tampons: data.tampons || 0, date_inscription: di > 0 ? new Date(di) : undefined, derniere_visite: dv > 0 ? new Date(dv) : undefined, recompense_en_attente: !!data.recompense_en_attente };
+      }));
     }, err => console.error("[dashboard] Firestore error:", err.code, err.message));
     return unsub;
   }, [user]);
@@ -497,24 +513,27 @@ export default function AccueilPage() {
 
       {/* Stats 2×2 compactes */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-        <StatTile value={stats.ce_mois} label="Visites ce mois" icon={<IcoCalendar />} />
+        <StatTile value={stats.ce_mois} label="Visites ce mois" icon={<IcoCalendar />} onClick={() => setOpenSheet("visites")} />
         <StatTile
           value={stats.total}
           label="Clients"
           trend={stats.nouvelles_semaine > 0 ? `+${stats.nouvelles_semaine} cette semaine` : undefined}
           icon={<IcoUsers />}
+          onClick={() => setOpenSheet("clients")}
         />
         <StatTile
           value={stats.tampons_total}
           label="Tampons"
           trend={totalSemaine > 0 ? `${totalSemaine} cette semaine` : undefined}
           icon={<IcoStamp />}
+          onClick={() => setOpenSheet("tampons")}
         />
         <StatTile
           value={stats.recompenses}
           label="Récompenses"
           trend={stats.recompenses > 0 ? "en attente" : undefined}
           icon={<IcoGift />}
+          onClick={() => setOpenSheet("recompenses")}
         />
       </div>
 
@@ -682,5 +701,156 @@ export default function AccueilPage() {
       })()}
       </div>
     </div>
+
+    {/* ── Bottom sheets ──────────────────────────────────────────────────── */}
+    {openSheet && (() => {
+      const thisMonthStr = new Intl.DateTimeFormat("sv", { timeZone: tz }).format(new Date()).slice(0, 7);
+
+      const sheetConfig: Record<string, { title: string; count: number; cta: string; href: string }> = {
+        visites:     { title: "Visites ce mois",    count: stats.ce_mois,        cta: "Voir l'historique",     href: "/dashboard/historique" },
+        clients:     { title: "Clients",             count: stats.total,          cta: "Voir tous les clients", href: "/dashboard/clients" },
+        tampons:     { title: "Tampons distribués",  count: stats.tampons_total,  cta: "Voir l'historique",     href: "/dashboard/historique" },
+        recompenses: { title: "Récompenses",         count: stats.recompenses,    cta: "Voir les clients",      href: "/dashboard/clients" },
+      };
+      const cfg = sheetConfig[openSheet];
+
+      const visitesRows = clientRows
+        .filter(c => c.derniere_visite && getDateStr(c.derniere_visite.getTime(), tz).startsWith(thisMonthStr))
+        .sort((a, b) => (b.derniere_visite?.getTime() || 0) - (a.derniere_visite?.getTime() || 0))
+        .slice(0, 7);
+
+      const clientsRows = [...clientRows]
+        .sort((a, b) => (b.date_inscription?.getTime() || 0) - (a.date_inscription?.getTime() || 0))
+        .slice(0, 7);
+
+      const tamponsRows = [...clientRows]
+        .filter(c => c.derniere_visite)
+        .sort((a, b) => (b.derniere_visite?.getTime() || 0) - (a.derniere_visite?.getTime() || 0))
+        .slice(0, 7);
+
+      const recompensesRows = clientRows.filter(c => c.recompense_en_attente);
+
+      function RowItem({ prenom, nom, sub, right }: { prenom: string; nom: string; sub?: string; right?: string }) {
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--lavande)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, color: "var(--lavande-fg)", flexShrink: 0 }}>
+              {(prenom[0] || "?").toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{formatName(prenom)} {formatName(nom)}</p>
+              {sub && <p style={{ fontSize: 12, color: "var(--fg-tertiary)", margin: 0 }}>{sub}</p>}
+            </div>
+            {right && <p style={{ fontSize: 13, color: "var(--fg-secondary)", flexShrink: 0 }}>{right}</p>}
+          </div>
+        );
+      }
+
+      function timeAgo(d: Date) {
+        const h = Math.floor((Date.now() - d.getTime()) / 3600000);
+        if (h < 1) return "< 1h";
+        if (h < 24) return `${h}h`;
+        const days = Math.floor(h / 24);
+        return days === 1 ? "hier" : `${days}j`;
+      }
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-end" style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)" }} onClick={() => setOpenSheet(null)}>
+          <div className="w-full" style={{ background: "var(--bg)", borderRadius: "24px 24px 0 0", animation: "slide-up 0.3s cubic-bezier(0.34,1.06,0.64,1)", paddingBottom: "max(20px, env(safe-area-inset-bottom))", maxHeight: "70vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+
+            {/* Poignée */}
+            <div style={{ width: 36, height: 4, background: "var(--border)", borderRadius: 2, margin: "14px auto 0" }} />
+
+            {/* Header */}
+            <div style={{ padding: "16px 20px 0", display: "flex", alignItems: "baseline", gap: 8 }}>
+              <p style={{ fontSize: 20, fontWeight: 700, color: "var(--fg)", margin: 0 }}>{cfg.title}</p>
+              <p style={{ fontSize: 20, fontWeight: 700, background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", margin: 0 }}>{fmt(cfg.count)}</p>
+            </div>
+
+            {/* Contenu scrollable */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "8px 20px 0" }}>
+
+              {/* Visites */}
+              {openSheet === "visites" && (
+                <>
+                  {/* Mini chart */}
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 56, marginBottom: 16, marginTop: 8 }}>
+                    {stats.semaine.map((val, i) => {
+                      const isToday = i === 6;
+                      const h = Math.max((val / Math.max(...stats.semaine, 1)) * 40, 3);
+                      return (
+                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                          <div style={{ width: "100%", height: 40, display: "flex", alignItems: "flex-end" }}>
+                            <div style={{ width: "100%", height: h, borderRadius: 4, background: isToday ? "linear-gradient(to top,#2F7BFF,#8B5CF6)" : "#D9DCF7" }} />
+                          </div>
+                          <span style={{ fontSize: 10, color: isToday ? "#2F7BFF" : "#8E8E93", fontWeight: isToday ? 600 : 400 }}>{getDayLetter(6 - i, tz)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {visitesRows.length === 0
+                    ? <p style={{ fontSize: 13, color: "var(--fg-tertiary)", textAlign: "center", padding: "20px 0" }}>Aucune visite ce mois</p>
+                    : visitesRows.map(c => <RowItem key={c.id} prenom={c.prenom} nom={c.nom} sub={`${c.tampons} tampon${c.tampons > 1 ? "s" : ""}`} right={c.derniere_visite ? timeAgo(c.derniere_visite) : undefined} />)
+                  }
+                </>
+              )}
+
+              {/* Clients */}
+              {openSheet === "clients" && (
+                <>
+                  {clientsRows.length === 0
+                    ? <p style={{ fontSize: 13, color: "var(--fg-tertiary)", textAlign: "center", padding: "20px 0" }}>Aucun client</p>
+                    : clientsRows.map(c => <RowItem key={c.id} prenom={c.prenom} nom={c.nom} sub={c.date_inscription ? c.date_inscription.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : undefined} right={`${c.tampons} 🟣`} />)
+                  }
+                </>
+              )}
+
+              {/* Tampons */}
+              {openSheet === "tampons" && (
+                <>
+                  <div style={{ display: "flex", gap: 16, marginTop: 8, marginBottom: 16 }}>
+                    <div style={{ flex: 1, background: "var(--glass-bg)", borderRadius: 14, padding: "12px 14px" }}>
+                      <p style={{ fontSize: 11, color: "var(--fg-tertiary)", margin: "0 0 2px" }}>Cette semaine</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: "var(--fg)", margin: 0 }}>{totalSemaine}</p>
+                    </div>
+                    <div style={{ flex: 1, background: "var(--glass-bg)", borderRadius: 14, padding: "12px 14px" }}>
+                      <p style={{ fontSize: 11, color: "var(--fg-tertiary)", margin: "0 0 2px" }}>Sem. précédente</p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: "var(--fg)", margin: 0 }}>{totalPrecedente}</p>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Derniers scans</p>
+                  {tamponsRows.map(c => <RowItem key={c.id} prenom={c.prenom} nom={c.nom} sub={`${c.tampons} tampon${c.tampons > 1 ? "s" : ""}`} right={c.derniere_visite ? timeAgo(c.derniere_visite) : undefined} />)}
+                </>
+              )}
+
+              {/* Récompenses */}
+              {openSheet === "recompenses" && (
+                <>
+                  {recompensesRows.length === 0
+                    ? <p style={{ fontSize: 13, color: "var(--fg-tertiary)", textAlign: "center", padding: "20px 0" }}>Aucune récompense en attente</p>
+                    : (
+                      <>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#FF9F0A", textTransform: "uppercase", letterSpacing: "0.08em", margin: "8px 0 4px" }}>En attente de validation</p>
+                        {recompensesRows.map(c => <RowItem key={c.id} prenom={c.prenom} nom={c.nom} sub={`${c.tampons} tampon${c.tampons > 1 ? "s" : ""}`} right="🎁" />)}
+                      </>
+                    )
+                  }
+                </>
+              )}
+            </div>
+
+            {/* Bouton fixé en bas */}
+            <div style={{ padding: "14px 20px 0" }}>
+              <button
+                onClick={() => { setOpenSheet(null); router.push(cfg.href); }}
+                style={{ width: "100%", padding: "14px 0", borderRadius: 14, background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)", color: "white", fontSize: 15, fontWeight: 600, border: "none", cursor: "pointer" }}
+              >
+                {cfg.cta} →
+              </button>
+            </div>
+
+          </div>
+        </div>
+      );
+    })()}
   );
 }
