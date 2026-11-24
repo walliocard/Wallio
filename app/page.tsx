@@ -1190,11 +1190,11 @@ export default function LandingPage() {
               </div>
               <div data-reveal style={{ maxWidth:860, margin:"0 auto" }}>
                 <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,.60)", border:".5px solid rgba(255,255,255,.08)" }}>
-                  <video ref={videoRef} poster="/Wallio_Landing_v2_poster.jpg" playsInline
+                  <video ref={videoRef} poster="/wallio_landing_v2_final_poster.jpg" playsInline
                     style={{ width:"100%", display:"block" }}
                     onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)}>
-                    <source src="/Wallio_Landing_v2.webm" type="video/webm" />
-                    <source src="/Wallio_Landing_v2.mp4" type="video/mp4" />
+                    <source src="/wallio_landing_v2_final.webm" type="video/webm" />
+                    <source src="/wallio_landing_v2_final.mp4" type="video/mp4" />
                   </video>
                   {!videoPlaying && (
                     <div className="video-play-btn" onClick={() => videoRef.current?.play()}>
