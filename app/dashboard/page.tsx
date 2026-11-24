@@ -353,6 +353,11 @@ export default function AccueilPage() {
     if (!loading && !user) router.replace("/choisir");
   }, [loading, user, router]);
 
+  useEffect(() => {
+    document.body.style.overflow = openSheet ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [openSheet]);
+
   if (loading || !marchand) return (
     <div className="px-5 md:px-8 pt-8 pb-44 max-w-5xl">
       <div className="shimmer h-5 w-28 rounded-xl mb-2" />
