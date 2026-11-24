@@ -833,9 +833,11 @@ export default function LandingPage() {
     }
     .btn-present:hover { background:rgba(255,255,255,.08); color:#fff; }
 
-    .stag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.10em;
-      text-transform:uppercase; color:#007AFF; background:rgba(0,122,255,.08);
-      padding:5px 12px; border-radius:20px; margin-bottom:20px; }
+    .stag { display:inline-flex; align-items:center; align-self:flex-start; gap:7px;
+      font-size:11px; font-weight:700; letter-spacing:.10em; text-transform:uppercase;
+      color:#007AFF; margin-bottom:16px; }
+    .stag::before { content:''; display:block; width:5px; height:5px; border-radius:50%;
+      background:#007AFF; flex-shrink:0; }
 
     .lp-nav { padding:0 52px; }
     .anchor-nav::-webkit-scrollbar { display:none; }
@@ -1057,19 +1059,19 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               1. HERO V2
           ══════════════════════════════════════════ */}
-          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"transparent" }}>
-            {/* Blob bleu — centre gauche, effet vague */}
-            <div style={{ position:"absolute", width:750, height:750, borderRadius:"50%", background:"rgba(37,99,235,.54)", filter:"blur(80px)", top:"28%", left:-160, pointerEvents:"none", zIndex:0 }} />
-            {/* Blob violet — coin supérieur droit */}
-            <div style={{ position:"absolute", width:720, height:720, borderRadius:"50%", background:"rgba(124,58,237,.46)", filter:"blur(82px)", top:-180, right:-160, pointerEvents:"none", zIndex:0 }} />
-            {/* Violet léger — coin inférieur droit */}
-            <div style={{ position:"absolute", width:480, height:480, borderRadius:"50%", background:"rgba(167,139,250,.22)", filter:"blur(70px)", bottom:-80, right:60, pointerEvents:"none", zIndex:0 }} />
-            {/* Arc lumineux — haut droit */}
-            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.58)", filter:"blur(7px)", top:-70, right:-20, pointerEvents:"none", zIndex:0 }} />
-            {/* Halo blanc supérieur gauche + centre dominant */}
-            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 72% 62% at 32% 42%, rgba(255,255,255,1) 0%, rgba(255,255,255,.88) 40%, rgba(255,255,255,.30) 65%, transparent 80%)", pointerEvents:"none", zIndex:1 }} />
-            {/* Transition douce vers bandeau noir */}
-            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, transparent, #EDF0FF)", pointerEvents:"none", zIndex:3 }} />
+          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FFFFFF" }}>
+            {/* Glow bleu électrique — bas gauche */}
+            <div style={{ position:"absolute", width:860, height:860, borderRadius:"50%", background:"rgba(37,99,235,.60)", filter:"blur(78px)", bottom:-220, left:-180, pointerEvents:"none", zIndex:0 }} />
+            {/* Glow violet — haut droit */}
+            <div style={{ position:"absolute", width:780, height:780, borderRadius:"50%", background:"rgba(124,58,237,.55)", filter:"blur(78px)", top:-200, right:-180, pointerEvents:"none", zIndex:0 }} />
+            {/* Violet moyen — bas droit */}
+            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(167,139,250,.28)", filter:"blur(65px)", bottom:-60, right:80, pointerEvents:"none", zIndex:0 }} />
+            {/* Arc lumineux haut droit */}
+            <div style={{ position:"absolute", width:520, height:520, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.65)", filter:"blur(7px)", top:-80, right:-20, pointerEvents:"none", zIndex:0 }} />
+            {/* Blanc pur central — contraste électrique */}
+            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 68% 58% at 38% 44%, #FFFFFF 0%, rgba(255,255,255,.95) 32%, rgba(255,255,255,.55) 58%, transparent 78%)", pointerEvents:"none", zIndex:1 }} />
+            {/* Transition bas vers page */}
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, transparent, #F0EDFF)", pointerEvents:"none", zIndex:3 }} />
             <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:2, height:"100%" }} className="hero-split">
               <div style={{ flex:"0 0 46%", maxWidth:520, minWidth:0 }}>
                 <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(40px,5.5vw,72px)", fontWeight:800, lineHeight:1.0, letterSpacing:"-0.04em", color:"#09090B", marginBottom:24 }}>
@@ -1116,13 +1118,19 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="hero-img-wrap" style={{ flex:"0 0 50%", maxWidth:600, display:"flex", alignItems:"center", justifyContent:"center", height:"100%", position:"relative" }}>
-                {/* 4 vraies cartes Wallio — le produit clairement */}
-                <Image src="/wallio_cartes_wallet_x4.png" alt="Cartes de fidélité Wallio" width={700} height={450} priority className="hero-img-enter"
-                  style={{ width:"100%", height:"auto", maxWidth:580, filter:"drop-shadow(0 28px 60px rgba(80,40,180,.22))", borderRadius:18, display:"block", position:"relative", zIndex:1 }} />
-                {/* Carte 8AM flottante en avant-plan */}
-                <div className="hero-img-enter" style={{ position:"absolute", right:"-4%", bottom:"12%", zIndex:2, transform:"rotate(8deg)", filter:"drop-shadow(0 16px 36px rgba(0,0,0,.28))" }}>
-                  <Image src="/carte_wallet_8am.png" alt="Carte 8AM Coffeehouse" width={240} height={152}
-                    style={{ width:240, height:"auto", borderRadius:14, display:"block" }} />
+                <div style={{ position:"relative", width:480, height:380 }}>
+                  {/* Carte arrière — inclinée gauche */}
+                  <div className="hero-img-enter" style={{ position:"absolute", top:"10%", left:0, zIndex:1, transform:"rotate(-11deg)", filter:"drop-shadow(0 16px 40px rgba(80,40,180,.20))" }}>
+                    <Image src="/carte_wallet_comptoir.png" alt="Carte Comptoir de l'Homme" width={260} height={165} style={{ width:260, height:"auto", borderRadius:14, display:"block" }} />
+                  </div>
+                  {/* Carte milieu — légèrement inclinée */}
+                  <div className="hero-img-enter" style={{ position:"absolute", top:"4%", left:"18%", zIndex:2, transform:"rotate(-3deg)", filter:"drop-shadow(0 20px 48px rgba(80,40,180,.24))" }}>
+                    <Image src="/carte_wallet_maisonmatcha.png" alt="Carte Maison Matcha" width={272} height={172} style={{ width:272, height:"auto", borderRadius:14, display:"block" }} />
+                  </div>
+                  {/* Carte avant — inclinée droite, au premier plan */}
+                  <div className="hero-img-enter" style={{ position:"absolute", top:"18%", left:"30%", zIndex:3, transform:"rotate(7deg)", filter:"drop-shadow(0 24px 56px rgba(0,0,0,.26))" }}>
+                    <Image src="/carte_wallet_8am.png" alt="Carte 8AM Coffeehouse" width={280} height={177} style={{ width:280, height:"auto", borderRadius:14, display:"block" }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1296,26 +1304,29 @@ export default function LandingPage() {
               </div>
 
               {/* Équipe & Wallio Pro */}
-              <div data-reveal style={{ background:"rgba(9,9,11,.03)", borderRadius:24, padding:"40px 36px", border:".5px solid rgba(9,9,11,.08)" }}>
-                <div style={{ marginBottom:32 }}>
-                  <span className="stag" style={{ background:"rgba(9,9,11,.06)", color:"rgba(9,9,11,.55)", marginBottom:12 }}>{t.teamTag}</span>
-                  <h3 style={{ fontSize:"clamp(22px,2.5vw,32px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", marginBottom:10 }}>
-                    {t.teamTitle} {t.teamTitle2}
-                  </h3>
-                  <p style={{ fontSize:15, color:"rgba(9,9,11,.45)", maxWidth:520 }}>{t.teamSub}</p>
+              <div data-reveal style={{ background:"rgba(255,255,255,.70)", borderRadius:24, padding:"40px 36px", border:".5px solid rgba(9,9,11,.09)", boxShadow:"0 4px 24px rgba(80,40,180,.07)" }}>
+                <div style={{ display:"flex", alignItems:"flex-start", gap:20, marginBottom:28 }}>
+                  <Image src="/icon-pro-512.png" alt="Wallio Pro" width={64} height={64} style={{ borderRadius:16, flexShrink:0, boxShadow:"0 4px 16px rgba(80,40,180,.18)" }} />
+                  <div>
+                    <span className="stag" style={{ color:"rgba(9,9,11,.50)" }}>{t.teamTag}</span>
+                    <h3 style={{ fontSize:"clamp(22px,2.5vw,32px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", marginBottom:8 }}>
+                      {t.teamTitle} {t.teamTitle2}
+                    </h3>
+                    <p style={{ fontSize:15, color:"rgba(9,9,11,.50)", maxWidth:520 }}>{t.teamSub}</p>
+                  </div>
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28 }} className="feats-2col">
                   {t.teamFeats.map((f, i) => (
-                    <div key={i} style={{ background:"rgba(9,9,11,.04)", borderRadius:14, padding:"20px 18px", border:".5px solid rgba(9,9,11,.07)" }}>
+                    <div key={i} style={{ background:"#FFFFFF", borderRadius:14, padding:"20px 18px", border:".5px solid rgba(9,9,11,.08)", boxShadow:"0 2px 8px rgba(0,0,0,.04)" }}>
                       <h4 style={{ fontSize:14, fontWeight:700, color:"#09090B", marginBottom:7 }}>{f.title}</h4>
-                      <p style={{ fontSize:13, color:"rgba(9,9,11,.45)", lineHeight:1.6 }}>{f.body}</p>
+                      <p style={{ fontSize:13, color:"rgba(9,9,11,.50)", lineHeight:1.6 }}>{f.body}</p>
                     </div>
                   ))}
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
                   <span style={{ fontSize:13, color:"rgba(9,9,11,.40)" }}>{lang==="ro" ? "Disponibil pe" : lang==="en" ? "Available on" : "Disponible sur"} :</span>
-                  <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.8 }} />
-                  <span style={{ fontSize:13, fontWeight:500, color:"rgba(9,9,11,.40)", padding:"6px 14px", background:"rgba(9,9,11,.05)", borderRadius:20 }}>
+                  <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.85 }} />
+                  <span style={{ fontSize:13, fontWeight:500, color:"rgba(9,9,11,.45)", padding:"6px 14px", background:"rgba(9,9,11,.06)", borderRadius:20 }}>
                     {lang==="ro" ? "Browser web" : lang==="en" ? "Web browser" : "Navigateur web"}
                   </span>
                 </div>
