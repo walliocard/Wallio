@@ -1610,6 +1610,37 @@ export default function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════
+              11b. VIDÉO RÉCAP
+          ══════════════════════════════════════════ */}
+          <section id="video" style={{ padding:"120px 64px", background:"#0E0D1A", position:"relative", overflow:"hidden", contain:"paint" }}>
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(37,99,235,.22)", filter:"blur(75px)", top:-150, left:-150, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(124,58,237,.20)", filter:"blur(67px)", bottom:-100, right:-100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
+            <div style={{ ...MAX, position:"relative", zIndex:1 }}>
+              <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:52, alignItems:"center" }}>
+                <span className="stag" style={{ background:"rgba(9,9,11,.06)", color:"rgba(255,255,255,.55)" }}>{t.videoTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
+                <p style={{ fontSize:16, color:"rgba(255,255,255,.50)", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
+              </div>
+              <div data-reveal style={{ maxWidth:860, margin:"0 auto" }}>
+                <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,.60)", border:".5px solid rgba(9,9,11,.08)" }}>
+                  <video ref={videoRef} poster="" playsInline
+                    style={{ width:"100%", display:"block" }}
+                    onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)}>
+                    <source src="/wallio_resume_v3.mp4" type="video/mp4" />
+                  </video>
+                  {!videoPlaying && (
+                    <div className="video-play-btn" onClick={() => videoRef.current?.play()}>
+                      <div className="play-circle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="#09090B" style={{ marginLeft:3 }}><polygon points="5 3 19 12 5 21"/></svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
               10. TARIFS
           ══════════════════════════════════════════ */}
           <section id="tarifs" style={{ padding:"120px 64px", background:"linear-gradient(135deg,#F0EEFF 0%,#F7F5FF 40%,#EEF3FF 100%)", position:"relative", overflow:"hidden" }} className="amb">
@@ -1702,37 +1733,6 @@ export default function LandingPage() {
               </div>
               <div data-reveal style={{ textAlign:"center", marginTop:48 }}>
                 <a href={wa(t.faqWa)} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize:14 }}>{t.faqCta}</a>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════
-              11b. VIDÉO RÉCAP
-          ══════════════════════════════════════════ */}
-          <section id="video" style={{ padding:"120px 64px", background:"#0E0D1A", position:"relative", overflow:"hidden", contain:"paint" }}>
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(37,99,235,.22)", filter:"blur(75px)", top:-150, left:-150, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(124,58,237,.20)", filter:"blur(67px)", bottom:-100, right:-100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
-            <div style={{ ...MAX, position:"relative", zIndex:1 }}>
-              <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:52, alignItems:"center" }}>
-                <span className="stag" style={{ background:"rgba(9,9,11,.06)", color:"rgba(255,255,255,.55)" }}>{t.videoTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
-                <p style={{ fontSize:16, color:"rgba(255,255,255,.50)", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
-              </div>
-              <div data-reveal style={{ maxWidth:860, margin:"0 auto" }}>
-                <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,.60)", border:".5px solid rgba(9,9,11,.08)" }}>
-                  <video ref={videoRef} poster="" playsInline
-                    style={{ width:"100%", display:"block" }}
-                    onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)}>
-                    <source src="/wallio_resume_v3.mp4" type="video/mp4" />
-                  </video>
-                  {!videoPlaying && (
-                    <div className="video-play-btn" onClick={() => videoRef.current?.play()}>
-                      <div className="play-circle">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="#09090B" style={{ marginLeft:3 }}><polygon points="5 3 19 12 5 21"/></svg>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </section>
