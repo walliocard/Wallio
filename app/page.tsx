@@ -885,6 +885,13 @@ export default function LandingPage() {
     .amb > div { position:relative; z-index:1; }
 
     .video-wrap { position:relative; border-radius:20px; overflow:hidden; cursor:pointer; background:#09090B; }
+    .video-pause-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      background:transparent; transition:background .2s; cursor:pointer; }
+    .video-pause-btn:hover { background:rgba(0,0,0,.18); }
+    .video-pause-btn .pause-circle { width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,.92);
+      display:flex; align-items:center; justify-content:center; box-shadow:0 8px 28px rgba(0,0,0,.35);
+      opacity:0; transform:scale(.85); transition:opacity .2s, transform .2s; }
+    .video-pause-btn:hover .pause-circle { opacity:1; transform:scale(1); }
     .video-play-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
       background:rgba(0,0,0,.35); transition:background .2s; }
     .video-play-btn:hover { background:rgba(0,0,0,.20); }
@@ -1661,7 +1668,13 @@ export default function LandingPage() {
                     onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)}>
                     <source src="/wallio_resume_v3.mp4" type="video/mp4" />
                   </video>
-                  {!videoPlaying && (
+                  {videoPlaying ? (
+                    <div className="video-pause-btn" onClick={() => videoRef.current?.pause()}>
+                      <div className="pause-circle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#09090B"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                      </div>
+                    </div>
+                  ) : (
                     <div className="video-play-btn" onClick={() => videoRef.current?.play()}>
                       <div className="play-circle">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="#09090B" style={{ marginLeft:3 }}><polygon points="5 3 19 12 5 21"/></svg>
