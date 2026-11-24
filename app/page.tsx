@@ -895,6 +895,11 @@ export default function LandingPage() {
     .sec-head::before { content:''; display:block; width:2px; height:40px; background:linear-gradient(180deg,transparent,rgba(0,122,255,.55)); border-radius:2px; margin-bottom:16px; }
     .sec-head-dark::before { background:linear-gradient(180deg,transparent,rgba(96,165,250,.45)); }
 
+    /* Fond ambiant — blob gradient dans chaque section claire */
+    .amb { position:relative; overflow:hidden; }
+    .amb::after { content:''; position:absolute; border-radius:50%; width:800px; height:800px; background:radial-gradient(circle, rgba(0,122,255,.055) 0%, rgba(99,102,241,.03) 50%, transparent 70%); filter:blur(90px); top:-220px; right:-160px; pointer-events:none; z-index:0; }
+    .amb > div { position:relative; z-index:1; }
+
     .video-wrap { position:relative; border-radius:20px; overflow:hidden; cursor:pointer; background:#09090B; }
     .video-play-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
       background:rgba(0,0,0,.35); transition:background .2s; }
@@ -1101,10 +1106,14 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               1. HERO V2
           ══════════════════════════════════════════ */}
-          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FAFAFA" }}>
-            <div style={{ position:"absolute", width:800, height:800, borderRadius:"50%", background:"rgba(99,102,241,.14)", filter:"blur(100px)", top:-200, left:-200, pointerEvents:"none", zIndex:0 }} />
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.10)", filter:"blur(90px)", top:0, right:-150, pointerEvents:"none", zIndex:0 }} />
-            <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:1, height:"100%" }} className="hero-split">
+          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FFFFFF" }}>
+            {/* Blobs périphériques — contraste avec le blanc électrique central */}
+            <div style={{ position:"absolute", width:900, height:900, borderRadius:"50%", background:"rgba(99,102,241,.22)", filter:"blur(110px)", top:-280, left:-220, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:800, height:800, borderRadius:"50%", background:"rgba(0,122,255,.16)", filter:"blur(100px)", top:-80, right:-200, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.10)", filter:"blur(90px)", bottom:-100, right:200, pointerEvents:"none", zIndex:0 }} />
+            {/* Halo central blanc électrique */}
+            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 65% 55% at 42% 45%, #FFFFFF 0%, rgba(255,255,255,.85) 35%, transparent 75%)", pointerEvents:"none", zIndex:1 }} />
+            <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:2, height:"100%" }} className="hero-split">
               <div style={{ flex:"0 0 46%", maxWidth:520, minWidth:0 }}>
                 <div className="hero-anim-1" style={{ marginBottom:28 }}>
                   <span style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"6px 14px", background:"rgba(0,0,0,.055)", borderRadius:99, fontSize:11.5, fontWeight:600, letterSpacing:".04em", color:"#374151" }}>{t.heroBadge}</span>
@@ -1261,7 +1270,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               4. COMMENT ÇA MARCHE
           ══════════════════════════════════════════ */}
-          <section id="comment" style={{ padding:"120px 64px", background:"#FAFAFA" }}>
+          <section id="comment" style={{ padding:"120px 64px", background:"#FAFAFA" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:72 }}>
                 <span className="stag">{t.howTag}</span>
@@ -1286,7 +1295,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               4b. SECTEURS
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"72px 64px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.06)" }}>
+          <section style={{ padding:"72px 64px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.06)" }} className="amb">
             <div style={{ ...MAX, textAlign:"center" }}>
               <div data-reveal>
                 <span className="stag">{t.sectorsTag}</span>
@@ -1301,7 +1310,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               5. EXPÉRIENCE CLIENT
           ══════════════════════════════════════════ */}
-          <section id="client" style={{ padding:"120px 64px", background:"#FFFFFF" }}>
+          <section id="client" style={{ padding:"120px 64px", background:"#FFFFFF" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
                 <span className="stag">{t.clientTag}</span>
@@ -1368,7 +1377,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               6. MODES DE RÉCOMPENSES
           ══════════════════════════════════════════ */}
-          <section id="recompenses" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
+          <section id="recompenses" style={{ padding:"120px 64px", background:"#F7F8FF" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.rewardTag}</span>
@@ -1588,7 +1597,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               8. PERSONNALISATION + VRAIES CARTES
           ══════════════════════════════════════════ */}
-          <section id="carte" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
+          <section id="carte" style={{ padding:"120px 64px", background:"#F7F8FF" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:60 }}>
                 <span className="stag">{t.customTag}</span>
@@ -1629,7 +1638,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9. TÉMOIGNAGES
           ══════════════════════════════════════════ */}
-          <section id="temoignages" style={{ padding:"120px 64px", background:"#F5F5F7" }}>
+          <section id="temoignages" style={{ padding:"120px 64px", background:"#F5F5F7" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
                 <span className="stag" style={{ background:"rgba(249,115,22,.10)", color:"#F97316" }}>{t.testTag}</span>
@@ -1660,7 +1669,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9b. ACCOMPAGNEMENT
           ══════════════════════════════════════════ */}
-          <section id="accom" style={{ padding:"120px 64px", background:"#F7F8FF" }}>
+          <section id="accom" style={{ padding:"120px 64px", background:"#F7F8FF" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:64 }}>
                 <span className="stag">{t.accomTag}</span>
@@ -1691,7 +1700,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               10. TARIFS
           ══════════════════════════════════════════ */}
-          <section id="tarifs" style={{ padding:"120px 64px", background:"#FAFAFA" }}>
+          <section id="tarifs" style={{ padding:"120px 64px", background:"#FAFAFA" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.tarifsTag}</span>
@@ -1756,7 +1765,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               11. FAQ
           ══════════════════════════════════════════ */}
-          <section id="faq" style={{ padding:"120px 64px", background:"#FFFFFF" }}>
+          <section id="faq" style={{ padding:"120px 64px", background:"#FFFFFF" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:56, alignItems:"center" }}>
                 <span className="stag">{t.faqTag}</span>
