@@ -15,11 +15,11 @@ const T = {
   fr: {
     navLogin: "Connexion", navCta: "Nous contacter",
     anchors: [
-      { id: "comment", label: "Comment ça marche" },
-      { id: "recompenses", label: "Récompenses" },
       { id: "dashboard", label: "Dashboard" },
-      { id: "client", label: "Expérience client" },
       { id: "carte", label: "Personnalisation" },
+      { id: "recompenses", label: "Récompenses" },
+      { id: "comment", label: "Comment ça marche" },
+      { id: "client", label: "Expérience client" },
       { id: "tarifs", label: "Tarifs" },
       { id: "faq", label: "FAQ" },
     ],
@@ -197,11 +197,11 @@ const T = {
   en: {
     navLogin: "Sign in", navCta: "Contact us",
     anchors: [
-      { id: "comment", label: "How it works" },
-      { id: "recompenses", label: "Rewards" },
       { id: "dashboard", label: "Dashboard" },
-      { id: "client", label: "Client experience" },
       { id: "carte", label: "Customization" },
+      { id: "recompenses", label: "Rewards" },
+      { id: "comment", label: "How it works" },
+      { id: "client", label: "Client experience" },
       { id: "tarifs", label: "Pricing" },
       { id: "faq", label: "FAQ" },
     ],
@@ -379,11 +379,11 @@ const T = {
   ro: {
     navLogin: "Autentificare", navCta: "Contactați-ne",
     anchors: [
-      { id: "comment", label: "Cum funcționează" },
-      { id: "recompenses", label: "Recompense" },
       { id: "dashboard", label: "Dashboard" },
-      { id: "client", label: "Experiența clientului" },
       { id: "carte", label: "Personalizare" },
+      { id: "recompenses", label: "Recompense" },
+      { id: "comment", label: "Cum funcționează" },
+      { id: "client", label: "Experiența clientului" },
       { id: "tarifs", label: "Tarife" },
       { id: "faq", label: "FAQ" },
     ],
