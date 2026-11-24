@@ -752,16 +752,16 @@ export default function AccueilPage() {
       const visitesRows = clientRows
         .filter(c => c.derniere_visite && getDateStr(c.derniere_visite.getTime(), tz).startsWith(thisMonthStr))
         .sort((a, b) => (b.derniere_visite?.getTime() || 0) - (a.derniere_visite?.getTime() || 0))
-        .slice(0, 4);
+        .slice(0, 6);
 
       const clientsRows = [...clientRows]
         .sort((a, b) => (b.date_inscription?.getTime() || 0) - (a.date_inscription?.getTime() || 0))
-        .slice(0, 4);
+        .slice(0, 6);
 
       const tamponsRows = [...clientRows]
         .filter(c => c.derniere_visite)
         .sort((a, b) => (b.derniere_visite?.getTime() || 0) - (a.derniere_visite?.getTime() || 0))
-        .slice(0, 4);
+        .slice(0, 6);
 
       const recompensesRows = clientRows.filter(c => c.recompense_en_attente);
 
