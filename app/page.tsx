@@ -1059,15 +1059,15 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               1. HERO V2
           ══════════════════════════════════════════ */}
-          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FFFFFF" }}>
+          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FFFFFF", contain:"paint" }}>
             {/* Glow bleu électrique — bas gauche */}
-            <div style={{ position:"absolute", width:860, height:860, borderRadius:"50%", background:"rgba(37,99,235,.30)", filter:"blur(78px)", bottom:-220, left:-180, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:860, height:860, borderRadius:"50%", background:"rgba(37,99,235,.30)", filter:"blur(58px)", bottom:-220, left:-180, pointerEvents:"none", zIndex:0, willChange:"transform", transform:"translateZ(0)" }} />
             {/* Glow violet — haut droit */}
-            <div style={{ position:"absolute", width:780, height:780, borderRadius:"50%", background:"rgba(124,58,237,.28)", filter:"blur(78px)", top:-200, right:-180, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:780, height:780, borderRadius:"50%", background:"rgba(124,58,237,.28)", filter:"blur(58px)", top:-200, right:-180, pointerEvents:"none", zIndex:0, willChange:"transform", transform:"translateZ(0)" }} />
             {/* Violet moyen — bas droit */}
-            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(167,139,250,.14)", filter:"blur(65px)", bottom:-60, right:80, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(167,139,250,.14)", filter:"blur(48px)", bottom:-60, right:80, pointerEvents:"none", zIndex:0, willChange:"transform", transform:"translateZ(0)" }} />
             {/* Arc lumineux haut droit */}
-            <div style={{ position:"absolute", width:520, height:520, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.35)", filter:"blur(7px)", top:-80, right:-20, pointerEvents:"none", zIndex:0 }} />
+            <div style={{ position:"absolute", width:520, height:520, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.35)", filter:"blur(40px)", top:-80, right:-20, pointerEvents:"none", zIndex:0, willChange:"transform", transform:"translateZ(0)" }} />
             {/* Blanc pur central — contraste électrique */}
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 68% 58% at 38% 44%, #FFFFFF 0%, rgba(255,255,255,.95) 32%, rgba(255,255,255,.55) 58%, transparent 78%)", pointerEvents:"none", zIndex:1 }} />
             {/* Transition bas vers page */}
@@ -1152,7 +1152,7 @@ export default function LandingPage() {
               3. LE PROBLÈME
           ══════════════════════════════════════════ */}
           <section style={{ padding:"120px 64px", background:"#F7F7FA", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.05)", filter:"blur(100px)", top:-150, right:-100, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.05)", filter:"blur(75px)", top:-150, right:-100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
               <div style={{ display:"flex", gap:80, alignItems:"flex-start" }} className="prob-split">
                 <div style={{ flex:"0 0 40%" }} className="prob-left">
@@ -1192,9 +1192,9 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               7. OUTILS GÉRANT (consolidé)
           ══════════════════════════════════════════ */}
-          <section id="dashboard" style={{ padding:"120px 64px", background:"#FFFFFF", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(90px)", top:-100, right:-100, pointerEvents:"none" }} />
-            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(139,92,246,.07)", filter:"blur(80px)", bottom:-80, right:100, pointerEvents:"none" }} />
+          <section id="dashboard" style={{ padding:"120px 64px", background:"#FFFFFF", position:"relative", overflow:"hidden", contain:"paint" }}>
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(67px)", top:-100, right:-100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
+            <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(139,92,246,.07)", filter:"blur(60px)", bottom:-80, right:100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head sec-head-dark" style={{ marginBottom:60 }}>
                 <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.outilsTag}</span>
@@ -1494,7 +1494,7 @@ export default function LandingPage() {
               </div>
               <div style={{ display:"flex", gap:0, alignItems:"stretch", background:"transparent", borderRadius:28, overflow:"hidden", border:".5px solid rgba(0,0,0,.07)" }} className="client-spotlight">
                 <div style={{ flex:"0 0 44%", background:"#F0F0F5", display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 32px", position:"relative", overflow:"hidden", minHeight:560 }} className="client-phone-panel">
-                  <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(60px)", top:-50, left:-50, pointerEvents:"none" }} />
+                  <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(45px)", top:-50, left:-50, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
                   <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:`rgba(${activeClient===2?"249,115,22":"99,102,241"},.07)`, filter:"blur(50px)", bottom:-30, right:-30, pointerEvents:"none", transition:"background .5s" }} />
                   <Image key={activeClient} src={["/iphone_client.webp","/iphone_messages.webp","/iphone_decouvrir.webp"][activeClient]} alt={t.clientFeats[activeClient]?.title ?? ""} width={340} height={680} className="screen-enter"
                     style={{ width:"auto", height:"min(72vh, 520px)", display:"block", position:"relative", zIndex:1, filter:"drop-shadow(0 24px 48px rgba(0,0,0,.18))" }} />
@@ -1613,8 +1613,8 @@ export default function LandingPage() {
               10. TARIFS
           ══════════════════════════════════════════ */}
           <section id="tarifs" style={{ padding:"120px 64px", background:"linear-gradient(135deg,#F0EEFF 0%,#F7F5FF 40%,#EEF3FF 100%)", position:"relative", overflow:"hidden" }} className="amb">
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.09)", filter:"blur(100px)", top:-200, left:-200, pointerEvents:"none" }} />
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.10)", filter:"blur(90px)", bottom:-150, right:-100, pointerEvents:"none" }} />
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.09)", filter:"blur(75px)", top:-200, left:-200, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.10)", filter:"blur(67px)", bottom:-150, right:-100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.tarifsTag}</span>
@@ -1709,9 +1709,9 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               11b. VIDÉO RÉCAP
           ══════════════════════════════════════════ */}
-          <section id="video" style={{ padding:"120px 64px", background:"#0E0D1A", position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(37,99,235,.22)", filter:"blur(100px)", top:-150, left:-150, pointerEvents:"none" }} />
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(124,58,237,.20)", filter:"blur(90px)", bottom:-100, right:-100, pointerEvents:"none" }} />
+          <section id="video" style={{ padding:"120px 64px", background:"#0E0D1A", position:"relative", overflow:"hidden", contain:"paint" }}>
+            <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(37,99,235,.22)", filter:"blur(75px)", top:-150, left:-150, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
+            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(124,58,237,.20)", filter:"blur(67px)", bottom:-100, right:-100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:52, alignItems:"center" }}>
                 <span className="stag" style={{ background:"rgba(9,9,11,.06)", color:"rgba(255,255,255,.55)" }}>{t.videoTag}</span>
