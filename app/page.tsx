@@ -649,7 +649,7 @@ function DashPreview({ feat }: { feat: number }) {
       ].map((n, i)=>(
         <div key={i} style={{ background:"rgba(255,255,255,.10)", borderRadius:14, padding:"12px 14px", marginBottom:8, animation:`notifDrop .5s cubic-bezier(.16,1,.3,1) ${n.delay}s both` }}>
           <div style={{ fontSize:11, fontWeight:700, color:"rgba(255,255,255,.45)", marginBottom:5 }}>{n.title}</div>
-          <div style={{ fontSize:12, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>{n.body}</div>
+          <div style={{ fontSize:12, color:"rgba(9,9,11,.85)", lineHeight:1.5 }}>{n.body}</div>
         </div>
       ))}
     </div>,
@@ -715,7 +715,6 @@ function DashPreview({ feat }: { feat: number }) {
   return <div key={feat} style={{ width:"100%" }}>{previews[feat]}</div>;
 }
 
-const PRESENT_SECTIONS = ["hero","video","comment","client","recompenses","dashboard","carte","temoignages","accom","tarifs","faq"];
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -726,8 +725,6 @@ export default function LandingPage() {
   const [activeDash, setActiveDash] = useState(0);
   const [activeReward, setActiveReward] = useState(0);
   const [activeClient, setActiveClient] = useState(0);
-  const [presentMode, setPresentMode] = useState(false);
-  const [presentSlide, setPresentSlide] = useState(0);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { region, lang: contextLang, setLang: setContextLang } = useLang();
@@ -770,21 +767,6 @@ export default function LandingPage() {
     return () => io.disconnect();
   }, [t.anchors]);
 
-  useEffect(() => {
-    if (!presentMode) return;
-    const goTo = (idx: number) => {
-      const id = PRESENT_SECTIONS[idx];
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      setPresentSlide(idx);
-    };
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") goTo(Math.min(presentSlide + 1, PRESENT_SECTIONS.length - 1));
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") goTo(Math.max(presentSlide - 1, 0));
-      if (e.key === "Escape") setPresentMode(false);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [presentMode, presentSlide]);
 
   const CSS = `
     @keyframes fadeUp    { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
@@ -985,38 +967,11 @@ export default function LandingPage() {
 
   const MAX = { maxWidth: 1100, margin: "0 auto" } as const;
 
-  const goToSlide = (idx: number) => {
-    document.getElementById(PRESENT_SECTIONS[idx])?.scrollIntoView({ behavior:"smooth", block:"start" });
-    setPresentSlide(idx);
-  };
-
   return (
     <>
       <style>{CSS}</style>
 
-      {/* Mode présentation overlay */}
-      {presentMode && (
-        <div className="present-overlay">
-          <div className="present-exit">
-            <button onClick={() => setPresentMode(false)} style={{ background:"rgba(9,9,11,.88)", backdropFilter:"blur(16px)", border:".5px solid rgba(255,255,255,.12)", color:"rgba(255,255,255,.65)", padding:"7px 16px", borderRadius:10, fontSize:12, fontWeight:600, letterSpacing:".04em", textTransform:"uppercase" as const, cursor:"pointer" }}>
-              {t.presentExit} · Échap
-            </button>
-          </div>
-          <div className="present-nav">
-            <button className="present-btn" disabled={presentSlide === 0} onClick={() => goToSlide(Math.max(0, presentSlide-1))}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.65)", minWidth:52, textAlign:"center" as const }}>
-              {presentSlide + 1} / {PRESENT_SECTIONS.length}
-            </span>
-            <button className="present-btn" disabled={presentSlide === PRESENT_SECTIONS.length-1} onClick={() => goToSlide(Math.min(PRESENT_SECTIONS.length-1, presentSlide+1))}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue', sans-serif", background:"#FAFAFA", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
+      <div style={{ fontFamily:"-apple-system,'SF Pro Display','Helvetica Neue', sans-serif", background:"transparent", minHeight:"100vh", overflowX:"hidden", WebkitFontSmoothing:"antialiased" }}>
 
         {/* ── WhatsApp float ── */}
         <a href={heroWA} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
@@ -1049,10 +1004,6 @@ export default function LandingPage() {
               ))}
             </div>
             <Link href="/choisir" style={{ fontSize:13, fontWeight:400, color:"#6B7280", textDecoration:"none", padding:"6px 12px" }}>{t.navLogin}</Link>
-            <button onClick={() => { setPresentMode(m => !m); setPresentSlide(0); if (!presentMode) document.getElementById("hero")?.scrollIntoView(); }}
-              style={{ background: presentMode ? "#09090B" : "transparent", color: presentMode ? "#fff" : "#374151", padding:"6px 14px", borderRadius:9, border:".5px solid rgba(0,0,0,.14)", fontSize:12, fontWeight:600, letterSpacing:".04em", textTransform:"uppercase" as const, cursor:"pointer", transition:"all .15s", whiteSpace:"nowrap" as const }}>
-              {presentMode ? "✕" : t.presentBtn}
-            </button>
             <a href={heroWA} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ padding:"7px 16px", fontSize:13, borderRadius:20 }}>{t.navCta}</a>
           </div>
           <div className="nav-mobile-lang" style={{ display:"none", alignItems:"center", gap:6 }}>
@@ -1101,12 +1052,12 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div style={{ position:"relative", zIndex:1 }}>
+        <div style={{ position:"relative", zIndex:1, background:"linear-gradient(170deg,#F0EDFF 0%,#F5F3FF 30%,#EDF0FF 60%,#F3F0FF 100%)" }}>
 
           {/* ══════════════════════════════════════════
               1. HERO V2
           ══════════════════════════════════════════ */}
-          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#FFFFFF" }}>
+          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"transparent" }}>
             {/* Blob bleu — centre gauche, effet vague */}
             <div style={{ position:"absolute", width:750, height:750, borderRadius:"50%", background:"rgba(37,99,235,.54)", filter:"blur(80px)", top:"28%", left:-160, pointerEvents:"none", zIndex:0 }} />
             {/* Blob violet — coin supérieur droit */}
@@ -1118,7 +1069,7 @@ export default function LandingPage() {
             {/* Halo blanc supérieur gauche + centre dominant */}
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 72% 62% at 32% 42%, rgba(255,255,255,1) 0%, rgba(255,255,255,.88) 40%, rgba(255,255,255,.30) 65%, transparent 80%)", pointerEvents:"none", zIndex:1 }} />
             {/* Transition douce vers bandeau noir */}
-            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, transparent, #09090B)", pointerEvents:"none", zIndex:3 }} />
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, transparent, #EDF0FF)", pointerEvents:"none", zIndex:3 }} />
             <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:2, height:"100%" }} className="hero-split">
               <div style={{ flex:"0 0 46%", maxWidth:520, minWidth:0 }}>
                 <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(40px,5.5vw,72px)", fontWeight:800, lineHeight:1.0, letterSpacing:"-0.04em", color:"#09090B", marginBottom:24 }}>
@@ -1182,7 +1133,7 @@ export default function LandingPage() {
           ══════════════════════════════════════════ */}
           <div style={{ background:"#09090B" }}>
             <div style={{ ...MAX, padding:"22px 64px", display:"flex", alignItems:"center", justifyContent:"center", gap:32, flexWrap:"wrap" }} className="proof-bar">
-              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(255,255,255,.35)" }}>{t.proofLabel}</span>
+              <span style={{ fontSize:11, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"rgba(9,9,11,.40)" }}>{t.proofLabel}</span>
               <div style={{ display:"flex", alignItems:"center", gap:20, flexWrap:"wrap", justifyContent:"center" }}>
                 {[
                   { src:"/logo-8am.jpg", alt:"8AM Coffeehouse", name:"8AM Coffeehouse & More", fit:"cover" as const },
@@ -1191,7 +1142,7 @@ export default function LandingPage() {
                   { src:"/logo-yumi.jpg", alt:"Yumi", name:"Yumi", fit:"cover" as const },
                 ].map(c => (
                   <div key={c.name} style={{ display:"flex", alignItems:"center", gap:9 }}>
-                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, border:".5px solid rgba(255,255,255,.12)" }}>
+                    <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, border:".5px solid rgba(9,9,11,.10)" }}>
                       <Image src={c.src} alt={c.alt} width={32} height={32} style={{ width:"100%", height:"100%", objectFit:c.fit }} />
                     </div>
                     <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.75)", letterSpacing:-.2 }}>{c.name}</span>
@@ -1206,7 +1157,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               3. LE PROBLÈME
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"120px 64px", background:"#FFFFFF", borderTop:".5px solid rgba(0,0,0,.06)", position:"relative", overflow:"hidden" }}>
+          <section style={{ padding:"120px 64px", background:"transparent", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.05)", filter:"blur(100px)", top:-150, right:-100, pointerEvents:"none" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
               <div style={{ display:"flex", gap:80, alignItems:"flex-start" }} className="prob-split">
@@ -1245,24 +1196,168 @@ export default function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════
-              4. COMMENT ÇA MARCHE
+              7. OUTILS GÉRANT (consolidé)
           ══════════════════════════════════════════ */}
-          <section id="comment" style={{ padding:"120px 64px", background:"#FAFAFA" }} className="amb">
+          <section id="dashboard" style={{ padding:"120px 64px", background:"transparent" }}>
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" className="sec-head" style={{ marginBottom:72 }}>
-                <span className="stag">{t.howTag}</span>
-                <h2 style={{ fontSize:"clamp(34px,4vw,56px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
-                  {t.howTitle}<br />{t.howTitle2}
+              <div data-reveal="scale" className="sec-head sec-head-dark" style={{ marginBottom:60 }}>
+                <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.outilsTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
+                  {t.outilsTitle}<br />{t.outilsTitle2}
                 </h2>
-                <p style={{ fontSize:16.5, color:"#6B7280", marginTop:14, maxWidth:420, lineHeight:1.65 }}>{t.howSub}</p>
+                <p style={{ fontSize:16, color:"rgba(9,9,11,.45)", lineHeight:1.7, maxWidth:520 }}>{t.outilsSub}</p>
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24 }} className="steps-row">
-                {t.howSteps.map((s, i) => (
-                  <div key={i} data-reveal style={{ background:"#FFFFFF", borderRadius:24, padding:"36px 32px", border:".5px solid rgba(0,0,0,.06)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
-                    <div style={{ fontSize:56, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.09)`,`rgba(91,108,246,.09)`,`rgba(249,115,22,.10)`][i], lineHeight:1, marginBottom:24 }}>{s.n}</div>
-                    <h3 style={{ fontSize:17, fontWeight:700, color:"#09090B", marginBottom:12, lineHeight:1.3 }}>{s.title}</h3>
-                    <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{s.body}</p>
-                    <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:`linear-gradient(180deg,${["#007AFF","#5B6CF6","#F97316"][i]}, transparent)` }} />
+
+              {/* Dashboard interactif */}
+              <div data-reveal className="dash-spotlight" style={{ background:"rgba(9,9,11,.04)", border:".5px solid rgba(9,9,11,.08)", marginBottom:52 }}>
+                <div className="dash-feat-list" style={{ borderRight:".5px solid rgba(9,9,11,.08)" }}>
+                  {t.dashFeats.map((f, i) => (
+                    <div key={i} className={`feat-row${activeDash===i?" feat-active":""}`}
+                      onMouseEnter={() => setActiveDash(i)} onClick={() => setActiveDash(i)}
+                      style={{ borderColor: activeDash===i ? "rgba(0,122,255,.5)" : "transparent" }}>
+                      <div style={{ width:7, height:7, borderRadius:"50%", background:activeDash===i?"#007AFF":"rgba(9,9,11,.18)", flexShrink:0, marginTop:5, transition:"background .15s" }} />
+                      <div>
+                        <h4 style={{ fontSize:14, fontWeight:700, color:activeDash===i?"#09090B":"rgba(9,9,11,.45)", marginBottom:activeDash===i?5:0, lineHeight:1.3, transition:"color .15s" }}>{f.title}</h4>
+                        <p style={{ fontSize:12.5, color:"rgba(9,9,11,.40)", lineHeight:1.55, maxHeight:activeDash===i?"80px":0, overflow:"hidden", opacity:activeDash===i?1:0, transition:"max-height .28s ease, opacity .2s ease", marginTop:activeDash===i?2:0 }}>{f.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"rgba(9,9,11,.04)", borderRadius:"0 24px 24px 0" }}>
+                  {(() => {
+                    const configs = [
+                      { src:"/iphone_accueil.webp",   scale:1.65, ty:-16 },
+                      { src:"/iphone_clients.webp",   scale:1,    ty:0   },
+                      { src:"/iphone_notifs.webp",    scale:1,    ty:0   },
+                      { src:"/iphone_accueil2.webp",  scale:1,    ty:0   },
+                      { src:"/iphone_scanner.webp",   scale:1,    ty:0   },
+                    ];
+                    const cfg = configs[Math.min(activeDash, configs.length - 1)];
+                    return (
+                      <div style={{ position:"relative", overflow:"hidden", borderRadius:28, boxShadow:"0 32px 80px rgba(0,0,0,.55)", height:640, width:"auto" }}>
+                        <Image key={cfg.src + activeDash} src={cfg.src} alt={t.dashFeats[activeDash]?.title ?? ""} width={280} height={560} className="screen-enter"
+                          style={{ display:"block", height:640, width:"auto", transform:`scale(${cfg.scale}) translateY(${cfg.ty}%)`, transition:"transform .7s cubic-bezier(.16,1,.3,1)", transformOrigin:"center center" }} />
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Automatisations */}
+              <div data-reveal style={{ marginBottom:48 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24, flexWrap:"wrap", gap:12 }}>
+                  <div>
+                    <span className="stag" style={{ background:"rgba(249,115,22,.12)", color:"#F97316", marginBottom:8 }}>
+                      {lang==="ro" ? "Automatizări" : lang==="en" ? "Automations" : "Automatisations"}
+                    </span>
+                    <p style={{ fontSize:14, color:"rgba(9,9,11,.45)" }}>{t.autoHook}</p>
+                  </div>
+                  <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"7px 14px", background:"rgba(52,199,89,.12)", borderRadius:20, border:".5px solid rgba(52,199,89,.25)" }}>
+                    <div style={{ width:7, height:7, borderRadius:"50%", background:"#34C759" }} />
+                    <span style={{ fontSize:12, fontWeight:600, color:"#34C759" }}>365j/an · 0 action manuelle</span>
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:16 }} className="steps-row">
+                  {[
+                    { color:"#007AFF", bg:"rgba(0,122,255,.10)", border:"rgba(0,122,255,.20)",
+                      tag: lang==="ro" ? "Zi de naștere" : lang==="en" ? "Birthday" : "Anniversaire",
+                      title: lang==="ro" ? "Un mesaj în ziua lor" : lang==="en" ? "A message on their day" : "Un message le jour J",
+                      body: lang==="ro" ? "Wallio detectează ziua și trimite automat un mesaj personalizat." :
+                            lang==="en" ? "Wallio detects the birthday and automatically sends a personalised message." :
+                            "Wallio détecte l'anniversaire et envoie automatiquement un message personnalisé.",
+                      preview: lang==="ro" ? "La mulți ani ! Îți oferim un tampon dublu azi." :
+                               lang==="en" ? "Happy Birthday! We're giving you a double stamp today." :
+                               "Bon anniversaire ! On vous offre un double tampon aujourd'hui.",
+                      label: lang==="ro" ? "Wallio · Zi naștere · Auto" : lang==="en" ? "Wallio · Birthday · Auto" : "Wallio · Anniversaire · Auto",
+                    },
+                    { color:"#F97316", bg:"rgba(249,115,22,.10)", border:"rgba(249,115,22,.20)",
+                      tag: lang==="ro" ? "Reactivare" : lang==="en" ? "Re-engagement" : "Relance",
+                      title: lang==="ro" ? "Clienții inactivi revin" : lang==="en" ? "Inactive customers come back" : "Vos clients inactifs reviennent",
+                      body: lang==="ro" ? "Un client absent de X zile ? Wallio detectează și trimite automat un mesaj de reactivare." :
+                            lang==="en" ? "A customer absent for X days? Wallio detects this and automatically sends a re-engagement message." :
+                            "Un client absent depuis X jours ? Wallio le détecte et envoie automatiquement un message de relance.",
+                      preview: lang==="ro" ? "Vă lipsim ? Vă mai lipsesc 2 ștampile pentru recompensă !" :
+                               lang==="en" ? "Miss us? You're only 2 stamps away from your reward!" :
+                               "Vous nous manquez ! Il vous reste 2 tampons avant votre récompense !",
+                      label: lang==="ro" ? "Wallio · +30 zile · Auto" : lang==="en" ? "Wallio · 30+ days · Auto" : "Wallio · +30 jours · Auto",
+                    },
+                  ].map((a, i) => (
+                    <div key={i} style={{ flex:1, border:`.5px solid ${a.border}`, borderRadius:20, padding:"24px 20px", background:"rgba(9,9,11,.03)" }}>
+                      <span style={{ display:"inline-block", padding:"4px 11px", borderRadius:20, fontSize:12, fontWeight:600, color:a.color, background:a.bg, marginBottom:12 }}>{a.tag}</span>
+                      <h3 style={{ fontSize:18, fontWeight:700, color:"#09090B", marginBottom:12, lineHeight:1.25 }}>{a.title}</h3>
+                      <div style={{ background:"rgba(9,9,11,.05)", borderRadius:14, padding:"14px 16px", marginBottom:16, border:`.5px solid ${a.border}` }}>
+                        <div style={{ fontSize:11, color:"rgba(9,9,11,.35)", fontWeight:600, marginBottom:8 }}>{a.label}</div>
+                        <div style={{ background:"rgba(9,9,11,.06)", borderRadius:10, padding:"10px 12px", fontSize:13, color:"rgba(9,9,11,.85)", lineHeight:1.5 }}>{a.preview}</div>
+                      </div>
+                      <p style={{ fontSize:13, color:"rgba(9,9,11,.45)", lineHeight:1.65 }}>{a.body}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Équipe & Wallio Pro */}
+              <div data-reveal style={{ background:"rgba(9,9,11,.03)", borderRadius:24, padding:"40px 36px", border:".5px solid rgba(9,9,11,.08)" }}>
+                <div style={{ marginBottom:32 }}>
+                  <span className="stag" style={{ background:"rgba(9,9,11,.06)", color:"rgba(9,9,11,.55)", marginBottom:12 }}>{t.teamTag}</span>
+                  <h3 style={{ fontSize:"clamp(22px,2.5vw,32px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", marginBottom:10 }}>
+                    {t.teamTitle} {t.teamTitle2}
+                  </h3>
+                  <p style={{ fontSize:15, color:"rgba(9,9,11,.45)", maxWidth:520 }}>{t.teamSub}</p>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28 }} className="feats-2col">
+                  {t.teamFeats.map((f, i) => (
+                    <div key={i} style={{ background:"rgba(9,9,11,.04)", borderRadius:14, padding:"20px 18px", border:".5px solid rgba(9,9,11,.07)" }}>
+                      <h4 style={{ fontSize:14, fontWeight:700, color:"#09090B", marginBottom:7 }}>{f.title}</h4>
+                      <p style={{ fontSize:13, color:"rgba(9,9,11,.45)", lineHeight:1.6 }}>{f.body}</p>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:13, color:"rgba(9,9,11,.40)" }}>{lang==="ro" ? "Disponibil pe" : lang==="en" ? "Available on" : "Disponible sur"} :</span>
+                  <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.8 }} />
+                  <span style={{ fontSize:13, fontWeight:500, color:"rgba(9,9,11,.40)", padding:"6px 14px", background:"rgba(9,9,11,.05)", borderRadius:20 }}>
+                    {lang==="ro" ? "Browser web" : lang==="en" ? "Web browser" : "Navigateur web"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════
+              8. PERSONNALISATION + VRAIES CARTES
+          ══════════════════════════════════════════ */}
+          <section id="carte" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
+            <div style={{ ...MAX }}>
+              <div data-reveal="scale" className="sec-head" style={{ marginBottom:60 }}>
+                <span className="stag">{t.customTag}</span>
+                <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
+                  {t.customTitle}<br />{t.customTitle2}
+                </h2>
+                <p style={{ fontSize:16, color:"#6B7280", marginTop:14, maxWidth:440 }}>{t.customSub}</p>
+              </div>
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:64 }} className="feats-2col custom-feats-grid">
+                {t.customFeats.map((f, i) => (
+                  <div key={i} style={{ background:"#fff", borderRadius:16, padding:"24px 22px", border:".5px solid rgba(0,0,0,.07)" }}>
+                    <h4 style={{ fontSize:14.5, fontWeight:700, color:"#09090B", marginBottom:8 }}>{f.title}</h4>
+                    <p style={{ fontSize:13.5, color:"#6B7280", lineHeight:1.65 }}>{f.body}</p>
+                  </div>
+                ))}
+              </div>
+              <div data-reveal style={{ marginBottom:24 }}>
+                <p style={{ fontSize:12, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"#AEAEB2", marginBottom:28 }}>{t.cardsTitle}</p>
+              </div>
+              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }} className="cards-grid">
+                {[
+                  { src:"/carte_wallet_8am.png", name:"8AM Coffeehouse" },
+                  { src:"/carte_wallet_comptoir.png", name:"Comptoir de l'Homme" },
+                  { src:"/carte_wallet_maisonmatcha.png", name:"Maison Matcha" },
+                  { src:"/carte_wallet_yumi.png", name:"Yumi" },
+                ].map(c => (
+                  <div key={c.src} style={{ borderRadius:14, overflow:"hidden", boxShadow:"0 8px 32px rgba(0,0,0,.12)" }} className="card-hover">
+                    <Image src={c.src} alt={`Carte Wallio ${c.name}`} width={375} height={180} style={{ width:"100%", height:"auto", display:"block" }} />
+                    <div style={{ background:"#fff", padding:"10px 14px" }}>
+                      <span style={{ fontSize:12, fontWeight:600, color:"#09090B" }}>{c.name}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1270,76 +1365,9 @@ export default function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════
-              5. EXPÉRIENCE CLIENT
-          ══════════════════════════════════════════ */}
-          <section id="client" style={{ padding:"120px 64px", background:"#FFFFFF" }} className="amb">
-            <div style={{ ...MAX }}>
-              <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
-                <span className="stag">{t.clientTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
-                  {t.clientTitle}<br />{t.clientTitle2}
-                </h2>
-                <p style={{ fontSize:16, color:"#6B7280", lineHeight:1.7, maxWidth:520 }}>{t.clientSub}</p>
-              </div>
-              <div style={{ display:"flex", gap:0, alignItems:"stretch", background:"#F5F5F7", borderRadius:28, overflow:"hidden", border:".5px solid rgba(0,0,0,.07)" }} className="client-spotlight">
-                <div style={{ flex:"0 0 44%", background:"#F0F0F5", display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 32px", position:"relative", overflow:"hidden", minHeight:560 }} className="client-phone-panel">
-                  <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(60px)", top:-50, left:-50, pointerEvents:"none" }} />
-                  <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:`rgba(${activeClient===2?"249,115,22":"99,102,241"},.07)`, filter:"blur(50px)", bottom:-30, right:-30, pointerEvents:"none", transition:"background .5s" }} />
-                  <Image key={activeClient} src={["/iphone_client.webp","/iphone_messages.webp","/iphone_decouvrir.webp"][activeClient]} alt={t.clientFeats[activeClient]?.title ?? ""} width={340} height={680} className="screen-enter"
-                    style={{ width:"auto", height:"min(72vh, 520px)", display:"block", position:"relative", zIndex:1, filter:"drop-shadow(0 24px 48px rgba(0,0,0,.18))" }} />
-                  <div style={{ position:"absolute", bottom:20, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
-                    {[0,1,2].map(i=>( <div key={i} onClick={()=>setActiveClient(i)} style={{ width: activeClient===i ? 20 : 6, height:6, borderRadius:3, background: activeClient===i ? "#007AFF" : "rgba(0,0,0,.18)", transition:"all .3s", cursor:"pointer" }} /> ))}
-                  </div>
-                </div>
-                <div style={{ flex:1, padding:"40px 36px", display:"flex", flexDirection:"column", justifyContent:"center", gap:4 }}>
-                  {t.clientFeats.slice(0, 3).map((f, i) => {
-                    const active = activeClient === i;
-                    const icons = [
-                      <><rect key="a" x="2" y="5" width="20" height="14" rx="3"/><path key="b" d="M2 10h20"/></>,
-                      <path key="c" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>,
-                      <><circle key="d" cx="12" cy="10" r="3"/><path key="e" d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/></>,
-                    ];
-                    return (
-                      <div key={i}>
-                        <div onMouseEnter={() => setActiveClient(i)} onClick={() => setActiveClient(i)}
-                          style={{ padding:"18px 20px", borderRadius:16, cursor:"pointer", background: active ? "#FFFFFF" : "transparent", border: active ? ".5px solid rgba(0,122,255,.15)" : ".5px solid transparent", boxShadow: active ? "0 4px 20px rgba(0,0,0,.07)" : "none", transition:"all .25s cubic-bezier(.16,1,.3,1)" }}>
-                          <div style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
-                            <div style={{ width:36, height:36, borderRadius:10, background: active ? "rgba(0,122,255,.10)" : "rgba(0,0,0,.05)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background .2s" }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={active?"#007AFF":"#8E8E93"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{icons[i]}</svg>
-                            </div>
-                            <div style={{ flex:1 }}>
-                              <h4 style={{ fontSize:14.5, fontWeight:700, color: active ? "#09090B" : "#6B7280", marginBottom: active ? 5 : 0, lineHeight:1.3, transition:"color .2s" }}>{f.title}</h4>
-                              <p style={{ fontSize:13, color:"#6B7280", lineHeight:1.6, maxHeight: active ? "80px" : 0, overflow:"hidden", opacity: active ? 1 : 0, transition:"max-height .3s ease, opacity .2s" }}>{f.body}</p>
-                            </div>
-                          </div>
-                        </div>
-                        {i === 0 && (
-                          <div style={{ marginLeft:30, marginTop:4, display:"flex", flexDirection:"column", gap:4 }}>
-                            {t.clientFeats.slice(3, 5).map((sub, si) => (
-                              <div key={si} style={{ padding:"12px 16px", background:"rgba(0,122,255,.04)", borderRadius:12, borderLeft:"2px solid rgba(0,122,255,.20)", display:"flex", gap:10, alignItems:"flex-start" }}>
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, marginTop:1 }}>
-                                  {si===0 ? <><polyline points="5 12 12 5 19 12"/><path d="M12 5v14"/></> : <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
-                                </svg>
-                                <div>
-                                  <div style={{ fontSize:13, fontWeight:700, color:"#09090B", marginBottom:3 }}>{sub.title}</div>
-                                  <div style={{ fontSize:12, color:"#6B7280", lineHeight:1.55 }}>{sub.body}</div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════
               6. MODES DE RÉCOMPENSES
           ══════════════════════════════════════════ */}
-          <section id="recompenses" style={{ padding:"120px 64px", background:"#F7F8FF" }} className="amb">
+          <section id="recompenses" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.rewardTag}</span>
@@ -1429,170 +1457,93 @@ export default function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════
-              7. OUTILS GÉRANT (consolidé)
+              4. COMMENT ÇA MARCHE
           ══════════════════════════════════════════ */}
-          <section id="dashboard" style={{ padding:"120px 64px", background:"#09090B" }}>
+          <section id="comment" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" className="sec-head sec-head-dark" style={{ marginBottom:60 }}>
-                <span className="stag" style={{ background:"rgba(0,122,255,.15)", color:"#60A5FA" }}>{t.outilsTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#FFFFFF", lineHeight:1.05, marginBottom:14 }}>
-                  {t.outilsTitle}<br />{t.outilsTitle2}
+              <div data-reveal="scale" className="sec-head" style={{ marginBottom:72 }}>
+                <span className="stag">{t.howTag}</span>
+                <h2 style={{ fontSize:"clamp(34px,4vw,56px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
+                  {t.howTitle}<br />{t.howTitle2}
                 </h2>
-                <p style={{ fontSize:16, color:"rgba(255,255,255,.45)", lineHeight:1.7, maxWidth:520 }}>{t.outilsSub}</p>
+                <p style={{ fontSize:16.5, color:"#6B7280", marginTop:14, maxWidth:420, lineHeight:1.65 }}>{t.howSub}</p>
               </div>
-
-              {/* Dashboard interactif */}
-              <div data-reveal className="dash-spotlight" style={{ background:"rgba(255,255,255,.04)", border:".5px solid rgba(255,255,255,.08)", marginBottom:52 }}>
-                <div className="dash-feat-list" style={{ borderRight:".5px solid rgba(255,255,255,.07)" }}>
-                  {t.dashFeats.map((f, i) => (
-                    <div key={i} className={`feat-row${activeDash===i?" feat-active":""}`}
-                      onMouseEnter={() => setActiveDash(i)} onClick={() => setActiveDash(i)}
-                      style={{ borderColor: activeDash===i ? "rgba(0,122,255,.4)" : "transparent" }}>
-                      <div style={{ width:7, height:7, borderRadius:"50%", background:activeDash===i?"#60A5FA":"rgba(255,255,255,.22)", flexShrink:0, marginTop:5, transition:"background .15s" }} />
-                      <div>
-                        <h4 style={{ fontSize:14, fontWeight:700, color:activeDash===i?"#FFFFFF":"rgba(255,255,255,.50)", marginBottom:activeDash===i?5:0, lineHeight:1.3, transition:"color .15s" }}>{f.title}</h4>
-                        <p style={{ fontSize:12.5, color:"rgba(255,255,255,.35)", lineHeight:1.55, maxHeight:activeDash===i?"80px":0, overflow:"hidden", opacity:activeDash===i?1:0, transition:"max-height .28s ease, opacity .2s ease", marginTop:activeDash===i?2:0 }}>{f.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"rgba(0,0,0,.2)", borderRadius:"0 24px 24px 0" }}>
-                  {(() => {
-                    const configs = [
-                      { src:"/iphone_accueil.webp",   scale:1.65, ty:-16 },
-                      { src:"/iphone_clients.webp",   scale:1,    ty:0   },
-                      { src:"/iphone_notifs.webp",    scale:1,    ty:0   },
-                      { src:"/iphone_accueil2.webp",  scale:1,    ty:0   },
-                      { src:"/iphone_scanner.webp",   scale:1,    ty:0   },
-                    ];
-                    const cfg = configs[Math.min(activeDash, configs.length - 1)];
-                    return (
-                      <div style={{ position:"relative", overflow:"hidden", borderRadius:28, boxShadow:"0 32px 80px rgba(0,0,0,.55)", height:640, width:"auto" }}>
-                        <Image key={cfg.src + activeDash} src={cfg.src} alt={t.dashFeats[activeDash]?.title ?? ""} width={280} height={560} className="screen-enter"
-                          style={{ display:"block", height:640, width:"auto", transform:`scale(${cfg.scale}) translateY(${cfg.ty}%)`, transition:"transform .7s cubic-bezier(.16,1,.3,1)", transformOrigin:"center center" }} />
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              {/* Automatisations */}
-              <div data-reveal style={{ marginBottom:48 }}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24, flexWrap:"wrap", gap:12 }}>
-                  <div>
-                    <span className="stag" style={{ background:"rgba(249,115,22,.12)", color:"#F97316", marginBottom:8 }}>
-                      {lang==="ro" ? "Automatizări" : lang==="en" ? "Automations" : "Automatisations"}
-                    </span>
-                    <p style={{ fontSize:14, color:"rgba(255,255,255,.40)" }}>{t.autoHook}</p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24 }} className="steps-row">
+                {t.howSteps.map((s, i) => (
+                  <div key={i} data-reveal style={{ background:"transparent", borderRadius:24, padding:"36px 32px", border:".5px solid rgba(0,0,0,.06)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
+                    <div style={{ fontSize:56, fontWeight:800, letterSpacing:-2, color:[`rgba(0,122,255,.09)`,`rgba(91,108,246,.09)`,`rgba(249,115,22,.10)`][i], lineHeight:1, marginBottom:24 }}>{s.n}</div>
+                    <h3 style={{ fontSize:17, fontWeight:700, color:"#09090B", marginBottom:12, lineHeight:1.3 }}>{s.title}</h3>
+                    <p style={{ fontSize:14, color:"#6B7280", lineHeight:1.7 }}>{s.body}</p>
+                    <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:`linear-gradient(180deg,${["#007AFF","#5B6CF6","#F97316"][i]}, transparent)` }} />
                   </div>
-                  <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"7px 14px", background:"rgba(52,199,89,.12)", borderRadius:20, border:".5px solid rgba(52,199,89,.25)" }}>
-                    <div style={{ width:7, height:7, borderRadius:"50%", background:"#34C759" }} />
-                    <span style={{ fontSize:12, fontWeight:600, color:"#34C759" }}>365j/an · 0 action manuelle</span>
-                  </div>
-                </div>
-                <div style={{ display:"flex", gap:16 }} className="steps-row">
-                  {[
-                    { color:"#007AFF", bg:"rgba(0,122,255,.10)", border:"rgba(0,122,255,.20)",
-                      tag: lang==="ro" ? "Zi de naștere" : lang==="en" ? "Birthday" : "Anniversaire",
-                      title: lang==="ro" ? "Un mesaj în ziua lor" : lang==="en" ? "A message on their day" : "Un message le jour J",
-                      body: lang==="ro" ? "Wallio detectează ziua și trimite automat un mesaj personalizat." :
-                            lang==="en" ? "Wallio detects the birthday and automatically sends a personalised message." :
-                            "Wallio détecte l'anniversaire et envoie automatiquement un message personnalisé.",
-                      preview: lang==="ro" ? "La mulți ani ! Îți oferim un tampon dublu azi." :
-                               lang==="en" ? "Happy Birthday! We're giving you a double stamp today." :
-                               "Bon anniversaire ! On vous offre un double tampon aujourd'hui.",
-                      label: lang==="ro" ? "Wallio · Zi naștere · Auto" : lang==="en" ? "Wallio · Birthday · Auto" : "Wallio · Anniversaire · Auto",
-                    },
-                    { color:"#F97316", bg:"rgba(249,115,22,.10)", border:"rgba(249,115,22,.20)",
-                      tag: lang==="ro" ? "Reactivare" : lang==="en" ? "Re-engagement" : "Relance",
-                      title: lang==="ro" ? "Clienții inactivi revin" : lang==="en" ? "Inactive customers come back" : "Vos clients inactifs reviennent",
-                      body: lang==="ro" ? "Un client absent de X zile ? Wallio detectează și trimite automat un mesaj de reactivare." :
-                            lang==="en" ? "A customer absent for X days? Wallio detects this and automatically sends a re-engagement message." :
-                            "Un client absent depuis X jours ? Wallio le détecte et envoie automatiquement un message de relance.",
-                      preview: lang==="ro" ? "Vă lipsim ? Vă mai lipsesc 2 ștampile pentru recompensă !" :
-                               lang==="en" ? "Miss us? You're only 2 stamps away from your reward!" :
-                               "Vous nous manquez ! Il vous reste 2 tampons avant votre récompense !",
-                      label: lang==="ro" ? "Wallio · +30 zile · Auto" : lang==="en" ? "Wallio · 30+ days · Auto" : "Wallio · +30 jours · Auto",
-                    },
-                  ].map((a, i) => (
-                    <div key={i} style={{ flex:1, border:`.5px solid ${a.border}`, borderRadius:20, padding:"24px 20px", background:"rgba(255,255,255,.03)" }}>
-                      <span style={{ display:"inline-block", padding:"4px 11px", borderRadius:20, fontSize:12, fontWeight:600, color:a.color, background:a.bg, marginBottom:12 }}>{a.tag}</span>
-                      <h3 style={{ fontSize:18, fontWeight:700, color:"#FFFFFF", marginBottom:12, lineHeight:1.25 }}>{a.title}</h3>
-                      <div style={{ background:"rgba(255,255,255,.06)", borderRadius:14, padding:"14px 16px", marginBottom:16, border:`.5px solid ${a.border}` }}>
-                        <div style={{ fontSize:11, color:"rgba(255,255,255,.30)", fontWeight:600, marginBottom:8 }}>{a.label}</div>
-                        <div style={{ background:"rgba(255,255,255,.08)", borderRadius:10, padding:"10px 12px", fontSize:13, color:"rgba(255,255,255,.85)", lineHeight:1.5 }}>{a.preview}</div>
-                      </div>
-                      <p style={{ fontSize:13, color:"rgba(255,255,255,.40)", lineHeight:1.65 }}>{a.body}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Équipe & Wallio Pro */}
-              <div data-reveal style={{ background:"rgba(255,255,255,.03)", borderRadius:24, padding:"40px 36px", border:".5px solid rgba(255,255,255,.08)" }}>
-                <div style={{ marginBottom:32 }}>
-                  <span className="stag" style={{ background:"rgba(255,255,255,.08)", color:"rgba(255,255,255,.60)", marginBottom:12 }}>{t.teamTag}</span>
-                  <h3 style={{ fontSize:"clamp(22px,2.5vw,32px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", marginBottom:10 }}>
-                    {t.teamTitle} {t.teamTitle2}
-                  </h3>
-                  <p style={{ fontSize:15, color:"rgba(255,255,255,.40)", maxWidth:520 }}>{t.teamSub}</p>
-                </div>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28 }} className="feats-2col">
-                  {t.teamFeats.map((f, i) => (
-                    <div key={i} style={{ background:"rgba(255,255,255,.04)", borderRadius:14, padding:"20px 18px", border:".5px solid rgba(255,255,255,.07)" }}>
-                      <h4 style={{ fontSize:14, fontWeight:700, color:"#FFFFFF", marginBottom:7 }}>{f.title}</h4>
-                      <p style={{ fontSize:13, color:"rgba(255,255,255,.40)", lineHeight:1.6 }}>{f.body}</p>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-                  <span style={{ fontSize:13, color:"rgba(255,255,255,.35)" }}>{lang==="ro" ? "Disponibil pe" : lang==="en" ? "Available on" : "Disponible sur"} :</span>
-                  <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.55 }} />
-                  <span style={{ fontSize:13, fontWeight:500, color:"rgba(255,255,255,.35)", padding:"6px 14px", background:"rgba(255,255,255,.06)", borderRadius:20 }}>
-                    {lang==="ro" ? "Browser web" : lang==="en" ? "Web browser" : "Navigateur web"}
-                  </span>
-                </div>
+                ))}
               </div>
             </div>
           </section>
 
           {/* ══════════════════════════════════════════
-              8. PERSONNALISATION + VRAIES CARTES
+              5. EXPÉRIENCE CLIENT
           ══════════════════════════════════════════ */}
-          <section id="carte" style={{ padding:"120px 64px", background:"#F7F8FF" }} className="amb">
+          <section id="client" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
             <div style={{ ...MAX }}>
-              <div data-reveal="scale" className="sec-head" style={{ marginBottom:60 }}>
-                <span className="stag">{t.customTag}</span>
-                <h2 style={{ fontSize:"clamp(32px,4vw,54px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>
-                  {t.customTitle}<br />{t.customTitle2}
+              <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
+                <span className="stag">{t.clientTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05, marginBottom:14 }}>
+                  {t.clientTitle}<br />{t.clientTitle2}
                 </h2>
-                <p style={{ fontSize:16, color:"#6B7280", marginTop:14, maxWidth:440 }}>{t.customSub}</p>
+                <p style={{ fontSize:16, color:"#6B7280", lineHeight:1.7, maxWidth:520 }}>{t.clientSub}</p>
               </div>
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:64 }} className="feats-2col custom-feats-grid">
-                {t.customFeats.map((f, i) => (
-                  <div key={i} style={{ background:"#fff", borderRadius:16, padding:"24px 22px", border:".5px solid rgba(0,0,0,.07)" }}>
-                    <h4 style={{ fontSize:14.5, fontWeight:700, color:"#09090B", marginBottom:8 }}>{f.title}</h4>
-                    <p style={{ fontSize:13.5, color:"#6B7280", lineHeight:1.65 }}>{f.body}</p>
+              <div style={{ display:"flex", gap:0, alignItems:"stretch", background:"transparent", borderRadius:28, overflow:"hidden", border:".5px solid rgba(0,0,0,.07)" }} className="client-spotlight">
+                <div style={{ flex:"0 0 44%", background:"#F0F0F5", display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 32px", position:"relative", overflow:"hidden", minHeight:560 }} className="client-phone-panel">
+                  <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(60px)", top:-50, left:-50, pointerEvents:"none" }} />
+                  <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:`rgba(${activeClient===2?"249,115,22":"99,102,241"},.07)`, filter:"blur(50px)", bottom:-30, right:-30, pointerEvents:"none", transition:"background .5s" }} />
+                  <Image key={activeClient} src={["/iphone_client.webp","/iphone_messages.webp","/iphone_decouvrir.webp"][activeClient]} alt={t.clientFeats[activeClient]?.title ?? ""} width={340} height={680} className="screen-enter"
+                    style={{ width:"auto", height:"min(72vh, 520px)", display:"block", position:"relative", zIndex:1, filter:"drop-shadow(0 24px 48px rgba(0,0,0,.18))" }} />
+                  <div style={{ position:"absolute", bottom:20, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
+                    {[0,1,2].map(i=>( <div key={i} onClick={()=>setActiveClient(i)} style={{ width: activeClient===i ? 20 : 6, height:6, borderRadius:3, background: activeClient===i ? "#007AFF" : "rgba(0,0,0,.18)", transition:"all .3s", cursor:"pointer" }} /> ))}
                   </div>
-                ))}
-              </div>
-              <div data-reveal style={{ marginBottom:24 }}>
-                <p style={{ fontSize:12, fontWeight:700, letterSpacing:".10em", textTransform:"uppercase" as const, color:"#AEAEB2", marginBottom:28 }}>{t.cardsTitle}</p>
-              </div>
-              <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }} className="cards-grid">
-                {[
-                  { src:"/carte_wallet_8am.png", name:"8AM Coffeehouse" },
-                  { src:"/carte_wallet_comptoir.png", name:"Comptoir de l'Homme" },
-                  { src:"/carte_wallet_maisonmatcha.png", name:"Maison Matcha" },
-                  { src:"/carte_wallet_yumi.png", name:"Yumi" },
-                ].map(c => (
-                  <div key={c.src} style={{ borderRadius:14, overflow:"hidden", boxShadow:"0 8px 32px rgba(0,0,0,.12)" }} className="card-hover">
-                    <Image src={c.src} alt={`Carte Wallio ${c.name}`} width={375} height={180} style={{ width:"100%", height:"auto", display:"block" }} />
-                    <div style={{ background:"#fff", padding:"10px 14px" }}>
-                      <span style={{ fontSize:12, fontWeight:600, color:"#09090B" }}>{c.name}</span>
-                    </div>
-                  </div>
-                ))}
+                </div>
+                <div style={{ flex:1, padding:"40px 36px", display:"flex", flexDirection:"column", justifyContent:"center", gap:4 }}>
+                  {t.clientFeats.slice(0, 3).map((f, i) => {
+                    const active = activeClient === i;
+                    const icons = [
+                      <><rect key="a" x="2" y="5" width="20" height="14" rx="3"/><path key="b" d="M2 10h20"/></>,
+                      <path key="c" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>,
+                      <><circle key="d" cx="12" cy="10" r="3"/><path key="e" d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C13 21.5 20 15.4 20 10a8 8 0 0 0-8-8z"/></>,
+                    ];
+                    return (
+                      <div key={i}>
+                        <div onMouseEnter={() => setActiveClient(i)} onClick={() => setActiveClient(i)}
+                          style={{ padding:"18px 20px", borderRadius:16, cursor:"pointer", background: active ? "#FFFFFF" : "transparent", border: active ? ".5px solid rgba(0,122,255,.15)" : ".5px solid transparent", boxShadow: active ? "0 4px 20px rgba(0,0,0,.07)" : "none", transition:"all .25s cubic-bezier(.16,1,.3,1)" }}>
+                          <div style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
+                            <div style={{ width:36, height:36, borderRadius:10, background: active ? "rgba(0,122,255,.10)" : "rgba(0,0,0,.05)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"background .2s" }}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={active?"#007AFF":"#8E8E93"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{icons[i]}</svg>
+                            </div>
+                            <div style={{ flex:1 }}>
+                              <h4 style={{ fontSize:14.5, fontWeight:700, color: active ? "#09090B" : "#6B7280", marginBottom: active ? 5 : 0, lineHeight:1.3, transition:"color .2s" }}>{f.title}</h4>
+                              <p style={{ fontSize:13, color:"#6B7280", lineHeight:1.6, maxHeight: active ? "80px" : 0, overflow:"hidden", opacity: active ? 1 : 0, transition:"max-height .3s ease, opacity .2s" }}>{f.body}</p>
+                            </div>
+                          </div>
+                        </div>
+                        {i === 0 && (
+                          <div style={{ marginLeft:30, marginTop:4, display:"flex", flexDirection:"column", gap:4 }}>
+                            {t.clientFeats.slice(3, 5).map((sub, si) => (
+                              <div key={si} style={{ padding:"12px 16px", background:"rgba(0,122,255,.04)", borderRadius:12, borderLeft:"2px solid rgba(0,122,255,.20)", display:"flex", gap:10, alignItems:"flex-start" }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, marginTop:1 }}>
+                                  {si===0 ? <><polyline points="5 12 12 5 19 12"/><path d="M12 5v14"/></> : <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>}
+                                </svg>
+                                <div>
+                                  <div style={{ fontSize:13, fontWeight:700, color:"#09090B", marginBottom:3 }}>{sub.title}</div>
+                                  <div style={{ fontSize:12, color:"#6B7280", lineHeight:1.55 }}>{sub.body}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
@@ -1600,7 +1551,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9. TÉMOIGNAGES
           ══════════════════════════════════════════ */}
-          <section id="temoignages" style={{ padding:"120px 64px", background:"#F5F5F7" }} className="amb">
+          <section id="temoignages" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:56 }}>
                 <span className="stag" style={{ background:"rgba(249,115,22,.10)", color:"#F97316" }}>{t.testTag}</span>
@@ -1608,7 +1559,7 @@ export default function LandingPage() {
               </div>
               <div data-stagger style={{ display:"flex", gap:20 }} className="steps-row">
                 {t.testimonials.map((testi, i) => (
-                  <div key={i} data-reveal style={{ flex:1, background:"#FFFFFF", border:".5px solid rgba(0,0,0,.07)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
+                  <div key={i} data-reveal style={{ flex:1, background:"transparent", border:".5px solid rgba(0,0,0,.07)", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
                     <div style={{ display:"flex", gap:3, marginBottom:18 }}>
                       {[0,1,2,3,4].map(s => ( <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#F97316"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ))}
                     </div>
@@ -1631,7 +1582,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               9b. ACCOMPAGNEMENT
           ══════════════════════════════════════════ */}
-          <section id="accom" style={{ padding:"120px 64px", background:"#F7F8FF" }} className="amb">
+          <section id="accom" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ marginBottom:64 }}>
                 <span className="stag">{t.accomTag}</span>
@@ -1642,7 +1593,7 @@ export default function LandingPage() {
               </div>
               <div data-stagger style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20, marginBottom:52 }} className="feats-2col">
                 {t.accomSteps.map((s, i) => (
-                  <div key={i} style={{ background:"#FFFFFF", borderRadius:20, padding:"32px 28px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
+                  <div key={i} style={{ background:"transparent", borderRadius:20, padding:"32px 28px", border:".5px solid rgba(0,0,0,.07)", position:"relative", overflow:"hidden", boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
                     <div style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:"rgba(0,122,255,.09)", lineHeight:1, marginBottom:18 }}>{s.n}</div>
                     <div style={{ position:"absolute", top:0, left:0, width:3, height:"100%", background:"linear-gradient(180deg,#007AFF, transparent)" }} />
                     <h3 style={{ fontSize:16.5, fontWeight:700, color:"#09090B", marginBottom:10, lineHeight:1.3 }}>{s.title}</h3>
@@ -1662,7 +1613,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               10. TARIFS
           ══════════════════════════════════════════ */}
-          <section id="tarifs" style={{ padding:"120px 64px", background:"#FAFAFA" }} className="amb">
+          <section id="tarifs" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:64, alignItems:"center" }}>
                 <span className="stag">{t.tarifsTag}</span>
@@ -1706,7 +1657,7 @@ export default function LandingPage() {
                     <span style={{ fontSize:44, fontWeight:800, letterSpacing:-2, color:"#fff" }}>{annual}</span>
                     <span style={{ fontSize:16, fontWeight:500, color:"rgba(255,255,255,.5)" }}>{currency}</span>
                   </div>
-                  <p style={{ fontSize:12, color:"rgba(255,255,255,.35)", marginBottom:32 }}>{t.tarifsMonthEquiv(monthlyEquivAnnual, currency)}</p>
+                  <p style={{ fontSize:12, color:"rgba(9,9,11,.40)", marginBottom:32 }}>{t.tarifsMonthEquiv(monthlyEquivAnnual, currency)}</p>
                   <a href={wa(t.tarifsWaAn(annual, currency))} target="_blank" rel="noopener noreferrer" className="btn-wa" style={{ width:"100%", justifyContent:"center", padding:"13px 0", borderRadius:12, fontSize:14 }}>{t.tarifsCta}</a>
                 </div>
               </div>
@@ -1727,7 +1678,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               11. FAQ
           ══════════════════════════════════════════ */}
-          <section id="faq" style={{ padding:"120px 64px", background:"#FFFFFF" }} className="amb">
+          <section id="faq" style={{ padding:"120px 64px", background:"transparent" }} className="amb">
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="sec-head" style={{ textAlign:"center", marginBottom:56, alignItems:"center" }}>
                 <span className="stag">{t.faqTag}</span>
@@ -1757,22 +1708,21 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               11b. VIDÉO RÉCAP
           ══════════════════════════════════════════ */}
-          <section id="video" style={{ padding:"120px 64px", background:"#09090B", position:"relative", overflow:"hidden" }}>
+          <section id="video" style={{ padding:"120px 64px", background:"transparent", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(120px)", top:-200, left:-200, pointerEvents:"none" }} />
             <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(139,92,246,.06)", filter:"blur(100px)", bottom:-150, right:-150, pointerEvents:"none" }} />
             <div style={{ ...MAX, position:"relative", zIndex:1 }}>
               <div data-reveal="scale" className="sec-head sec-head-dark" style={{ textAlign:"center", marginBottom:52, alignItems:"center" }}>
-                <span className="stag" style={{ background:"rgba(255,255,255,.08)", color:"rgba(255,255,255,.60)" }}>{t.videoTag}</span>
-                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#FFFFFF", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
-                <p style={{ fontSize:16, color:"rgba(255,255,255,.45)", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
+                <span className="stag" style={{ background:"rgba(9,9,11,.06)", color:"rgba(9,9,11,.55)" }}>{t.videoTag}</span>
+                <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", lineHeight:1.1, marginBottom:12 }}>{t.videoTitle}</h2>
+                <p style={{ fontSize:16, color:"rgba(9,9,11,.50)", maxWidth:420, margin:"0 auto" }}>{t.videoSub}</p>
               </div>
               <div data-reveal style={{ maxWidth:860, margin:"0 auto" }}>
-                <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,.60)", border:".5px solid rgba(255,255,255,.08)" }}>
-                  <video ref={videoRef} poster="/wallio_landing_v2_final_poster.jpg" playsInline
+                <div className="video-wrap" style={{ borderRadius:20, overflow:"hidden", boxShadow:"0 32px 80px rgba(0,0,0,.60)", border:".5px solid rgba(9,9,11,.08)" }}>
+                  <video ref={videoRef} poster="" playsInline
                     style={{ width:"100%", display:"block" }}
                     onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)}>
-                    <source src="/wallio_landing_v2_final.webm" type="video/webm" />
-                    <source src="/wallio_landing_v2_final.mp4" type="video/mp4" />
+                    <source src="/wallio_resume_v3.mp4" type="video/mp4" />
                   </video>
                   {!videoPlaying && (
                     <div className="video-play-btn" onClick={() => videoRef.current?.play()}>
@@ -1789,7 +1739,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               12. CTA FINAL
           ══════════════════════════════════════════ */}
-          <section style={{ padding:"96px 64px" }}>
+          <section style={{ padding:"96px 64px", background:"transparent" }}>
             <div style={{ ...MAX }}>
               <div data-reveal="scale" className="cta-inner" style={{ background:"linear-gradient(135deg,#007AFF,#8B5CF6)", borderRadius:32, padding:"80px 64px", textAlign:"center" }}>
                 <h2 className="cta-title" style={{ fontSize:"clamp(32px,4.5vw,56px)", fontWeight:800, letterSpacing:"-0.04em", color:"#fff", marginBottom:16, lineHeight:1.0 }}>{t.ctaTitle}</h2>
@@ -1811,7 +1761,7 @@ export default function LandingPage() {
       <footer style={{ background:"#09090B", padding:"36px 64px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
         <div style={{ display:"flex", alignItems:"center", gap:9 }}>
           <Image src="/wallio-instagram-profil.png" alt="Wallio" width={28} height={28} style={{ borderRadius:6, opacity:.85 }} />
-          <span style={{ fontSize:14, fontWeight:700, color:"rgba(255,255,255,.60)", letterSpacing:".12em" }}>WALLIO</span>
+          <span style={{ fontSize:14, fontWeight:700, color:"rgba(9,9,11,.55)", letterSpacing:".12em" }}>WALLIO</span>
         </div>
         <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
           {t.footerLinks.map(l => (
