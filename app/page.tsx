@@ -1118,20 +1118,8 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="hero-img-wrap" style={{ flex:"0 0 50%", maxWidth:600, display:"flex", alignItems:"center", justifyContent:"center", height:"100%", position:"relative" }}>
-                <div style={{ position:"relative", width:480, height:380 }}>
-                  {/* Carte arrière — inclinée gauche */}
-                  <div className="hero-img-enter" style={{ position:"absolute", top:"10%", left:0, zIndex:1, transform:"rotate(-11deg)", filter:"drop-shadow(0 16px 40px rgba(80,40,180,.20))" }}>
-                    <Image src="/carte_wallet_comptoir.png" alt="Carte Comptoir de l'Homme" width={260} height={165} style={{ width:260, height:"auto", borderRadius:14, display:"block" }} />
-                  </div>
-                  {/* Carte milieu — légèrement inclinée */}
-                  <div className="hero-img-enter" style={{ position:"absolute", top:"4%", left:"18%", zIndex:2, transform:"rotate(-3deg)", filter:"drop-shadow(0 20px 48px rgba(80,40,180,.24))" }}>
-                    <Image src="/carte_wallet_maisonmatcha.png" alt="Carte Maison Matcha" width={272} height={172} style={{ width:272, height:"auto", borderRadius:14, display:"block" }} />
-                  </div>
-                  {/* Carte avant — inclinée droite, au premier plan */}
-                  <div className="hero-img-enter" style={{ position:"absolute", top:"18%", left:"30%", zIndex:3, transform:"rotate(7deg)", filter:"drop-shadow(0 24px 56px rgba(0,0,0,.26))" }}>
-                    <Image src="/carte_wallet_8am.png" alt="Carte 8AM Coffeehouse" width={280} height={177} style={{ width:280, height:"auto", borderRadius:14, display:"block" }} />
-                  </div>
-                </div>
+                <Image src="/wallio_hero_mobile_transparent.webp" alt="Wallio — cartes de fidélité et dashboard gérant" width={900} height={900} priority className="hero-img-enter"
+                  style={{ width:"100%", height:"auto", maxHeight:"82vh", objectFit:"contain", display:"block" }} />
               </div>
             </div>
           </section>
