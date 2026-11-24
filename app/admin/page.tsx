@@ -540,7 +540,7 @@ export default function AdminPage() {
         pdf.addImage(pc.toDataURL("image/jpeg", 0.93), "JPEG", 0, 0, A4W, A4H);
         y += pageHpx; page++;
       }
-      triggerDownload(win, pdf.output("bloburl") as string, `${filename}.pdf`);
+      triggerDownload(win, pdf.output("bloburl") as unknown as string, `${filename}.pdf`);
     } finally {
       document.body.removeChild(wrap);
     }
