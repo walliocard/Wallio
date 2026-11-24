@@ -63,15 +63,11 @@ export async function GET(
   const m = marchand;
   const ld = getWalletLang(m.langue as string | undefined);
   const palierInfo = prochainPalierInfo(m as Record<string, unknown>, client as Record<string, unknown>);
-  const pkpass = await buildPkpass({
+
+  const baseParams = {
     walletId: serialNumber,
     authToken: client.apns_auth_token,
     merchantName: m.nom,
-    logoUrl: m.logo_url || undefined,
-    logoShape: (m.logo_shape as "square" | "round") || "square",
-    logoCircleUrl: (m.logo_circle_url as string | undefined) || undefined,
-    notifIconUrl: (m.apple_icon_url as string | undefined) || undefined,
-    stripUrl: m.strip_url || undefined,
     backgroundColor: m.apple_bg_color || m.couleur_principale || "#1C1C1E",
     foregroundColor: m.apple_fg_color || undefined,
     labelColorHex: m.apple_label_color || undefined,
@@ -101,35 +97,49 @@ export async function GET(
     description: m.apple_description || undefined,
     locations: m.apple_location ? [m.apple_location as { latitude: number; longitude: number; relevantText?: string }] : undefined,
     messagePush: (() => {
-      // Priorité 1 : message anniversaire si birthday_bonus actif sur ce client
       if (client.birthday_bonus === true) {
         const annivMsg = (m.automatisations as Record<string, unknown> | undefined)?.anniversaire as Record<string, unknown> | undefined;
         return (annivMsg?.message as string | undefined) || "Joyeux anniversaire !";
       }
-      // Priorité 2 : message de relance si relance_pending actif
       if (client.relance_pending === true) {
         const relanceMsg = (m.automatisations as Record<string, unknown> | undefined)?.relance as Record<string, unknown> | undefined;
         const msg = relanceMsg?.message as string | undefined;
         if (msg) return msg;
       }
-      // Priorité 3 : message custom du marchand (non expiré)
       const msg = m.current_message as string | undefined;
       const exp = m.message_expires_at as string | undefined;
       if (!msg) return undefined;
       if (exp && new Date(exp) < new Date()) return undefined;
       return msg;
     })(),
-    stampsOnStrip:    m.apple_stamps_on_strip === true,
-    stripStampStyle:  m.apple_strip_stamp_style || "dot",
-    stampColor:       m.apple_stamp_color       || "#FFFFFF",
-    stampPosition:    typeof m.apple_stamp_position === "number" ? m.apple_stamp_position : 50,
-    stampSizePreset:  m.apple_stamp_size        || "m",
-    stampThickness:   m.apple_stamp_thickness   ?? 2,
-    stampText:        m.apple_stamp_text        || "",
-    stampTextBold:    m.apple_stamp_text_bold   === true,
-    stampTextItalic:  m.apple_stamp_text_italic === true,
-    stampTextSize:    m.apple_stamp_text_size   ?? 1,
-    stampLogoOpacity: m.apple_stamp_logo_opacity ?? 1,
+  };
+
+  const timeout = (ms: number) => new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms));
+
+  const pkpass = await Promise.race([
+    buildPkpass({
+      ...baseParams,
+      logoUrl: m.logo_url || undefined,
+      logoShape: (m.logo_shape as "square" | "round") || "square",
+      logoCircleUrl: (m.logo_circle_url as string | undefined) || undefined,
+      notifIconUrl: (m.apple_icon_url as string | undefined) || undefined,
+      stripUrl: m.strip_url || undefined,
+      stampsOnStrip:    m.apple_stamps_on_strip === true,
+      stripStampStyle:  m.apple_strip_stamp_style || "dot",
+      stampColor:       m.apple_stamp_color       || "#FFFFFF",
+      stampPosition:    typeof m.apple_stamp_position === "number" ? m.apple_stamp_position : 50,
+      stampSizePreset:  m.apple_stamp_size        || "m",
+      stampThickness:   m.apple_stamp_thickness   ?? 2,
+      stampText:        m.apple_stamp_text        || "",
+      stampTextBold:    m.apple_stamp_text_bold   === true,
+      stampTextItalic:  m.apple_stamp_text_italic === true,
+      stampTextSize:    m.apple_stamp_text_size   ?? 1,
+      stampLogoOpacity: m.apple_stamp_logo_opacity ?? 1,
+    }),
+    timeout(8000),
+  ]).catch(async (err) => {
+    console.error("[passes] buildPkpass timeout ou erreur, fallback minimal:", err?.message);
+    return buildPkpass({ ...baseParams, stampsOnStrip: false });
   });
 
   const lastModified = client.apns_last_updated
