@@ -101,7 +101,9 @@ export function generatePassJson(input: PassInput): object {
       auxiliaryFields,
       backFields: [
         // message_push : valeur affichée au dos. notif_id change à chaque envoi → garantit la notif lock screen même si le texte est identique
-        { key: "message_push", label: "OFFRE", value: input.messagePush || "" },
+        // message_push : changeMessage pour le 1er envoi ou quand le texte change
+        // notif_id : changeMessage pour tous les envois suivants (valeur toujours unique = timestamp)
+        { key: "message_push", label: "OFFRE", value: input.messagePush || "", ...(input.messagePush ? { changeMessage: "%@" } : {}) },
         ...(input.notifSentAt ? [{ key: "notif_id", label: "DERNIÈRE NOTIFICATION", value: (() => { try { return new Date(input.notifSentAt!).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }); } catch { return input.notifSentAt!; } })(), ...(input.messagePush ? { changeMessage: input.messagePush } : {}) }] : []),
         ...(input.backInfo ? [{ key: "info", label: "À PROPOS", value: input.backInfo }] : []),
         ...backAux,
