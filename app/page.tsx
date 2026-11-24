@@ -905,20 +905,34 @@ export default function LandingPage() {
     .present-btn:disabled { opacity:.3; cursor:default; }
     .present-exit { position:fixed; top:20px; right:24px; pointer-events:all; z-index:10000; }
 
-    @media (max-width:1024px) { .lp-nav { padding:0 28px; } }
+    @media (max-width:1024px) {
+      .lp-nav { padding:0 28px; }
+      section { padding:96px 40px!important; }
+      .hero-split { gap:24px!important; }
+      .hero-img-wrap { flex:0 0 52%!important; }
+      .hero-img-wrap img { width:100%!important; margin-right:0!important; }
+      .dash-preview-panel > div { height:auto!important; }
+      .dash-preview-panel img { height:min(44vw, 560px)!important; width:auto!important; }
+    }
     @media (max-width:768px) {
       .lp-nav { padding:0 20px; }
-      .hero-split { flex-direction:column!important; text-align:center; align-items:stretch!important; height:auto!important; padding-top:88px!important; }
+      /* Hero */
+      .hero-split { flex-direction:column!important; text-align:center; align-items:stretch!important; height:auto!important; padding-top:88px!important; gap:32px!important; }
       .hero-split > div:first-child { width:100%!important; max-width:100%!important; flex:unset!important; }
-      .hero-split .hero-ctas { justify-content:center!important; }
-      .hero-img-wrap { width:100%!important; max-width:460px!important; margin:0 auto; height:auto!important; flex:unset!important; align-self:center!important; }
-      .hero-img-wrap img { max-height:56vw!important; }
+      .hero-split .hero-ctas { justify-content:center!important; flex-direction:column!important; align-items:center!important; }
+      .hero-img-wrap { width:100%!important; max-width:480px!important; margin:0 auto!important; height:auto!important; flex:unset!important; align-self:center!important; }
+      .hero-img-wrap img { width:100%!important; max-height:62vw!important; margin-right:0!important; }
+      .hero-anim-3 { justify-content:center!important; }
+      .hero-anim-5 { justify-content:center!important; }
+      /* Nav */
       .nav-right { display:none!important; }
       .nav-mobile-lang { display:flex!important; }
       .nav-mobile-title { display:block!important; }
       .nav-logo { display:none!important; }
-      section { padding:88px 24px!important; }
-      .steps-row { flex-direction:column!important; }
+      /* Sections */
+      section { padding:72px 20px!important; }
+      /* Layouts */
+      .steps-row { flex-direction:column!important; grid-template-columns:1fr!important; }
       .steps-row > div { flex:unset!important; }
       .reward-cols { flex-direction:column!important; }
       .pricing-grid { flex-direction:column!important; }
@@ -926,41 +940,47 @@ export default function LandingPage() {
       .cards-grid { grid-template-columns:1fr 1fr!important; }
       .btn-wa,.btn-ghost { padding:13px 22px; font-size:14px; }
       .cta-title { font-size:clamp(28px,8vw,44px)!important; }
+      /* Nav anchors */
       .anchor-nav-desktop { display:none!important; }
       .anchor-nav-mobile { display:flex!important; }
-      .feats-2col { grid-template-columns:1fr 1fr!important; }
-      .steps-row { grid-template-columns:1fr!important; }
+      /* Grilles */
+      .feats-2col { grid-template-columns:1fr!important; }
       .custom-feats-grid { grid-template-columns:1fr 1fr!important; }
+      /* Problème */
       .prob-split { flex-direction:column!important; gap:40px!important; }
       .prob-left { flex:unset!important; width:100%!important; }
       .prob-right { flex:unset!important; width:100%!important; }
+      /* Expérience client */
       .client-spotlight { flex-direction:column!important; }
-      .client-phone-panel { flex:unset!important; width:100%!important; min-height:320px!important; padding:28px!important; }
-      .client-phone-panel img { height:min(50vw,320px)!important; }
+      .client-phone-panel { flex:unset!important; width:100%!important; min-height:280px!important; padding:24px!important; }
+      .client-phone-panel img { height:min(52vw,300px)!important; }
+      /* Dashboard */
       .dash-spotlight { flex-direction:column!important; }
-      .dash-feat-list { border-right:none!important; border-bottom:.5px solid rgba(0,0,0,.07)!important; flex:unset!important; }
-      .dash-preview-panel { min-height:unset!important; padding:24px 20px!important; }
+      .dash-feat-list { border-right:none!important; border-bottom:.5px solid #EEEEF3!important; flex:unset!important; }
+      .dash-preview-panel { min-height:unset!important; padding:20px!important; }
       .dash-preview-panel > div { height:auto!important; }
-      .dash-preview-panel img { height:min(78vw, 480px)!important; width:auto!important; }
-      .proof-bar { padding:16px 20px!important; gap:16px!important; }
-      .mini-cta-row { flex-direction:column!important; align-items:flex-start!important; }
-      footer { padding:28px 20px!important; }
-      .present-nav { display:none!important; }
-      .hero-anim-5 { justify-content:center!important; }
-      .cta-inner { padding:52px 28px!important; border-radius:24px!important; }
-    }
-    @media (max-width:1024px) {
-      section { padding:96px 40px!important; }
-      .hero-split { gap:28px!important; }
-      .dash-preview-panel > div { height:auto!important; }
-      .dash-preview-panel img { height:min(44vw, 560px)!important; width:auto!important; }
+      .dash-preview-panel img { height:min(72vw,420px)!important; width:auto!important; }
+      /* Team */
+      .team-header { flex-direction:column!important; gap:12px!important; }
+      /* Proof bar */
+      .proof-bar { padding:14px 16px!important; gap:12px!important; }
+      .proof-bar > div { flex-wrap:wrap!important; gap:12px!important; justify-content:center!important; }
+      /* Témoignages */
+      .testi-row { flex-direction:column!important; }
+      /* Footer */
+      footer { padding:24px 20px!important; flex-direction:column!important; gap:16px!important; text-align:center!important; }
+      .cta-inner { padding:48px 20px!important; border-radius:20px!important; }
     }
     @media (max-width:480px) {
+      section { padding:64px 16px!important; }
       .cards-grid { grid-template-columns:1fr!important; }
-      .hero-title { font-size:clamp(26px,7vw,36px)!important; }
-      .pricing-grid > div { padding:28px 20px!important; }
+      .hero-title { font-size:clamp(28px,8vw,40px)!important; }
+      .pricing-grid > div { padding:24px 16px!important; }
       .custom-feats-grid { grid-template-columns:1fr!important; }
       .feats-2col { grid-template-columns:1fr!important; }
+      .hero-img-wrap img { max-height:72vw!important; }
+      .btn-wa { width:100%!important; justify-content:center!important; }
+      .proof-bar > div > div { flex-direction:column!important; align-items:center!important; gap:8px!important; }
     }
     @media (prefers-reduced-motion:reduce) {
       *, *::before, *::after { animation-duration:.01ms!important; transition-duration:.01ms!important; }
@@ -1304,7 +1324,7 @@ export default function LandingPage() {
 
               {/* Équipe & Wallio Pro */}
               <div data-reveal style={{ background:"#F7F7FA", borderRadius:24, padding:"40px 36px", border:"1px solid #EEEEF3" }}>
-                <div style={{ display:"flex", alignItems:"flex-start", gap:20, marginBottom:28 }}>
+                <div className="team-header" style={{ display:"flex", alignItems:"flex-start", gap:20, marginBottom:28 }}>
                   <Image src="/icon-pro-512.png" alt="Wallio Pro" width={64} height={64} style={{ borderRadius:16, flexShrink:0, boxShadow:"0 4px 16px rgba(80,40,180,.18)" }} loading="eager" />
                   <div>
                     <span className="stag" style={{ color:"rgba(9,9,11,.50)" }}>{t.teamTag}</span>
@@ -1569,7 +1589,7 @@ export default function LandingPage() {
                 <span className="stag" style={{ background:"rgba(249,115,22,.10)", color:"#F97316" }}>{t.testTag}</span>
                 <h2 style={{ fontSize:"clamp(28px,3.5vw,48px)", fontWeight:800, letterSpacing:"-0.04em", color:"#09090B", lineHeight:1.05 }}>{t.testTitle}</h2>
               </div>
-              <div data-stagger style={{ display:"flex", gap:20 }} className="steps-row">
+              <div data-stagger style={{ display:"flex", gap:20 }} className="steps-row testi-row">
                 {t.testimonials.map((testi, i) => (
                   <div key={i} data-reveal style={{ flex:1, background:"#FFFFFF", border:"1px solid #EEEEF3", borderRadius:24, padding:"28px 24px", display:"flex", flexDirection:"column", boxShadow:"0 2px 12px rgba(0,0,0,.05)", borderTop:`2px solid ${["#007AFF","#8B5CF6","#F97316"][i]}` }}>
                     <div style={{ display:"flex", gap:3, marginBottom:18 }}>
