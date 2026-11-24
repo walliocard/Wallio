@@ -1107,7 +1107,7 @@ export default function LandingPage() {
                   <div style={{ display:"flex" }}>
                     {["/logo-8am.jpg","/logo-maison-matcha.png","/logo-yumi.jpg","/logo-comptoir-homme.jpg"].map((src,i) => (
                       <div key={src} style={{ width:34, height:34, borderRadius:"50%", border:"2px solid #FFFFFF", overflow:"hidden", marginLeft:i===0?0:-10, background:"#F5F5F7", flexShrink:0 }}>
-                        <Image src={src} alt="" width={34} height={34} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                        <Image src={src} alt="" width={34} height={34} style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="eager" />
                       </div>
                     ))}
                   </div>
@@ -1139,7 +1139,7 @@ export default function LandingPage() {
                 ].map(c => (
                   <div key={c.name} style={{ display:"flex", alignItems:"center", gap:9 }}>
                     <div style={{ width:32, height:32, borderRadius:8, overflow:"hidden", flexShrink:0, border:".5px solid rgba(255,255,255,.10)" }}>
-                      <Image src={c.src} alt={c.alt} width={32} height={32} style={{ width:"100%", height:"100%", objectFit:c.fit }} />
+                      <Image src={c.src} alt={c.alt} width={32} height={32} style={{ width:"100%", height:"100%", objectFit:c.fit }} loading="eager" />
                     </div>
                     <span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,.75)", letterSpacing:-.2 }}>{c.name}</span>
                   </div>
@@ -1234,7 +1234,7 @@ export default function LandingPage() {
                     return (
                       <div style={{ position:"relative", overflow:"hidden", borderRadius:28, boxShadow:"0 32px 80px rgba(0,0,0,.35)", height:640, width:"auto", zIndex:1 }}>
                         {configs.map((c, idx) => (
-                          <Image key={c.src} src={c.src} alt={t.dashFeats[Math.min(idx, t.dashFeats.length-1)]?.title ?? ""} width={280} height={560}
+                          <Image key={c.src} src={c.src} alt={t.dashFeats[Math.min(idx, t.dashFeats.length-1)]?.title ?? ""} width={280} height={560} loading="eager"
                             style={{ display:"block", height:640, width:"auto",
                               transform:`scale(${c.scale}) translateY(${c.ty}%)`,
                               transformOrigin:"center center",
@@ -1305,7 +1305,7 @@ export default function LandingPage() {
               {/* Équipe & Wallio Pro */}
               <div data-reveal style={{ background:"#F7F7FA", borderRadius:24, padding:"40px 36px", border:"1px solid #EEEEF3" }}>
                 <div style={{ display:"flex", alignItems:"flex-start", gap:20, marginBottom:28 }}>
-                  <Image src="/icon-pro-512.png" alt="Wallio Pro" width={64} height={64} style={{ borderRadius:16, flexShrink:0, boxShadow:"0 4px 16px rgba(80,40,180,.18)" }} />
+                  <Image src="/icon-pro-512.png" alt="Wallio Pro" width={64} height={64} style={{ borderRadius:16, flexShrink:0, boxShadow:"0 4px 16px rgba(80,40,180,.18)" }} loading="eager" />
                   <div>
                     <span className="stag" style={{ color:"rgba(9,9,11,.50)" }}>{t.teamTag}</span>
                     <h3 style={{ fontSize:"clamp(22px,2.5vw,32px)", fontWeight:700, letterSpacing:"-0.03em", color:"#09090B", marginBottom:8 }}>
@@ -1324,7 +1324,7 @@ export default function LandingPage() {
                 </div>
                 <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
                   <span style={{ fontSize:13, color:"rgba(9,9,11,.40)" }}>{lang==="ro" ? "Disponibil pe" : lang==="en" ? "Available on" : "Disponible sur"} :</span>
-                  <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.85 }} />
+                  <Image src="/apple-wallet-badge.svg" alt="App Store" width={110} height={34} style={{ opacity:.85 }} loading="eager" />
                   <span style={{ fontSize:13, fontWeight:500, color:"rgba(9,9,11,.45)", padding:"6px 14px", background:"rgba(9,9,11,.06)", borderRadius:20 }}>
                     {lang==="ro" ? "Browser web" : lang==="en" ? "Web browser" : "Navigateur web"}
                   </span>
@@ -1364,7 +1364,7 @@ export default function LandingPage() {
                   { src:"/carte_wallet_yumi.png", name:"Yumi" },
                 ].map(c => (
                   <div key={c.src} style={{ borderRadius:14, overflow:"hidden", boxShadow:"0 8px 32px rgba(0,0,0,.12)" }} className="card-hover">
-                    <Image src={c.src} alt={`Carte Wallio ${c.name}`} width={375} height={180} style={{ width:"100%", height:"auto", display:"block" }} />
+                    <Image src={c.src} alt={`Carte Wallio ${c.name}`} width={375} height={180} style={{ width:"100%", height:"auto", display:"block" }} loading="eager" />
                     <div style={{ background:"#fff", padding:"10px 14px" }}>
                       <span style={{ fontSize:12, fontWeight:600, color:"#09090B" }}>{c.name}</span>
                     </div>
@@ -1509,7 +1509,7 @@ export default function LandingPage() {
                 <div style={{ flex:"0 0 44%", background:"#F0F0F5", display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 32px", position:"relative", overflow:"hidden", minHeight:560 }} className="client-phone-panel">
                   <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(0,122,255,.08)", filter:"blur(45px)", top:-50, left:-50, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
                   <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:`rgba(${activeClient===2?"249,115,22":"99,102,241"},.07)`, filter:"blur(50px)", bottom:-30, right:-30, pointerEvents:"none", transition:"background .5s" }} />
-                  <Image key={activeClient} src={["/iphone_client.webp","/iphone_messages.webp","/iphone_decouvrir.webp"][activeClient]} alt={t.clientFeats[activeClient]?.title ?? ""} width={340} height={680} className="screen-enter"
+                  <Image key={activeClient} src={["/iphone_client.webp","/iphone_messages.webp","/iphone_decouvrir.webp"][activeClient]} alt={t.clientFeats[activeClient]?.title ?? ""} width={340} height={680} loading="eager" className="screen-enter"
                     style={{ width:"auto", height:"min(72vh, 520px)", display:"block", position:"relative", zIndex:1, filter:"drop-shadow(0 24px 48px rgba(0,0,0,.18))" }} />
                   <div style={{ position:"absolute", bottom:20, left:"50%", transform:"translateX(-50%)", display:"flex", gap:6 }}>
                     {[0,1,2].map(i=>( <div key={i} onClick={()=>setActiveClient(i)} style={{ width: activeClient===i ? 20 : 6, height:6, borderRadius:3, background: activeClient===i ? "#007AFF" : "rgba(0,0,0,.18)", transition:"all .3s", cursor:"pointer" }} /> ))}
@@ -1578,7 +1578,7 @@ export default function LandingPage() {
                     <p style={{ fontSize:14, color:"#4B5563", lineHeight:1.78, marginBottom:24, flex:1, fontStyle:"italic" }}>"{testi.quote}"</p>
                     <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                       <div style={{ width:40, height:40, borderRadius:10, overflow:"hidden", background:"rgba(0,0,0,.04)", flexShrink:0, border:".5px solid rgba(0,0,0,.08)" }}>
-                        <Image src={testi.logo} alt={testi.business} width={40} height={40} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                        <Image src={testi.logo} alt={testi.business} width={40} height={40} style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="eager" />
                       </div>
                       <div>
                         <div style={{ fontSize:13, fontWeight:700, color:"#09090B" }}>{testi.name}</div>
@@ -1774,7 +1774,7 @@ export default function LandingPage() {
 
       <footer style={{ background:"#09090B", padding:"36px 64px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:16 }}>
         <div style={{ display:"flex", alignItems:"center", gap:9 }}>
-          <Image src="/wallio-instagram-profil.png" alt="Wallio" width={28} height={28} style={{ borderRadius:6, opacity:.85 }} />
+          <Image src="/wallio-instagram-profil.png" alt="Wallio" width={28} height={28} style={{ borderRadius:6, opacity:.85 }} loading="eager" />
           <span style={{ fontSize:14, fontWeight:700, color:"rgba(9,9,11,.55)", letterSpacing:".12em" }}>WALLIO</span>
         </div>
         <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
