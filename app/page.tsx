@@ -1192,7 +1192,7 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               7. OUTILS GÉRANT (consolidé)
           ══════════════════════════════════════════ */}
-          <section id="dashboard" style={{ padding:"120px 64px", background:"#FFFFFF", position:"relative", overflow:"hidden", contain:"paint" }}>
+          <section id="dashboard" style={{ padding:"120px 64px", background:"#FFFFFF", position:"relative", overflow:"hidden" }}>
             <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"rgba(0,122,255,.07)", filter:"blur(67px)", top:-100, right:-100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
             <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:"rgba(139,92,246,.07)", filter:"blur(60px)", bottom:-80, right:100, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
             <div style={{ ...MAX }}>
@@ -1219,7 +1219,10 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"#F0F0F5", borderRadius:"0 24px 24px 0" }}>
+                <div className="dash-preview-panel" style={{ overflow:"hidden", justifyContent:"center", background:"#F0F0F5", borderRadius:"0 24px 24px 0", position:"relative" }}>
+                  {/* Blobs fond — même style que section expérience client */}
+                  <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"rgba(0,122,255,.10)", filter:"blur(50px)", top:-60, left:-60, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
+                  <div style={{ position:"absolute", width:350, height:350, borderRadius:"50%", background:"rgba(99,102,241,.09)", filter:"blur(45px)", bottom:-40, right:-40, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
                   {(() => {
                     const configs = [
                       { src:"/iphone_accueil.webp",   scale:1.65, ty:-16 },
@@ -1228,11 +1231,19 @@ export default function LandingPage() {
                       { src:"/iphone_accueil2.webp",  scale:1,    ty:0   },
                       { src:"/iphone_scanner.webp",   scale:1,    ty:0   },
                     ];
-                    const cfg = configs[Math.min(activeDash, configs.length - 1)];
                     return (
-                      <div style={{ position:"relative", overflow:"hidden", borderRadius:28, boxShadow:"0 32px 80px rgba(0,0,0,.55)", height:640, width:"auto" }}>
-                        <Image key={cfg.src + activeDash} src={cfg.src} alt={t.dashFeats[activeDash]?.title ?? ""} width={280} height={560} className="screen-enter"
-                          style={{ display:"block", height:640, width:"auto", transform:`scale(${cfg.scale}) translateY(${cfg.ty}%)`, transition:"transform .7s cubic-bezier(.16,1,.3,1)", transformOrigin:"center center" }} />
+                      <div style={{ position:"relative", overflow:"hidden", borderRadius:28, boxShadow:"0 32px 80px rgba(0,0,0,.35)", height:640, width:"auto", zIndex:1 }}>
+                        {configs.map((c, idx) => (
+                          <Image key={c.src} src={c.src} alt={t.dashFeats[Math.min(idx, t.dashFeats.length-1)]?.title ?? ""} width={280} height={560}
+                            style={{ display:"block", height:640, width:"auto",
+                              transform:`scale(${c.scale}) translateY(${c.ty}%)`,
+                              transformOrigin:"center center",
+                              opacity: idx === Math.min(activeDash, configs.length-1) ? 1 : 0,
+                              transition:"opacity .35s cubic-bezier(.16,1,.3,1)",
+                              position: idx === 0 ? "relative" : "absolute",
+                              top: idx === 0 ? undefined : 0, left: idx === 0 ? undefined : 0,
+                            }} />
+                        ))}
                       </div>
                     );
                   })()}
