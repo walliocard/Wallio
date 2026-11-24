@@ -1429,17 +1429,19 @@ export default function LandingPage() {
                   return (
                     <div key={i} data-reveal onMouseEnter={() => setActiveReward(i)} onClick={() => setActiveReward(i)}
                       style={{ flex: active ? "2.2" : "1", background:"#F7F7FA", borderRadius:24,
-                        padding: active ? "28px 28px" : "28px 20px",
+                        padding:"28px 20px",
                         border: active ? `1.5px solid ${border}` : ".5px solid rgba(0,0,0,.07)",
                         boxShadow: active ? `0 12px 40px rgba(0,0,0,.08), 0 0 0 4px ${bg}` : "0 2px 12px rgba(0,0,0,.04)",
-                        transition:"flex .4s cubic-bezier(.16,1,.3,1), box-shadow .3s, border-color .3s, padding .3s",
-                        cursor:"pointer", overflow:"hidden" }}>
+                        transition:"flex .4s cubic-bezier(.16,1,.3,1), box-shadow .3s, border-color .3s",
+                        cursor:"pointer", overflow:"hidden", willChange:"flex" }}>
                       <span className="reward-pill" style={{ color:accent, background:bg }}>{data.tag}</span>
                       <p style={{ fontSize:12, color:"#8E8E93", marginBottom:12 }}>{data.sub}</p>
-                      <div style={{ overflow:"hidden", maxHeight: active ? "320px" : 0, opacity: active ? 1 : 0, transition:"max-height .4s cubic-bezier(.16,1,.3,1), opacity .3s" }}>
-                        {active && visual}
+                      <div style={{ display:"grid", gridTemplateRows: active ? "1fr" : "0fr", transition:"grid-template-rows .35s cubic-bezier(.16,1,.3,1)" }}>
+                        <div style={{ overflow:"hidden", opacity: active ? 1 : 0, transform: active ? "translateY(0)" : "translateY(6px)", transition:"opacity .25s .05s, transform .25s .05s" }}>
+                          {visual}
+                        </div>
                       </div>
-                      <p style={{ fontSize:13.5, color:"#6B7280", lineHeight:1.65, marginBottom:14, marginTop: active ? 16 : 0 }}>{data.desc}</p>
+                      <p style={{ fontSize:13.5, color:"#6B7280", lineHeight:1.65, marginBottom:14, marginTop:12 }}>{data.desc}</p>
                       <div style={{ display:"flex", flexDirection:"column", gap:9 }}>
                         {data.bullets.map((b, bi) => (
                           <div key={bi} className="feat-item">
