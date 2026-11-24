@@ -1225,7 +1225,7 @@ export default function LandingPage() {
                   <div style={{ position:"absolute", width:350, height:350, borderRadius:"50%", background:"rgba(99,102,241,.09)", filter:"blur(45px)", bottom:-40, right:-40, pointerEvents:"none", willChange:"transform", transform:"translateZ(0)" }} />
                   {(() => {
                     const configs = [
-                      { src:"/iphone_accueil.webp",   scale:1.65, ty:-16 },
+                      { src:"/iphone_accueil.webp",   scale:1,    ty:0   },
                       { src:"/iphone_clients.webp",   scale:1,    ty:0   },
                       { src:"/iphone_notifs.webp",    scale:1,    ty:0   },
                       { src:"/iphone_accueil2.webp",  scale:1,    ty:0   },
