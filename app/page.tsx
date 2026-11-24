@@ -1106,17 +1106,17 @@ export default function LandingPage() {
           {/* ══════════════════════════════════════════
               1. HERO V2
           ══════════════════════════════════════════ */}
-          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#F4F3FF" }}>
-            {/* Blob bleu électrique, bas gauche */}
-            <div style={{ position:"absolute", width:1000, height:900, borderRadius:"50%", background:"rgba(37,99,235,.52)", filter:"blur(100px)", bottom:-220, left:-260, pointerEvents:"none", zIndex:0 }} />
-            {/* Blob violet, haut droit */}
-            <div style={{ position:"absolute", width:820, height:820, borderRadius:"50%", background:"rgba(124,58,237,.48)", filter:"blur(95px)", top:-280, right:-220, pointerEvents:"none", zIndex:0 }} />
-            {/* Arc lumineux violet, haut droit (effet ligne de lumière) */}
-            <div style={{ position:"absolute", width:600, height:600, borderRadius:"50%", background:"transparent", border:"2px solid rgba(167,139,250,.55)", filter:"blur(8px)", top:-180, right:-80, pointerEvents:"none", zIndex:0 }} />
-            {/* Lavande mid */}
-            <div style={{ position:"absolute", width:700, height:500, borderRadius:"50%", background:"rgba(196,181,253,.30)", filter:"blur(80px)", top:"30%", left:"25%", pointerEvents:"none", zIndex:0 }} />
-            {/* Halo blanc central intense */}
-            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 55% 50% at 44% 48%, rgba(255,255,255,.92) 0%, rgba(255,255,255,.60) 40%, transparent 72%)", pointerEvents:"none", zIndex:1 }} />
+          <section id="hero" style={{ minHeight:"100dvh", display:"flex", alignItems:"center", padding:"100px 64px 80px", position:"relative", overflow:"hidden", background:"#F8F7FF" }}>
+            {/* Blob bleu électrique — haut gauche, bien visible */}
+            <div style={{ position:"absolute", width:900, height:800, borderRadius:"50%", background:"rgba(37,99,235,.46)", filter:"blur(88px)", top:-140, left:-200, pointerEvents:"none", zIndex:0 }} />
+            {/* Blob violet — haut droit */}
+            <div style={{ position:"absolute", width:780, height:780, borderRadius:"50%", background:"rgba(124,58,237,.42)", filter:"blur(90px)", top:-200, right:-180, pointerEvents:"none", zIndex:0 }} />
+            {/* Arc lumineux violet — haut droit */}
+            <div style={{ position:"absolute", width:520, height:520, borderRadius:"50%", background:"transparent", border:"1.5px solid rgba(167,139,250,.48)", filter:"blur(6px)", top:-80, right:-30, pointerEvents:"none", zIndex:0 }} />
+            {/* Halo blanc central fort */}
+            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 60% 54% at 44% 46%, rgba(255,255,255,.96) 0%, rgba(255,255,255,.68) 42%, transparent 70%)", pointerEvents:"none", zIndex:1 }} />
+            {/* Transition douce vers la section suivante */}
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:160, background:"linear-gradient(to bottom, transparent, #F5F5F7)", pointerEvents:"none", zIndex:3 }} />
             <div style={{ ...MAX, width:"100%", display:"flex", alignItems:"center", gap:48, justifyContent:"space-between", position:"relative", zIndex:2, height:"100%" }} className="hero-split">
               <div style={{ flex:"0 0 46%", maxWidth:520, minWidth:0 }}>
                 <h1 className="hero-title hero-anim-1" style={{ fontSize:"clamp(40px,5.5vw,72px)", fontWeight:800, lineHeight:1.0, letterSpacing:"-0.04em", color:"#09090B", marginBottom:24 }}>
@@ -1163,13 +1163,13 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="hero-img-wrap" style={{ flex:"0 0 50%", maxWidth:600, display:"flex", alignItems:"center", justifyContent:"center", height:"100%", position:"relative" }}>
-                {/* iPhone côté client avec carte Wallet ouverte */}
-                <Image src="/iphone_client.webp" alt="Wallio, carte de fidélité dans le Wallet" width={340} height={680} priority className="hero-img-enter"
-                  style={{ width:"auto", height:"min(72vh,560px)", objectFit:"contain", display:"block", position:"relative", zIndex:1 }} />
-                {/* Carte Wallet flottante en avant-plan */}
-                <div className="hero-img-enter" style={{ position:"absolute", right:"2%", bottom:"18%", zIndex:2, transform:"rotate(7deg)", filter:"drop-shadow(0 20px 44px rgba(0,0,0,.26))" }}>
-                  <Image src="/carte_wallet_8am.png" alt="Carte de fidélité Wallio" width={230} height={145}
-                    style={{ width:230, height:"auto", borderRadius:14, display:"block" }} />
+                {/* 4 vraies cartes Wallio — le produit clairement */}
+                <Image src="/wallio_cartes_wallet_x4.png" alt="Cartes de fidélité Wallio" width={700} height={450} priority className="hero-img-enter"
+                  style={{ width:"100%", height:"auto", maxWidth:580, filter:"drop-shadow(0 28px 60px rgba(80,40,180,.22))", borderRadius:18, display:"block", position:"relative", zIndex:1 }} />
+                {/* Carte 8AM flottante en avant-plan */}
+                <div className="hero-img-enter" style={{ position:"absolute", right:"-4%", bottom:"12%", zIndex:2, transform:"rotate(8deg)", filter:"drop-shadow(0 16px 36px rgba(0,0,0,.28))" }}>
+                  <Image src="/carte_wallet_8am.png" alt="Carte 8AM Coffeehouse" width={240} height={152}
+                    style={{ width:240, height:"auto", borderRadius:14, display:"block" }} />
                 </div>
               </div>
             </div>
