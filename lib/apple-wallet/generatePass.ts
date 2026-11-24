@@ -101,10 +101,10 @@ export function generatePassJson(input: PassInput): object {
       auxiliaryFields,
       backFields: [
         // message_push : valeur affichée au dos. notif_id change à chaque envoi → garantit la notif lock screen même si le texte est identique
-        // message_push : changeMessage pour le 1er envoi ou quand le texte change
-        // notif_id : changeMessage pour tous les envois suivants (valeur toujours unique = timestamp)
+        // message_push : valeur affichée au dos
+        // notif_id : toujours présent dans le pass — garantit que changeMessage se déclenche dès la 1ère notif
         { key: "message_push", label: "OFFRE", value: input.messagePush || "", ...(input.messagePush ? { changeMessage: "%@" } : {}) },
-        ...(input.notifSentAt ? [{ key: "notif_id", label: "DERNIÈRE NOTIFICATION", value: (() => { try { return new Date(input.notifSentAt!).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }); } catch { return input.notifSentAt!; } })(), ...(input.messagePush ? { changeMessage: input.messagePush } : {}) }] : []),
+        { key: "notif_id", label: "DERNIÈRE NOTIFICATION", value: input.notifSentAt ? (() => { try { return new Date(input.notifSentAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }); } catch { return input.notifSentAt; } })() : "—", changeMessage: input.messagePush || "Nouveau message" },
         ...(input.backInfo ? [{ key: "info", label: "À PROPOS", value: input.backInfo }] : []),
         ...backAux,
         { key: "mes_cartes", label: "MES CARTES WALLIO", value: "https://app.walliocard.com/mes-cartes" },
