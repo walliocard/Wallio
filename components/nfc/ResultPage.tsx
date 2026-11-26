@@ -139,7 +139,7 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.rp.rp-anim,.rp.rp-anim *{animation:none!important}}
 `;
 
-type Kind = "stamp" | "progressif" | "choice" | "reward" | "dup";
+type Kind = "stamp" | "flexstamp" | "progressif" | "choice" | "reward" | "dup";
 
 export default function ResultPage({ result }: { result: StampResult; onRetry?: () => void }) {
   const { result: res, client, marchand } = result;
@@ -160,8 +160,7 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
   const paliers = ((mn.paliers as { tampons: number; recompense: string }[] | undefined) || []);
   const milestones = paliers.map(p => ({ at: p.tampons, label: p.recompense }));
   const objectif = (mn.objectif_tampons as number) || 10;
-  const goal = mode === "progressif" && paliers.length
-    ? Math.max(...paliers.map(p => p.tampons)) : objectif;
+  const interm = (mn.palier_intermediaire as number) || Math.ceil(objectif / 2);
 
   // before / after
   const r = res as TamponResult & Record<string, unknown>;
@@ -174,11 +173,18 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
     default: after = before = client.tampons;
   }
 
+  // Objectif affiché : flex → on vise d'abord le palier de choix, puis le grand objectif
+  const goal = mode === "progressif" && paliers.length
+    ? Math.max(...paliers.map(p => p.tampons))
+    : mode === "flex" ? (after < interm ? interm : objectif)
+    : objectif;
+
   const kind: Kind =
     res.type === "recompense" ? "reward"
     : res.type === "anti_doublon" ? "dup"
     : res.type === "choix_requis" ? "choice"
     : mode === "progressif" && milestones.length ? "progressif"
+    : mode === "flex" ? "flexstamp"
     : "stamp";
 
   const left = Math.max(0, goal - after);
@@ -259,6 +265,21 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
         <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Encore {left}</em></div>
         <Bar before={before} after={after} goal={goal} />
         <div className="rp-note">Plus que {left} visite{left > 1 ? "s" : ""} avant {reward}.</div>
+      </div>
+    );
+  } else if (kind === "flexstamp") {
+    const preChoice = after < interm;
+    const fleft = Math.max(0, goal - after);
+    tile = <span className="rp-num">{after}</span>;
+    title = "Tampon ajouté";
+    sub = `Bonjour ${firstName}, merci pour votre visite.`;
+    body = (
+      <div className="rp-card">
+        <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Encore {fleft}</em></div>
+        <Bar before={before} after={after} goal={goal} />
+        <div className="rp-note">{preChoice
+          ? `Plus que ${fleft} visite${fleft > 1 ? "s" : ""} avant de choisir : ${flexNow} ou ${flexLater}.`
+          : `Plus que ${fleft} visite${fleft > 1 ? "s" : ""} avant ${flexLater}.`}</div>
       </div>
     );
   } else if (kind === "progressif") {
