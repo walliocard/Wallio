@@ -15,6 +15,7 @@ import { registerFcmToken } from "@/lib/fcm";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
 import { getWalletLang } from "@/lib/wallet-lang";
+import StampPage, { type StampMerchant } from "@/components/StampPage";
 
 // Lazy-load composants lourds — pas besoin au premier rendu
 const AppleWalletCard = lazy(() => import("@/components/AppleWalletCard"));
@@ -43,9 +44,24 @@ function getCookiePhone(): string | null {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
+function getMerchantDisplay(marchand: Marchand): StampMerchant {
+  const mn = marchand as Record<string, unknown>;
+  const isRound = mn.logo_shape === "round";
+  return {
+    name: marchand.nom,
+    logo: (isRound && mn.logo_circle_url) ? mn.logo_circle_url as string : (mn.logo_url as string | undefined),
+    color: (mn.apple_bg_color as string) || marchand.couleur_principale || "#007AFF",
+  };
+}
+
+const IS_PREVIEW_ENV =
+  typeof process !== "undefined" &&
+  (process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_VERCEL_ENV === "preview");
+
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
+  const [stampMerchant, setStampMerchant] = useState<StampMerchant | null>(null);
   useTimeTheme("light"); // page NFC toujours en mode clair
   useAutoRefresh(screen.type === "loading");
 
@@ -120,6 +136,29 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
 
   useEffect(() => {
     async function init() {
+      // ── Mode preview (dev / preview Vercel uniquement) ───────────────────────
+      if (IS_PREVIEW_ENV) {
+        const previewParam = new URLSearchParams(window.location.search).get("preview");
+        if (previewParam) {
+          const mockMarchand = {
+            id: "preview", nom: "Aperçu Wallio", actif: true, couleur_principale: "#2F7BFF",
+            couleur_secondaire: "#8B5CF6", objectif_tampons: 10, nom_recompense: "votre matcha",
+            anti_doublon_delai: 86400, icone_tampons: "☕", fuseau_horaire: "Africa/Casablanca",
+          } as unknown as Marchand;
+          const mockClient = { id: "preview", prenom: "Karim", nom: "M.", telephone: "+212600000000", date_naissance: "", wallet_id: "preview-wallet", marchand_id: "preview", tampons: 6 } as Client;
+          setStampMerchant(getMerchantDisplay(mockMarchand));
+          if (previewParam === "stamp")
+            setScreen({ type: "result", result: { type: "ok", tampons: 7, objectif: 10, prenom: "Karim" }, client: mockClient, marchand: mockMarchand });
+          else if (previewParam === "reward")
+            setScreen({ type: "result", result: { type: "recompense", prenom: "Karim", nom_recompense: "votre matcha", tampons: 10 }, client: { ...mockClient, tampons: 9 }, marchand: mockMarchand });
+          else if (previewParam === "duplicate")
+            setScreen({ type: "result", result: { type: "anti_doublon", prenom: "Karim", secondes_restantes: 72000, tampons: 7, objectif: 10 }, client: mockClient, marchand: mockMarchand });
+          else if (previewParam === "error")
+            setScreen({ type: "erreur", message: "Problème de connexion. Réessayez.", retryable: true });
+          return;
+        }
+      }
+
       try {
         const CACHE_KEY = `wm_${marchandId}`;
         const CACHE_TTL = 4 * 60 * 60 * 1000; // 4h
@@ -128,7 +167,11 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           const raw = localStorage.getItem(CACHE_KEY);
           if (raw) {
             const { d, ts } = JSON.parse(raw);
-            if (Date.now() - ts < CACHE_TTL) marchand = d;
+            if (Date.now() - ts < CACHE_TTL) {
+              marchand = d;
+              // Affiche immédiatement les données du marchand pour le chargement animé
+              setStampMerchant(getMerchantDisplay(d as Marchand));
+            }
           }
         } catch {}
         if (!marchand) {
@@ -139,6 +182,8 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           setScreen({ type: "erreur", message: "Ce service est temporairement indisponible.", retryable: false });
           return;
         }
+        // Mettre à jour les données marchand avec les données fraîches
+        setStampMerchant(getMerchantDisplay(marchand));
 
         // Dead flag — back_forward/reload → afficher résultat en cache, jamais de re-tampon
         const navType = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type;
@@ -299,39 +344,33 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     init();
   }, [marchandId, traiterTampon]);
 
-  if (screen.type === "loading") return <Loading />;
-  if (screen.type === "erreur") return <Erreur message={screen.message} retryable={screen.retryable} />;
-  if (screen.type === "result") return (
-    <ResultScreen
-      result={screen.result}
-      marchand={screen.marchand}
-      walletId={screen.client.wallet_id}
-      telephone={screen.client.telephone || ""}
-      paliersValides={screen.client.paliers_valides || []}
-      hasWallet={!!(screen.client.wallet_type || screen.client.apns_push_token)}
-      hasFcmToken={!!screen.client.fcm_token}
-      onEnregistrerChoix={async (choix) => {
-        const res = await fetch("/api/nfc/enregistrer-choix", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ walletId: screen.client.wallet_id, marchandId: screen.marchand.id, choix }),
-        });
-        const data = await res.json();
-        if (data.already_done) {
-          // Un autre côté a déjà enregistré le choix — ne rien afficher, le screen se mettra à jour via le prochain scan
-          return;
-        }
-        if (data.ok) {
-          const mn = screen.marchand as Record<string, unknown>;
-          const tampons = screen.result.type === "choix_requis" ? screen.result.tampons : 0;
-          if (choix === "petit") {
-            setScreen({ type: "result", result: { type: "recompense", prenom: screen.client.prenom, nom_recompense: (mn.nom_recompense_petit as string) || "", tampons }, client: { ...screen.client, choix_fait: "petit" }, marchand: screen.marchand });
-          } else {
-            setScreen({ type: "result", result: { type: "ok", tampons, objectif: (mn.objectif_tampons as number) || 0, prenom: screen.client.prenom, prochainRecompense: (mn.nom_recompense_grand as string) || "" }, client: { ...screen.client, choix_fait: "grand" }, marchand: screen.marchand });
-          }
-        }
-      }}
-    />
+  // ── Rendu : loading + result → StampPage (module conservé entre les deux états) ──
+  if (screen.type === "loading" || screen.type === "result") {
+    const merchant = screen.type === "result"
+      ? getMerchantDisplay(screen.marchand)
+      : (stampMerchant ?? { name: "", color: "#007AFF" });
+    return (
+      <StampPage
+        merchant={merchant}
+        result={screen.type === "result" ? { result: screen.result, client: screen.client, marchand: screen.marchand } : null}
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+  if (screen.type === "erreur") return (
+    <main style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px", background: "#F0F4FF", fontFamily: "-apple-system,'SF Pro Text',sans-serif" }}>
+      <div style={{ textAlign: "center", maxWidth: 320 }}>
+        <div style={{ width: 56, height: 56, margin: "0 auto 20px", borderRadius: 16, background: "rgba(255,59,48,0.10)", border: "1.5px solid rgba(255,59,48,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 24, fontWeight: 700, color: "#FF3B30" }}>!</span>
+        </div>
+        <p style={{ fontSize: 17, fontWeight: 600, color: "#1C1C1E", marginBottom: 8 }}>{screen.message}</p>
+        {screen.retryable !== false && (
+          <button onClick={() => window.location.reload()} style={{ marginTop: 16, padding: "12px 24px", borderRadius: 14, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", fontSize: 15, fontWeight: 600, border: "none", cursor: "pointer" }}>
+            Réessayer
+          </button>
+        )}
+      </div>
+    </main>
   );
   if (screen.type === "passkey_prompt") return (
     <PasskeyPromptScreen
@@ -448,637 +487,6 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// ─── Loading ──────────────────────────────────────────────────────────────────
-
-const STEPS = [
-  { label: "Lecture de votre carte…",      delay: 0 },
-  { label: "Connexion au service…",         delay: 2500 },
-  { label: "Mise à jour de votre carte…",   delay: 5500 },
-  { label: "Encore quelques secondes…",     delay: 9000 },
-];
-
-function Loading() {
-  const [step, setStep] = useState(0);
-  const [slow, setSlow] = useState(false);
-
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    STEPS.forEach((s, i) => {
-      if (i === 0) return;
-      timers.push(setTimeout(() => setStep(i), s.delay));
-    });
-    timers.push(setTimeout(() => setSlow(true), 12000));
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-8" style={{ background: NFC_BG }}>
-      <style>{`
-        @keyframes pulse-dot { 0%,100%{opacity:.3;transform:scale(.85)} 50%{opacity:1;transform:scale(1)} }
-        @keyframes fade-up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-      `}</style>
-
-      {/* Dots animés */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 28 }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} style={{
-            width: 10, height: 10, borderRadius: "50%",
-            background: "rgba(99,102,241,0.5)",
-            animation: `pulse-dot 1.2s ease-in-out ${i * 0.2}s infinite`,
-          }} />
-        ))}
-      </div>
-
-      {/* Message courant */}
-      <p key={step} style={{
-        fontSize: 16, fontWeight: 600, color: "#3C3C43", textAlign: "center",
-        animation: "fade-up 0.35s ease",
-      }}>
-        {STEPS[step].label}
-      </p>
-
-      {/* Barre de progression */}
-      <div style={{ width: 180, height: 3, background: "rgba(99,102,241,0.12)", borderRadius: 4, marginTop: 20, overflow: "hidden" }}>
-        <div style={{
-          height: "100%", borderRadius: 4,
-          background: "linear-gradient(90deg,#6366F1,#818CF8)",
-          width: `${((step + 1) / STEPS.length) * 100}%`,
-          transition: "width 0.6s cubic-bezier(.4,0,.2,1)",
-        }} />
-      </div>
-
-      {/* Message connexion lente */}
-      {slow && (
-        <p style={{ marginTop: 20, fontSize: 13, color: "#AEAEB2", textAlign: "center", animation: "fade-up 0.4s ease" }}>
-          Connexion lente — merci de patienter
-        </p>
-      )}
-    </main>
-  );
-}
-
-// ─── Erreur ───────────────────────────────────────────────────────────────────
-
-function Erreur({ message, retryable = true }: { message: string; retryable?: boolean }) {
-  return (
-    <main className="min-h-screen flex items-center justify-center px-6" style={{ background: NFC_BG }}>
-      <div className="text-center max-w-sm">
-        <div className="w-14 h-14 mx-auto mb-5 rounded-2xl flex items-center justify-center"
-          style={{ background: "rgba(255,59,48,0.10)", border: "1.5px solid rgba(255,59,48,0.2)" }}>
-          <span className="text-[24px] font-bold" style={{ color: "#FF3B30" }}>!</span>
-        </div>
-        <p className="text-[17px] font-semibold mb-2" style={{ color: "#1C1C1E" }}>{message}</p>
-        {retryable && (
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-3 rounded-2xl text-[15px] font-semibold text-white active:opacity-80 transition-opacity"
-            style={{ background: BTN_BG, boxShadow: "0 4px 20px rgba(99,102,241,0.25)" }}>
-            Réessayer
-          </button>
-        )}
-      </div>
-    </main>
-  );
-}
-
-// ─── Résultat tampon ──────────────────────────────────────────────────────────
-
-function ResultScreen({ result, marchand, walletId, telephone, paliersValides, hasWallet, hasFcmToken, onEnregistrerChoix }: {
-  result: TamponResult;
-  marchand: Marchand;
-  walletId: string;
-  telephone: string;
-  paliersValides: boolean[];
-  hasWallet: boolean;
-  hasFcmToken: boolean;
-  onEnregistrerChoix?: (choix: "petit" | "grand") => Promise<void>;
-}) {
-  const mn = marchand as Record<string, unknown>;
-  const paliersDef = (mn.paliers as { tampons: number; recompense: string }[]) || [];
-  const isProgressif = mn.mode_recompense === "progressif" && paliersDef.length > 0;
-  const tamponsPostScan = result.type === "ok" || result.type === "recompense" ? result.tampons : 0;
-  const couleur = (mn.apple_bg_color as string) || marchand.couleur_principale || "#007AFF";
-  const isLight = isLightColor(couleur);
-  const badgeTextColor = isLight ? "#1D1D1F" : "#FFFFFF";
-  const [isAndroid, setIsAndroid] = useState(false);
-  const [notifState, setNotifState] = useState<"idle" | "granted" | "denied">("idle");
-  const [enregistrantChoix, setEnregistrantChoix] = useState(false);
-  const [emailExists, setEmailExists] = useState<boolean | null>(null);
-  const [emailInput, setEmailInput] = useState("");
-  const [emailSending, setEmailSending] = useState(false);
-  const [emailDone, setEmailDone] = useState(false);
-  const [pinExists, setPinExists] = useState<boolean | null>(null);
-  const [pinPromptInput, setPinPromptInput] = useState("");
-  const [pinPromptSending, setPinPromptSending] = useState(false);
-  const [pinPromptDone, setPinPromptDone] = useState(false);
-
-  const isChoixRequis = result.type === "choix_requis";
-
-  useEffect(() => {
-    if (telephone) {
-      getDocs(query(collection(db, "clients"), where("telephone", "==", telephone)))
-        .then(snap => {
-          setEmailExists(snap.docs.some(d => !!(d.data().email)));
-          setPinExists(snap.docs.some(d => !!(d.data().pin_hash)));
-        }).catch(() => { setEmailExists(true); setPinExists(true); });
-    }
-  }, [telephone]);
-
-  useEffect(() => {
-    setIsAndroid(/android/i.test(navigator.userAgent));
-    if (typeof Notification !== "undefined") {
-      if (Notification.permission === "granted") setNotifState("granted");
-      else if (Notification.permission === "denied") setNotifState("denied");
-    }
-    // Synchronise la couleur de l'UI Safari (Dynamic Island + barre bas) avec le fond de page
-    const prev = document.querySelector('meta[name="theme-color"]')?.getAttribute("content") ?? "";
-    const setTheme = (c: string) => {
-      let m = document.querySelector('meta[name="theme-color"]');
-      if (!m) { m = document.createElement("meta"); (m as HTMLMetaElement).name = "theme-color"; document.head.appendChild(m); }
-      m.setAttribute("content", c);
-    };
-    setTheme(NFC_BG);
-    return () => setTheme(prev);
-  }, []);
-
-  async function activerNotifs() {
-    try {
-      const token = await registerFcmToken();
-      if (token) {
-        const snap = await getDocs(query(collection(db, "clients"), where("wallet_id", "==", walletId)));
-        await Promise.all(snap.docs.map(d => updateDoc(d.ref, { fcm_token: token })));
-        setNotifState("granted");
-      } else {
-        setNotifState("denied");
-      }
-    } catch { setNotifState("denied"); }
-  }
-
-  if (result.type === "not_found") return <Erreur message="Client introuvable." />;
-
-  const isOk = result.type === "ok";
-  const isRecompense = result.type === "recompense";
-  const isAntiDoublon = result.type === "anti_doublon";
-
-  return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-10"
-      style={{ background: `linear-gradient(180deg, ${hexToRgba(couleur, 0.06)} 0%, ${NFC_BG} 40%)` }}>
-      <div className="w-full max-w-[360px] text-center">
-
-        {/* Mini header commerçant */}
-        <div className="flex flex-col items-center mb-8">
-          {mn.logo_url ? (
-            <img src={(mn.logo_shape === "round" && mn.logo_circle_url) ? mn.logo_circle_url as string : mn.logo_url as string} alt={marchand.nom}
-              className={`w-12 h-12 mb-2.5 object-contain ${mn.logo_shape === "round" ? "rounded-full" : "rounded-xl"}`}
-              style={{ boxShadow: `0 4px 16px ${hexToRgba(couleur, 0.25)}` }} />
-          ) : (
-            <div className={`w-12 h-12 mb-2.5 flex items-center justify-center text-[20px] font-bold ${mn.logo_shape === "round" ? "rounded-full" : "rounded-xl"}`}
-              style={{ background: couleur, color: badgeTextColor, boxShadow: `0 4px 16px ${hexToRgba(couleur, 0.25)}` }}>
-              {marchand.nom.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <p className="text-[15px] font-semibold" style={{ color: "#1D1D1F" }}>{marchand.nom}</p>
-        </div>
-
-        {/* Badge icône */}
-        {isOk && (
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: couleur, boxShadow: `0 8px 24px ${hexToRgba(couleur, 0.35)}`, animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
-            <span className="text-[22px] font-bold" style={{ color: badgeTextColor }}>+{(result.double || result.birthday) ? "2" : "1"}</span>
-          </div>
-        )}
-        {isRecompense && (
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: couleur, boxShadow: `0 8px 24px ${hexToRgba(couleur, 0.35)}`, animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
-            <span className="text-[22px] font-bold" style={{ color: badgeTextColor }}>+1</span>
-          </div>
-        )}
-        {isAntiDoublon && (
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: "rgba(255,159,10,0.12)", border: "1.5px solid rgba(255,159,10,0.28)", animation: "shake 0.45s ease-in-out" }}>
-            <span className="text-[28px] font-bold leading-none" style={{ color: "#FF9F0A" }}>!</span>
-          </div>
-        )}
-        {isChoixRequis && (
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,rgba(0,122,255,0.12),rgba(139,92,246,0.12))", animation: "success-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" stroke="url(#ncg)">
-              <defs><linearGradient id="ncg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#007AFF"/><stop offset="100%" stopColor="#8B5CF6"/></linearGradient></defs>
-              <polyline points="20 12 20 22 4 22 4 12"/>
-              <rect x="2" y="7" width="20" height="5"/>
-              <line x1="12" y1="22" x2="12" y2="7"/>
-              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-            </svg>
-          </div>
-        )}
-
-        {/* Titre */}
-        <h1 className="text-[26px] font-semibold tracking-tight mb-2" style={{ color: "#1D1D1F" }}>
-          {isOk && (result.birthday ? "Joyeux anniversaire !" : result.double ? "2 tampons ajoutés" : "Tampon ajouté")}
-          {isRecompense && "Récompense débloquée"}
-          {isAntiDoublon && "Votre passage a déjà été enregistré"}
-          {isChoixRequis && "À vous de choisir !"}
-        </h1>
-
-        {/* Sous-titre */}
-        <p className="text-[16px] mb-6" style={{ color: "#6E6E73" }}>
-          {isOk && `Bonjour ${result.prenom}`}
-          {isRecompense && `Bonjour ${result.prenom} — ${result.nom_recompense}`}
-          {isAntiDoublon && `À bientôt chez ${marchand.nom} !`}
-          {isChoixRequis && `Bonjour ${result.prenom} — ${result.tampons} tampons`}
-        </p>
-
-        {/* Message anniversaire sur choix_requis */}
-        {isChoixRequis && result.type === "choix_requis" && result.birthday && (
-          <div className="mb-4 px-4 py-3 rounded-2xl text-center"
-            style={{ background: "rgba(255,45,85,0.07)", border: "1px solid rgba(255,45,85,0.18)" }}>
-            <p className="text-[13px] font-semibold" style={{ color: "#FF2D55" }}>
-              Joyeux anniversaire !{result.birthday_offre ? ` — ${result.birthday_offre}` : ""}
-            </p>
-          </div>
-        )}
-
-        {/* Bloc de choix Flex */}
-        {isChoixRequis && result.type === "choix_requis" && (
-          <div className="mb-6 rounded-2xl p-5 text-left" style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(12px)", border: "1px solid rgba(0,0,0,0.07)" }}>
-            <p className="text-[13px] font-semibold uppercase tracking-widest mb-4" style={{ color: "#AEAEB2" }}>Votre choix</p>
-            <div className="flex flex-col gap-3">
-              <button
-                disabled={enregistrantChoix}
-                onClick={async () => {
-                  if (!onEnregistrerChoix) return;
-                  setEnregistrantChoix(true);
-                  try { await onEnregistrerChoix("petit"); } finally { setEnregistrantChoix(false); }
-                }}
-                className="w-full py-4 rounded-2xl font-bold text-white text-[16px]"
-                style={{ background: enregistrantChoix ? "#C7C7CC" : "linear-gradient(135deg,#007AFF,#8B5CF6)", border: "none", cursor: "pointer", boxShadow: enregistrantChoix ? "none" : "0 6px 20px rgba(0,122,255,0.25)" }}
-              >
-                {enregistrantChoix ? "…" : `Prendre : ${result.nom_recompense_petit}`}
-              </button>
-              <button
-                disabled={enregistrantChoix}
-                onClick={async () => {
-                  if (!onEnregistrerChoix) return;
-                  setEnregistrantChoix(true);
-                  try { await onEnregistrerChoix("grand"); } finally { setEnregistrantChoix(false); }
-                }}
-                className="w-full py-3.5 rounded-2xl font-semibold text-[15px]"
-                style={{ background: "rgba(0,0,0,0.04)", color: "#3C3C43", border: "1px solid rgba(0,0,0,0.08)", cursor: "pointer" }}
-              >
-                {`Continuer vers : ${result.nom_recompense_grand}`}
-              </button>
-            </div>
-            <p className="text-[11px] mt-3 text-center" style={{ color: "#AEAEB2" }}>Ce choix est définitif</p>
-          </div>
-        )}
-
-        {/* Offre anniversaire personnalisée */}
-        {(isOk || isRecompense) && result.birthday && result.birthday_offre && (
-          <div className="mb-5 px-4 py-3 rounded-2xl text-center"
-            style={{ background: "rgba(255,45,85,0.07)", border: "1px solid rgba(255,45,85,0.18)" }}>
-            <p className="text-[13px] font-semibold" style={{ color: "#FF2D55" }}>
-              Offre anniversaire : {result.birthday_offre}
-            </p>
-          </div>
-        )}
-
-        {/* Barre de progression (ok) */}
-        {isOk && (
-          <div className="mb-6">
-            {result.birthday && (
-              <p className="text-[12px] font-medium mb-3 px-3 py-1.5 rounded-full inline-block"
-                style={{ background: "rgba(255,45,85,0.08)", color: "#FF2D55" }}>
-                Bonus anniversaire — 2 tampons offerts
-              </p>
-            )}
-            {result.double && (
-              <p className="text-[12px] font-medium mb-3 px-3 py-1.5 rounded-full inline-block"
-                style={{ background: "rgba(0,122,255,0.08)", color: "#007AFF" }}>
-                Offre x2 tampons active
-              </p>
-            )}
-            <div className="flex justify-between text-[12px] mb-2" style={{ color: "#AEAEB2" }}>
-              <span>{result.tampons} tampon{result.tampons > 1 ? "s" : ""}</span>
-              <span>Objectif {result.objectif}</span>
-            </div>
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#E5E5EA" }}>
-              <div className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${Math.min((result.tampons / result.objectif) * 100, 100)}%`, background: couleur }} />
-            </div>
-            {result.tampons < result.objectif && (
-              <p className="text-[12px] mt-2" style={{ color: "#AEAEB2" }}>
-                {result.objectif - result.tampons} avant {result.prochainRecompense || marchand.nom_recompense}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Explication programme Flex */}
-        {isOk && mn.mode_recompense === "flex" && (
-          <div className="rounded-2xl p-4 mb-5 text-left" style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(0,0,0,0.06)" }}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#AEAEB2" }}>Programme Flex</p>
-            {result.objectif === (mn.palier_intermediaire as number) ? (
-              <>
-                <p className="text-[13px] font-medium mb-2" style={{ color: "#1D1D1F" }}>
-                  À {mn.palier_intermediaire as number} tampons, vous choisissez :
-                </p>
-                <p className="text-[12px] mb-1" style={{ color: "#6E6E73" }}>· Prendre {mn.nom_recompense_petit as string}</p>
-                <p className="text-[12px]" style={{ color: "#6E6E73" }}>· Ou continuer jusqu&apos;à {marchand.objectif_tampons} tampons pour {mn.nom_recompense_grand as string}</p>
-              </>
-            ) : (
-              <p className="text-[13px] font-medium" style={{ color: "#1D1D1F" }}>
-                Vous visez {mn.nom_recompense_grand as string} — encore {result.objectif - result.tampons} tampon{result.objectif - result.tampons > 1 ? "s" : ""}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Paliers progressifs */}
-        {isProgressif && (result.type === "ok" || result.type === "recompense") && (
-          <div className="rounded-2xl p-4 mb-5 text-left" style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", border: "1px solid rgba(0,0,0,0.06)" }}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#AEAEB2" }}>
-              Programme progressif
-            </p>
-            <div className="space-y-2">
-              {paliersDef.map((palier, i) => {
-                const valide = !!(paliersValides[i]) && tamponsPostScan >= palier.tampons;
-                const atteint = !valide && tamponsPostScan >= palier.tampons;
-                const enCours = !valide && !atteint && paliersDef.findIndex((_, j) => !(paliersValides[j] && paliersDef[j].tampons <= tamponsPostScan) && paliersDef[j].tampons > tamponsPostScan) === i;
-                const restants = palier.tampons - tamponsPostScan;
-                return (
-                  <div key={i} className="flex items-center gap-2.5">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: valide ? "rgba(52,199,89,0.15)" : atteint ? "rgba(255,159,10,0.15)" : enCours ? "rgba(0,122,255,0.1)" : "rgba(0,0,0,0.05)" }}>
-                      {valide
-                        ? <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#34C759" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        : <div style={{ width: 5, height: 5, borderRadius: "50%", background: atteint ? "#FF9F0A" : enCours ? "#007AFF" : "#C7C7CC" }} />
-                      }
-                    </div>
-                    <div className="flex-1 flex items-center justify-between min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-bold flex-shrink-0"
-                          style={{ color: valide ? "#34C759" : atteint ? "#FF9F0A" : enCours ? "#007AFF" : "#C7C7CC" }}>
-                          {palier.tampons}
-                        </span>
-                        <span className="text-[13px] font-medium"
-                          style={{ color: valide || atteint || enCours ? "#1D1D1F" : "#AEAEB2" }}>
-                          {palier.recompense}
-                        </span>
-                      </div>
-                      <span className="text-[11px] ml-2 flex-shrink-0"
-                        style={{ color: valide ? "#34C759" : atteint ? "#FF9F0A" : "#AEAEB2" }}>
-                        {valide ? "Validé" : atteint ? "À valider" : restants > 0 ? `${restants} restant${restants > 1 ? "s" : ""}` : ""}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Anti-doublon : tampons actuels */}
-        {isAntiDoublon && result.type === "anti_doublon" && (
-          <div className="mb-6">
-            <div className="flex justify-between text-[12px] mb-2" style={{ color: "#AEAEB2" }}>
-              <span>{result.tampons} tampon{result.tampons > 1 ? "s" : ""}</span>
-              <span>Objectif {result.objectif}</span>
-            </div>
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#E5E5EA" }}>
-              <div className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${Math.min((result.tampons / result.objectif) * 100, 100)}%`, background: couleur }} />
-            </div>
-          </div>
-        )}
-
-        {/* Anti-doublon : bouton Wallet en priorité */}
-        {isAntiDoublon && (
-          <div className="flex flex-col gap-3 mb-6">
-            {/* Bouton Google Wallet mis en avant */}
-            {isAndroid && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
-              <div>
-                <p className="text-[13px] mb-2 text-center" style={{ color: "#6E6E73" }}>
-                  Ajoutez votre carte pour suivre vos tampons
-                </p>
-                <a href={`/api/google-wallet/generate/${walletId}`}
-                  className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
-                  style={{ background: "#1a73e8" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 7H3a1 1 0 00-1 1v8a1 1 0 001 1h18a1 1 0 001-1V8a1 1 0 00-1-1z" stroke="white" strokeWidth="1.5"/>
-                    <path d="M1 10h22" stroke="white" strokeWidth="1.5"/>
-                  </svg>
-                  <span className="text-[14px] font-semibold text-white">Ajouter à Google Wallet</span>
-                </a>
-              </div>
-            )}
-            {!isAndroid && process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" && (
-              <div>
-                <p className="text-[13px] mb-2 text-center" style={{ color: "#6E6E73" }}>
-                  Ajoutez votre carte pour suivre vos tampons
-                </p>
-                <a href={`/api/apple-wallet/generate/${walletId}`}
-                  className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
-                  style={{ background: "#000" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="5" width="20" height="14" rx="3" stroke="white" strokeWidth="1.5"/>
-                    <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
-                    <circle cx="7" cy="14.5" r="1.5" fill="white"/>
-                  </svg>
-                  <span className="text-[14px] font-semibold text-white">Ajouter à Apple Wallet</span>
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* QR récompense */}
-        {isRecompense && (mn.mode_recompense === "flex" ? (
-          <div className="rounded-2xl px-5 py-5 mb-2" style={{ background: hexToRgba(couleur, 0.08), border: `1px solid ${hexToRgba(couleur, 0.25)}` }}>
-            <p className="text-[28px] font-bold mb-1" style={{ color: couleur }}>{result.nom_recompense}</p>
-            <p className="text-[14px] font-semibold mb-1" style={{ color: couleur }}>Récompense prête</p>
-            <p className="text-[13px]" style={{ color: "#6E6E73" }}>Montrez cet écran au barista pour la récupérer.</p>
-          </div>
-        ) : (
-          <RecompenseQR walletId={walletId} />
-        ))}
-
-        {/* Installer la PWA si pas encore fait */}
-        <div className="mt-8"><InstallBanner /></div>
-        <div className="mt-3"><PasskeyRegisterBanner telephone={telephone} /></div>
-
-        {/* Ajouter au Wallet */}
-        <div className="flex flex-col gap-2.5">
-          {!isAndroid && !hasWallet && process.env.NEXT_PUBLIC_APPLE_WALLET_ENABLED === "true" && (
-            <a href={`/api/apple-wallet/generate/${walletId}`}
-              className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
-              style={{ background: "#000" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect x="2" y="5" width="20" height="14" rx="3" stroke="white" strokeWidth="1.5"/>
-                <path d="M2 10H22" stroke="white" strokeWidth="1.5"/>
-                <circle cx="7" cy="14.5" r="1.5" fill="white"/>
-              </svg>
-              <span className="text-[14px] font-semibold text-white">Ajouter à Apple Wallet</span>
-            </a>
-          )}
-          {isAndroid && !hasWallet && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
-            <a href={`/api/google-wallet/generate/${walletId}`}
-              className="w-full rounded-2xl py-3.5 px-6 flex items-center justify-center gap-3 active:opacity-75 transition-opacity"
-              style={{ background: "#1a73e8" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M21 7H3a1 1 0 00-1 1v8a1 1 0 001 1h18a1 1 0 001-1V8a1 1 0 00-1-1z" stroke="white" strokeWidth="1.5"/>
-                <path d="M1 10h22" stroke="white" strokeWidth="1.5"/>
-              </svg>
-              <span className="text-[14px] font-semibold text-white">Ajouter à Google Wallet</span>
-            </a>
-          )}
-        </div>
-
-        {/* Banner notif — visible si marchand notif actif + client pas encore autorisé */}
-        {(isOk || isRecompense) && mn.notif_actif !== false && notifState === "idle" && !hasFcmToken && (
-          <div className="mt-5 rounded-2xl p-4 flex items-center gap-3"
-            style={{ background: "rgba(0,122,255,0.08)", border: "1px solid rgba(0,122,255,0.18)" }}>
-            <div className="flex-1 text-left">
-              <p className="text-[13px] font-semibold mb-0.5" style={{ color: "#1D1D1F" }}>Restez informé</p>
-              <p className="text-[11px]" style={{ color: "#6E6E73" }}>Recevez vos récompenses et offres</p>
-            </div>
-            <button onClick={activerNotifs}
-              className="px-4 py-2 rounded-xl text-[13px] font-semibold text-white flex-shrink-0"
-              style={{ background: "var(--accent)" }}>
-              Activer
-            </button>
-          </div>
-        )}
-        {(isOk || isRecompense) && notifState === "granted" && (
-          <div className="mt-5 rounded-2xl py-2.5 px-4 flex items-center gap-2"
-            style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.18)" }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <p className="text-[12px] font-medium" style={{ color: "#34C759" }}>Notifications activées</p>
-          </div>
-        )}
-
-        {/* Prompt email — uniquement si client sans email, sur écran ok ou récompense */}
-        {(isOk || isRecompense) && emailExists === false && !emailDone && (
-          <div className="mt-5 rounded-2xl p-4" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.14)" }}>
-            <p className="text-[13px] font-semibold mb-0.5" style={{ color: FG_MAIN }}>Recevez votre carte par email</p>
-            <p className="text-[11px] mb-3" style={{ color: FG_SEC }}>Optionnel — retrouvez vos cartes depuis n'importe quel appareil</p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input type="email" placeholder="votre@email.com" value={emailInput}
-                onChange={e => setEmailInput(e.target.value)}
-                style={{ flex: 1, padding: "9px 12px", borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 13, outline: "none", color: FG_MAIN, background: BG_CARD }} />
-              <button
-                disabled={!emailInput.includes("@") || emailSending}
-                onClick={async () => {
-                  if (!emailInput.includes("@") || !telephone) return;
-                  setEmailSending(true);
-                  try {
-                    await setClientEmail(telephone, emailInput.trim());
-                    const prenom = result.type === "ok" || result.type === "recompense" ? result.prenom : "";
-                    fetch("/api/send-welcome-email", {
-                      method: "POST", headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ email: emailInput.trim(), prenom, marchandNom: marchand.nom, walletId, mode: "inscription" }),
-                    }).catch(() => {});
-                    setEmailDone(true);
-                  } catch { /* silent */ }
-                  finally { setEmailSending(false); }
-                }}
-                style={{ padding: "9px 14px", borderRadius: 10, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: !emailInput.includes("@") || emailSending ? 0.5 : 1, flexShrink: 0 }}>
-                {emailSending ? "…" : "OK"}
-              </button>
-            </div>
-          </div>
-        )}
-        {emailDone && (
-          <div className="mt-4 rounded-2xl py-2.5 px-4 flex items-center gap-2"
-            style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.18)" }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <p className="text-[12px] font-medium" style={{ color: "#34C759" }}>Email enregistré !</p>
-          </div>
-        )}
-
-        {/* Prompt PIN — uniquement si email déjà renseigné et pas de PIN */}
-        {(isOk || isRecompense) && emailExists !== false && pinExists === false && !pinPromptDone && (
-          <div className="mt-5 rounded-2xl p-4" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.14)" }}>
-            <p className="text-[13px] font-semibold mb-0.5" style={{ color: FG_MAIN }}>Sécurisez votre compte</p>
-            <p className="text-[11px] mb-3" style={{ color: FG_SEC }}>Créez un code PIN à 4 chiffres pour accéder à vos cartes depuis n&apos;importe quel appareil.</p>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input type="password" inputMode="numeric" pattern="\d{4}" maxLength={4}
-                placeholder="••••" value={pinPromptInput}
-                onChange={e => setPinPromptInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                style={{ flex: 1, padding: "9px 12px", borderRadius: 10, border: `1px solid ${BORDER}`, fontSize: 20, outline: "none", color: FG_MAIN, background: BG_CARD, textAlign: "center", letterSpacing: "0.5em", fontWeight: 700 }} />
-              <button
-                disabled={pinPromptInput.length !== 4 || pinPromptSending}
-                onClick={async () => {
-                  if (pinPromptInput.length !== 4 || !telephone) return;
-                  setPinPromptSending(true);
-                  try {
-                    await fetch("/api/client/set-pin", {
-                      method: "POST", headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ telephone, pin: pinPromptInput }),
-                    });
-                    setPinPromptDone(true);
-                  } catch { /* silent */ }
-                  finally { setPinPromptSending(false); }
-                }}
-                style={{ padding: "9px 14px", borderRadius: 10, background: "linear-gradient(135deg,#007AFF,#8B5CF6)", color: "white", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: pinPromptInput.length !== 4 || pinPromptSending ? 0.5 : 1, flexShrink: 0 }}>
-                {pinPromptSending ? "…" : "OK"}
-              </button>
-            </div>
-          </div>
-        )}
-        {pinPromptDone && (
-          <div className="mt-4 rounded-2xl py-2.5 px-4 flex items-center gap-2"
-            style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.18)" }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8l3.5 3.5L13 4" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <p className="text-[12px] font-medium" style={{ color: "#34C759" }}>Code PIN créé !</p>
-          </div>
-        )}
-
-        <a href={`/preferences/${walletId}`} className="block mt-6 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
-          Gérer mes notifications
-        </a>
-        <Link href="/mes-cartes" className="block mt-3 text-[11px] text-center" style={{ color: "#C7C7CC" }}>
-          Toutes mes cartes →
-        </Link>
-      </div>
-    </main>
-  );
-}
-
-// ─── QR Récompense ────────────────────────────────────────────────────────────
-
-function RecompenseQR({ walletId }: { walletId: string }) {
-  const [qr, setQr] = useState("");
-
-  useEffect(() => {
-    import("qrcode").then(({ default: QRCode }) => QRCode.toDataURL(`https://app.walliocard.com/client/${walletId}`, {
-      width: 600, margin: 1, errorCorrectionLevel: "M",
-      color: { dark: "#1D1D1F", light: "#FFFFFF" },
-    }).then(setQr).catch(() => {}));
-  }, [walletId]);
-
-  return (
-    <div className="rounded-2xl px-5 py-5" style={{ background: "rgba(52,199,89,0.08)", border: "1px solid rgba(52,199,89,0.2)" }}>
-      <p className="text-[15px] font-semibold mb-1" style={{ color: "#34C759" }}>Récompense à valider</p>
-      <p className="text-[13px] mb-4" style={{ color: "var(--fg-secondary)" }}>
-        Faites scanner ce code par le marchand.
-      </p>
-      {qr ? (
-        <div className="flex justify-center">
-          <img src={qr} alt="QR récompense" className="w-36 h-36 rounded-xl" />
-        </div>
-      ) : (
-        <div className="w-36 h-36 mx-auto rounded-xl" style={{ background: "var(--border)" }} />
-      )}
-    </div>
-  );
-}
 
 // ─── Passkey Prompt ───────────────────────────────────────────────────────────
 
