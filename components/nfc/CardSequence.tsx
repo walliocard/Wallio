@@ -83,7 +83,8 @@ export default function CardSequence({ result, fresh = true, onRetry }: Props) {
       return () => clearTimeout(t);
     }
     if (phase === "out") {
-      const t = setTimeout(() => setPhase("result"), 1150);
+      // Court : juste le temps du fondu de la carte pendant que ResultPage (dessous) fait voler sa bannière
+      const t = setTimeout(() => setPhase("result"), 600);
       return () => clearTimeout(t);
     }
   }, [phase]);
@@ -187,84 +188,99 @@ export default function CardSequence({ result, fresh = true, onRetry }: Props) {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  if (phase === "result") return (
-    <ResultPage
-      pass={pass}
-      result={res}
-      client={client}
-      marchand={marchand}
-      cardState={cardState}
-      before={before}
-      after={after}
-      goal={goal}
-      stampRootRef={stampRootRef}
-      hasWallet={hasWallet}
-      isAndroid={isAndroid}
-      flipFrom={flipRectRef.current}
-      reduce={REDUCE}
-    />
-  );
-
-  // Card sequence overlay
-  const cardPhase: CardPhase = phase === "in" ? "in" : phase === "stamp" ? "stamp" : "out";
-  const bgColor = blendWithWhite(pass.backgroundColor, 0.05);
-
-  return (
-    <div
-      onClick={skipToResult}
-      style={{
-        position: "fixed", inset: 0, zIndex: 50,
-        background: bgColor,
-        display: "flex", flexDirection: "column",
-        paddingTop: "env(safe-area-inset-top)",
-        fontFamily: "-apple-system,'SF Pro Text',sans-serif",
-      }}
-    >
-      {/* Card */}
-      <div style={{ flex: 1, position: "relative" }}>
-        {phase !== "preload" && (
-          <CardPreview
-            pass={pass}
-            phase={cardPhase}
-            state={cardState}
-            before={before}
-            after={after}
-            goal={goal}
-            reduce={REDUCE}
-            stripRef={stripRef}
-          />
-        )}
-        {phase === "preload" && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <style>{`@keyframes wpulse{0%,100%{opacity:.3;transform:scale(.88)}50%{opacity:1;transform:scale(1)}}`}</style>
-            {pass.logo ? (
-              <img src={pass.logo} alt="" style={{
-                width: 72, height: 72, borderRadius: pass.logoShape === "round" ? "50%" : 18,
-                objectFit: "cover", animation: "wpulse 1.6s ease-in-out infinite",
-              }} />
-            ) : (
-              <div style={{
-                width: 72, height: 72, borderRadius: 18,
-                background: pass.backgroundColor, opacity: 0.6,
-                animation: "wpulse 1.6s ease-in-out infinite",
-              }} />
-            )}
-          </div>
+  // Preload : logo pulsé plein écran
+  if (phase === "preload") {
+    const bgColor = blendWithWhite(pass.backgroundColor, 0.05);
+    return (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 50, background: bgColor,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <style>{`@keyframes wpulse{0%,100%{opacity:.3;transform:scale(.88)}50%{opacity:1;transform:scale(1)}}`}</style>
+        {pass.logo ? (
+          <img src={pass.logo} alt="" style={{
+            width: 72, height: 72, borderRadius: pass.logoShape === "round" ? "50%" : 18,
+            objectFit: "cover", animation: "wpulse 1.6s ease-in-out infinite",
+          }} />
+        ) : (
+          <div style={{
+            width: 72, height: 72, borderRadius: 18,
+            background: pass.backgroundColor, opacity: 0.6,
+            animation: "wpulse 1.6s ease-in-out infinite",
+          }} />
         )}
       </div>
+    );
+  }
 
-      {/* Skip hint */}
-      {phase !== "preload" && (
-        <div style={{
-          textAlign: "center", fontSize: 12, color: "rgba(0,0,0,0.3)",
-          paddingBottom: "max(16px, env(safe-area-inset-bottom))",
-          animation: "fadeIn .4s .8s both",
-        }}>
-          <style>{`@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
-          Touchez pour passer
+  const cardPhase: CardPhase = phase === "in" ? "in" : phase === "stamp" ? "stamp" : "out";
+  const bgColor = blendWithWhite(pass.backgroundColor, 0.05);
+  // ResultPage est monté DÈS "out" (sous la carte) → sa bannière prend le relais sans frame vide.
+  // La carte reste montée pendant "out" et se fond en place par-dessus.
+  const showResult = phase === "out" || phase === "result";
+  const showCard = phase === "in" || phase === "stamp" || phase === "out";
+  const exiting = phase === "out";
+
+  return (
+    <>
+      {showResult && (
+        <ResultPage
+          pass={pass}
+          result={res}
+          client={client}
+          marchand={marchand}
+          cardState={cardState}
+          before={before}
+          after={after}
+          goal={goal}
+          stampRootRef={stampRootRef}
+          hasWallet={hasWallet}
+          isAndroid={isAndroid}
+          flipFrom={flipRectRef.current}
+          reduce={REDUCE}
+        />
+      )}
+
+      {showCard && (
+        <div
+          onClick={exiting ? undefined : skipToResult}
+          style={{
+            position: "fixed", inset: 0, zIndex: 50,
+            // Transparent pendant "out" pour laisser voir ResultPage dessous
+            background: exiting ? "transparent" : bgColor,
+            pointerEvents: exiting ? "none" : "auto",
+            display: "flex", flexDirection: "column",
+            paddingTop: "env(safe-area-inset-top)",
+            fontFamily: "-apple-system,'SF Pro Text',sans-serif",
+          }}
+        >
+          <div style={{ flex: 1, position: "relative" }}>
+            <CardPreview
+              pass={pass}
+              phase={cardPhase}
+              state={cardState}
+              before={before}
+              after={after}
+              goal={goal}
+              reduce={REDUCE}
+              stripRef={stripRef}
+            />
+          </div>
+
+          {/* Skip hint — masqué pendant la sortie */}
+          {!exiting && (
+            <div style={{
+              textAlign: "center", fontSize: 12, color: "rgba(0,0,0,0.3)",
+              paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+              animation: "fadeIn .4s .8s both",
+            }}>
+              <style>{`@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
+              Touchez pour passer
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -322,20 +338,23 @@ function ResultPage({ pass, result, client, marchand, cardState, before, after, 
     // Force reflow then animate to natural position
     void el.offsetWidth;
     requestAnimationFrame(() => {
-      const ease = "cubic-bezier(.4,0,.2,1)";
+      const ease = "cubic-bezier(.32,.72,0,1)";
       el.style.transition = `transform 0.85s ${ease}`;
-      el.style.transform = "translate(0,0) scale(1,1)";
+      el.style.transform = "none";
       if (img) {
         img.style.transition = `transform 0.85s ${ease}`;
-        img.style.transform = "scale(1,1)";
+        img.style.transform = "none";
       }
     });
   }, [flipFrom, reduce]);
 
-  // ── Ring segments draw + tile appear
+  // ── Ring segments draw + tile appear — APRÈS la fin du FLIP (850ms) pour éviter la
+  //    distorsion : l'anneau/tuile vivent dans la bannière transformée, donc restent
+  //    invisibles tant que le scale n'est pas revenu à 1.
   useEffect(() => {
     const filled = Math.min(Math.max(after, 0), goal);
     if (reduce) { setDrawn(filled); setTileIn(true); return; }
+    const RING_START = 880; // > durée du FLIP (850ms)
     let i = 0;
     const start = setTimeout(() => {
       const iv = setInterval(() => {
@@ -343,9 +362,9 @@ function ResultPage({ pass, result, client, marchand, cardState, before, after, 
         setDrawn(i);
         if (i >= filled) { clearInterval(iv); setTimeout(() => setTileIn(true), 120); }
       }, 40);
-    }, 450);
+    }, RING_START);
     // Ensure tile shows even when nothing to fill
-    const safety = setTimeout(() => setTileIn(true), 450 + filled * 40 + 300);
+    const safety = setTimeout(() => setTileIn(true), RING_START + filled * 40 + 300);
     return () => { clearTimeout(start); clearTimeout(safety); };
   }, [after, goal, reduce]);
 

@@ -151,19 +151,33 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       if (IS_PREVIEW_ENV) {
         const previewParam = new URLSearchParams(window.location.search).get("preview");
         if (previewParam) {
-          const mockMarchand = {
+          const baseMarchand = {
             id: "preview", nom: "Aperçu Wallio", actif: true, couleur_principale: "#2F7BFF",
             couleur_secondaire: "#8B5CF6", objectif_tampons: 10, nom_recompense: "votre matcha",
             anti_doublon_delai: 86400, icone_tampons: "☕", fuseau_horaire: "Africa/Casablanca",
-          } as unknown as Marchand;
+          } as Record<string, unknown>;
+          // Variantes de mode selon le paramètre
+          const progMarchand = { ...baseMarchand, mode_recompense: "progressif",
+            paliers: [{ tampons: 3, recompense: "un café" }, { tampons: 6, recompense: "un dessert" }, { tampons: 10, recompense: "un plat" }] };
+          const flexMarchand = { ...baseMarchand, mode_recompense: "flex",
+            palier_intermediaire: 5, nom_recompense_petit: "un café", nom_recompense_grand: "un plat" };
+          const mockMarchand = (
+            previewParam === "progressive" ? progMarchand
+            : previewParam === "flex" ? flexMarchand
+            : baseMarchand
+          ) as unknown as Marchand;
           const mockClient = { id: "preview", prenom: "Karim", nom: "M.", telephone: "+212600000000", date_naissance: "", wallet_id: "preview-wallet", marchand_id: "preview", tampons: 6 } as Client;
           setStampMerchant(getMerchantDisplay(mockMarchand));
           if (previewParam === "stamp")
-            setScreen({ type: "result", result: { type: "ok", tampons: 7, objectif: 10, prenom: "Karim" }, client: mockClient, marchand: mockMarchand });
+            setScreen({ type: "result", result: { type: "ok", tampons: 7, objectif: 10, prenom: "Karim" }, client: mockClient, marchand: mockMarchand, fresh: true });
+          else if (previewParam === "progressive")
+            setScreen({ type: "result", result: { type: "ok", tampons: 4, objectif: 10, prenom: "Karim", prochainRecompense: "un dessert" }, client: { ...mockClient, tampons: 3 }, marchand: mockMarchand, fresh: true });
+          else if (previewParam === "flex")
+            setScreen({ type: "result", result: { type: "choix_requis", prenom: "Karim", tampons: 5, palier_intermediaire: 5, nom_recompense_petit: "un café", nom_recompense_grand: "un plat" }, client: { ...mockClient, tampons: 5, choix_en_attente: true } as Client, marchand: mockMarchand, fresh: true });
           else if (previewParam === "reward")
-            setScreen({ type: "result", result: { type: "recompense", prenom: "Karim", nom_recompense: "votre matcha", tampons: 10 }, client: { ...mockClient, tampons: 9 }, marchand: mockMarchand });
+            setScreen({ type: "result", result: { type: "recompense", prenom: "Karim", nom_recompense: "votre matcha", tampons: 10 }, client: { ...mockClient, tampons: 9 }, marchand: mockMarchand, fresh: true });
           else if (previewParam === "duplicate")
-            setScreen({ type: "result", result: { type: "anti_doublon", prenom: "Karim", secondes_restantes: 72000, tampons: 7, objectif: 10 }, client: mockClient, marchand: mockMarchand });
+            setScreen({ type: "result", result: { type: "anti_doublon", prenom: "Karim", secondes_restantes: 72000, tampons: 7, objectif: 10 }, client: mockClient, marchand: mockMarchand, fresh: true });
           else if (previewParam === "error")
             setScreen({ type: "erreur", message: "Problème de connexion. Réessayez.", retryable: true });
           return;

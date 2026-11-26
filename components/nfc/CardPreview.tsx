@@ -92,11 +92,11 @@ export default function CardPreview({ pass, phase, state, before, after, goal, r
     transition: reduce ? "none" : phase === "in"
       ? "opacity 0.5s cubic-bezier(.22,1,.36,1), transform 0.6s cubic-bezier(.22,1,.36,1)"
       : phase === "out"
-      ? "opacity 0.4s ease-in, transform 0.4s ease-in"
+      // Fondu EN PLACE : la bannière de ResultPage (dessous, même rect) prend le relais sans frame vide
+      ? "opacity 0.45s ease"
       : "none",
     opacity: phase === "in" ? 1 : phase === "out" ? 0 : 1,
     transform: phase === "in" ? "translateY(-50%) translateY(0) rotateX(0deg)"
-      : phase === "out" ? "translateY(-60%) scale(0.92)"
       : "translateY(-50%)",
   };
 
