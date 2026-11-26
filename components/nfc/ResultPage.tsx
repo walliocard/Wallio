@@ -53,6 +53,21 @@ function Bar({ before, after, goal }: { before: number; after: number; goal: num
   );
 }
 
+// Liste des paliers (mode progressif) — statut selon before/after
+function milestoneRows(milestones: { at: number; label: string }[], before: number, after: number) {
+  return milestones.map((m, i) => {
+    const st = m.at <= before ? "rp-done" : m.at <= after ? "rp-now" : "";
+    const rem = m.at - after;
+    const lab = st === "rp-done" ? "Validé" : st === "rp-now" ? "Débloqué" : `${rem} restant${rem > 1 ? "s" : ""}`;
+    return (
+      <div key={i} className={`rp-msr ${st}`}>
+        <span className="rp-msi">{st ? <Ic name="check" s={13} w={2.4} /> : <Ic name="lock" s={12} w={2} />}</span>
+        {m.label}<small style={{ color: "var(--muted)", fontSize: "12.5px" }}>&nbsp;· {m.at}</small><em>{lab}</em>
+      </div>
+    );
+  });
+}
+
 // Toutes les classes sont préfixées `rp-` pour éviter toute collision avec les
 // utilities Tailwind (ex. `ring` = box-shadow en anneau → carré parasite).
 const CSS = `
@@ -291,19 +306,7 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
       <div className="rp-card">
         <div className="rp-big"><b>{after}</b><span>/ {goal}</span>{next && <em className="rp-pill">Encore {next.at - after}</em>}</div>
         <Bar before={before} after={after} goal={goal} />
-        <div className="rp-ms">
-          {milestones.map((m, i) => {
-            const st = m.at <= before ? "rp-done" : m.at <= after ? "rp-now" : "";
-            const rem = m.at - after;
-            const lab = st === "rp-done" ? "Validé" : st === "rp-now" ? "Débloqué" : `${rem} restant${rem > 1 ? "s" : ""}`;
-            return (
-              <div key={i} className={`rp-msr ${st}`}>
-                <span className="rp-msi">{st ? <Ic name="check" s={13} w={2.4} /> : <Ic name="lock" s={12} w={2} />}</span>
-                {m.label}<small style={{ color: "var(--muted)", fontSize: "12.5px" }}>&nbsp;· {m.at}</small><em>{lab}</em>
-              </div>
-            );
-          })}
-        </div>
+        <div className="rp-ms">{milestoneRows(milestones, before, after)}</div>
       </div>
     );
   } else if (kind === "choice") {
@@ -321,7 +324,25 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
         <div className="rp-fin">Ce choix est définitif.</div>
       </>
     );
+  } else if (kind === "reward" && mode === "progressif" && milestones.length) {
+    // Palier progressif atteint (intermédiaire ou dernier)
+    const idx = typeof r.palier_index === "number" ? (r.palier_index as number) : milestones.findIndex(m => m.at === after);
+    const isLast = idx >= milestones.length - 1;
+    const next = milestones.find(m => m.at > after);
+    const palierLabel = (idx >= 0 && milestones[idx]) ? milestones[idx].label : reward;
+    tile = <Ic name="gift" s={38} w={1.5} />;
+    title = isLast ? "Dernier palier débloqué" : "Palier débloqué";
+    sub = `${palierLabel} ! Montrez cet écran au comptoir.`;
+    body = (
+      <div className="rp-card">
+        <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">{next ? `Encore ${next.at - after}` : "Complet"}</em></div>
+        <Bar before={before} after={after} goal={goal} />
+        <div className="rp-ms">{milestoneRows(milestones, before, after)}</div>
+        {isLast && <div className="rp-note">Votre carte repart à zéro après validation.</div>}
+      </div>
+    );
   } else if (kind === "reward") {
+    // Récompense cyclique / flex → reset complet
     tile = <Ic name="gift" s={38} w={1.5} />;
     title = "Récompense débloquée";
     sub = `${reward} ! Montrez cet écran au comptoir.`;
