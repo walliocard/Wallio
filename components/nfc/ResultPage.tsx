@@ -82,6 +82,7 @@ const CSS = `
 .rp-ring path.rp-off{opacity:.35}
 .rp-tile{position:absolute;left:50%;top:calc(101px + env(safe-area-inset-top));width:86px;height:86px;margin-left:-43px;border-radius:21px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.28);z-index:3}
 .rp-tile::before{content:"";position:absolute;inset:4px;border-radius:17px;border:.5px solid rgba(255,255,255,.4)}
+.rp-tile.rp-round,.rp-tile.rp-round::before{border-radius:50%}
 .rp-tile .rp-lay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .rp-tile .rp-tlogo img{width:100%;height:100%;object-fit:cover;display:block}
 .rp-tile .rp-num{font-weight:300;font-size:38px;line-height:1;letter-spacing:-1px}
@@ -406,7 +407,7 @@ export default function ResultPage({ merchant, result }: { merchant: StampMercha
           <div className="rp-hero-fade" />
         </div>
         {res && <Ring before={ringBefore} after={ringAfter} goal={ringGoal} />}
-        <div className="rp-tile" ref={tileRef}>
+        <div className={`rp-tile${tileLogoRound ? " rp-round" : ""}`} ref={tileRef}>
           {loadingFlow.current && (
             <div className="rp-lay rp-tlogo">{tileLogo ? <img src={tileLogo} alt="" style={{ borderRadius: tileLogoRound ? "50%" : 20 }} /> : null}</div>
           )}
