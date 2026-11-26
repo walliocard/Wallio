@@ -36,7 +36,7 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
       ws.current?.destroy();
       ws.current = null;
       setLoaderGone(true);
-    }, 360);
+    }, 520);
     return () => clearTimeout(t);
   }, [result]);
 
@@ -139,7 +139,7 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
           ref={root}
           style={result ? {
             position: "fixed", inset: 0, zIndex: 3,
-            opacity: 0, transition: "opacity 0.36s ease", pointerEvents: "none",
+            opacity: 0, transition: "opacity 0.5s ease", pointerEvents: "none",
           } : undefined}
         />
       )}

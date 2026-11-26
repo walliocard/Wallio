@@ -108,12 +108,19 @@ const CSS = `
 .rp-mini i{position:absolute;left:0;right:0;top:8px;height:11px;background:var(--banner) center/cover}
 .rp-mini u{position:absolute;left:9px;top:23px;width:12px;height:12px;border-radius:2px;overflow:hidden;background:#fff}
 .rp-mini u img{width:100%;height:100%;display:block;image-rendering:pixelated}
+.rp-inst{background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:14px;display:flex;align-items:center;gap:12px;border:0;width:100%;text-align:left;font-family:inherit;cursor:pointer}
+.rp-inst img{width:46px;height:46px;border-radius:11px}
+.rp-inst b{font-size:15px}
+.rp-inst small{display:block;color:var(--muted);font-size:12.5px}
+.rp-inst .rp-get{margin-left:auto;flex:none;background:#4B4FD6;color:#fff;font-weight:600;font-size:14px;padding:9px 14px;border-radius:11px}
+@keyframes rp-pagein{from{opacity:0}to{opacity:1}}
 @keyframes rp-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes rp-fade{from{opacity:0}to{opacity:1}}
 @keyframes rp-heroIn{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:none}}
 @keyframes rp-tileIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 @keyframes rp-seg{from{opacity:0}}
 @keyframes rp-grow{from{transform:scaleX(0)}to{transform:none}}
+.rp.rp-anim{animation:rp-pagein .5s ease both}
 .rp.rp-anim .rp-hero-img{animation:rp-heroIn .9s var(--ease) both}
 .rp.rp-anim .rp-hero-fade{animation:rp-fade .7s .1s ease both}
 .rp.rp-anim .rp-tile{animation:rp-tileIn .55s .35s var(--ease) both}
@@ -129,7 +136,7 @@ const CSS = `
 .rp.rp-anim .rp-foot>*:nth-child(1){animation:rp-up .55s 1.05s var(--ease) both}
 .rp.rp-anim .rp-foot>*:nth-child(2){animation:rp-up .55s 1.15s var(--ease) both}
 .rp.rp-anim .rp-foot>*:nth-child(3){animation:rp-up .55s 1.25s var(--ease) both}
-@media (prefers-reduced-motion:reduce){.rp.rp-anim *{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.rp.rp-anim,.rp.rp-anim *{animation:none!important}}
 `;
 
 type Kind = "stamp" | "progressif" | "choice" | "reward" | "dup";
@@ -207,20 +214,26 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
     return () => { alive = false; };
   }, []);
 
-  // ── Module d'installation Wallio (carte « Obtenir » + feuille slide-up iOS/Android)
-  const installRef = useRef<HTMLDivElement>(null);
+  // ── Installation Wallio : carte visuelle (maquette) + feuille slide-up du vrai
+  //    module WallioInstall. On monte le module dans un conteneur CACHÉ uniquement
+  //    pour récupérer openSheet() ; la carte visible reste celle de la maquette.
+  const installHiddenRef = useRef<HTMLDivElement>(null);
+  const installApi = useRef<{ kind?: string; openSheet?: (k: string) => void } | null>(null);
   useEffect(() => {
-    const el = installRef.current;
+    const el = installHiddenRef.current;
     if (!el) return;
-    import("@/lib/wallio-install.js").then((m: any) =>
-      m.WallioInstall.mount(el, {
+    import("@/lib/wallio-install.js").then((m: any) => {
+      installApi.current = m.WallioInstall.mount(el, {
         icon: "/wallio-instagram-profil.png",
-        theme: { brand: "#4B4FD6", brandSoft: "#EEF0FF" },
         texts: { get: "Obtenir", perks: [] },
-      })
-    );
+      });
+    });
     return () => { if (el) el.innerHTML = ""; };
   }, []);
+  const onInstall = () => {
+    const api = installApi.current;
+    if (api?.openSheet) api.openSheet(api.kind === "android" ? "android" : "ios");
+  };
 
   // ── Fond derrière la Dynamic Island
   useEffect(() => {
@@ -349,10 +362,17 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
           ) : showWalletBtn ? (
             <a className="rp-btn rp-primary" style={{ height: 48 }} href={walletHref}>Ajouter à {walletName}</a>
           ) : null}
-          <div ref={installRef} />
+          <button type="button" className="rp-inst" onClick={onInstall}>
+            <img src="/wallio-instagram-profil.png" alt="" />
+            <div><b>Wallio</b><small>Toutes vos cartes au même endroit</small></div>
+            <span className="rp-get">Obtenir</span>
+          </button>
           <a className="rp-btn rp-ghost" href="/mes-cartes">Voir toutes mes cartes</a>
         </div>
       )}
+
+      {/* Montage caché : fournit la feuille slide-up à la carte « Obtenir » ci-dessus */}
+      <div ref={installHiddenRef} style={{ display: "none" }} />
     </div>
   );
 }
