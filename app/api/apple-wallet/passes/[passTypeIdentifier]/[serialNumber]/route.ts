@@ -46,7 +46,8 @@ export async function GET(
     .limit(1)
     .get();
 
-  if (snap.empty) return new Response(null, { status: 401 });
+  // 410 Gone = Apple retire automatiquement la carte du Wallet du client
+  if (snap.empty) return new Response(null, { status: 410 });
 
   const client = snap.docs[0].data();
 

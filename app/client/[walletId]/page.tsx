@@ -711,6 +711,18 @@ export default function ClientQrPage({ params }: { params: Promise<{ walletId: s
           onClick={async () => {
             if (!confirm(`Supprimer définitivement ${cap(client.prenom)} ${cap(client.nom)} ?\nSes tampons seront perdus.`)) return;
             setDeleting(true);
+            // Invalider la carte Apple Wallet avant suppression :
+            // await garantit que le document existe encore quand push-update le lit.
+            // Apple reçoit le push, appelle GET passes, obtient 410 → retire la carte du Wallet.
+            if (client.apns_push_token) {
+              try {
+                await fetch("/api/apple-wallet/push-update", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ walletId: client.wallet_id }),
+                });
+              } catch {}
+            }
             await deleteDoc(doc(db, "clients", client.id));
             setDeleted(true);
           }}
