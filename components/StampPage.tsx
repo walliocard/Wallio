@@ -35,8 +35,15 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
 
     import("@/lib/wallio-stamp.js").then((m: any) => {
       if (!alive || !root.current) return;
+      // Override CSS : fond plus compact, slot moins espacé
+      const styleEl = document.createElement("style");
+      styleEl.setAttribute("data-wallio-overrides", "");
+      styleEl.textContent = `.ws-main{padding-bottom:28px}.ws-slot{margin-top:12px}`;
+      document.head.appendChild(styleEl);
+
       ws.current = m.WallioStamp.mount(root.current, {
         merchant,
+        bgStyle: "mist",
         onRetry: () => onRetryRef.current(),
         onChoose: async (choice: "small" | "big") => {
           const r = resultRef.current;
@@ -73,6 +80,7 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
       slotBuilt.current = false;
       pending.current = false;
       setMeta("theme-color", prevTheme);
+      document.querySelector("style[data-wallio-overrides]")?.remove();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -83,6 +91,12 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
     if (!ws.current) { pending.current = true; return; }   // module pas encore prêt
     if (!slotBuilt.current) { slotBuilt.current = true; buildSlot(ws.current.slot, result); }
     ws.current.play(mapParams(result.result, result.client, result.marchand));
+    // Injection du prénom après play() — texts sont fixés au mount, on patch le DOM directement
+    const prenom = result.client.prenom;
+    if (prenom && root.current) {
+      const subEl = root.current.querySelector(".ws-sub") as HTMLElement | null;
+      if (subEl) { subEl.textContent = `Bonjour ${prenom} !`; subEl.style.display = ""; }
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result]);
 
@@ -101,7 +115,11 @@ function buildSlot(slot: HTMLElement, { result, client, marchand }: StampResult)
   const installEl = document.createElement("div");
   slot.appendChild(installEl);
   import("@/lib/wallio-install.js").then((m: any) =>
-    m.WallioInstall.mount(installEl, { icon: "/wallio-instagram-profil.png" })
+    m.WallioInstall.mount(installEl, {
+      icon: "/wallio-instagram-profil.png",
+      theme: { brand: "#007AFF", brandSoft: "rgba(0,122,255,0.08)" },
+      texts: { perks: [], get: "Obtenir" },
+    })
   );
 
   // 2. Wallet button

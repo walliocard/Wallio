@@ -61,7 +61,18 @@ const IS_PREVIEW_ENV =
 export default function NfcPage({ params }: { params: Promise<{ marchandId: string }> }) {
   const { marchandId } = use(params);
   const [screen, setScreen] = useState<Screen>({ type: "loading" });
-  const [stampMerchant, setStampMerchant] = useState<StampMerchant | null>(null);
+  // Lecture synchrone du cache localStorage → logo + couleur du marchand dès le 1er render
+  const [stampMerchant, setStampMerchant] = useState<StampMerchant | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(`wm_${marchandId}`);
+      if (raw) {
+        const { d, ts } = JSON.parse(raw);
+        if (d && Date.now() - ts < 4 * 60 * 60 * 1000) return getMerchantDisplay(d as Marchand);
+      }
+    } catch {}
+    return null;
+  });
   useTimeTheme("light"); // page NFC toujours en mode clair
   useAutoRefresh(screen.type === "loading");
 
