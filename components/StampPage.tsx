@@ -29,16 +29,32 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
     if (!root.current) return;
     let alive = true;
 
-    // theme-color Safari pour Dynamic Island
+    // Fond derrière Dynamic Island — même fix que client-layout.tsx natif
+    const prevHtmlBg = document.documentElement.style.backgroundColor;
+    const prevBodyBg = document.body.style.backgroundColor;
+    document.documentElement.style.backgroundColor = "#F5F6FA";
+    document.body.style.backgroundColor = "#F5F6FA";
+
+    // theme-color Safari status bar
     const prevTheme = document.querySelector('meta[name="theme-color"]')?.getAttribute("content") ?? "";
     setMeta("theme-color", "#F5F6FA");
 
     import("@/lib/wallio-stamp.js").then((m: any) => {
       if (!alive || !root.current) return;
-      // Override CSS : fond plus compact, slot moins espacé
+      // Overrides CSS : layout + pastilles rondes iOS + récompense visible
       const styleEl = document.createElement("style");
       styleEl.setAttribute("data-wallio-overrides", "");
-      styleEl.textContent = `.ws-main{padding-bottom:28px}.ws-slot{margin-top:12px}`;
+      styleEl.textContent = [
+        `.ws-main{padding-bottom:28px}`,
+        `.ws-slot{margin-top:12px}`,
+        // Barre → points circulaires (style carte de fidélité physique)
+        `.ws-bar{gap:5px;height:10px;align-items:center}`,
+        `.ws-bar i{flex:0 0 10px;width:10px;height:10px;border-radius:50%;overflow:hidden}`,
+        `.ws-bar i b{border-radius:50%}`,
+        // Récompense plus visible
+        `.ws-note{color:#1D1D1F;font-weight:600;font-size:15px}`,
+        `.ws-left{font-size:14px;font-weight:700;padding:7px 13px}`,
+      ].join("");
       document.head.appendChild(styleEl);
 
       ws.current = m.WallioStamp.mount(root.current, {
@@ -80,6 +96,8 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
       slotBuilt.current = false;
       pending.current = false;
       setMeta("theme-color", prevTheme);
+      document.documentElement.style.backgroundColor = prevHtmlBg;
+      document.body.style.backgroundColor = prevBodyBg;
       document.querySelector("style[data-wallio-overrides]")?.remove();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,22 +140,31 @@ function buildSlot(slot: HTMLElement, { result, client, marchand }: StampResult)
     })
   );
 
-  // 2. Wallet button
-  if (!isAndroid) {
-    const a = el<HTMLAnchorElement>("a");
-    a.href = `/api/apple-wallet/generate/${walletId}`;
-    a.style.cssText = btnStyle("#000");
-    a.innerHTML = walletSvg("white") + (hasWallet ? "Mettre à jour ma carte" : "Ajouter à Apple Wallet");
-    slot.appendChild(a);
-  } else if (GOOGLE_ENABLED) {
-    const a = el<HTMLAnchorElement>("a");
-    a.href = `/api/google-wallet/generate/${walletId}`;
-    a.style.cssText = btnStyle("#1a73e8");
-    a.innerHTML = walletSvg("white") + (hasWallet ? "Voir ma carte" : "Ajouter à Google Wallet");
-    slot.appendChild(a);
+  // 2. Bouton Wallet — uniquement si pas encore dans Wallet
+  if (!hasWallet) {
+    if (!isAndroid) {
+      const a = el<HTMLAnchorElement>("a");
+      a.href = `/api/apple-wallet/generate/${walletId}`;
+      a.style.cssText = btnStyle("#000");
+      a.innerHTML = walletSvg("white") + "Ajouter à Apple Wallet";
+      slot.appendChild(a);
+    } else if (GOOGLE_ENABLED) {
+      const a = el<HTMLAnchorElement>("a");
+      a.href = `/api/google-wallet/generate/${walletId}`;
+      a.style.cssText = btnStyle("#1a73e8");
+      a.innerHTML = walletSvg("white") + "Ajouter à Google Wallet";
+      slot.appendChild(a);
+    }
   }
 
-  // 3. Notifications button
+  // 3. Voir toutes mes cartes — toujours affiché, prominent
+  const cardsBtn = el<HTMLAnchorElement>("a");
+  cardsBtn.href = "/mes-cartes";
+  cardsBtn.style.cssText = btnStyle("linear-gradient(135deg,#007AFF,#8B5CF6)");
+  cardsBtn.innerHTML = cardsSvg() + "Voir toutes mes cartes";
+  slot.appendChild(cardsBtn);
+
+  // 4. Notifications button
   if (!hasFcmToken && "Notification" in window && Notification.permission !== "denied") {
     const btn = el<HTMLButtonElement>("button");
     btn.type = "button";
@@ -164,7 +191,7 @@ function buildSlot(slot: HTMLElement, { result, client, marchand }: StampResult)
     slot.appendChild(btn);
   }
 
-  // 4. Lien "Gérer mes notifications"
+  // 5. Lien "Gérer mes notifications"
   const lnk = el<HTMLAnchorElement>("a");
   lnk.href = `/preferences/${walletId}`;
   lnk.textContent = "Gérer mes notifications";
@@ -251,6 +278,9 @@ const walletSvg = (c: string) =>
 
 const bellSvg = () =>
   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`;
+
+const cardsSvg = () =>
+  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>`;
 
 const checkSvg = () =>
   `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8l3.5 3.5L13 4" stroke="#34C759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
