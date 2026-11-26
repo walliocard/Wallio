@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { saveMarchandFields } from "@/lib/save-marchand";
 import { useLang } from "@/lib/lang-context";
 import { db } from "@/lib/firebase";
@@ -104,7 +105,7 @@ function ChevronRight() {
 
 // ── Page principale ───────────────────────────────────────────────────────────
 
-export default function ReglagesPage() {
+function ReglagesPage() {
   const { user, marchand } = useAuth();
   const { t, setLang } = useLang();
 
@@ -168,7 +169,7 @@ export default function ReglagesPage() {
 
   // Option C : vue focalisée sur une section (depuis le hub Compte via ?section=…).
   // Sans paramètre (desktop/iPad via sidebar) → tout s'affiche.
-  const section = useMemo(() => (typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("section")), []);
+  const section = useSearchParams().get("section");
   const showG = (g: string) => !section || section === g;
   const sectionTitle = section === "programme" ? "Programme de fidélité"
     : section === "etablissement" ? "Établissement"
@@ -929,3 +930,12 @@ function DeleteAccountSection() {
 
 // React import needed for JSX in helper components
 import React from "react";
+
+// Wrapper Suspense requis par Next pour useSearchParams()
+export default function ReglagesPageRoute() {
+  return (
+    <Suspense fallback={null}>
+      <ReglagesPage />
+    </Suspense>
+  );
+}
