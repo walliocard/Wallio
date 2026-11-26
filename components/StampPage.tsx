@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { TamponResult, Client, Marchand } from "@/lib/loyalty";
-import CardSequence from "@/components/nfc/CardSequence";
+import ResultPage from "@/components/nfc/ResultPage";
 
 const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true";
 
@@ -16,7 +16,7 @@ interface Props {
   onRetry: () => void;
 }
 
-export default function StampPage({ merchant, result, fresh, onRetry }: Props) {
+export default function StampPage({ merchant, result, onRetry }: Props) {
   const root      = useRef<HTMLDivElement>(null);
   const ws        = useRef<any>(null);
   const resultRef = useRef<StampResult | null>(null);
@@ -117,9 +117,10 @@ export default function StampPage({ merchant, result, fresh, onRetry }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Quand le résultat arrive, CardSequence prend la main
+  // Pendant le chargement : la tuile du marchand « respire » (module monté ci-dessous).
+  // Dès que le résultat arrive, on passe directement à la nouvelle page résultat (option B).
   if (result) {
-    return <CardSequence result={result} fresh={fresh} onRetry={onRetry} />;
+    return <ResultPage result={result} onRetry={onRetry} />;
   }
 
   return <div ref={root} />;
