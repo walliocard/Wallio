@@ -396,10 +396,13 @@ export default function ClientsPage() {
             const enProgressif = mn?.mode_recompense === "progressif" && paliersDef.length > 0;
             const prochainPalier = enProgressif ? (paliersDef.find((p, i) => !pv[i]) ?? paliersDef[paliersDef.length - 1]) : null;
             const enFlex = mn?.mode_recompense === "flex";
+            const palierInt = (mn?.palier_intermediaire as number ?? 5);
+            // Au-dessus du palier (tampons > palier) → le client a forcément choisi « grand »
+            // → on vise l'objectif final, pas le palier intermédiaire.
             const flexObjectif = enFlex
-              ? ((client as Record<string,unknown>).choix_fait === "grand"
+              ? ((client as Record<string,unknown>).choix_fait === "grand" || client.tampons > palierInt
                 ? (mn?.objectif_tampons as number ?? 10)
-                : (mn?.palier_intermediaire as number ?? 5))
+                : palierInt)
               : null;
             const objectifActuel = prochainPalier ? prochainPalier.tampons : (flexObjectif ?? (marchand?.objectif_tampons ?? 10));
             const dvSeconds = (client.derniere_visite as { seconds?: number })?.seconds;
