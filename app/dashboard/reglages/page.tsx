@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { saveMarchandFields } from "@/lib/save-marchand";
 import { useLang } from "@/lib/lang-context";
 import { db } from "@/lib/firebase";
@@ -87,7 +87,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
   return (
     <button onClick={() => onChange(!value)}
       className="relative w-11 h-6 rounded-full transition-all duration-200 flex-shrink-0"
-      style={{ background: value ? "var(--accent)" : "var(--border)" }}>
+      style={{ background: value ? "#9E8BD6" : "var(--border)" }}>
       <div className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200"
         style={{ left: value ? "calc(100% - 22px)" : "2px" }} />
     </button>
@@ -165,6 +165,15 @@ export default function ReglagesPage() {
   const [isDirty, setIsDirty] = useState(false);
 
   const mark = () => setIsDirty(true);
+
+  // Option C : vue focalisée sur une section (depuis le hub Compte via ?section=…).
+  // Sans paramètre (desktop/iPad via sidebar) → tout s'affiche.
+  const section = useMemo(() => (typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("section")), []);
+  const showG = (g: string) => !section || section === g;
+  const sectionTitle = section === "programme" ? "Programme de fidélité"
+    : section === "etablissement" ? "Établissement"
+    : section === "engagement" ? "Engagement clients"
+    : t.settings_title;
 
   if (!marchand || !user) return null;
 
@@ -246,9 +255,10 @@ export default function ReglagesPage() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
         Plus
       </Link>
-      <h1 className="text-[34px] font-bold tracking-[-1px] mb-6" style={{ color: "var(--fg)" }}>{t.settings_title}</h1>
+      <h1 className="text-[34px] font-bold tracking-[-1px] mb-6" style={{ color: "var(--fg)" }}>{sectionTitle}</h1>
 
       {/* ── 1. Établissement ───────────────────────────────────────────────── */}
+      {showG("etablissement") && (<>
       <SectionLabel title="Établissement" first id="etablissement" />
       <IosCard>
         <div className="px-5 py-4">
@@ -277,6 +287,8 @@ export default function ReglagesPage() {
       </IosCard>
 
       {/* ── 2. Programme de fidélité ────────────────────────────────────────── */}
+      </>)}
+      {showG("programme") && (<>
       <SectionLabel title="Programme de fidélité" id="programme" />
       <IosCard>
         {/* Mode selector */}
@@ -478,6 +490,8 @@ export default function ReglagesPage() {
       </IosCard>
 
       {/* ── 5. Automatisations ─────────────────────────────────────────────── */}
+      </>)}
+      {showG("engagement") && (<>
       <SectionLabel title="Engagement clients" id="engagement" />
       <IosCard>
         {/* Anniversaire */}
@@ -569,6 +583,8 @@ export default function ReglagesPage() {
       )}
 
       {/* ── 7. Notifications clients ───────────────────────────────────────── */}
+      </>)}
+      {showG("etablissement") && (<>
       <SectionLabel title="Notifications clients" />
       <IosCard>
         <div className="flex items-start justify-between gap-3 px-5 py-4" style={{ borderBottom: notifActif ? "1px solid var(--border)" : "none" }}>
@@ -631,6 +647,7 @@ export default function ReglagesPage() {
 
       {/* ── 10. Compte ─────────────────────────────────────────────────────── */}
       <DeleteAccountSection />
+      </>)}
 
       <div className="mb-8" />
 
@@ -698,16 +715,6 @@ function SectionEquipe({ onDirty }: { onDirty: () => void }) {
   }, []);
 
   useEffect(() => { if (user) loadMembres(); }, [user, loadMembres]);
-
-  // Scroll vers la section ciblée par l'ancre (#programme, #etablissement, #engagement)
-  useEffect(() => {
-    const h = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
-    if (!h) return;
-    const t = setTimeout(() => {
-      document.getElementById(h)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 200);
-    return () => clearTimeout(t);
-  }, []);
 
   async function handleAddMembre(e: React.FormEvent) {
     e.preventDefault();

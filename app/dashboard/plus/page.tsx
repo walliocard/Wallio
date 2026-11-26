@@ -12,6 +12,7 @@ import CompactHeader from "@/components/dashboard/CompactHeader";
 const VERSION = "1.3";
 const CHIP_BG = "#EEF0FF";
 const CHIP_FG = "#5B7CFA";
+const VIOLET = "#9E8BD6"; // toggle actif — violet fade
 
 function ChevronRight() {
   return (
@@ -23,7 +24,7 @@ function ChevronRight() {
 
 function Chip({ children, bg = CHIP_BG }: { children: React.ReactNode; bg?: string }) {
   return (
-    <div style={{ width: 30, height: 30, borderRadius: 9, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    <div style={{ width: 27, height: 27, borderRadius: 8, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
       {children}
     </div>
   );
@@ -31,7 +32,7 @@ function Chip({ children, bg = CHIP_BG }: { children: React.ReactNode; bg?: stri
 
 function SectionLabel({ title }: { title: string }) {
   return (
-    <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--fg-tertiary)", margin: "20px 4px 7px" }}>
+    <p style={{ fontSize: 10.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--fg-tertiary)", margin: "16px 4px 6px" }}>
       {title}
     </p>
   );
@@ -52,12 +53,12 @@ function LinkRow({ href, label, right, icon, last }: {
   const inner = (
     <>
       <Chip>{icon}</Chip>
-      <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 500, color: "var(--fg)" }}>{label}</span>
-      {right != null && <span style={{ fontSize: 13.5, color: "var(--fg-tertiary)", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{right}</span>}
+      <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500, color: "var(--fg)" }}>{label}</span>
+      {right != null && <span style={{ fontSize: 12.5, color: "var(--fg-tertiary)", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{right}</span>}
       <ChevronRight />
     </>
   );
-  const style: React.CSSProperties = { display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", textDecoration: "none", borderBottom: last ? "none" : "1px solid var(--border)" };
+  const style: React.CSSProperties = { display: "flex", alignItems: "center", gap: 11, padding: "8px 14px", textDecoration: "none", borderBottom: last ? "none" : "1px solid var(--border)" };
   return external
     ? <a href={href} style={style}>{inner}</a>
     : <Link href={href} style={style}>{inner}</Link>;
@@ -66,8 +67,8 @@ function LinkRow({ href, label, right, icon, last }: {
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
     <button type="button" onClick={() => onChange(!on)} aria-pressed={on}
-      style={{ width: 48, height: 29, borderRadius: 999, background: on ? "var(--accent)" : "rgba(120,120,128,0.32)", border: "none", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}>
-      <span style={{ position: "absolute", top: 2, left: 2, width: 25, height: 25, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: on ? "translateX(19px)" : "none", transition: "transform 0.2s" }} />
+      style={{ width: 46, height: 28, borderRadius: 999, background: on ? VIOLET : "rgba(120,120,128,0.32)", border: "none", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}>
+      <span style={{ position: "absolute", top: 2, left: 2, width: 24, height: 24, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: on ? "translateX(18px)" : "none", transition: "transform 0.2s" }} />
     </button>
   );
 }
@@ -76,11 +77,11 @@ function ToggleRow({ label, sub, icon, on, onChange, last }: {
   label: string; sub?: string; icon: React.ReactNode; on: boolean; onChange: (v: boolean) => void; last?: boolean;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 14px", borderBottom: last ? "none" : "1px solid var(--border)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "7px 14px", borderBottom: last ? "none" : "1px solid var(--border)" }}>
       <Chip>{icon}</Chip>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 15, fontWeight: 500, color: "var(--fg)", margin: 0 }}>{label}</p>
-        {sub && <p style={{ fontSize: 12, color: "var(--fg-tertiary)", margin: "1px 0 0" }}>{sub}</p>}
+        <p style={{ fontSize: 14, fontWeight: 500, color: "var(--fg)", margin: 0 }}>{label}</p>
+        {sub && <p style={{ fontSize: 11.5, color: "var(--fg-tertiary)", margin: "1px 0 0" }}>{sub}</p>}
       </div>
       <Toggle on={on} onChange={onChange} />
     </div>
@@ -180,9 +181,9 @@ export default function PlusPage() {
 
         <SectionLabel title="Configuration" />
         <Card>
-          <LinkRow href="/dashboard/reglages#programme" label="Programme de fidélité" right={`${modeLabel} · ${objectif}`} icon={IconTarget} />
+          <LinkRow href="/dashboard/reglages?section=programme" label="Programme de fidélité" right={`${modeLabel} · ${objectif}`} icon={IconTarget} />
           <LinkRow href="/dashboard/carte" label="Ma carte" right="Personnaliser" icon={IconCard} />
-          <LinkRow href="/dashboard/reglages#etablissement" label="Établissement" right={nomEtab || "Nom, langue"} icon={IconStore} last />
+          <LinkRow href="/dashboard/reglages?section=etablissement" label="Établissement" right={nomEtab || "Nom, langue"} icon={IconStore} last />
         </Card>
 
         <SectionLabel title="Engagement clients" />
@@ -193,7 +194,7 @@ export default function PlusPage() {
             on={relance} onChange={v => toggleAuto("relance", v)} />
           <ToggleRow label="Parrainage" sub="Les clients invitent leurs amis" icon={IconGift}
             on={parrain} onChange={toggleParrain} />
-          <LinkRow href="/dashboard/reglages#engagement" label="Personnaliser les messages" icon={IconSliders} last />
+          <LinkRow href="/dashboard/reglages?section=engagement" label="Personnaliser les messages" icon={IconSliders} last />
         </Card>
 
         {hasEquipe && (
@@ -220,9 +221,9 @@ export default function PlusPage() {
         <div style={{ marginTop: 14 }}>
           <Card>
             <button onClick={handleSignOut}
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+              style={{ display: "flex", alignItems: "center", gap: 11, padding: "8px 14px", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
               <Chip bg="rgba(255,59,48,0.1)">{IconLogout}</Chip>
-              <span style={{ fontSize: 15, fontWeight: 500, color: "#FF3B30" }}>Déconnexion</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#FF3B30" }}>Déconnexion</span>
             </button>
           </Card>
         </div>
