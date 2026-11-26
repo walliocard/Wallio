@@ -3,7 +3,7 @@
 import type { TamponResult, Client, Marchand } from "@/lib/loyalty";
 import ResultPage from "@/components/nfc/ResultPage";
 
-export interface StampMerchant { name: string; logo?: string; color: string; }
+export interface StampMerchant { name: string; logo?: string; color: string; round?: boolean; }
 export interface StampResult { result: TamponResult; client: Client; marchand: Marchand; }
 
 interface Props {

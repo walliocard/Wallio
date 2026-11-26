@@ -83,7 +83,7 @@ const CSS = `
 .rp-tile{position:absolute;left:50%;top:101px;width:86px;height:86px;margin-left:-43px;border-radius:21px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.28);z-index:3}
 .rp-tile::before{content:"";position:absolute;inset:4px;border-radius:17px;border:.5px solid rgba(255,255,255,.4)}
 .rp-tile .rp-lay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-.rp-tile .rp-tlogo img{width:54px;height:54px;object-fit:cover}
+.rp-tile .rp-tlogo img{width:62px;height:62px;object-fit:cover;display:block}
 .rp-tile .rp-num{font-weight:300;font-size:38px;line-height:1;letter-spacing:-1px}
 .rp-loading-txt{position:absolute;left:0;right:0;text-align:center;font-size:15px;color:var(--muted);top:calc(var(--cy) + 66px);opacity:0}
 .rp-head{text-align:center;padding:0 28px;margin-top:-4px}
@@ -211,6 +211,7 @@ export default function ResultPage({ merchant, result }: { merchant: StampMercha
     ? (mn.logo_circle_url as string) : (mn.logo_url as string | undefined);
   const headLogoRound = mn.logo_shape === "round";
   const tileLogo = headLogo || merchant.logo;
+  const tileLogoRound = marchand ? headLogoRound : !!merchant.round;
 
   // ── Mini QR réaliste (pointe vers app.walliocard.com)
   const [qr, setQr] = useState<string>("");
@@ -407,7 +408,7 @@ export default function ResultPage({ merchant, result }: { merchant: StampMercha
         {res && <Ring before={ringBefore} after={ringAfter} goal={ringGoal} />}
         <div className="rp-tile" ref={tileRef}>
           {loadingFlow.current && (
-            <div className="rp-lay rp-tlogo">{tileLogo ? <img src={tileLogo} alt="" /> : null}</div>
+            <div className="rp-lay rp-tlogo">{tileLogo ? <img src={tileLogo} alt="" style={{ borderRadius: tileLogoRound ? "50%" : 15 }} /> : null}</div>
           )}
           <div className="rp-lay rp-res">{tileNode}</div>
         </div>

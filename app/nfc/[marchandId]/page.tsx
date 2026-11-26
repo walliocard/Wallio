@@ -51,6 +51,7 @@ function getMerchantDisplay(marchand: Marchand): StampMerchant {
     name: marchand.nom,
     logo: (isRound && mn.logo_circle_url) ? mn.logo_circle_url as string : (mn.logo_url as string | undefined),
     color: (mn.apple_bg_color as string) || marchand.couleur_principale || "#007AFF",
+    round: isRound,
   };
 }
 
