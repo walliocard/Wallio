@@ -95,10 +95,14 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
     logNfcClient(client, marchand, result);
     if (result.type === "ok" || result.type === "recompense" || result.type === "choix_requis") {
       try { navigator.vibrate(result.type === "recompense" ? [80, 60, 120] : result.type === "choix_requis" ? [60, 40, 60] : 40); } catch {}
-      const body = JSON.stringify({ walletId: client.wallet_id });
-      const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
-      fetch("/api/apple-wallet/push-update", opts).catch(() => {});
-      fetch("/api/google-wallet/push-update", opts).catch(() => {});
+      // Push Wallet uniquement sur ok/recompense — pour choix_requis, on attend que le
+      // client fasse son choix via enregistrer-choix (qui pushera avec choix_fait déjà positionné)
+      if (result.type !== "choix_requis") {
+        const body = JSON.stringify({ walletId: client.wallet_id });
+        const opts = { method: "POST", headers: { "Content-Type": "application/json" }, body };
+        fetch("/api/apple-wallet/push-update", opts).catch(() => {});
+        fetch("/api/google-wallet/push-update", opts).catch(() => {});
+      }
       // Vérifie si ce tampon déclenche la récompense parrain (1ère vraie visite du filleul)
       checkEtRecompenseParrain(client, marchand.id).then(res => {
         if (!res) return;
@@ -323,7 +327,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
           if (choix === "petit") {
             setScreen({ type: "result", result: { type: "recompense", prenom: screen.client.prenom, nom_recompense: (mn.nom_recompense_petit as string) || "", tampons }, client: { ...screen.client, choix_fait: "petit" }, marchand: screen.marchand });
           } else {
-            setScreen({ type: "result", result: { type: "ok", tampons, objectif: (mn.objectif_tampons as number) || 0, prenom: screen.client.prenom }, client: { ...screen.client, choix_fait: "grand" }, marchand: screen.marchand });
+            setScreen({ type: "result", result: { type: "ok", tampons, objectif: (mn.objectif_tampons as number) || 0, prenom: screen.client.prenom, prochainRecompense: (mn.nom_recompense_grand as string) || "" }, client: { ...screen.client, choix_fait: "grand" }, marchand: screen.marchand });
           }
         }
       }}

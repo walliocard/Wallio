@@ -180,14 +180,21 @@ export async function ajouterTampon(
 ): Promise<TamponResult> {
   // ── Mode flex : si choix en attente, on bypasse tout et on retourne choix_requis ─
   if (marchand.mode_recompense === "flex" && client.choix_en_attente) {
-    return {
-      type: "choix_requis",
-      prenom: client.prenom,
-      tampons: client.tampons,
-      palier_intermediaire: marchand.palier_intermediaire!,
-      nom_recompense_petit: marchand.nom_recompense_petit!,
-      nom_recompense_grand: marchand.nom_recompense_grand!,
-    };
+    // État incohérent : tampons retombés sous le palier suite à retrait manuel
+    // → on efface le flag et on continue normalement
+    if (client.tampons < marchand.palier_intermediaire!) {
+      await updateDoc(doc(db, "clients", client.id), { choix_en_attente: deleteField() });
+      client = { ...client, choix_en_attente: undefined };
+    } else {
+      return {
+        type: "choix_requis",
+        prenom: client.prenom,
+        tampons: client.tampons,
+        palier_intermediaire: marchand.palier_intermediaire!,
+        nom_recompense_petit: marchand.nom_recompense_petit!,
+        nom_recompense_grand: marchand.nom_recompense_grand!,
+      };
+    }
   }
 
   // Anti-doublon — ignoré si le marchand force manuellement
