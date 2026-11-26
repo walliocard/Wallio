@@ -21,10 +21,10 @@ const FUSEAUX = ["Africa/Casablanca","Europe/Madrid","Europe/Paris","Europe/Lond
 
 // ── Helpers UI ───────────────────────────────────────────────────────────────
 
-function SectionLabel({ title, first }: { title: string; first?: boolean }) {
+function SectionLabel({ title, first, id }: { title: string; first?: boolean; id?: string }) {
   return (
-    <p className={`text-[11px] font-semibold uppercase tracking-widest px-1 mb-2 ${first ? "mt-0" : "mt-6"}`}
-      style={{ color: "var(--fg-tertiary)" }}>
+    <p id={id} className={`text-[11px] font-semibold uppercase tracking-widest px-1 mb-2 ${first ? "mt-0" : "mt-6"}`}
+      style={{ color: "var(--fg-tertiary)", scrollMarginTop: "80px" }}>
       {title}
     </p>
   );
@@ -249,7 +249,7 @@ export default function ReglagesPage() {
       <h1 className="text-[34px] font-bold tracking-[-1px] mb-6" style={{ color: "var(--fg)" }}>{t.settings_title}</h1>
 
       {/* ── 1. Établissement ───────────────────────────────────────────────── */}
-      <SectionLabel title="Établissement" first />
+      <SectionLabel title="Établissement" first id="etablissement" />
       <IosCard>
         <div className="px-5 py-4">
           <input type="text" value={nomEtablissement}
@@ -277,7 +277,7 @@ export default function ReglagesPage() {
       </IosCard>
 
       {/* ── 2. Programme de fidélité ────────────────────────────────────────── */}
-      <SectionLabel title="Programme de fidélité" />
+      <SectionLabel title="Programme de fidélité" id="programme" />
       <IosCard>
         {/* Mode selector */}
         <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
@@ -478,7 +478,7 @@ export default function ReglagesPage() {
       </IosCard>
 
       {/* ── 5. Automatisations ─────────────────────────────────────────────── */}
-      <SectionLabel title="Automatisations" />
+      <SectionLabel title="Engagement clients" id="engagement" />
       <IosCard>
         {/* Anniversaire */}
         <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
@@ -543,8 +543,8 @@ export default function ReglagesPage() {
         </div>
       </IosCard>
 
-      {/* ── 6. Parrainage ──────────────────────────────────────────────────── */}
-      <SectionLabel title="Parrainage" />
+      {/* ── 6. Parrainage (regroupé sous « Engagement clients ») ───────────── */}
+      <div className="mt-3" />
       <IosCard>
         <div className="flex items-start justify-between gap-3 px-5 py-4">
           <div>
@@ -698,6 +698,16 @@ function SectionEquipe({ onDirty }: { onDirty: () => void }) {
   }, []);
 
   useEffect(() => { if (user) loadMembres(); }, [user, loadMembres]);
+
+  // Scroll vers la section ciblée par l'ancre (#programme, #etablissement, #engagement)
+  useEffect(() => {
+    const h = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
+    if (!h) return;
+    const t = setTimeout(() => {
+      document.getElementById(h)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 200);
+    return () => clearTimeout(t);
+  }, []);
 
   async function handleAddMembre(e: React.FormEvent) {
     e.preventDefault();
