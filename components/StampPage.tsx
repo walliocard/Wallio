@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { TamponResult, Client, Marchand } from "@/lib/loyalty";
+import CardSequence from "@/components/nfc/CardSequence";
 
 const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true";
 
@@ -11,10 +12,11 @@ export interface StampResult { result: TamponResult; client: Client; marchand: M
 interface Props {
   merchant: StampMerchant;
   result: StampResult | null;
+  fresh?: boolean;      // true = scan frais (séquence carte), false = cache (page directe)
   onRetry: () => void;
 }
 
-export default function StampPage({ merchant, result, onRetry }: Props) {
+export default function StampPage({ merchant, result, fresh, onRetry }: Props) {
   const root      = useRef<HTMLDivElement>(null);
   const ws        = useRef<any>(null);
   const resultRef = useRef<StampResult | null>(null);
@@ -115,23 +117,10 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Play quand le résultat arrive ──────────────────────────────────────────
-  useEffect(() => {
-    if (!result) return;
-    if (!ws.current) { pending.current = true; return; }
-    if (choixDone.current && result.result.type !== "choix_requis") return;
-    if (!slotBuilt.current) { slotBuilt.current = true; buildSlot(ws.current.slot, result); }
-    ws.current.play(mapParams(result.result, result.client, result.marchand));
-    // Couleurs marchand (injectées après play() → carte tintée Option 2)
-    injectMerchantStyles(result.marchand);
-    // Prénom — patch DOM direct (texts fixés au mount)
-    const prenom = result.client.prenom;
-    if (prenom && root.current) {
-      const subEl = root.current.querySelector(".ws-sub") as HTMLElement | null;
-      if (subEl) { subEl.textContent = `Bonjour ${prenom} !`; subEl.style.display = ""; }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result]);
+  // Quand le résultat arrive, CardSequence prend la main
+  if (result) {
+    return <CardSequence result={result} fresh={fresh} onRetry={onRetry} />;
+  }
 
   return <div ref={root} />;
 }

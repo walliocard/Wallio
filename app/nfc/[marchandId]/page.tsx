@@ -25,7 +25,7 @@ const InstallBanner = lazy(() => import("@/components/InstallBanner"));
 
 type Screen =
   | { type: "loading" }
-  | { type: "result"; result: TamponResult; client: Client; marchand: Marchand }
+  | { type: "result"; result: TamponResult; client: Client; marchand: Marchand; fresh?: boolean }
   | { type: "inscription"; marchand: Marchand; refParam: string | null }
   | { type: "passkey_prompt"; marchand: Marchand; refParam: string | null }
   | { type: "recuperation"; marchand: Marchand }
@@ -116,7 +116,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
 
   const traiterTampon = useCallback(async (client: Client, marchand: Marchand) => {
     const result = await ajouterTampon(client, marchand);
-    setScreen({ type: "result", result, client, marchand });
+    setScreen({ type: "result", result, client, marchand, fresh: true });
     try { sessionStorage.setItem(`nfc_result_${marchand.id}`, JSON.stringify({ result, client })); } catch {}
     try { localStorage.setItem(`nfc_dead_${marchand.id}`, JSON.stringify({ ts: Date.now(), type: "result", result, client })); } catch {}
     logNfcClient(client, marchand, result);
@@ -372,6 +372,7 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
       <StampPage
         merchant={merchant}
         result={screen.type === "result" ? { result: screen.result, client: screen.client, marchand: screen.marchand } : null}
+        fresh={screen.type === "result" ? screen.fresh : undefined}
         onRetry={() => window.location.reload()}
       />
     );
