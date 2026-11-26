@@ -257,9 +257,6 @@ export default function NotificationsPage() {
                 <button key={id} onClick={() => { setSegment(id); if (id !== "manuel") setSelectedIds(new Set()); setClientSearch(""); }}
                   style={{ flex: 1, padding: "7px 2px", borderRadius: 8, fontSize: 11, fontWeight: segment === id ? 600 : 400, background: segment === id ? "#FFFFFF" : "transparent", color: segment === id ? "var(--fg)" : "var(--fg-tertiary)", border: "none", cursor: "pointer", boxShadow: segment === id ? "0 1px 4px rgba(0,0,0,0.12)" : "none", transition: "all 0.15s", whiteSpace: "nowrap" }}>
                   {id === "tous" ? "Tous" : id === "actifs" ? "Actifs" : id === "inactifs" ? "Inactifs" : "Manuel"}
-                  {id !== "manuel" && (
-                    <> <span style={{ opacity: 0.7 }}>({segmentCounts === null ? "…" : segmentCounts[id as "tous"|"actifs"|"inactifs"]})</span></>
-                  )}
                 </button>
               ))}
             </div>
