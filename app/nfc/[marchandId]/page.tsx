@@ -206,8 +206,9 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         const cachedDob    = localStorage.getItem("wallio_client_dob");
         const cachedEmail  = localStorage.getItem("wallio_client_email");
         const cachedPin    = localStorage.getItem("wallio_client_pin");
-        if (cachedPhone && cachedPrenom && cachedNom && !compteSupprimeIci) {
+        if (cachedPhone && cachedPrenom && cachedNom) {
           // Peut-être déjà inscrit ici (localStorage perdu / nouvel appareil)
+          // Note : si compteSupprimeIci, getClientByTelephone retournera null → creerClient() comme nouveau
           const existing = await getClientByTelephone(cachedPhone, marchand.id);
           if (existing) {
             // Déjà client ici → lien parrainage : pas de tampon
