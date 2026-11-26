@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { TamponResult, Client, Marchand } from "@/lib/loyalty";
 import ResultPage from "@/components/nfc/ResultPage";
 
@@ -26,6 +26,19 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
   const onRetryRef = useRef(onRetry);
   useEffect(() => { onRetryRef.current = onRetry; }, [onRetry]);
   useEffect(() => { resultRef.current = result; }, [result]);
+
+  // Transition chargement → résultat : on laisse le loader fondre, puis on DÉTRUIT
+  // le module (sinon sa boucle rAF et ses nœuds restent en vie → résidus à l'écran).
+  const [loaderGone, setLoaderGone] = useState(false);
+  useEffect(() => {
+    if (!result) return;
+    const t = setTimeout(() => {
+      ws.current?.destroy();
+      ws.current = null;
+      setLoaderGone(true);
+    }, 360);
+    return () => clearTimeout(t);
+  }, [result]);
 
   // ── Mount module once ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -117,13 +130,22 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Pendant le chargement : la tuile du marchand « respire » (module monté ci-dessous).
-  // Dès que le résultat arrive, on passe directement à la nouvelle page résultat (option B).
-  if (result) {
-    return <ResultPage result={result} onRetry={onRetry} />;
-  }
-
-  return <div ref={root} />;
+  // Pendant le chargement : la tuile du marchand « respire » (module `root` ci-dessous).
+  // Quand le résultat arrive, ResultPage apparaît et le loader fond par-dessus avant d'être retiré.
+  return (
+    <>
+      {!loaderGone && (
+        <div
+          ref={root}
+          style={result ? {
+            position: "fixed", inset: 0, zIndex: 3,
+            opacity: 0, transition: "opacity 0.36s ease", pointerEvents: "none",
+          } : undefined}
+        />
+      )}
+      {result && <ResultPage result={result} onRetry={onRetry} />}
+    </>
+  );
 }
 
 // ─── Slot content (vanilla DOM — doit exister avant play()) ───────────────────
