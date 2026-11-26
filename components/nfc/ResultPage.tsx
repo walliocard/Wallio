@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Client, Marchand, TamponResult } from "@/lib/loyalty";
-import type { StampResult } from "@/components/StampPage";
+import type { StampMerchant, StampResult } from "@/components/StampPage";
 
 const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true";
 
@@ -68,21 +68,24 @@ function milestoneRows(milestones: { at: number; label: string }[], before: numb
   });
 }
 
-// Toutes les classes sont préfixées `rp-` pour éviter toute collision avec les
-// utilities Tailwind (ex. `ring` = box-shadow en anneau → carré parasite).
+// Toutes les classes sont préfixées `rp-` pour éviter toute collision avec Tailwind.
 const CSS = `
 .rp{--brand-soft:color-mix(in srgb,var(--brand) 12%,#fff);--brand-line:color-mix(in srgb,var(--brand) 16%,#fff);--bg:#F5F6FA;--ink:#141826;--muted:#8A93A6;--card:#fff;--shadow:0 6px 20px rgba(30,30,70,.07);--ease:cubic-bezier(.32,.72,0,1);
   max-width:430px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .rp *{box-sizing:border-box;margin:0;padding:0}
 .rp-hero{position:relative;height:300px;flex:none}
+.rp-hero-bg{position:absolute;inset:0;overflow:hidden}
 .rp-hero-img{position:absolute;inset:0;background:var(--banner) center 30%/cover}
 .rp-hero-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.30) 0%,rgba(0,0,0,0) 22%,color-mix(in srgb,var(--bg) 0%,transparent) 50%,color-mix(in srgb,var(--bg) 75%,transparent) 78%,var(--bg) 100%)}
 .rp-ring{position:absolute;left:50%;top:66px;width:156px;height:156px;margin-left:-78px}
 .rp-ring path{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round}
 .rp-ring path.rp-off{opacity:.35}
-.rp-tile{position:absolute;left:50%;top:101px;width:86px;height:86px;margin-left:-43px;border-radius:21px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.28)}
+.rp-tile{position:absolute;left:50%;top:101px;width:86px;height:86px;margin-left:-43px;border-radius:21px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.28);z-index:3}
 .rp-tile::before{content:"";position:absolute;inset:4px;border-radius:17px;border:.5px solid rgba(255,255,255,.4)}
+.rp-tile .rp-lay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.rp-tile .rp-tlogo img{width:54px;height:54px;object-fit:cover}
 .rp-tile .rp-num{font-weight:300;font-size:38px;line-height:1;letter-spacing:-1px}
+.rp-loading-txt{position:absolute;left:0;right:0;text-align:center;font-size:15px;color:var(--muted);top:calc(var(--cy) + 66px);opacity:0}
 .rp-head{text-align:center;padding:0 28px;margin-top:-4px}
 .rp-logo{width:46px;height:46px;margin:0 auto 10px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.14)}
 .rp-logo img{width:100%;height:100%;object-fit:cover;display:block}
@@ -128,103 +131,88 @@ const CSS = `
 .rp-inst b{font-size:15px}
 .rp-inst small{display:block;color:var(--muted);font-size:12.5px}
 .rp-inst .rp-get{margin-left:auto;flex:none;background:#4B4FD6;color:#fff;font-weight:600;font-size:14px;padding:9px 14px;border-radius:11px}
-@keyframes rp-pagein{from{opacity:0}to{opacity:1}}
+
+/* ---------- Transition chargement → résultat (tuile unique) ---------- */
 @keyframes rp-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes rp-fade{from{opacity:0}to{opacity:1}}
+@keyframes rp-fadeK{from{opacity:0}to{opacity:1}}
 @keyframes rp-heroIn{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:none}}
-@keyframes rp-tileIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+@keyframes rp-tileMove{from{transform:translateY(var(--dy))}to{transform:none}}
+@keyframes rp-breathe{0%,100%{transform:translateY(var(--dy)) scale(1)}50%{transform:translateY(var(--dy)) scale(1.045)}}
+@keyframes rp-out{from{opacity:1}to{opacity:0}}
+@keyframes rp-resIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
 @keyframes rp-seg{from{opacity:0}}
 @keyframes rp-grow{from{transform:scaleX(0)}to{transform:none}}
-.rp.rp-anim{animation:rp-pagein .5s ease both}
-.rp.rp-anim .rp-hero-img{animation:rp-heroIn .9s var(--ease) both}
-.rp.rp-anim .rp-hero-fade{animation:rp-fade .7s .1s ease both}
-.rp.rp-anim .rp-tile{animation:rp-tileIn .55s .35s var(--ease) both}
-.rp.rp-anim .rp-ring path{animation:rp-seg .3s var(--ease) both;animation-delay:calc(.45s + var(--i) * 40ms)}
-.rp.rp-anim .rp-ring path.rp-new{animation:rp-seg .45s 1.1s var(--ease) both}
-.rp.rp-anim .rp-logo{animation:rp-up .55s .5s var(--ease) both}
-.rp.rp-anim .rp-merchant{animation:rp-up .55s .55s var(--ease) both}
-.rp.rp-anim .rp-title{animation:rp-up .55s .65s var(--ease) both}
-.rp.rp-anim .rp-sub{animation:rp-up .55s .75s var(--ease) both}
-.rp.rp-anim .rp-body>*:nth-child(1){animation:rp-up .55s .85s var(--ease) both}
-.rp.rp-anim .rp-body>*:nth-child(2){animation:rp-up .55s .95s var(--ease) both}
-.rp.rp-anim .rp-bar i.rp-new{animation:rp-grow .45s 1.2s var(--ease) both}
-.rp.rp-anim .rp-foot>*:nth-child(1){animation:rp-up .55s 1.05s var(--ease) both}
-.rp.rp-anim .rp-foot>*:nth-child(2){animation:rp-up .55s 1.15s var(--ease) both}
-.rp.rp-anim .rp-foot>*:nth-child(3){animation:rp-up .55s 1.25s var(--ease) both}
-@media (prefers-reduced-motion:reduce){.rp.rp-anim,.rp.rp-anim *{animation:none!important}}
+/* état chargement : tout invisible sauf la tuile, décalée au centre, qui respire */
+.rp-loading .rp-hero-img,.rp-loading .rp-hero-fade,.rp-loading .rp-ring,.rp-loading .rp-head,.rp-loading .rp-body,.rp-loading .rp-foot{opacity:0}
+.rp-loading .rp-tile{animation:rp-breathe 1.6s ease-in-out infinite}
+.rp-loading .rp-tile .rp-res{opacity:0}
+.rp-loading .rp-loading-txt{animation:rp-fade .4s .2s ease both}
+/* état résultat : la tuile remonte, logo → chiffre, bannière + cascade */
+.rp-anim .rp-hero-img{animation:rp-heroIn 1s var(--ease) both}
+.rp-anim .rp-hero-fade{animation:rp-fadeK 1s var(--ease) both}
+.rp-anim .rp-tile{animation:rp-tileMove .8s var(--ease) both}
+.rp-anim .rp-tile .rp-tlogo{animation:rp-out .22s .08s ease both}
+.rp-anim .rp-tile .rp-res{animation:rp-resIn .4s .28s var(--ease) both}
+.rp-anim .rp-loading-txt{animation:rp-out .2s ease both}
+.rp-anim .rp-ring path{animation:rp-seg .3s var(--ease) both;animation-delay:calc(.45s + var(--i) * 40ms)}
+.rp-anim .rp-ring path.rp-new{animation:rp-seg .45s 1.1s var(--ease) both}
+.rp-anim .rp-logo{animation:rp-up .55s .5s var(--ease) both}
+.rp-anim .rp-merchant{animation:rp-up .55s .55s var(--ease) both}
+.rp-anim .rp-title{animation:rp-up .55s .65s var(--ease) both}
+.rp-anim .rp-sub{animation:rp-up .55s .75s var(--ease) both}
+.rp-anim .rp-body>*:nth-child(1){animation:rp-up .55s .85s var(--ease) both}
+.rp-anim .rp-body>*:nth-child(2){animation:rp-up .55s .95s var(--ease) both}
+.rp-anim .rp-bar i.rp-new{animation:rp-grow .45s 1.2s var(--ease) both}
+.rp-anim .rp-foot>*:nth-child(1){animation:rp-up .55s 1.05s var(--ease) both}
+.rp-anim .rp-foot>*:nth-child(2){animation:rp-up .55s 1.15s var(--ease) both}
+.rp-anim .rp-foot>*:nth-child(3){animation:rp-up .55s 1.25s var(--ease) both}
+@media (prefers-reduced-motion:reduce){.rp-anim *,.rp-loading *{animation:none!important}.rp-loading .rp-tile{transform:translateY(var(--dy))}.rp-anim .rp-tile .rp-tlogo{opacity:0}}
 `;
 
 type Kind = "stamp" | "flexstamp" | "progressif" | "choice" | "reward" | "dup";
 
-export default function ResultPage({ result }: { result: StampResult; onRetry?: () => void }) {
-  const { result: res, client, marchand } = result;
-  const mn = marchand as Record<string, unknown>;
+export default function ResultPage({ merchant, result }: { merchant: StampMerchant; result: StampResult | null; onRetry?: () => void }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const tileRef = useRef<HTMLDivElement>(null);
+  // Si on a déjà le résultat au montage (cache / retour arrière) → pas de vol de tuile
+  const loadingFlow = useRef(result == null);
+  const [phase, setPhase] = useState<"loading" | "anim">(result ? "anim" : "loading");
 
-  const brand = (mn.apple_bg_color as string) || marchand.couleur_principale || "#283F22";
+  // --dy : distance entre la tuile (place finale) et le centre de l'écran
+  useLayoutEffect(() => {
+    const el = rootRef.current, t = tileRef.current;
+    if (!el || !t) return;
+    if (!loadingFlow.current) { el.style.setProperty("--dy", "0px"); return; }
+    const r = t.getBoundingClientRect();
+    const cy = window.innerHeight / 2;
+    el.style.setProperty("--dy", `${cy - (r.top + r.height / 2)}px`);
+    el.style.setProperty("--cy", `${cy}px`);
+  }, []);
+
+  // Quand l'API répond : la tuile remonte, la page apparaît autour
+  useEffect(() => {
+    if (result && phase === "loading") {
+      const el = rootRef.current;
+      if (el) void el.offsetWidth; // reflow pour (re)déclencher les keyframes
+      setPhase("anim");
+    }
+  }, [result, phase]);
+
+  const res = result?.result;
+  const client = result?.client;
+  const marchand = result?.marchand;
+  const mn = (marchand || {}) as Record<string, unknown>;
+
+  // Visuels marchand (dispo dès le chargement)
+  const brand = (mn.apple_bg_color as string) || marchand?.couleur_principale || merchant.color || "#283F22";
   const banner = (mn.strip_url as string) || "";
-  const logo = (mn.logo_shape === "round" && mn.logo_circle_url)
+  const headLogo = (mn.logo_shape === "round" && mn.logo_circle_url)
     ? (mn.logo_circle_url as string) : (mn.logo_url as string | undefined);
-  const logoRound = mn.logo_shape === "round";
-  const firstName = client.prenom || "";
-  const hasWallet = !!((client as Record<string, unknown>).wallet_type || (client as Record<string, unknown>).apns_push_token);
-  const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-  const walletId = client.wallet_id;
+  const headLogoRound = mn.logo_shape === "round";
+  const tileLogo = headLogo || merchant.logo;
 
-  const mode = mn.mode_recompense === "progressif" ? "progressif"
-    : mn.mode_recompense === "flex" ? "flex" : "cyclique";
-  const paliers = ((mn.paliers as { tampons: number; recompense: string }[] | undefined) || []);
-  const milestones = paliers.map(p => ({ at: p.tampons, label: p.recompense }));
-  const objectif = (mn.objectif_tampons as number) || 10;
-  const interm = (mn.palier_intermediaire as number) || Math.ceil(objectif / 2);
-
-  // before / after
-  const r = res as TamponResult & Record<string, unknown>;
-  let before: number, after: number;
-  switch (res.type) {
-    case "ok": after = res.tampons; before = Math.max(0, after - (r.double ? 2 : 1)); break;
-    case "recompense": after = res.tampons; before = Math.max(0, after - 1); break;
-    case "anti_doublon": after = before = (r.tampons as number) ?? client.tampons; break;
-    case "choix_requis": after = res.tampons; before = client.tampons; break;
-    default: after = before = client.tampons;
-  }
-
-  // Objectif affiché : flex → on vise d'abord le palier de choix, puis le grand objectif
-  const goal = mode === "progressif" && paliers.length
-    ? Math.max(...paliers.map(p => p.tampons))
-    : mode === "flex" ? (after < interm ? interm : objectif)
-    : objectif;
-
-  const kind: Kind =
-    res.type === "recompense" ? "reward"
-    : res.type === "anti_doublon" ? "dup"
-    : res.type === "choix_requis" ? "choice"
-    : mode === "progressif" && milestones.length ? "progressif"
-    : mode === "flex" ? "flexstamp"
-    : "stamp";
-
-  const left = Math.max(0, goal - after);
-  // Récompense telle qu'entrée dans les réglages du marchand
-  const reward = res.type === "recompense"
-    ? res.nom_recompense
-    : (mn.nom_recompense as string) || "votre récompense";
-  const flexNow = (res.type === "choix_requis" ? res.nom_recompense_petit : (mn.nom_recompense_petit as string)) || "";
-  const flexLater = (res.type === "choix_requis" ? res.nom_recompense_grand : (mn.nom_recompense_grand as string)) || "";
-
-  // ── Choix flex
-  const [choosing, setChoosing] = useState(false);
-  async function choose(c: "petit" | "grand") {
-    if (choosing) return;
-    setChoosing(true);
-    try {
-      await fetch("/api/nfc/enregistrer-choix", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletId, marchandId: marchand.id, choix: c }),
-      });
-      // La page NFC poll Firestore (choix_en_attente) et bascule l'écran sur le résultat.
-    } catch { setChoosing(false); }
-  }
-
-  // ── Mini QR réaliste (pointe vers app.walliocard.com — personne ne le scanne)
+  // ── Mini QR réaliste (pointe vers app.walliocard.com)
   const [qr, setQr] = useState<string>("");
   useEffect(() => {
     let alive = true;
@@ -235,9 +223,7 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
     return () => { alive = false; };
   }, []);
 
-  // ── Installation Wallio : carte visuelle (maquette) + feuille slide-up du vrai
-  //    module WallioInstall. On monte le module dans un conteneur CACHÉ uniquement
-  //    pour récupérer openSheet() ; la carte visible reste celle de la maquette.
+  // ── Feuille d'installation Wallio (montée cachée pour openSheet)
   const installHiddenRef = useRef<HTMLDivElement>(null);
   const installApi = useRef<{ kind?: string; openSheet?: (k: string) => void } | null>(null);
   useEffect(() => {
@@ -268,153 +254,229 @@ export default function ResultPage({ result }: { result: StampResult; onRetry?: 
     };
   }, []);
 
-  // ── Contenu par mode
-  let tile: React.ReactNode, title: string, sub: string, body: React.ReactNode;
+  const rootStyle = { ["--brand" as string]: brand, ["--banner" as string]: banner ? `url(${banner})` : "none" } as React.CSSProperties;
+  const rootClass = `rp ${phase === "loading" ? "rp-loading" : "rp-anim"}`;
 
-  if (kind === "stamp") {
-    tile = <span className="rp-num">{after}</span>;
-    title = "Tampon ajouté";
-    sub = `Bonjour ${firstName}, merci pour votre visite.`;
-    body = (
-      <div className="rp-card">
-        <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Encore {left}</em></div>
-        <Bar before={before} after={after} goal={goal} />
-        <div className="rp-note">Plus que {left} visite{left > 1 ? "s" : ""} avant {reward}.</div>
-      </div>
-    );
-  } else if (kind === "flexstamp") {
-    const preChoice = after < interm;
-    const fleft = Math.max(0, goal - after);
-    tile = <span className="rp-num">{after}</span>;
-    title = "Tampon ajouté";
-    sub = `Bonjour ${firstName}, merci pour votre visite.`;
-    body = (
-      <div className="rp-card">
-        <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Encore {fleft}</em></div>
-        <Bar before={before} after={after} goal={goal} />
-        <div className="rp-note">{preChoice
-          ? `Plus que ${fleft} visite${fleft > 1 ? "s" : ""} avant de choisir : ${flexNow} ou ${flexLater}.`
-          : `Plus que ${fleft} visite${fleft > 1 ? "s" : ""} avant ${flexLater}.`}</div>
-      </div>
-    );
-  } else if (kind === "progressif") {
-    const next = milestones.find(m => m.at > after);
-    tile = <span className="rp-num">{after}</span>;
-    title = "Tampon ajouté";
-    sub = next ? `Prochain palier : ${next.label.toLowerCase()} à ${next.at} tampons.` : "Tous les paliers sont débloqués.";
-    body = (
-      <div className="rp-card">
-        <div className="rp-big"><b>{after}</b><span>/ {goal}</span>{next && <em className="rp-pill">Encore {next.at - after}</em>}</div>
-        <Bar before={before} after={after} goal={goal} />
-        <div className="rp-ms">{milestoneRows(milestones, before, after)}</div>
-      </div>
-    );
-  } else if (kind === "choice") {
-    tile = <Ic name="star" s={36} w={1.5} />;
-    title = "À vous de choisir";
-    sub = `Vous avez ${after} tampons. Profitez maintenant ou continuez.`;
-    body = (
-      <>
-        <div className="rp-opts">
-          <div className="rp-opt"><small>MAINTENANT</small><b>{flexNow}</b>
-            <button className="rp-btn rp-primary" disabled={choosing} onClick={() => choose("petit")}>Prendre</button></div>
-          <div className="rp-opt"><small>À {goal} TAMPONS</small><b>{flexLater}</b>
-            <button className="rp-btn rp-soft" disabled={choosing} onClick={() => choose("grand")}>Continuer</button></div>
+  // ── Contenu résultat (calculé seulement quand on a la réponse)
+  let tileNode: React.ReactNode = null;
+  let title = "", sub = "", body: React.ReactNode = null, isChoice = false;
+  let ringBefore = 0, ringAfter = 0, ringGoal = 10;
+  let hasWallet = false, walletName = "Apple Wallet", walletHref = "", showWalletBtn = false;
+
+  if (res && client && marchand) {
+    const firstName = client.prenom || "";
+    hasWallet = !!((client as Record<string, unknown>).wallet_type || (client as Record<string, unknown>).apns_push_token);
+    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+    const walletId = client.wallet_id;
+
+    const mode = mn.mode_recompense === "progressif" ? "progressif"
+      : mn.mode_recompense === "flex" ? "flex" : "cyclique";
+    const paliers = ((mn.paliers as { tampons: number; recompense: string }[] | undefined) || []);
+    const milestones = paliers.map(p => ({ at: p.tampons, label: p.recompense }));
+    const objectif = (mn.objectif_tampons as number) || 10;
+    const interm = (mn.palier_intermediaire as number) || Math.ceil(objectif / 2);
+
+    const r = res as TamponResult & Record<string, unknown>;
+    let before: number, after: number;
+    switch (res.type) {
+      case "ok": after = res.tampons; before = Math.max(0, after - (r.double ? 2 : 1)); break;
+      case "recompense": after = res.tampons; before = Math.max(0, after - 1); break;
+      case "anti_doublon": after = before = (r.tampons as number) ?? client.tampons; break;
+      case "choix_requis": after = res.tampons; before = client.tampons; break;
+      default: after = before = client.tampons;
+    }
+
+    const goal = mode === "progressif" && paliers.length
+      ? Math.max(...paliers.map(p => p.tampons))
+      : mode === "flex" ? (after < interm ? interm : objectif)
+      : objectif;
+
+    const kind: Kind =
+      res.type === "recompense" ? "reward"
+      : res.type === "anti_doublon" ? "dup"
+      : res.type === "choix_requis" ? "choice"
+      : mode === "progressif" && milestones.length ? "progressif"
+      : mode === "flex" ? "flexstamp"
+      : "stamp";
+
+    const left = Math.max(0, goal - after);
+    const reward = res.type === "recompense" ? res.nom_recompense : (mn.nom_recompense as string) || "votre récompense";
+    const flexNow = (res.type === "choix_requis" ? res.nom_recompense_petit : (mn.nom_recompense_petit as string)) || "";
+    const flexLater = (res.type === "choix_requis" ? res.nom_recompense_grand : (mn.nom_recompense_grand as string)) || "";
+
+    ringBefore = kind === "dup" ? after : before;
+    ringAfter = after; ringGoal = goal;
+
+    if (kind === "stamp") {
+      tileNode = <span className="rp-num">{after}</span>;
+      title = "Tampon ajouté";
+      sub = `Bonjour ${firstName}, merci pour votre visite.`;
+      body = (
+        <div className="rp-card">
+          <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Encore {left}</em></div>
+          <Bar before={before} after={after} goal={goal} />
+          <div className="rp-note">Plus que {left} visite{left > 1 ? "s" : ""} avant {reward}.</div>
         </div>
-        <div className="rp-fin">Ce choix est définitif.</div>
-      </>
-    );
-  } else if (kind === "reward" && mode === "progressif" && milestones.length) {
-    // Palier progressif atteint (intermédiaire ou dernier)
-    const idx = typeof r.palier_index === "number" ? (r.palier_index as number) : milestones.findIndex(m => m.at === after);
-    const isLast = idx >= milestones.length - 1;
-    const next = milestones.find(m => m.at > after);
-    const palierLabel = (idx >= 0 && milestones[idx]) ? milestones[idx].label : reward;
-    tile = <Ic name="gift" s={38} w={1.5} />;
-    title = isLast ? "Dernier palier débloqué" : "Palier débloqué";
-    sub = `${palierLabel} ! Montrez cet écran au comptoir.`;
-    body = (
-      <div className="rp-card">
-        <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">{next ? `Encore ${next.at - after}` : "Complet"}</em></div>
-        <Bar before={before} after={after} goal={goal} />
-        <div className="rp-ms">{milestoneRows(milestones, before, after)}</div>
-        {isLast && <div className="rp-note">Votre carte repart à zéro après validation.</div>}
-      </div>
-    );
-  } else if (kind === "reward") {
-    // Récompense cyclique / flex → reset complet
-    tile = <Ic name="gift" s={38} w={1.5} />;
-    title = "Récompense débloquée";
-    sub = `${reward} ! Montrez cet écran au comptoir.`;
-    body = (
-      <div className="rp-card">
-        <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Complet</em></div>
-        <Bar before={before} after={after} goal={goal} />
-        <div className="rp-note">Votre carte repart à zéro après la récompense.</div>
-      </div>
-    );
-  } else { // dup
-    tile = <Ic name="clock" s={36} w={1.5} />;
-    title = "Déjà tamponné aujourd’hui";
-    sub = "Un tampon par jour. Revenez demain pour continuer.";
-    body = (
-      <div className="rp-card">
-        <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Encore {left}</em></div>
-        <Bar before={after} after={after} goal={goal} />
-      </div>
-    );
+      );
+    } else if (kind === "flexstamp") {
+      const preChoice = after < interm;
+      const fleft = Math.max(0, goal - after);
+      tileNode = <span className="rp-num">{after}</span>;
+      title = "Tampon ajouté";
+      sub = `Bonjour ${firstName}, merci pour votre visite.`;
+      body = (
+        <div className="rp-card">
+          <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Encore {fleft}</em></div>
+          <Bar before={before} after={after} goal={goal} />
+          <div className="rp-note">{preChoice
+            ? `Plus que ${fleft} visite${fleft > 1 ? "s" : ""} avant de choisir : ${flexNow} ou ${flexLater}.`
+            : `Plus que ${fleft} visite${fleft > 1 ? "s" : ""} avant ${flexLater}.`}</div>
+        </div>
+      );
+    } else if (kind === "progressif") {
+      const next = milestones.find(m => m.at > after);
+      tileNode = <span className="rp-num">{after}</span>;
+      title = "Tampon ajouté";
+      sub = next ? `Prochain palier : ${next.label.toLowerCase()} à ${next.at} tampons.` : "Tous les paliers sont débloqués.";
+      body = (
+        <div className="rp-card">
+          <div className="rp-big"><b>{after}</b><span>/ {goal}</span>{next && <em className="rp-pill">Encore {next.at - after}</em>}</div>
+          <Bar before={before} after={after} goal={goal} />
+          <div className="rp-ms">{milestoneRows(milestones, before, after)}</div>
+        </div>
+      );
+    } else if (kind === "choice") {
+      isChoice = true;
+      tileNode = <Ic name="star" s={36} w={1.5} />;
+      title = "À vous de choisir";
+      sub = `Vous avez ${after} tampons. Profitez maintenant ou continuez.`;
+      body = <ChoiceBody walletId={walletId} marchandId={marchand.id} goal={goal} now={flexNow} later={flexLater} />;
+    } else if (kind === "reward" && mode === "progressif" && milestones.length) {
+      const idx = typeof r.palier_index === "number" ? (r.palier_index as number) : milestones.findIndex(m => m.at === after);
+      const isLast = idx >= milestones.length - 1;
+      const next = milestones.find(m => m.at > after);
+      const palierLabel = (idx >= 0 && milestones[idx]) ? milestones[idx].label : reward;
+      tileNode = <Ic name="gift" s={38} w={1.5} />;
+      title = isLast ? "Dernier palier débloqué" : "Palier débloqué";
+      sub = `${palierLabel} ! Montrez cet écran au comptoir.`;
+      body = (
+        <div className="rp-card">
+          <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">{next ? `Encore ${next.at - after}` : "Complet"}</em></div>
+          <Bar before={before} after={after} goal={goal} />
+          <div className="rp-ms">{milestoneRows(milestones, before, after)}</div>
+          {isLast && <div className="rp-note">Votre carte repart à zéro après validation.</div>}
+        </div>
+      );
+    } else if (kind === "reward") {
+      tileNode = <Ic name="gift" s={38} w={1.5} />;
+      title = "Récompense débloquée";
+      sub = `${reward} ! Montrez cet écran au comptoir.`;
+      body = (
+        <div className="rp-card">
+          <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Complet</em></div>
+          <Bar before={before} after={after} goal={goal} />
+          <div className="rp-note">Votre carte repart à zéro après la récompense.</div>
+        </div>
+      );
+    } else { // dup
+      tileNode = <Ic name="clock" s={36} w={1.5} />;
+      title = "Déjà tamponné aujourd’hui";
+      sub = "Un tampon par jour. Revenez demain pour continuer.";
+      body = (
+        <div className="rp-card">
+          <div className="rp-big"><b>{after}</b><span>/ {goal}</span><em className="rp-pill">Encore {left}</em></div>
+          <Bar before={after} after={after} goal={goal} />
+        </div>
+      );
+    }
+
+    walletName = isAndroid ? "Google Wallet" : "Apple Wallet";
+    walletHref = isAndroid ? (GOOGLE_ENABLED ? `/api/google-wallet/generate/${walletId}` : "") : `/api/apple-wallet/generate/${walletId}`;
+    showWalletBtn = !hasWallet && !!walletHref;
   }
 
-  const walletName = isAndroid ? "Google Wallet" : "Apple Wallet";
-  const walletHref = isAndroid
-    ? (GOOGLE_ENABLED ? `/api/google-wallet/generate/${walletId}` : "")
-    : `/api/apple-wallet/generate/${walletId}`;
-  const showWalletBtn = !hasWallet && !!walletHref;
-
-  const rootStyle = { ["--brand" as string]: brand, ["--banner" as string]: banner ? `url(${banner})` : "none" } as React.CSSProperties;
-
   return (
-    <div className="rp rp-anim" style={rootStyle}>
+    <div ref={rootRef} className={rootClass} style={rootStyle}>
       <style>{CSS}</style>
 
       <header className="rp-hero">
-        <div className="rp-hero-img" style={banner ? undefined : { background: brand }} />
-        <div className="rp-hero-fade" />
-        <Ring before={before} after={after} goal={goal} />
-        <div className="rp-tile">{tile}</div>
+        <div className="rp-hero-bg">
+          <div className="rp-hero-img" style={banner ? undefined : { background: brand }} />
+          <div className="rp-hero-fade" />
+        </div>
+        {res && <Ring before={ringBefore} after={ringAfter} goal={ringGoal} />}
+        <div className="rp-tile" ref={tileRef}>
+          {loadingFlow.current && (
+            <div className="rp-lay rp-tlogo">{tileLogo ? <img src={tileLogo} alt="" /> : null}</div>
+          )}
+          <div className="rp-lay rp-res">{tileNode}</div>
+        </div>
       </header>
 
-      <div className="rp-head">
-        {logo && (
-          <div className="rp-logo" style={{ borderRadius: logoRound ? "50%" : 13 }}>
-            <img src={logo} alt="" />
+      {loadingFlow.current && <div className="rp-loading-txt">Validation de votre tampon…</div>}
+
+      {res && (
+        <>
+          <div className="rp-head">
+            {headLogo && (
+              <div className="rp-logo" style={{ borderRadius: headLogoRound ? "50%" : 13 }}>
+                <img src={headLogo} alt="" />
+              </div>
+            )}
+            <div className="rp-merchant">{marchand!.nom}</div>
+            <h1 className="rp-title">{title}</h1>
+            <p className="rp-sub">{sub}</p>
           </div>
-        )}
-        <div className="rp-merchant">{marchand.nom}</div>
-        <h1 className="rp-title">{title}</h1>
-        <p className="rp-sub">{sub}</p>
-      </div>
 
-      <div className="rp-body">{body}</div>
+          <div className="rp-body">{body}</div>
 
-      {kind !== "choice" && (
-        <div className="rp-foot">
-          {hasWallet ? (
-            <div className="rp-wal"><div className="rp-mini"><i /><u>{qr && <img src={qr} alt="" />}</u></div>Carte à jour dans {walletName}</div>
-          ) : showWalletBtn ? (
-            <a className="rp-btn rp-primary" style={{ height: 48 }} href={walletHref}>Ajouter à {walletName}</a>
-          ) : null}
-          <button type="button" className="rp-inst" onClick={onInstall}>
-            <img src="/wallio-instagram-profil.png" alt="" />
-            <div><b>Wallio</b><small>Toutes vos cartes au même endroit</small></div>
-            <span className="rp-get">Obtenir</span>
-          </button>
-          <a className="rp-btn rp-ghost" href="/mes-cartes">Voir toutes mes cartes</a>
-        </div>
+          {!isChoice && (
+            <div className="rp-foot">
+              {hasWallet ? (
+                <div className="rp-wal"><div className="rp-mini"><i /><u>{qr && <img src={qr} alt="" />}</u></div>Carte à jour dans {walletName}</div>
+              ) : showWalletBtn ? (
+                <a className="rp-btn rp-primary" style={{ height: 48 }} href={walletHref}>Ajouter à {walletName}</a>
+              ) : null}
+              <button type="button" className="rp-inst" onClick={onInstall}>
+                <img src="/wallio-instagram-profil.png" alt="" />
+                <div><b>Wallio</b><small>Toutes vos cartes au même endroit</small></div>
+                <span className="rp-get">Obtenir</span>
+              </button>
+              <a className="rp-btn rp-ghost" href="/mes-cartes">Voir toutes mes cartes</a>
+            </div>
+          )}
+        </>
       )}
 
-      {/* Montage caché : fournit la feuille slide-up à la carte « Obtenir » ci-dessus */}
       <div ref={installHiddenRef} style={{ display: "none" }} />
     </div>
+  );
+}
+
+// Boutons de choix flex — enregistre le choix (la page NFC poll et bascule l'écran)
+function ChoiceBody({ walletId, marchandId, goal, now, later }: {
+  walletId: string; marchandId: string; goal: number; now: string; later: string;
+}) {
+  const [choosing, setChoosing] = useState(false);
+  async function choose(c: "petit" | "grand") {
+    if (choosing) return;
+    setChoosing(true);
+    try {
+      await fetch("/api/nfc/enregistrer-choix", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletId, marchandId, choix: c }),
+      });
+    } catch { setChoosing(false); }
+  }
+  return (
+    <>
+      <div className="rp-opts">
+        <div className="rp-opt"><small>MAINTENANT</small><b>{now}</b>
+          <button className="rp-btn rp-primary" disabled={choosing} onClick={() => choose("petit")}>Prendre</button></div>
+        <div className="rp-opt"><small>À {goal} TAMPONS</small><b>{later}</b>
+          <button className="rp-btn rp-soft" disabled={choosing} onClick={() => choose("grand")}>Continuer</button></div>
+      </div>
+      <div className="rp-fin">Ce choix est définitif.</div>
+    </>
   );
 }
