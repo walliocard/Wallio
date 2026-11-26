@@ -42,21 +42,6 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
 
     import("@/lib/wallio-stamp.js").then((m: any) => {
       if (!alive || !root.current) return;
-      // Overrides CSS : layout + pastilles rondes iOS + récompense visible
-      const styleEl = document.createElement("style");
-      styleEl.setAttribute("data-wallio-overrides", "");
-      styleEl.textContent = [
-        `.ws-main{padding-bottom:28px}`,
-        `.ws-slot{margin-top:12px}`,
-        // Barre → points circulaires (style carte de fidélité physique)
-        `.ws-bar{gap:5px;height:10px;align-items:center}`,
-        `.ws-bar i{flex:0 0 10px;width:10px;height:10px;border-radius:50%;overflow:hidden}`,
-        `.ws-bar i b{border-radius:50%}`,
-        // Récompense plus visible
-        `.ws-note{color:#1D1D1F;font-weight:600;font-size:15px}`,
-        `.ws-left{font-size:14px;font-weight:700;padding:7px 13px}`,
-      ].join("");
-      document.head.appendChild(styleEl);
 
       ws.current = m.WallioStamp.mount(root.current, {
         merchant,
@@ -77,11 +62,30 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
             });
             const data = await res.json();
             const ok = !!(data.ok || data.already_done);
-            if (ok) choixDone.current = true;   // bloquer le 2ème play() du polling
+            if (ok) choixDone.current = true;
             return ok;
           } catch { return false; }
         },
       });
+
+      // Overrides layout injectés APRÈS le mount (après le CSS du module → gagne la cascade)
+      const styleEl = document.createElement("style");
+      styleEl.setAttribute("data-wallio-overrides", "");
+      styleEl.textContent = [
+        `.ws-main{padding-bottom:28px}`,
+        `.ws-slot{margin-top:12px}`,
+        // Badge "Encore N" supprimé (redondant avec le texte)
+        `.ws-left{display:none}`,
+        // "/" et objectif discrets
+        `.ws-of{color:#AEAEB2;font-weight:400;font-size:18px}`,
+        // Texte récompense lisible
+        `.ws-note{color:#1D1D1F;font-weight:600;font-size:15px;margin-top:10px}`,
+        // Barre fine continue iOS (3px)
+        `.ws-bar{height:3px;gap:2px;margin-top:14px;align-items:center}`,
+        `.ws-bar i{flex:1;height:3px;border-radius:2px;overflow:hidden}`,
+        `.ws-bar i b{border-radius:2px}`,
+      ].join("");
+      document.head.appendChild(styleEl);
 
       // Si un play() a été demandé avant que l'import resolve
       if (pending.current && resultRef.current) {
@@ -89,6 +93,7 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
         const r = resultRef.current;
         if (!slotBuilt.current) { slotBuilt.current = true; buildSlot(ws.current.slot, r); }
         ws.current.play(mapParams(r.result, r.client, r.marchand));
+        injectMerchantStyles(r.marchand);
       }
     });
 
@@ -102,6 +107,7 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
       document.documentElement.style.backgroundColor = prevHtmlBg;
       document.body.style.backgroundColor = prevBodyBg;
       document.querySelector("style[data-wallio-overrides]")?.remove();
+      document.querySelector("style[data-wallio-mc]")?.remove();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -109,12 +115,13 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
   // ── Play quand le résultat arrive ──────────────────────────────────────────
   useEffect(() => {
     if (!result) return;
-    if (!ws.current) { pending.current = true; return; }   // module pas encore prêt
-    // Si le choix Flex a déjà été traité par le module, ignorer la mise à jour du polling
+    if (!ws.current) { pending.current = true; return; }
     if (choixDone.current && result.result.type !== "choix_requis") return;
     if (!slotBuilt.current) { slotBuilt.current = true; buildSlot(ws.current.slot, result); }
     ws.current.play(mapParams(result.result, result.client, result.marchand));
-    // Injection du prénom après play() — texts sont fixés au mount, on patch le DOM directement
+    // Couleurs marchand (injectées après play() → carte tintée Option 2)
+    injectMerchantStyles(result.marchand);
+    // Prénom — patch DOM direct (texts fixés au mount)
     const prenom = result.client.prenom;
     if (prenom && root.current) {
       const subEl = root.current.querySelector(".ws-sub") as HTMLElement | null;
@@ -263,6 +270,35 @@ function mapParams(result: TamponResult, client: Client, marchand: Marchand) {
   const rawReward = result.type === "recompense" ? result.nom_recompense : reward;
 
   return { mode, state, before, after, goal, reward, rawReward, delay, milestones, flex };
+}
+
+// ─── Styles couleur marchand (Option 2 — carte tintée) ───────────────────────
+
+function hexRgb(hex: string): string {
+  const h = hex.replace("#", "").padEnd(6, "0");
+  return [0, 2, 4].map(i => parseInt(h.substring(i, i + 2), 16)).join(",");
+}
+
+function injectMerchantStyles(marchand: Marchand) {
+  const mn = marchand as Record<string, unknown>;
+  const mc = (mn.apple_bg_color as string) || marchand.couleur_principale || "#007AFF";
+  const rgb = hexRgb(mc);
+
+  let el = document.querySelector("style[data-wallio-mc]") as HTMLStyleElement | null;
+  if (!el) {
+    el = document.createElement("style");
+    el.setAttribute("data-wallio-mc", "");
+    document.head.appendChild(el);
+  }
+  el.textContent = [
+    // Carte tintée : fond + bordure couleur marchand, zéro ombre
+    `.ws-prog{background:rgba(${rgb},0.05)!important;border:1px solid rgba(${rgb},0.18)!important;box-shadow:none!important}`,
+    // Compteur dans la couleur du marchand
+    `.ws-big .ws-roll{color:${mc}}`,
+    // Barre fine : fond vide + remplissage marchand
+    `.ws-bar i{background:rgba(${rgb},0.12)!important}`,
+    `.ws-bar i b{background:${mc}!important}`,
+  ].join("");
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
