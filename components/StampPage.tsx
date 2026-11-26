@@ -31,14 +31,17 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
     let alive = true;
 
     // Fond derrière Dynamic Island — même fix que client-layout.tsx natif
+    // On calcule immédiatement la couleur tintée du marchand (approxime le haut du dégradé mist)
+    // pour éviter tout mismatch de couleur dans la zone status bar
+    const topBg = blendWithWhite(merchant.color || "#007AFF", 0.05);
     const prevHtmlBg = document.documentElement.style.backgroundColor;
     const prevBodyBg = document.body.style.backgroundColor;
-    document.documentElement.style.backgroundColor = "#F5F6FA";
-    document.body.style.backgroundColor = "#F5F6FA";
+    document.documentElement.style.backgroundColor = topBg;
+    document.body.style.backgroundColor = topBg;
 
-    // theme-color Safari status bar
+    // theme-color Safari status bar — même couleur que le fond
     const prevTheme = document.querySelector('meta[name="theme-color"]')?.getAttribute("content") ?? "";
-    setMeta("theme-color", "#F5F6FA");
+    setMeta("theme-color", topBg);
 
     import("@/lib/wallio-stamp.js").then((m: any) => {
       if (!alive || !root.current) return;
@@ -277,6 +280,13 @@ function mapParams(result: TamponResult, client: Client, marchand: Marchand) {
 function hexRgb(hex: string): string {
   const h = hex.replace("#", "").padEnd(6, "0");
   return [0, 2, 4].map(i => parseInt(h.substring(i, i + 2), 16)).join(",");
+}
+
+/** Mélange une couleur hex avec le blanc à alpha donné → approxime le haut du dégradé mist */
+function blendWithWhite(hex: string, alpha: number): string {
+  const [r, g, b] = hexRgb(hex).split(",").map(Number);
+  const mix = (c: number) => Math.round(255 * (1 - alpha) + c * alpha);
+  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
 }
 
 function injectMerchantStyles(marchand: Marchand) {
