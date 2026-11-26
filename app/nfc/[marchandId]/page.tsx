@@ -197,8 +197,16 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
         setStampMerchant(getMerchantDisplay(marchand));
 
         // Dead flag — back_forward/reload → afficher résultat en cache, jamais de re-tampon
+        // Protection étendue : navType "navigate" récent (< 60s) = retry depuis erreur, même protection
         const navType = (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type;
-        if (navType !== "navigate") {
+        const isRecentDeadFlag = (() => {
+          try {
+            const r = localStorage.getItem(`nfc_dead_${marchand.id}`);
+            if (!r) return false;
+            return Date.now() - (JSON.parse(r) as { ts: number }).ts < 60_000;
+          } catch { return false; }
+        })();
+        if (navType !== "navigate" || isRecentDeadFlag) {
           try {
             const deadRaw = localStorage.getItem(`nfc_dead_${marchand.id}`);
             if (deadRaw) {

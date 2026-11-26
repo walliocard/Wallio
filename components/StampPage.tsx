@@ -20,6 +20,7 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
   const resultRef = useRef<StampResult | null>(null);
   const slotBuilt = useRef(false);
   const pending   = useRef(false);       // play demandé avant que ws soit prêt
+  const choixDone = useRef(false);       // choix Flex confirmé → bloquer le 2ème play() du polling
   const onRetryRef = useRef(onRetry);
   useEffect(() => { onRetryRef.current = onRetry; }, [onRetry]);
   useEffect(() => { resultRef.current = result; }, [result]);
@@ -75,7 +76,9 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
               }),
             });
             const data = await res.json();
-            return !!(data.ok || data.already_done);
+            const ok = !!(data.ok || data.already_done);
+            if (ok) choixDone.current = true;   // bloquer le 2ème play() du polling
+            return ok;
           } catch { return false; }
         },
       });
@@ -107,6 +110,8 @@ export default function StampPage({ merchant, result, onRetry }: Props) {
   useEffect(() => {
     if (!result) return;
     if (!ws.current) { pending.current = true; return; }   // module pas encore prêt
+    // Si le choix Flex a déjà été traité par le module, ignorer la mise à jour du polling
+    if (choixDone.current && result.result.type !== "choix_requis") return;
     if (!slotBuilt.current) { slotBuilt.current = true; buildSlot(ws.current.slot, result); }
     ws.current.play(mapParams(result.result, result.client, result.marchand));
     // Injection du prénom après play() — texts sont fixés au mount, on patch le DOM directement
