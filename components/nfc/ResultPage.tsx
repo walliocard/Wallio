@@ -73,14 +73,14 @@ const CSS = `
 .rp{--brand-soft:color-mix(in srgb,var(--brand) 12%,#fff);--brand-line:color-mix(in srgb,var(--brand) 16%,#fff);--bg:#F5F6FA;--ink:#141826;--muted:#8A93A6;--card:#fff;--shadow:0 6px 20px rgba(30,30,70,.07);--ease:cubic-bezier(.32,.72,0,1);
   max-width:430px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .rp *{box-sizing:border-box;margin:0;padding:0}
-.rp-hero{position:relative;height:300px;flex:none}
+.rp-hero{position:relative;height:calc(300px + env(safe-area-inset-top));flex:none}
 .rp-hero-bg{position:absolute;inset:0;overflow:hidden}
 .rp-hero-img{position:absolute;inset:0;background:var(--banner) center 30%/cover}
 .rp-hero-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.30) 0%,rgba(0,0,0,0) 22%,color-mix(in srgb,var(--bg) 0%,transparent) 50%,color-mix(in srgb,var(--bg) 75%,transparent) 78%,var(--bg) 100%)}
-.rp-ring{position:absolute;left:50%;top:66px;width:156px;height:156px;margin-left:-78px}
+.rp-ring{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top));width:156px;height:156px;margin-left:-78px}
 .rp-ring path{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round}
 .rp-ring path.rp-off{opacity:.35}
-.rp-tile{position:absolute;left:50%;top:101px;width:86px;height:86px;margin-left:-43px;border-radius:21px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.28);z-index:3}
+.rp-tile{position:absolute;left:50%;top:calc(101px + env(safe-area-inset-top));width:86px;height:86px;margin-left:-43px;border-radius:21px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(0,0,0,.28);z-index:3}
 .rp-tile::before{content:"";position:absolute;inset:4px;border-radius:17px;border:.5px solid rgba(255,255,255,.4)}
 .rp-tile .rp-lay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .rp-tile .rp-tlogo img{width:62px;height:62px;object-fit:cover;display:block}
