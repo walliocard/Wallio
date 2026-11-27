@@ -88,10 +88,16 @@ const PAYS = [
   { code: "+1",   flag: "🇺🇸", label: "USA/CA" },
 ];
 
+// Cache mémoire des cartes : survit aux allers-retours de navigation (pas au rechargement complet de l'app).
+let cardsCache: { phone: string; cards: CardData[]; prenom: string; nom: string; notifs: ClientNotif[] } | null = null;
+
 export default function MesCartesPage() {
   const { t } = useLang();
   const [step, setStep]         = useState<"loading"|"login"|"pin"|"forgot_pin"|"reset_code"|"create_pin"|"main">(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem(PHONE_KEY)) return "login";
+    if (typeof window === "undefined") return "loading";
+    const ph = localStorage.getItem(PHONE_KEY);
+    if (!ph) return "login";
+    if (cardsCache && cardsCache.phone === ph) return "main"; // retour instantané depuis le cache
     return "loading";
   });
   const [pinInput, setPinInput]   = useState("");
@@ -117,11 +123,11 @@ export default function MesCartesPage() {
   }, []);
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
-  const [phone, setPhone]       = useState("");
-  const [prenom, setPrenom]     = useState("");
-  const [nom, setNom]           = useState("");
+  const [phone, setPhone]       = useState(() => cardsCache?.phone ?? "");
+  const [prenom, setPrenom]     = useState(() => cardsCache?.prenom ?? "");
+  const [nom, setNom]           = useState(() => cardsCache?.nom ?? "");
   const [dob, setDob]           = useState("");
-  const [cards, setCards]       = useState<CardData[]>([]);
+  const [cards, setCards]       = useState<CardData[]>(() => cardsCache?.cards ?? []);
   const [clientEmail, setClientEmail2] = useState<string | null>(null); // null = pas encore chargé, "" = pas d'email
   const [emailInput, setEmailInput] = useState("");
   const [emailSending, setEmailSending] = useState(false);
@@ -131,7 +137,7 @@ export default function MesCartesPage() {
   const [notFound, setNotFound] = useState(false);
   const [joining, setJoining]   = useState<Set<string>>(new Set());
   const [joined, setJoined]     = useState<Set<string>>(new Set());
-  const [notifs, setNotifs]     = useState<ClientNotif[]>([]);
+  const [notifs, setNotifs]     = useState<ClientNotif[]>(() => cardsCache?.notifs ?? []);
   const unsubRef = useRef<(() => void) | null>(null);
   const unsubMerchantsRef = useRef<(() => void) | null>(null);
   const registeredIdsRef = useRef<string[]>([]);
@@ -210,7 +216,9 @@ export default function MesCartesPage() {
   async function loadCards(fullPhone: string) {
     // Annuler l'éventuel listener précédent
     unsubRef.current?.();
-    setFetching(true); setNotFound(false);
+    // Pas de spinner si on a déjà les cartes en cache (rafraîchissement silencieux)
+    if (!(cardsCache && cardsCache.phone === fullPhone)) setFetching(true);
+    setNotFound(false);
 
     const q = query(collection(db, "clients"), where("telephone", "==", fullPhone));
     let firstSnapshot = true;
@@ -320,7 +328,11 @@ export default function MesCartesPage() {
       });
       notifsMapRef.current = newNotifsMap;
       allNotifs.sort((a, b) => b.sentAt.localeCompare(a.sentAt));
-      setNotifs(allNotifs.slice(0, 50));
+      const notifsTop = allNotifs.slice(0, 50);
+      setNotifs(notifsTop);
+
+      // Mise à jour du cache mémoire (retour instantané la prochaine fois)
+      cardsCache = { phone: fullPhone, cards: results, prenom: p, nom: n, notifs: notifsTop };
 
       registeredIdsRef.current = results.map(c => c.marchandId);
       refreshMerchants();
@@ -590,8 +602,8 @@ export default function MesCartesPage() {
   // Déconnexion et suppression de compte vivent désormais dans /profil.
 
   // ── Loading ────────────────────────────────────────────────────────
-  // Ne jamais spinner si pas de téléphone connu (cas visiteur depuis landing)
-  if (step === "loading" || fetching) return (
+  // Pas de spinner si des cartes sont déjà affichées (retour depuis le cache)
+  if ((step === "loading" || fetching) && cards.length === 0) return (
     <main style={bg}>
       <div style={{ padding: "20px 20px 0", maxWidth: 430, margin: "0 auto", width: "100%" }}>
         <Header />

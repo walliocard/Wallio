@@ -56,7 +56,38 @@ export default function DiscoverMap({ merchants, registeredIds, onJoin }: {
         if (!mapkit.__wallioInit) { mapkit.init({ authorizationCallback: (done: any) => done(token) }); mapkit.__wallioInit = true; }
         const map = new mapkit.Map(ref.current, { showsUserLocationControl: false, showsCompass: mapkit.FeatureVisibility?.Hidden });
         mapRef.current = map;
-        map.addEventListener("select", (e: any) => { if (e.annotation?.data) setSelected(e.annotation.data); });
+
+        // Épingle « compteur » pour les groupes de commerces proches
+        map.annotationForCluster = (cluster: any) => {
+          const count = cluster.memberAnnotations.length;
+          const factory = () => {
+            const el = document.createElement("div");
+            el.style.cssText = "width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;";
+            const inner = document.createElement("div");
+            inner.style.cssText = "width:34px;height:34px;border-radius:50%;background:#4B4FD6;color:#fff;font:600 15px -apple-system,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;";
+            inner.textContent = String(count);
+            el.appendChild(inner);
+            return el;
+          };
+          const a = new mapkit.Annotation(cluster.coordinate, factory, {});
+          a.clusterMembers = cluster.memberAnnotations;
+          return a;
+        };
+
+        map.addEventListener("select", (e: any) => {
+          const a = e.annotation;
+          if (!a) return;
+          if (a.clusterMembers?.length) {
+            // Groupe : on zoome pour séparer les commerces
+            try {
+              const sp = map.region.span;
+              map.setRegionAnimated(new mapkit.CoordinateRegion(a.coordinate, new mapkit.CoordinateSpan(Math.max(sp.latitudeDelta / 3, 0.002), Math.max(sp.longitudeDelta / 3, 0.002))), true);
+              map.selectedAnnotation = null;
+            } catch { /* */ }
+            return;
+          }
+          if (a.data) setSelected(a.data);
+        });
         map.addEventListener("deselect", () => setSelected(null));
         drawPins();
       } catch { setError(true); }
