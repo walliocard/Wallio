@@ -77,12 +77,10 @@ function ToggleRow({ label, sub, icon, on, onChange, last }: {
   label: string; sub?: string; icon: React.ReactNode; on: boolean; onChange: (v: boolean) => void; last?: boolean;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "7px 14px", borderBottom: last ? "none" : "1px solid var(--border)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "8px 14px", borderBottom: last ? "none" : "1px solid var(--border)" }}>
       <Chip>{icon}</Chip>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 500, color: "var(--fg)", margin: 0 }}>{label}</p>
-        {sub && <p style={{ fontSize: 11.5, color: "var(--fg-tertiary)", margin: "1px 0 0" }}>{sub}</p>}
-      </div>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500, color: "var(--fg)" }}>{label}</span>
+      {sub && <span style={{ fontSize: 12.5, color: "var(--fg-tertiary)", marginRight: 6 }}>{sub}</span>}
       <Toggle on={on} onChange={onChange} />
     </div>
   );
@@ -188,11 +186,11 @@ export default function PlusPage() {
 
         <SectionLabel title="Engagement clients" />
         <Card>
-          <ToggleRow label="Anniversaire" sub="Offre le jour de l'anniversaire" icon={IconCake}
+          <ToggleRow label="Anniversaire" icon={IconCake}
             on={anniv} onChange={v => toggleAuto("anniversaire", v)} />
-          <ToggleRow label={`Relance ${relanceJours} jours`} sub="Rappel aux clients inactifs" icon={IconBell}
+          <ToggleRow label={`Relance ${relanceJours} jours`} icon={IconBell}
             on={relance} onChange={v => toggleAuto("relance", v)} />
-          <ToggleRow label="Parrainage" sub="Les clients invitent leurs amis" icon={IconGift}
+          <ToggleRow label="Parrainage" icon={IconGift}
             on={parrain} onChange={toggleParrain} />
           <LinkRow href="/dashboard/reglages?section=engagement" label="Personnaliser les messages" icon={IconSliders} last />
         </Card>
