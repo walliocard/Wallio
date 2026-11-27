@@ -788,71 +788,48 @@ export default function MesCartesPage() {
 
   // ── Login ──────────────────────────────────────────────────────────
   if (step === "login") return (
-    <main style={bg}>
-      <div style={{ padding: "20px 20px 0", maxWidth: 430, margin: "0 auto", width: "100%" }}>
-        <Header />
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 24px 48px" }}>
-        <div style={{ maxWidth: 390, width: "100%", margin: "0 auto" }}>
+    <main style={{ ...bg, justifyContent: "center" }}>
+      <div style={{ maxWidth: 380, width: "100%", margin: "0 auto", padding: "0 26px", display: "flex", flexDirection: "column", alignItems: "center" }}>
 
-          {/* Pile de 3 mini-cartes inclinées */}
-          <div style={{ position: "relative", height: 104, marginBottom: 18 }}>
-            {[
-              { c: "#2E9E5B", r: -11, x: -58, y: 10, z: 1 },
-              { c: "#E0864B", r: 9, x: 58, y: 8, z: 2 },
-              { c: "#6D4FC0", r: -2, x: 0, y: 0, z: 3 },
-            ].map((s, i) => (
-              <div key={i} style={{ position: "absolute", top: s.y, left: "50%", width: 150, height: 92, borderRadius: 16, background: s.c, transform: `translateX(-50%) translateX(${s.x}px) rotate(${s.r}deg)`, zIndex: s.z, boxShadow: "0 10px 30px rgba(100,120,160,0.22)", padding: 14 }}>
-                <div style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(255,255,255,0.25)" }} />
-                <div style={{ display: "flex", gap: 5, marginTop: 20 }}>
-                  {Array.from({ length: 5 }).map((_, k) => <div key={k} style={{ width: 11, height: 11, borderRadius: "50%", background: k < 3 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)" }} />)}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ ...glass, padding: "32px 28px", borderRadius: 28, marginBottom: 16 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: "#1C2333", marginBottom: 8 }}>{t.mes_cartes_title}</h1>
-            <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 28, lineHeight: 1.55 }}>
-              {t.mes_cartes_subtitle}
-            </p>
-
-            <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ display: "flex", gap: 8 }}>
-                <select value={countryCode} onChange={e => setCountryCode(e.target.value)} style={{ ...input, flexShrink: 0, width: 108, paddingLeft: 12, paddingRight: 8 }}>
-                  {PAYS.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
-                </select>
-                <input
-                  type="tel" inputMode="tel" value={phoneInput} onChange={e => setPhoneInput(e.target.value)}
-                  placeholder="6 12 34 56 78" required style={{ ...input, flex: 1 }}
-                  onFocus={e => (e.target.style.borderColor = "#5B7CFA")}
-                  onBlur={e => (e.target.style.borderColor = "rgba(142,155,181,0.25)")}
-                />
-              </div>
-              {notFound && <p style={{ fontSize: 13, color: "#FF453A", textAlign: "center" }}>{t.mes_cartes_not_found}</p>}
-              <button type="submit" disabled={!phoneInput.trim()} style={{
-                padding: "15px", borderRadius: 16, border: "none", cursor: phoneInput.trim() ? "pointer" : "not-allowed",
-                background: phoneInput.trim() ? "linear-gradient(135deg,#5B7CFA,#7C5BFA)" : "rgba(142,155,181,0.15)",
-                color: phoneInput.trim() ? "white" : "#8E9BB5", fontSize: 15, fontWeight: 600,
-                boxShadow: phoneInput.trim() ? "0 8px 24px rgba(91,124,250,0.35)" : "none", transition: "all 0.2s",
-              }}>
-                {t.mes_cartes_see}
-              </button>
-            </form>
-          </div>
-
-          <div style={{ textAlign: "center", marginTop: 8 }}>
-            <p style={{ fontSize: 13, color: "#8E9BB5", marginBottom: 12 }}>{t.mes_cartes_no_card}</p>
-            <a href="/inscription" style={{
-              display: "inline-block", fontSize: 14, fontWeight: 600,
-              color: "#5B7CFA", textDecoration: "none",
-              padding: "12px 28px", borderRadius: 14,
-              background: "rgba(91,124,250,0.08)", border: "1px solid rgba(91,124,250,0.2)",
-            }}>
-              {t.mes_cartes_create}
-            </a>
-          </div>
+        {/* Logo + halo */}
+        <div style={{ position: "relative", marginBottom: 30, display: "flex", justifyContent: "center" }}>
+          <div style={{ position: "absolute", width: 210, height: 210, top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: "radial-gradient(circle, rgba(123,92,246,0.34), rgba(47,123,255,0.16) 45%, transparent 70%)", filter: "blur(28px)", pointerEvents: "none" }} />
+          <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ position: "relative", width: 96, height: 96, borderRadius: 24, boxShadow: "0 14px 36px rgba(99,102,241,0.28)" }} />
         </div>
+
+        {/* Titre + sous-titre */}
+        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: "#1C2333", textAlign: "center", lineHeight: 1.18 }}>
+          Toutes vos cartes,<br />au même endroit.
+        </h1>
+        <p style={{ fontSize: 15, color: "#8E9BB5", textAlign: "center", lineHeight: 1.5, marginTop: 12, maxWidth: 320 }}>
+          Entrez votre numéro pour retrouver vos cartes et découvrir de nouveaux établissements.
+        </p>
+
+        {/* Formulaire */}
+        <form onSubmit={handleLogin} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12, marginTop: 30 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <select value={countryCode} onChange={e => setCountryCode(e.target.value)}
+              style={{ flexShrink: 0, width: 118, height: 54, borderRadius: 15, background: "#F1F2F6", border: "1px solid #E3E5EC", padding: "0 12px", fontSize: 16, fontWeight: 500, color: "#1C2333", appearance: "none", WebkitAppearance: "none", outline: "none" }}>
+              {PAYS.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
+            </select>
+            <input type="tel" inputMode="tel" value={phoneInput} onChange={e => setPhoneInput(e.target.value)}
+              placeholder="6 12 34 56 78" required
+              style={{ flex: 1, height: 54, borderRadius: 15, background: "#F1F2F6", border: "1px solid #E3E5EC", padding: "0 16px", fontSize: 16, color: "#1C2333", outline: "none" }}
+              onFocus={e => (e.currentTarget.style.borderColor = "#2F7BFF")}
+              onBlur={e => (e.currentTarget.style.borderColor = "#E3E5EC")} />
+          </div>
+          {notFound && <p style={{ fontSize: 13, color: "#FF453A", textAlign: "center" }}>{t.mes_cartes_not_found}</p>}
+          <button type="submit" disabled={!phoneInput.trim()}
+            style={{ height: 54, borderRadius: 16, border: "none", cursor: phoneInput.trim() ? "pointer" : "default", background: "linear-gradient(135deg,#2F7BFF,#8B5CF6)", color: "#fff", fontSize: 16, fontWeight: 600, opacity: phoneInput.trim() ? 1 : 0.4, boxShadow: phoneInput.trim() ? "0 10px 26px rgba(99,102,241,0.33)" : "none", transition: "opacity .2s, box-shadow .2s", marginTop: 4 }}>
+            {t.mes_cartes_see}
+          </button>
+        </form>
+
+        {/* Créer un compte */}
+        <p style={{ fontSize: 14, color: "#8E9BB5", textAlign: "center", marginTop: 24 }}>
+          {t.mes_cartes_no_card}{" "}
+          <a href="/inscription" style={{ color: "#4B4FD6", fontWeight: 600, textDecoration: "none" }}>{t.mes_cartes_create}</a>
+        </p>
       </div>
     </main>
   );
