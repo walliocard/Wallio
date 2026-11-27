@@ -67,13 +67,17 @@ async function geocode(address: string, country?: string): Promise<LatLng | null
   const streetIdx = parts.findIndex(s => /\d/.test(s)); // segment avec un numéro de rue
   const street = streetIdx >= 0 ? parts.slice(streetIdx).join(", ") : parts.join(", ");
   const withCountry = (s: string) => (country ? `${s}, ${country}` : s);
+  const lastPart = parts[parts.length - 1] || "";              // ex. "Agadir 80000"
+  const cityNoPostal = lastPart.replace(/\s*\d{4,}\s*$/, "").trim(); // ex. "Agadir"
   const variants = [...new Set([
     withCountry(street),               // rue + ville + pays (le plus fiable)
     withCountry(parts.slice(1).join(", ")), // sans le nom du commerce
     withCountry(address),
     street,
     address,
-  ])];
+    withCountry(lastPart),             // repli ville + code postal
+    withCountry(cityNoPostal),         // repli ville seule
+  ].filter(Boolean))];
   for (const v of variants) {
     if (!v) continue;
     try {
