@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { collection, onSnapshot, query, where, getCountFromServer, orderBy, limit, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import WallioLogo from "@/components/WallioLogo";
+import AdminLocationMap from "@/components/AdminLocationMap";
 import { drawPrintCard, drawPrintCardQROnly, drawPrintCardNFCOnly } from "@/lib/print-card-draw";
 import { registerFcmToken } from "@/lib/fcm";
 
@@ -1384,10 +1385,11 @@ export default function AdminPage() {
                 </button>
                 {geoMsg && <p style={{ fontSize: 12, color: geoMsg.ok ? "#2E9E5B" : "#E0533D", textAlign: "center" }}>{geoMsg.text}</p>}
 
-                {selected.latitude != null && selected.longitude != null && (
-                  <iframe title="Vérification GPS" style={{ width: "100%", height: 150, border: `1px solid ${T.border}`, borderRadius: 10 }}
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${selected.longitude - 0.004}%2C${selected.latitude - 0.003}%2C${selected.longitude + 0.004}%2C${selected.latitude + 0.003}&layer=mapnik&marker=${selected.latitude}%2C${selected.longitude}`} />
-                )}
+                <AdminLocationMap
+                  lat={locLat ? parseFloat(locLat) : null}
+                  lng={locLng ? parseFloat(locLng) : null}
+                  onChange={(la, ln) => { setLocLat(String(la)); setLocLng(String(ln)); }}
+                />
                 <div style={{ display: "flex", gap: 8 }}>
                   <input type="text" inputMode="decimal" placeholder="Latitude" value={locLat} onChange={e => setLocLat(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
                   <input type="text" inputMode="decimal" placeholder="Longitude" value={locLng} onChange={e => setLocLng(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
