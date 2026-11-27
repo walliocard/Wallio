@@ -946,17 +946,24 @@ export default function MesCartesPage() {
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_cards_sub}</p>
             </div>
           ) : (() => {
-            const sorted = [...cards].sort((a, b) => {
+            // Récompenses prêtes d'abord, puis restants croissants.
+            const byReward = (a: CardData, b: CardData) => {
               const ra = cardRestants(a).restants, rb = cardRestants(b).restants;
               const readyA = ra <= 0 ? 0 : 1, readyB = rb <= 0 ? 0 : 1;
-              if (readyA !== readyB) return readyA - readyB; // récompenses prêtes d'abord
-              return ra - rb;                                // puis restants croissants
-            });
-            return (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {sorted.map((card, i) => <CardItem key={card.walletId} card={card} delay={i * 0.06} />)}
+              if (readyA !== readyB) return readyA - readyB;
+              return ra - rb;
+            };
+            // Regroupement par ville
+            const groups: Record<string, CardData[]> = {};
+            cards.forEach(c => { const k = c.ville || "Autres"; (groups[k] = groups[k] || []).push(c); });
+            const villes = Object.keys(groups).sort((a, b) => a === "Autres" ? 1 : b === "Autres" ? -1 : a.localeCompare(b, "fr"));
+            let i = -1;
+            return villes.map(ville => (
+              <div key={ville} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "#8E9BB5", textTransform: "uppercase", letterSpacing: "0.08em", paddingLeft: 2 }}>{ville}</p>
+                {[...groups[ville]].sort(byReward).map(card => { i++; return <CardItem key={card.walletId} card={card} delay={i * 0.06} />; })}
               </div>
-            );
+            ));
           })()
         )}
 
