@@ -49,6 +49,47 @@ function parseFromText(text: string): LatLng | null {
 
 const isShort = (url: string) => /maps\.app\.goo\.gl|goo\.gl\/maps|g\.co\/kgs/i.test(url);
 
+// Récupère l'adresse (?q= / ?query= / ?destination=) si ce n'est pas déjà des coordonnées.
+function extractAddress(url: string): string | null {
+  try {
+    const u = new URL(url);
+    for (const k of ["q", "query", "destination"]) {
+      const v = u.searchParams.get(k);
+      if (v && !/^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/.test(v.trim())) return v;
+    }
+  } catch { /* pas une URL */ }
+  return null;
+}
+
+// Géocode une adresse via OpenStreetMap Nominatim (essaie quelques variantes, pays en indice).
+async function geocode(address: string, country?: string): Promise<LatLng | null> {
+  const parts = address.split(",").map(s => s.trim()).filter(Boolean);
+  const streetIdx = parts.findIndex(s => /\d/.test(s)); // segment avec un numéro de rue
+  const street = streetIdx >= 0 ? parts.slice(streetIdx).join(", ") : parts.join(", ");
+  const withCountry = (s: string) => (country ? `${s}, ${country}` : s);
+  const variants = [...new Set([
+    withCountry(street),               // rue + ville + pays (le plus fiable)
+    withCountry(parts.slice(1).join(", ")), // sans le nom du commerce
+    withCountry(address),
+    street,
+    address,
+  ])];
+  for (const v of variants) {
+    if (!v) continue;
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(v)}`, {
+        headers: { "User-Agent": "WallioAdmin/1.0 (walliocard.com)", "Accept-Language": "fr" },
+      });
+      const j = await r.json();
+      if (Array.isArray(j) && j[0]) {
+        const lat = parseFloat(j[0].lat), lng = parseFloat(j[0].lon);
+        if (valid(lat, lng)) return { lat, lng };
+      }
+    } catch { /* variante suivante */ }
+  }
+  return null;
+}
+
 // Suit la redirection des liens courts pour récupérer l'URL complète.
 export async function resolveMapsUrl(url: string): Promise<string> {
   if (!isShort(url)) return url;
@@ -60,22 +101,28 @@ export async function resolveMapsUrl(url: string): Promise<string> {
   }
 }
 
-// Extraction complète : URL directe → URL résolue → contenu de la page (dernier recours).
-export async function extractLatLng(url: string): Promise<LatLng | null> {
+// Extraction complète : URL directe → URL résolue → contenu de la page → géocodage de l'adresse.
+export async function extractLatLng(url: string, countryHint?: string): Promise<LatLng | null> {
   if (!url) return null;
   const direct = parseLatLng(url);
   if (direct) return direct;
 
+  let resolvedUrl = url;
   try {
     const res = await fetch(url, { redirect: "follow", headers: { "User-Agent": "Mozilla/5.0", "Accept-Language": "fr" } });
-    const fromUrl = parseLatLng(res.url);
+    resolvedUrl = res.url || url;
+    const fromUrl = parseLatLng(resolvedUrl);
     if (fromUrl) return fromUrl;
     const body = await res.text();
     const fromBody = parseFromText(body);
     if (fromBody) return fromBody;
-  } catch { /* on tente le repli ci-dessous */ }
+  } catch { /* on tente les replis ci-dessous */ }
 
-  const resolved = await resolveMapsUrl(url);
-  if (resolved !== url) return parseLatLng(resolved);
+  // Dernier recours : géocoder l'adresse contenue dans le lien.
+  const address = extractAddress(resolvedUrl) || extractAddress(url);
+  if (address) {
+    const geo = await geocode(address, countryHint);
+    if (geo) return geo;
+  }
   return null;
 }

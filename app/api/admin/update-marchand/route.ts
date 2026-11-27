@@ -73,7 +73,7 @@ export async function PATCH(req: Request) {
       data.latitude = null;
       data.longitude = null;
     } else {
-      const r = await extractLatLng(url);
+      const r = await extractLatLng(url, (fields.pays as string) || undefined);
       if (r) { data.latitude = r.lat; data.longitude = r.lng; geo = r; }
       else geoError = "Coordonnées introuvables dans ce lien.";
     }

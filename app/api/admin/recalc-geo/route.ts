@@ -28,7 +28,7 @@ export async function POST() {
     const m = doc.data();
     const url = (m.maps_url as string) || "";
     if (!url) continue;
-    const r = await extractLatLng(url);
+    const r = await extractLatLng(url, (m.pays as string) || undefined);
     if (r) {
       await doc.ref.update({ latitude: r.lat, longitude: r.lng });
       updated++;
