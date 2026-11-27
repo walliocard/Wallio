@@ -233,7 +233,7 @@ export default function MarchandPage() {
           )}
 
           {/* Informations */}
-          {(m.latitude != null || m.horaires || m.telephone) && (
+          {(m.latitude != null || m.horaires) && (
             <div style={cardStyle}>
               {m.latitude != null && m.longitude != null && (
                 <Link href="/mes-cartes?tab=decouvrir&view=carte" style={{ display: "block", height: 120, borderRadius: 12, overflow: "hidden", marginBottom: 6, background: soft(couleur, 10) }}>
@@ -255,7 +255,6 @@ export default function MarchandPage() {
                   {JOURS.map(j => { const pl = m.horaires![j] || []; const today = j === todayKey; return <div key={j} style={{ display: "contents" }}><span style={{ textTransform: "capitalize", color: today ? FG : FG3, fontWeight: today ? 500 : 400 }}>{JOUR_LABELS[j]}</span><span style={{ color: today ? FG : FG3, fontWeight: today ? 500 : 400, textAlign: "right" }}>{pl.length ? pl.map(p => `${p.ouverture}–${p.fermeture}`).join(", ") : "Fermé"}</span></div>; })}
                 </div>
               )}
-              {m.telephone && <a href={telHref!} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", fontSize: 14, color: FG, textDecoration: "none", borderTop: m.horaires ? ".5px solid " + SEP : "none" }}><Pi name="phone" couleur={couleur} />{m.telephone}</a>}
             </div>
           )}
 
