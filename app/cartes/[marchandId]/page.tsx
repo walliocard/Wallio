@@ -501,10 +501,23 @@ function CarteView({ client, marchand, isNew }: { client: Client; marchand: Marc
           </h1>
           <p className="text-[14px]" style={{ color: "var(--fg-secondary)" }}>
             {isNew
-              ? "Votre carte est créée — scannez le tag NFC pour votre 1er tampon"
+              ? "Votre carte est créée !"
               : `${client.tampons} tampon${(client.tampons ?? 0) > 1 ? "s" : ""} · ${marchand.nom}`}
           </p>
         </div>
+
+        {/* Rappel « dernière étape » tant que la carte est à 0 tampon */}
+        {(client.tampons ?? 0) === 0 && (
+          <div style={{ marginBottom: 20, padding: "15px 16px", borderRadius: 16, background: `${couleur}14`, border: `1px solid ${couleur}33`, display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <span style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: `${couleur}24`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={couleur} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12" /><rect x="2" y="7" width="20" height="5" /><line x1="12" y1="22" x2="12" y2="7" /><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /></svg>
+            </span>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 600, color: couleur }}>Plus qu&apos;une étape !</p>
+              <p style={{ fontSize: 13.5, color: "var(--fg-secondary)", marginTop: 3, lineHeight: 1.4 }}>Présentez votre carte au comptoir pour recevoir votre premier tampon.</p>
+            </div>
+          </div>
+        )}
 
         <div className="mb-5 -mx-5 flex justify-center" style={{ touchAction: "pan-y", overflowX: "hidden" }}>
           <Suspense fallback={<div style={{ width: 340, height: 300, borderRadius: 16, background: couleur, opacity: 0.3 }} />}>
