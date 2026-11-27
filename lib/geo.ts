@@ -14,6 +14,7 @@ export function parseLatLng(input: string): LatLng | null {
   try { s = decodeURIComponent(input); } catch { /* garde l'original */ }
 
   const patterns: RegExp[] = [
+    /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/, // coordonnées collées directement
     /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,
     /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
     /[?&](?:q|query|ll|destination|center|sll)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/i,
