@@ -24,7 +24,7 @@ type MarchandPublic = {
   palier_intermediaire: number | null; nom_recompense_petit: string | null; nom_recompense_grand: string | null;
   parrainage_actif: boolean; date_inscription: number | null; maps_url: string | null;
 };
-type Carte = { walletId: string; clientId: string; tampons: number; paliersValides?: boolean[]; recompenseEnAttente: boolean; nfcId?: string; hasWallet: boolean; notifOn: boolean };
+type Carte = { walletId: string; clientId: string; tampons: number; paliersValides?: boolean[]; recompenseEnAttente: boolean; nfcId?: string; apnsToken: boolean; walletType: string | null; notifOn: boolean };
 type Notif = { id: string; title: string; body: string; sentAt: string };
 type Evt = { type: string; recompense: boolean; tampons_apres: number | null; at: number | null };
 
@@ -82,7 +82,7 @@ export default function MarchandPage() {
           if (!snap.empty) {
             const c = snap.docs[0].data();
             const walletId = c.wallet_id as string;
-            setCarte({ walletId, clientId: snap.docs[0].id, tampons: (c.tampons as number) || 0, paliersValides: c.paliers_valides as boolean[] | undefined, recompenseEnAttente: !!c.recompense_en_attente, nfcId: c.nfc_id as string | undefined, hasWallet: !!c.wallet_type, notifOn: !!c.fcm_token });
+            setCarte({ walletId, clientId: snap.docs[0].id, tampons: (c.tampons as number) || 0, paliersValides: c.paliers_valides as boolean[] | undefined, recompenseEnAttente: !!c.recompense_en_attente, nfcId: c.nfc_id as string | undefined, apnsToken: !!c.apns_push_token, walletType: (c.wallet_type as string) || null, notifOn: !!c.fcm_token });
             const raw = (c.notifs as Notif[] | undefined) || [];
             setNotifs([...raw].sort((a, b) => b.sentAt.localeCompare(a.sentAt)).slice(0, 2));
             fetch(`/api/public/carte?walletId=${walletId}`).then(r => r.json()).then(d => { setEvents(d.events || []); setParrainages(d.parrainagesReussis || 0); }).catch(() => {});
@@ -134,7 +134,10 @@ export default function MarchandPage() {
   if (itineraire) actions.push({ icon: "nav", label: "Itinéraire", href: itineraire });
   if (telHref) actions.push({ icon: "phone", label: "Appeler", href: telHref });
   if (instaHref) actions.push({ icon: "insta", label: "Instagram", href: instaHref });
-  if (membre && walletHref) actions.push({ icon: "wallet", label: carte!.hasWallet ? "Dans le Wallet" : "Ajouter", href: walletHref });
+
+  // Carte déjà dans le Wallet ? (signal fiable : apns pour Apple, wallet_type pour Google)
+  const inWallet = membre && (isIOS() ? carte!.apnsToken : carte!.walletType === "google");
+  const walletLabel = isIOS() ? "Apple Wallet" : "Google Wallet";
 
   function partager() {
     if (!carte) return;
@@ -189,6 +192,21 @@ export default function MarchandPage() {
                 return <a key={a.label} href={a.href} {...(ext ? { target: "_blank", rel: "noopener noreferrer" } : {})} style={{ background: "#fff", borderRadius: 14, boxShadow: SHADOW, height: 66, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, fontWeight: 500, color: FG2, textDecoration: "none" }}><Icon name={a.icon} size={20} stroke={1.6} color={couleur} />{a.label}</a>;
               })}
             </div>
+          )}
+
+          {/* Wallet : bouton d'ajout bien visible (membre uniquement) */}
+          {membre && walletHref && (
+            inWallet ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, fontSize: 13, color: FG3, padding: "2px 0" }}>
+                <Icon name="check" size={15} stroke={2} color="#2E9E5B" />
+                <span>Dans {walletLabel}</span>
+              </div>
+            ) : (
+              <a href={walletHref} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, height: 52, borderRadius: 13, background: "#000", textDecoration: "none" }}>
+                <Icon name="wallet" size={20} stroke={1.7} color="#fff" />
+                <span style={{ color: "#fff", fontSize: 16, fontWeight: 600 }}>Ajouter à {walletLabel}</span>
+              </a>
+            )
           )}
 
           {/* Récompense prête */}
@@ -247,7 +265,7 @@ export default function MarchandPage() {
           {(m.latitude != null || m.horaires) && (
             <div style={cardStyle}>
               {m.latitude != null && m.longitude != null && (
-                <Link href="/mes-cartes?tab=decouvrir&view=carte" style={{ display: "block", height: 120, borderRadius: 12, overflow: "hidden", marginBottom: 6, background: soft(couleur, 10) }}>
+                <Link href="/mes-cartes?tab=map" style={{ display: "block", height: 120, borderRadius: 12, overflow: "hidden", marginBottom: 6, background: soft(couleur, 10) }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`/api/public/map-snapshot?lat=${m.latitude}&lng=${m.longitude}&color=${couleur.replace("#", "")}`} alt="Carte" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </Link>

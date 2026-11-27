@@ -111,17 +111,17 @@ export default function MesCartesPage() {
   const [dobInput, setDobInput]   = useState("");
   const [resetEmailMasked, setResetEmailMasked] = useState("");
   const [isWallioUser, setIsWallioUser] = useState(false);
-  const [tab, setTab]           = useState<"cartes"|"messages"|"decouvrir">("cartes");
+  const [tab, setTab]           = useState<"cartes"|"messages"|"map"|"decouvrir">("cartes");
   const [openMsgCommerce, setOpenMsgCommerce] = useState<string | null>(null);
   const [catFilter, setCatFilter] = useState("tous");
-  const [discoverView, setDiscoverView] = useState<"liste" | "carte">("liste");
   const router = useRouter();
 
-  // Ouverture directe sur un onglet / une vue via l'URL (ex. /mes-cartes?tab=decouvrir&view=carte)
+  // Ouverture directe sur un onglet via l'URL (ex. /mes-cartes?tab=map)
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
-    if (p.get("tab") === "decouvrir") setTab("decouvrir");
-    if (p.get("view") === "carte") setDiscoverView("carte");
+    const tb = p.get("tab");
+    if (tb === "decouvrir") setTab("decouvrir");
+    else if (tb === "map" || p.get("view") === "carte") setTab("map");
   }, []);
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
@@ -872,13 +872,14 @@ export default function MesCartesPage() {
           {(() => {
             const unread = notifs.filter(n => !n.read).length;
             return ([
-              ["cartes", `${t.mes_cartes_tab_cards} (${cards.length})`, 0],
+              ["cartes", `Cartes (${cards.length})`, 0],
               ["messages", t.mes_cartes_tab_messages, unread],
-              ["decouvrir", `${t.mes_cartes_tab_discover} (${merchants.length})`, 0],
+              ["map", "Map", 0],
+              ["decouvrir", t.mes_cartes_tab_discover, 0],
             ] as const).map(([key, label, badge]) => (
               <button key={key} onClick={() => setTab(key)} style={{
-                flex: 1, padding: "10px", borderRadius: 13, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                flex: 1, padding: "10px 4px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 11.5, fontWeight: 600,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 5, whiteSpace: "nowrap",
                 background: tab === key ? "white" : "transparent",
                 color: tab === key ? "#1C2333" : "#8E9BB5",
                 boxShadow: tab === key ? "0 2px 12px rgba(100,120,160,0.15)" : "none",
@@ -1051,15 +1052,7 @@ export default function MesCartesPage() {
 
           return (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {/* Titre + sélecteur Liste/Carte */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <p style={{ fontSize: 17, fontWeight: 700, color: "#1C2333" }}>Par ville</p>
-                <div style={{ display: "flex", gap: 4, padding: 3, background: "rgba(142,155,181,0.12)", borderRadius: 11 }}>
-                  {(["liste", "carte"] as const).map(v => (
-                    <button key={v} onClick={() => setDiscoverView(v)} style={{ padding: "5px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, textTransform: "capitalize", background: discoverView === v ? "white" : "transparent", color: discoverView === v ? "#1C2333" : "#8E9BB5", boxShadow: discoverView === v ? "0 1px 6px rgba(100,120,160,0.15)" : "none" }}>{v}</button>
-                  ))}
-                </div>
-              </div>
+              <p style={{ fontSize: 17, fontWeight: 700, color: "#1C2333" }}>Par ville</p>
 
               {/* Filtres par catégorie */}
               {catsPresent.length > 0 && (
@@ -1072,13 +1065,7 @@ export default function MesCartesPage() {
                 </div>
               )}
 
-              {discoverView === "carte" ? (
-                <DiscoverMap
-                  merchants={allMerchantsRef.current.filter(mm => catFilter === "tous" || mm.categorie === catFilter)}
-                  registeredIds={registeredIdsRef.current}
-                  onJoin={rejoindre}
-                />
-              ) : filtered.length === 0 ? (
+              {filtered.length === 0 ? (
                 <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
                   <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(52,199,89,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="1.8" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
@@ -1131,6 +1118,29 @@ export default function MesCartesPage() {
                   </div>
                 ));
               })()}
+            </div>
+          );
+        })()}
+
+        {/* ── Tab Map ── */}
+        {tab === "map" && (() => {
+          const catsPresent = Array.from(new Set(allMerchantsRef.current.map(m => m.categorie).filter(Boolean))) as string[];
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {catsPresent.length > 0 && (
+                <div style={{ display: "flex", gap: 7, overflowX: "auto", paddingBottom: 2, WebkitOverflowScrolling: "touch" }}>
+                  {["tous", ...catsPresent].map(c => (
+                    <button key={c} onClick={() => setCatFilter(c)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 100, border: "1px solid " + (catFilter === c ? "transparent" : "rgba(142,155,181,0.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, background: catFilter === c ? "#6D4FC0" : "transparent", color: catFilter === c ? "white" : "#6E7A8A" }}>
+                      {c === "tous" ? "Tous" : DISCOVER_CATS[c] || c}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <DiscoverMap
+                merchants={allMerchantsRef.current.filter(mm => catFilter === "tous" || mm.categorie === catFilter)}
+                registeredIds={registeredIdsRef.current}
+                onJoin={rejoindre}
+              />
             </div>
           );
         })()}
