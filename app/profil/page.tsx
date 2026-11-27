@@ -92,6 +92,13 @@ export default function ProfilPage() {
     })();
   }, []);
 
+  // Rebond iOS natif (même sensation que Mes cartes)
+  useEffect(() => {
+    document.body.style.overscrollBehavior = "auto";
+    document.documentElement.style.overscrollBehavior = "auto";
+    return () => { document.body.style.overscrollBehavior = ""; document.documentElement.style.overscrollBehavior = ""; };
+  }, []);
+
   const notifGlobalOn = comptes.some(c => c.notifOn);
 
   async function saveField(fields: Record<string, unknown>) {

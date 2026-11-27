@@ -91,6 +91,13 @@ export default function MarchandPage() {
     })();
   }, [id]);
 
+  // Rebond iOS natif (même sensation que Mes cartes)
+  useEffect(() => {
+    document.body.style.overscrollBehavior = "auto";
+    document.documentElement.style.overscrollBehavior = "auto";
+    return () => { document.body.style.overscrollBehavior = ""; document.documentElement.style.overscrollBehavior = ""; };
+  }, []);
+
   if (!m) return <Centered>{notFound ? "Ce commerce est introuvable." : "Chargement…"}</Centered>;
 
   const couleur = m.couleur_principale || "#5B7CFA";
