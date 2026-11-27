@@ -41,7 +41,7 @@
 
 html {
   overflow-x: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior: auto;
   touch-action: pan-y;
   background: linear-gradient(to bottom, rgba(130,110,250,0.22) 0, rgba(130,110,250,0) 80px), #F7F7FA;
   min-height: 100%;
@@ -53,7 +53,7 @@ body {
   font-family: var(--font-geist), Inter, system-ui, sans-serif;
   transition: background 0.3s ease;
   overflow-x: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior: auto;
   touch-action: pan-y;
   min-height: 100dvh;
 }
