@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 export type DiscoverMerchant = {
   id: string; nom: string; logoUrl?: string; couleur: string;
   categorie?: string; ville?: string; latitude?: number; longitude?: number;
-  banner?: string; objectif?: number; reward?: string;
+  banner?: string; objectif?: number; reward?: string; mapsUrl?: string;
 };
 
 const CAT: Record<string, string> = { cafe: "Café", coffee_shop: "Coffee shop", matcha_bar: "Matcha bar", restaurant: "Restaurant", boulangerie: "Boulangerie", patisserie: "Pâtisserie", barbier: "Barbier", coiffure: "Coiffure", beaute: "Beauté", autre: "Autre" };
@@ -104,9 +104,11 @@ export default function DiscoverMap({ merchants, registeredIds, onJoin }: {
   }
 
   const membre = selected ? registeredIds.includes(selected.id) : false;
-  const itineraire = selected && selected.latitude != null && selected.longitude != null
-    ? (isIOS() ? `https://maps.apple.com/?daddr=${selected.latitude},${selected.longitude}` : `https://www.google.com/maps/dir/?api=1&destination=${selected.latitude},${selected.longitude}`)
-    : null;
+  const itineraire = selected?.mapsUrl
+    ? selected.mapsUrl
+    : selected && selected.latitude != null && selected.longitude != null
+      ? (isIOS() ? `https://maps.apple.com/?daddr=${selected.latitude},${selected.longitude}` : `https://www.google.com/maps/dir/?api=1&destination=${selected.latitude},${selected.longitude}`)
+      : null;
 
   return (
     <div style={{ position: "relative", height: "66vh", borderRadius: 22, overflow: "hidden", border: "1px solid rgba(142,155,181,0.14)" }}>

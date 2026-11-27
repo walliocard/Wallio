@@ -22,7 +22,7 @@ type MarchandPublic = {
   objectif_tampons: number | null; nom_recompense: string | null; mode_recompense: string | null;
   paliers: { tampons: number; recompense: string }[] | null;
   palier_intermediaire: number | null; nom_recompense_petit: string | null; nom_recompense_grand: string | null;
-  parrainage_actif: boolean; date_inscription: number | null;
+  parrainage_actif: boolean; date_inscription: number | null; maps_url: string | null;
 };
 type Carte = { walletId: string; clientId: string; tampons: number; paliersValides?: boolean[]; recompenseEnAttente: boolean; nfcId?: string; hasWallet: boolean; notifOn: boolean };
 type Notif = { id: string; title: string; body: string; sentAt: string };
@@ -110,8 +110,13 @@ export default function MarchandPage() {
   const catLabel = m.categorie ? CAT_LABELS[m.categorie] ?? "" : "";
   const sousTitre = [catLabel, m.ville].filter(Boolean).join(" · ");
 
-  const itineraire = m.latitude != null && m.longitude != null
-    ? (isIOS() ? `https://maps.apple.com/?daddr=${m.latitude},${m.longitude}` : `https://www.google.com/maps/dir/?api=1&destination=${m.latitude},${m.longitude}`) : null;
+  // « Itinéraire » : on privilégie le lien Google Maps exact du commerçant ;
+  // on ne retombe sur les coordonnées (approximatives) que s'il n'y a pas de lien.
+  const itineraire = m.maps_url
+    ? m.maps_url
+    : m.latitude != null && m.longitude != null
+      ? (isIOS() ? `https://maps.apple.com/?daddr=${m.latitude},${m.longitude}` : `https://www.google.com/maps/dir/?api=1&destination=${m.latitude},${m.longitude}`)
+      : null;
   const instaHref = m.instagram ? `https://instagram.com/${m.instagram}` : null;
   const telHref = m.telephone ? `tel:${m.telephone}` : null;
   const walletHref = carte ? (isIOS() ? `/api/apple-wallet/generate/${carte.walletId}` : `/api/google-wallet/generate/${carte.walletId}`) : null;

@@ -60,6 +60,7 @@ interface MarchandDiscover {
   latitude?: number;
   longitude?: number;
   dateInscription?: number;
+  mapsUrl?: string;
 }
 
 const DISCOVER_CATS: Record<string, string> = { cafe: "Café", coffee_shop: "Coffee shop", matcha_bar: "Matcha bar", restaurant: "Restaurant", boulangerie: "Boulangerie", patisserie: "Pâtisserie", barbier: "Barbier", coiffure: "Coiffure", beaute: "Beauté", autre: "Autre" };
@@ -160,6 +161,7 @@ export default function MesCartesPage() {
           latitude: typeof m.latitude === "number" ? m.latitude : undefined,
           longitude: typeof m.longitude === "number" ? m.longitude : undefined,
           dateInscription: di?.seconds,
+          mapsUrl: (m.maps_url as string) || undefined,
         };
       });
       refreshMerchants();

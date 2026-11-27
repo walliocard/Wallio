@@ -16,6 +16,7 @@ export type MarchandPublic = {
   pays: string | null;
   latitude: number | null;
   longitude: number | null;
+  maps_url: string | null;
   horaires: Horaires | null;
   statut: ReturnType<typeof statutOuverture>;
   telephone: string | null;
@@ -54,6 +55,7 @@ export function toMarchandPublic(id: string, m: Doc, now: Date = new Date()): Ma
     pays: (m.pays as string) ?? null,
     latitude: typeof m.latitude === "number" ? m.latitude : null,
     longitude: typeof m.longitude === "number" ? m.longitude : null,
+    maps_url: (m.maps_url as string) ?? null,
     horaires,
     statut: statutOuverture(horaires ?? undefined, fermetures, tz, now),
     telephone: (m.telephone as string) ?? null,
