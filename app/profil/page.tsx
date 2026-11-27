@@ -130,7 +130,7 @@ export default function ProfilPage() {
   }
 
   return (
-    <main style={{ minHeight: "100dvh", background: "#F7F7FA", color: FG, fontFamily: "Geist, -apple-system, system-ui, sans-serif" }}>
+    <main style={{ minHeight: "100dvh", background: "#F7F7FA", color: FG, fontFamily: "-apple-system, 'SF Pro Display', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 430, margin: "0 auto", padding: "max(16px, env(safe-area-inset-top, 16px)) 20px 48px" }}>
 
         {/* Barre : retour */}

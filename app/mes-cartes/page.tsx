@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { collection, query, where, onSnapshot, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone, setClientEmail } from "@/lib/loyalty";
@@ -104,6 +106,14 @@ export default function MesCartesPage() {
   const [openMsgCommerce, setOpenMsgCommerce] = useState<string | null>(null);
   const [catFilter, setCatFilter] = useState("tous");
   const [discoverView, setDiscoverView] = useState<"liste" | "carte">("liste");
+  const router = useRouter();
+
+  // Ouverture directe sur un onglet / une vue via l'URL (ex. /mes-cartes?tab=decouvrir&view=carte)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("tab") === "decouvrir") setTab("decouvrir");
+    if (p.get("view") === "carte") setDiscoverView("carte");
+  }, []);
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
   const [phone, setPhone]       = useState("");
@@ -849,9 +859,9 @@ export default function MesCartesPage() {
               {prenom ? `Bonjour, ${prenom} !` : "Mes cartes"}
             </h1>
           </div>
-          <a href="/profil" aria-label="Profil" style={{ width: 40, height: 40, borderRadius: "50%", background: "#EDE9FB", border: "1px solid rgba(123,97,214,0.18)", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
+          <Link href="/profil" aria-label="Profil" style={{ width: 40, height: 40, borderRadius: "50%", background: "#EDE9FB", border: "1px solid rgba(123,97,214,0.18)", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
             <span style={{ fontSize: 16, fontWeight: 600, color: "#6D4FC0" }}>{(prenom?.[0] || "?").toUpperCase()}</span>
-          </a>
+          </Link>
         </div>
 
         {/* Tabs */}
@@ -1066,7 +1076,7 @@ export default function MesCartesPage() {
                 const isNew = m.dateInscription != null && (now - m.dateInscription) < 30 * 86400;
                 const sousTitre = [m.categorie ? DISCOVER_CATS[m.categorie] : "", m.ville].filter(Boolean).join(" · ");
                 return (
-                  <div key={m.id} className="card-appear" onClick={() => { window.location.href = `/c/${m.id}`; }}
+                  <div key={m.id} className="card-appear" onClick={() => router.push(`/c/${m.id}`)}
                     style={{ animationDelay: `${i * 0.05}s`, ...glass, borderRadius: 22, overflow: "hidden", cursor: "pointer" }}>
                     {/* Bannière + badge Nouveau */}
                     <div style={{ position: "relative", height: 92, background: m.banner ? `center/cover url(${m.banner})` : m.couleur }}>
@@ -1125,7 +1135,7 @@ function CardItem({ card, delay }: { card: CardData; delay: number }) {
   const dark = isColorDark(card.couleur);
 
   return (
-    <a href={`/c/${card.marchandId}`} className="card-appear" style={{ display: "block", textDecoration: "none", animationDelay: `${delay}s`, borderRadius: 24, overflow: "hidden", boxShadow: "0 12px 40px rgba(100,120,160,0.18)" }}>
+    <Link href={`/c/${card.marchandId}`} className="card-appear" style={{ display: "block", textDecoration: "none", animationDelay: `${delay}s`, borderRadius: 24, overflow: "hidden", boxShadow: "0 12px 40px rgba(100,120,160,0.18)" }}>
       {/* Haut coloré — inchangé : logo, nom, compteur, barre */}
       <div style={{ background: card.couleur, padding: "20px 20px 18px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -1159,7 +1169,7 @@ function CardItem({ card, delay }: { card: CardData; delay: number }) {
         )}
         <span style={{ fontSize: 13, fontWeight: 600, color: "#1C2333", textAlign: "right", maxWidth: "55%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reward}</span>
       </div>
-    </a>
+    </Link>
   );
 }
 
