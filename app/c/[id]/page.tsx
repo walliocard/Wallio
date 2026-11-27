@@ -57,6 +57,7 @@ export default function MarchandPage() {
   const { id } = useParams<{ id: string }>();
   const [m, setM] = useState<MarchandPublic | null>(null);
   const [carte, setCarte] = useState<Carte | null>(null);
+  const [carteChecked, setCarteChecked] = useState(false); // a-t-on fini de vérifier si l'utilisateur est membre ?
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [events, setEvents] = useState<Evt[]>([]);
   const [parrainages, setParrainages] = useState(0);
@@ -87,7 +88,8 @@ export default function MarchandPage() {
             fetch(`/api/public/carte?walletId=${walletId}`).then(r => r.json()).then(d => { setEvents(d.events || []); setParrainages(d.parrainagesReussis || 0); }).catch(() => {});
           }
         }
-      } catch { setNotFound(true); }
+        setCarteChecked(true);
+      } catch { setNotFound(true); setCarteChecked(true); }
     })();
   }, [id]);
 
@@ -197,7 +199,8 @@ export default function MarchandPage() {
             </div>
           )}
 
-          {/* Progression / Comment ça marche */}
+          {/* Progression / Comment ça marche — attend de savoir si l'utilisateur est membre */}
+          {(membre || carteChecked) && (
           <div style={cardStyle}>
             {membre ? (<>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
@@ -226,6 +229,7 @@ export default function MarchandPage() {
               <div style={{ display: "flex", gap: 4, marginTop: 14, height: 8 }}>{Array.from({ length: Math.min(m.objectif_tampons || 10, 20) }).map((_, i) => <i key={i} style={{ flex: 1, borderRadius: 4, background: soft(couleur, 16) }} />)}</div>
             </>)}
           </div>
+          )}
 
           {/* Parrainage */}
           {membre && m.parrainage_actif && (
@@ -306,7 +310,7 @@ export default function MarchandPage() {
       </div>
 
       {/* Non-membre : bouton fixe */}
-      {!membre && (
+      {carteChecked && !membre && (
         <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, padding: "12px 16px max(20px, env(safe-area-inset-bottom, 20px))", background: `linear-gradient(180deg,${BG}00,${BG} 30%)` }}>
           <div style={{ maxWidth: 480, margin: "0 auto" }}>
             <a href="/inscription" style={{ display: "block", textAlign: "center", height: 52, lineHeight: "52px", borderRadius: 16, background: couleur, color: "#fff", fontSize: 16, fontWeight: 600, textDecoration: "none" }}>Rejoindre {m.nom}</a>

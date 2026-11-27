@@ -65,6 +65,8 @@ interface MarchandDiscover {
 
 const DISCOVER_CATS: Record<string, string> = { cafe: "Café", coffee_shop: "Coffee shop", matcha_bar: "Matcha bar", restaurant: "Restaurant", boulangerie: "Boulangerie", patisserie: "Pâtisserie", barbier: "Barbier", coiffure: "Coiffure", beaute: "Beauté", autre: "Autre" };
 
+const IS_IOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+
 const PHONE_KEY    = "wallio_client_phone";
 const VERIFIED_KEY = "wallio_client_verified";
 const PRENOM_KEY   = "wallio_client_prenom";
@@ -1182,16 +1184,24 @@ function CardItem({ card, delay }: { card: CardData; delay: number }) {
       </div>
 
       {/* Ligne du bas : à gauche l'état, à droite la récompense */}
-      <div style={{ background: "#fff", padding: "13px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        {ready ? (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: card.couleur }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-            Récompense prête
-          </span>
-        ) : (
-          <span style={{ fontSize: 13, color: "#6E7A8A" }}>{card.stampsCurrent === 0 ? "Première visite" : `Encore ${restants} tampon${restants > 1 ? "s" : ""}`}</span>
+      <div style={{ background: "#fff", padding: "13px 18px 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          {ready ? (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: card.couleur }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+              Récompense prête
+            </span>
+          ) : (
+            <span style={{ fontSize: 13, color: "#6E7A8A" }}>{card.stampsCurrent === 0 ? "Première visite" : `Encore ${restants} tampon${restants > 1 ? "s" : ""}`}</span>
+          )}
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#1C2333", textAlign: "right", maxWidth: "55%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reward}</span>
+        </div>
+        {IS_IOS && !card.hasPushToken && (
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(142,155,181,0.14)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0556A" strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
+            <span style={{ fontSize: 12, color: "#C0556A" }}>Pas dans votre Wallet · appuyez pour l&apos;ajouter</span>
+          </div>
         )}
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#1C2333", textAlign: "right", maxWidth: "55%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reward}</span>
       </div>
     </Link>
   );
