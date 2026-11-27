@@ -9,6 +9,7 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { getAuth, signOut } from "firebase/auth";
 import { haptic, HAPTICS_KEY, isHapticsEnabled } from "@/lib/haptics";
+import { statutOuverture, JOUR_ORDER, type Horaires, type Plage } from "@/lib/horaires";
 import Link from "next/link";
 
 async function getIdToken(): Promise<string> {
@@ -19,6 +20,36 @@ async function getIdToken(): Promise<string> {
 const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
 const FUSEAUX = ["Africa/Casablanca","Europe/Madrid","Europe/Paris","Europe/London","America/New_York","Asia/Dubai"];
+
+// ── Établissement : catégories, jours, horaires ───────────────────────────────
+const CATEGORIES = [
+  { value: "cafe", label: "Café" },
+  { value: "coffee_shop", label: "Coffee shop" },
+  { value: "matcha_bar", label: "Matcha bar" },
+  { value: "restaurant", label: "Restaurant" },
+  { value: "boulangerie", label: "Boulangerie" },
+  { value: "patisserie", label: "Pâtisserie" },
+  { value: "barbier", label: "Barbier" },
+  { value: "coiffure", label: "Coiffure" },
+  { value: "beaute", label: "Beauté" },
+  { value: "autre", label: "Autre" },
+];
+const categorieLabel = (v?: string) => CATEGORIES.find(c => c.value === v)?.label || "";
+
+const JOURS = [
+  { key: "lun", label: "Lundi" }, { key: "mar", label: "Mardi" },
+  { key: "mer", label: "Mercredi" }, { key: "jeu", label: "Jeudi" },
+  { key: "ven", label: "Vendredi" }, { key: "sam", label: "Samedi" },
+  { key: "dim", label: "Dimanche" },
+];
+
+function instagramUsername(raw: string): string {
+  let s = (raw || "").trim();
+  if (!s) return "";
+  const m = s.match(/instagram\.com\/([^/?#]+)/i);
+  if (m) s = m[1];
+  return s.replace(/^@+/, "").replace(/\/+$/, "").trim();
+}
 
 // ── Helpers UI ───────────────────────────────────────────────────────────────
 
@@ -103,6 +134,76 @@ function ChevronRight() {
   );
 }
 
+function HorairesEditor({ value, onChange }: { value: Horaires; onChange: (h: Horaires) => void }) {
+  const update = (day: string, plages: Plage[]) => onChange({ ...value, [day]: plages });
+  const toggleDay = (day: string) => {
+    const open = (value[day] ?? []).length > 0;
+    update(day, open ? [] : [{ ouverture: "09:00", fermeture: "18:00" }]);
+  };
+  const setTime = (day: string, idx: number, field: "ouverture" | "fermeture", v: string) =>
+    update(day, (value[day] ?? []).map((p, i) => i === idx ? { ...p, [field]: v } : p));
+  const addPlage = (day: string) => {
+    const plages = [...(value[day] ?? [])];
+    if (plages.length >= 2) return;
+    plages.push({ ouverture: "16:00", fermeture: "22:00" });
+    update(day, plages);
+  };
+  const removePlage = (day: string, idx: number) => update(day, (value[day] ?? []).filter((_, i) => i !== idx));
+  const applyWeekdays = () => {
+    const lun = (value["lun"] ?? []).map(p => ({ ...p }));
+    const next = { ...value };
+    for (const k of ["mar", "mer", "jeu", "ven"]) next[k] = lun.map(p => ({ ...p }));
+    onChange(next);
+  };
+
+  const timeInput = (day: string, idx: number, field: "ouverture" | "fermeture") => (
+    <input type="time" value={value[day]?.[idx]?.[field] || ""}
+      onChange={e => setTime(day, idx, field, e.target.value)}
+      className="text-[14px] outline-none rounded-lg px-2 py-1"
+      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }} />
+  );
+
+  return (
+    <IosCard>
+      {JOURS.map((j, di) => {
+        const plages = value[j.key] ?? [];
+        const open = plages.length > 0;
+        return (
+          <div key={j.key} style={{ borderBottom: di < JOURS.length - 1 ? "1px solid var(--border)" : "none" }}>
+            <div className="flex items-center justify-between px-5 py-3.5">
+              <span className="text-[15px]" style={{ color: "var(--fg)" }}>{j.label}</span>
+              <div className="flex items-center gap-2.5">
+                <span className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>{open ? "Ouvert" : "Fermé"}</span>
+                <Toggle value={open} onChange={() => toggleDay(j.key)} />
+              </div>
+            </div>
+            {open && (
+              <div className="px-5 pb-3.5 flex flex-col gap-2">
+                {plages.map((_, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    {timeInput(j.key, idx, "ouverture")}
+                    <span className="text-[13px]" style={{ color: "var(--fg-tertiary)" }}>–</span>
+                    {timeInput(j.key, idx, "fermeture")}
+                    {idx === 1 && (
+                      <button onClick={() => removePlage(j.key, idx)} className="ml-1 text-[13px]" style={{ color: "var(--fg-tertiary)", background: "transparent" }}>Retirer</button>
+                    )}
+                  </div>
+                ))}
+                {plages.length < 2 && (
+                  <button onClick={() => addPlage(j.key)} className="self-start text-[13px]" style={{ color: "var(--accent)", background: "transparent" }}>+ Ajouter une plage</button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <button onClick={applyWeekdays} className="w-full px-5 py-3.5 text-[14px] text-left" style={{ borderTop: "1px solid var(--border)", color: "var(--accent)", background: "transparent" }}>
+        Appliquer lundi à tous les jours de semaine
+      </button>
+    </IosCard>
+  );
+}
+
 // ── Page principale ───────────────────────────────────────────────────────────
 
 function ReglagesPage() {
@@ -160,6 +261,15 @@ function ReglagesPage() {
   const [doubleTamponsFin, setDoubleTamponsFin] = useState<string>(doubleFin ?? new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10));
   const [parrainageActif, setParrainageActif] = useState<boolean>(!!(m?.parrainage_actif));
   const [langue, setLangue] = useState<"fr" | "ro" | "es">((m?.langue as "fr" | "ro" | "es") || "fr");
+  const [categorie, setCategorie] = useState<string>((m?.categorie as string) || "");
+  const [instagram, setInstagram] = useState<string>((m?.instagram as string) || "");
+  const [horaires, setHoraires] = useState<Horaires>(() => {
+    const h = (m?.horaires as Horaires) || {};
+    const base: Horaires = {};
+    for (const j of JOURS) base[j.key] = Array.isArray(h[j.key]) ? h[j.key] : [];
+    return base;
+  });
+  const [fermetures, setFermetures] = useState<string[]>(Array.isArray(m?.fermetures_exceptionnelles) ? (m!.fermetures_exceptionnelles as string[]) : []);
   const [hapticsOn, setHapticsOn] = useState(isHapticsEnabled);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -218,8 +328,13 @@ function ReglagesPage() {
         double_tampons_fin: doubleTamponsActif ? doubleTamponsFin : null,
         parrainage_actif: parrainageActif,
         langue,
+        categorie: categorie || null,
+        instagram: instagramUsername(instagram) || null,
+        horaires,
+        fermetures_exceptionnelles: fermetures,
       });
       setLang(langue);
+      setInstagram(instagramUsername(instagram));
       setSaved(true);
       setIsDirty(false);
       haptic("success");
@@ -286,6 +401,104 @@ function ReglagesPage() {
           </select>
         </div>
       </IosCard>
+
+      {/* Catégorie & Instagram */}
+      <SectionLabel title="Catégorie & réseaux" />
+      <IosCard>
+        <div className="relative overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4">
+            <span className="text-[15px]" style={{ color: "var(--fg)" }}>Catégorie</span>
+            <div className="flex items-center gap-1.5" style={{ color: "var(--fg-tertiary)" }}>
+              <span className="text-[14px]">{categorieLabel(categorie) || "Choisir"}</span>
+              <ChevronRight />
+            </div>
+          </div>
+          <select value={categorie} onChange={e => { setCategorie(e.target.value); mark(); }}
+            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer">
+            <option value="">—</option>
+            {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
+        <div className="flex items-center px-5 py-4" style={{ borderTop: "1px solid var(--border)" }}>
+          <span className="text-[15px]" style={{ color: "var(--fg)" }}>Instagram</span>
+          <span className="text-[15px] ml-2" style={{ color: "var(--fg-tertiary)" }}>@</span>
+          <input type="text" value={instagram} onChange={e => { setInstagram(e.target.value); mark(); }}
+            placeholder="nomdutilisateur" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+            className="flex-1 text-[15px] outline-none bg-transparent ml-0.5" style={{ color: "var(--fg)" }} />
+        </div>
+      </IosCard>
+
+      {/* Horaires */}
+      <SectionLabel title="Horaires d'ouverture" />
+      <HorairesEditor value={horaires} onChange={h => { setHoraires(h); mark(); }} />
+
+      <div style={{ height: 8 }} />
+      <IosCard>
+        <div className="px-5 py-4">
+          <p className="text-[13px]" style={{ color: "var(--fg-secondary)", marginBottom: fermetures.length ? 10 : 8 }}>Fermetures exceptionnelles</p>
+          <div className="flex flex-col gap-2">
+            {fermetures.map(d => (
+              <div key={d} className="flex items-center justify-between">
+                <span className="text-[14px]" style={{ color: "var(--fg)" }}>{d}</span>
+                <button onClick={() => { setFermetures(fermetures.filter(x => x !== d)); mark(); }}
+                  className="text-[13px]" style={{ color: "var(--fg-tertiary)", background: "transparent" }}>Retirer</button>
+              </div>
+            ))}
+            <input type="date"
+              onChange={e => { const v = e.target.value; if (v && !fermetures.includes(v)) { setFermetures([...fermetures, v].sort()); mark(); } e.target.value = ""; }}
+              className="text-[14px] outline-none rounded-lg px-2 py-1 self-start"
+              style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--fg)" }} />
+          </div>
+        </div>
+      </IosCard>
+
+      {/* Aperçu fiche Découvrir + complétude */}
+      {(() => {
+        const st = statutOuverture(horaires, fermetures, config.fuseau_horaire);
+        const recompense = nomRecompense || paliers.find(p => p.recompense.trim())?.recompense || nomRecompensePetit || "";
+        const checklist = [
+          { ok: !!(m?.logo_url), label: "votre logo" },
+          { ok: !!categorie, label: "votre catégorie" },
+          { ok: JOUR_ORDER.some(k => (horaires[k] ?? []).length > 0), label: "vos horaires" },
+          { ok: !!instagram, label: "votre Instagram" },
+        ];
+        const pct = Math.round((checklist.filter(c => c.ok).length / checklist.length) * 100);
+        const manque = checklist.find(c => !c.ok);
+        const logo = m?.logo_url as string | undefined;
+        const strip = (m?.strip_url as string) || (m?.strip_raw_url as string) || undefined;
+        const couleur = (m?.couleur_principale as string) || "var(--accent)";
+        return (
+          <>
+            <SectionLabel title="Votre fiche dans Découvrir" />
+            <IosCard>
+              <div style={{ padding: 14 }}>
+                <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+                  <div style={{ height: 96, backgroundColor: "#ececf2", backgroundImage: strip ? `url(${strip})` : "linear-gradient(135deg,#e9e9ef,#f4f4f8)", backgroundSize: "cover", backgroundPosition: "center" }} />
+                  <div style={{ padding: "12px 14px", position: "relative" }}>
+                    <div style={{ position: "absolute", top: -26, left: 14, width: 48, height: 48, borderRadius: 12, overflow: "hidden", border: "2px solid var(--bg)", background: "#fff", backgroundImage: logo ? `url(${logo})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }} />
+                    <div style={{ marginTop: 22 }}>
+                      <p className="text-[15px] font-semibold" style={{ color: "var(--fg)" }}>{nomEtablissement || "Votre établissement"}</p>
+                      <p className="text-[13px]" style={{ color: "var(--fg-tertiary)", marginTop: 1 }}>
+                        {[categorieLabel(categorie), m?.ville as string].filter(Boolean).join(" · ") || "Catégorie · Ville"}
+                      </p>
+                      {st && <p className="text-[13px]" style={{ color: st.ouvert ? "#2E9E5B" : "var(--fg-tertiary)", marginTop: 3 }}>{st.label}</p>}
+                      {recompense && <p className="text-[13px]" style={{ color: couleur, marginTop: 6 }}>{objectif} tampons → {recompense}</p>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: "0 14px 14px" }}>
+                <div style={{ height: 6, borderRadius: 100, background: "var(--border)", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${pct}%`, background: couleur, transition: "width .3s cubic-bezier(.32,.72,0,1)" }} />
+                </div>
+                <p className="text-[13px]" style={{ color: "var(--fg-secondary)", marginTop: 8 }}>
+                  {manque ? `Votre fiche est complète à ${pct} % : ajoutez ${manque.label}.` : "Votre fiche est complète à 100 %."}
+                </p>
+              </div>
+            </IosCard>
+          </>
+        );
+      })()}
 
       {/* ── 2. Programme de fidélité ────────────────────────────────────────── */}
       </>)}

@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase";
 import { creerClient, getClientByTelephone, setClientEmail } from "@/lib/loyalty";
 import InstallBanner from "@/components/InstallBanner";
 import PasskeyRegisterBanner from "@/components/PasskeyRegisterBanner";
+import DiscoverMap from "@/components/DiscoverMap";
 import { useLang } from "@/lib/lang-context";
 
 interface CardData {
@@ -50,7 +51,16 @@ interface MarchandDiscover {
   couleur: string;
   nfc_id?: string;
   ville?: string;
+  categorie?: string;
+  banner?: string;
+  objectif?: number;
+  reward?: string;
+  latitude?: number;
+  longitude?: number;
+  dateInscription?: number;
 }
+
+const DISCOVER_CATS: Record<string, string> = { cafe: "Café", coffee_shop: "Coffee shop", matcha_bar: "Matcha bar", restaurant: "Restaurant", boulangerie: "Boulangerie", patisserie: "Pâtisserie", barbier: "Barbier", coiffure: "Coiffure", beaute: "Beauté", autre: "Autre" };
 
 const PHONE_KEY    = "wallio_client_phone";
 const VERIFIED_KEY = "wallio_client_verified";
@@ -91,6 +101,9 @@ export default function MesCartesPage() {
   const [resetEmailMasked, setResetEmailMasked] = useState("");
   const [isWallioUser, setIsWallioUser] = useState(false);
   const [tab, setTab]           = useState<"cartes"|"messages"|"decouvrir">("cartes");
+  const [openMsgCommerce, setOpenMsgCommerce] = useState<string | null>(null);
+  const [catFilter, setCatFilter] = useState("tous");
+  const [discoverView, setDiscoverView] = useState<"liste" | "carte">("liste");
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
   const [phone, setPhone]       = useState("");
@@ -125,7 +138,19 @@ export default function MesCartesPage() {
     unsubMerchantsRef.current = onSnapshot(q, snap => {
       allMerchantsRef.current = snap.docs.map(d => {
         const m = d.data();
-        return { id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined, logoShape: (m.logo_shape as "square" | "round") || "square", logoCircleUrl: m.logo_circle_url || undefined, couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id, ville: m.ville || undefined };
+        const di = m.date_inscription as { seconds?: number } | undefined;
+        return {
+          id: d.id, nom: m.nom || "Établissement", logoUrl: m.logo_url || undefined,
+          logoShape: (m.logo_shape as "square" | "round") || "square", logoCircleUrl: m.logo_circle_url || undefined,
+          couleur: m.apple_bg_color || m.couleur_principale || "#1C1C1E", nfc_id: m.nfc_id, ville: m.ville || undefined,
+          categorie: (m.categorie as string) || undefined,
+          banner: (m.strip_url as string) || (m.strip_raw_url as string) || undefined,
+          objectif: (m.mode_recompense === "flex" ? (m.palier_intermediaire as number) : (m.objectif_tampons as number)) || undefined,
+          reward: (m.mode_recompense === "flex" ? (m.nom_recompense_petit as string) : (m.nom_recompense as string)) || undefined,
+          latitude: typeof m.latitude === "number" ? m.latitude : undefined,
+          longitude: typeof m.longitude === "number" ? m.longitude : undefined,
+          dateInscription: di?.seconds,
+        };
       });
       refreshMerchants();
     });
@@ -352,23 +377,17 @@ export default function MesCartesPage() {
     finally { setPinLoading(false); }
   }
 
-  // Marque les notifs comme lues quand l'utilisateur ouvre l'onglet Messages
-  useEffect(() => {
-    if (tab !== "messages") return;
-    const unread = notifs.filter(n => !n.read);
-    if (unread.length === 0) return;
-    const unreadIds = new Set(unread.map(n => n.id));
-    Promise.all(
-      [...notifsMapRef.current.entries()].map(async ([clientId, clientNotifs]) => {
-        if (!clientNotifs.some(n => unreadIds.has(n.id))) return;
-        const updated = clientNotifs.map(n => unreadIds.has(n.id) ? { ...n, read: true } : n);
-        await updateDoc(doc(db, "clients", clientId), { notifs: updated });
-      })
-    ).then(() => {
-      setNotifs(prev => prev.map(n => ({ ...n, read: true })));
-    }).catch(() => { /* silent */ });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+  // Marque les messages d'un commerce comme lus quand on ouvre son fil.
+  async function markCommerceRead(marchandId: string) {
+    const clientId = cards.find(c => c.marchandId === marchandId)?.clientId;
+    if (!clientId) return;
+    const arr = notifsMapRef.current.get(clientId);
+    if (!arr || !arr.some(n => !n.read)) return;
+    const updated = arr.map(n => ({ ...n, read: true }));
+    notifsMapRef.current.set(clientId, updated);
+    setNotifs(prev => prev.map(n => n.marchandId === marchandId ? { ...n, read: true } : n));
+    try { await updateDoc(doc(db, "clients", clientId), { notifs: updated }); } catch { /* silent */ }
+  }
 
   // Refresh silencieux du token FCM à chaque session (couvre les expirations de token)
   useEffect(() => {
@@ -546,42 +565,7 @@ export default function MesCartesPage() {
     setEnablingNotif(false);
   }
 
-  function handleLogout() {
-    unsubRef.current?.();
-    unsubRef.current = null;
-    [PHONE_KEY, VERIFIED_KEY, PRENOM_KEY, NOM_KEY, DOB_KEY, "wallio_client_email", "wallio_client_pin"].forEach(k => localStorage.removeItem(k));
-    setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom(""); setPhoneInput(""); setNotFound(false); setPinInput(""); setPinError(""); setIsWallioUser(false); setStep("login");
-  }
-
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  async function handleDeleteAccount() {
-    if (!phone) return;
-    setDeleting(true);
-    const walletId = cards[0]?.walletId;
-    if (!walletId) { setDeleting(false); return; }
-    try {
-      await fetch("/api/delete-account", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telephone: phone, walletId }),
-      });
-    } catch { /* on nettoie quand même */ }
-
-    // Vider tout le localStorage wallio_* + verified
-    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith("wallio_"));
-    keysToRemove.forEach(k => localStorage.removeItem(k));
-    localStorage.removeItem(VERIFIED_KEY);
-    // Vider le cookie partagé PWA↔Safari
-    document.cookie = "wallio_p=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
-
-    unsubRef.current?.();
-    unsubRef.current = null;
-    setPhone(""); setCards([]); setMerchants([]); setPrenom(""); setNom("");
-    setPhoneInput(""); setNotFound(false); setDeleteConfirm(false); setDeleting(false);
-    setStep("login");
-  }
+  // Déconnexion et suppression de compte vivent désormais dans /profil.
 
   // ── Loading ────────────────────────────────────────────────────────
   // Ne jamais spinner si pas de téléphone connu (cas visiteur depuis landing)
@@ -789,6 +773,22 @@ export default function MesCartesPage() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 24px 48px" }}>
         <div style={{ maxWidth: 390, width: "100%", margin: "0 auto" }}>
 
+          {/* Pile de 3 mini-cartes inclinées */}
+          <div style={{ position: "relative", height: 104, marginBottom: 18 }}>
+            {[
+              { c: "#2E9E5B", r: -11, x: -58, y: 10, z: 1 },
+              { c: "#E0864B", r: 9, x: 58, y: 8, z: 2 },
+              { c: "#6D4FC0", r: -2, x: 0, y: 0, z: 3 },
+            ].map((s, i) => (
+              <div key={i} style={{ position: "absolute", top: s.y, left: "50%", width: 150, height: 92, borderRadius: 16, background: s.c, transform: `translateX(-50%) translateX(${s.x}px) rotate(${s.r}deg)`, zIndex: s.z, boxShadow: "0 10px 30px rgba(100,120,160,0.22)", padding: 14 }}>
+                <div style={{ width: 26, height: 26, borderRadius: 8, background: "rgba(255,255,255,0.25)" }} />
+                <div style={{ display: "flex", gap: 5, marginTop: 20 }}>
+                  {Array.from({ length: 5 }).map((_, k) => <div key={k} style={{ width: 11, height: 11, borderRadius: "50%", background: k < 3 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)" }} />)}
+                </div>
+              </div>
+            ))}
+          </div>
+
           <div style={{ ...glass, padding: "32px 28px", borderRadius: 28, marginBottom: 16 }}>
             <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: "#1C2333", marginBottom: 8 }}>{t.mes_cartes_title}</h1>
             <p style={{ fontSize: 14, color: "#8E9BB5", marginBottom: 28, lineHeight: 1.55 }}>
@@ -797,7 +797,7 @@ export default function MesCartesPage() {
 
             <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "flex", gap: 8 }}>
-                <select value={countryCode} onChange={e => setCountryCode(e.target.value)} style={{ ...input, flexShrink: 0, width: 90, paddingLeft: 10, paddingRight: 10 }}>
+                <select value={countryCode} onChange={e => setCountryCode(e.target.value)} style={{ ...input, flexShrink: 0, width: 108, paddingLeft: 12, paddingRight: 8 }}>
                   {PAYS.map(c => <option key={c.code} value={c.code}>{c.flag} {c.code}</option>)}
                 </select>
                 <input
@@ -848,30 +848,36 @@ export default function MesCartesPage() {
             <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.6, color: "#1C2333", marginTop: 12 }}>
               {prenom ? `Bonjour, ${prenom} !` : "Mes cartes"}
             </h1>
-            <p style={{ fontSize: 13, color: "#8E9BB5", marginTop: 3 }}>{phone}</p>
           </div>
-          <button onClick={handleLogout} style={{ background: "rgba(142,155,181,0.15)", border: "none", borderRadius: 12, padding: "8px 14px", fontSize: 13, color: "#8E9BB5", cursor: "pointer", fontWeight: 500, backdropFilter: "blur(8px)" }}>
-            {t.mes_cartes_change}
-          </button>
+          <a href="/profil" aria-label="Profil" style={{ width: 40, height: 40, borderRadius: "50%", background: "#EDE9FB", border: "1px solid rgba(123,97,214,0.18)", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
+            <span style={{ fontSize: 16, fontWeight: 600, color: "#6D4FC0" }}>{(prenom?.[0] || "?").toUpperCase()}</span>
+          </a>
         </div>
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 6, padding: "5px", background: "rgba(142,155,181,0.12)", borderRadius: 18, marginBottom: 20, backdropFilter: "blur(8px)" }}>
-          {([
-            ["cartes", `${t.mes_cartes_tab_cards} (${cards.length})`],
-            ["messages", notifs.filter(n => !n.read).length > 0 ? `${t.mes_cartes_tab_messages} (${notifs.filter(n => !n.read).length})` : t.mes_cartes_tab_messages],
-            ["decouvrir", `${t.mes_cartes_tab_discover} (${merchants.length})`],
-          ] as const).map(([key, label]) => (
-            <button key={key} onClick={() => setTab(key)} style={{
-              flex: 1, padding: "10px", borderRadius: 13, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-              background: tab === key ? "white" : "transparent",
-              color: tab === key ? "#1C2333" : "#8E9BB5",
-              boxShadow: tab === key ? "0 2px 12px rgba(100,120,160,0.15)" : "none",
-              transition: "all 0.2s",
-            }}>
-              {label}
-            </button>
-          ))}
+          {(() => {
+            const unread = notifs.filter(n => !n.read).length;
+            return ([
+              ["cartes", `${t.mes_cartes_tab_cards} (${cards.length})`, 0],
+              ["messages", t.mes_cartes_tab_messages, unread],
+              ["decouvrir", `${t.mes_cartes_tab_discover} (${merchants.length})`, 0],
+            ] as const).map(([key, label, badge]) => (
+              <button key={key} onClick={() => setTab(key)} style={{
+                flex: 1, padding: "10px", borderRadius: 13, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                background: tab === key ? "white" : "transparent",
+                color: tab === key ? "#1C2333" : "#8E9BB5",
+                boxShadow: tab === key ? "0 2px 12px rgba(100,120,160,0.15)" : "none",
+                transition: "all 0.2s",
+              }}>
+                {label}
+                {badge > 0 && (
+                  <span style={{ minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "#9E8BD6", color: "white", fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{badge}</span>
+                )}
+              </button>
+            ));
+          })()}
         </div>
       </div>
 
@@ -928,18 +934,17 @@ export default function MesCartesPage() {
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_cards_sub}</p>
             </div>
           ) : (() => {
-            const grouped: Record<string, typeof cards> = {};
-            cards.forEach(c => { const k = c.ville || "Autres"; grouped[k] = grouped[k] || []; grouped[k].push(c); });
-            const sortedVilles = Object.keys(grouped).sort((a, b) => a === "Autres" ? 1 : b === "Autres" ? -1 : a.localeCompare(b, "fr"));
-            let idx = 0;
-            return sortedVilles.map(ville => (
-              <div key={ville}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#8E9BB5", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 8, marginTop: 4, paddingLeft: 2 }}>{ville}</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {grouped[ville].map(card => <CardItem key={card.walletId} card={card} delay={(idx++) * 0.06} onEnableNotif={() => enableNotifications(card.clientId)} enablingNotif={enablingNotif} isAndroid={isAndroid} />)}
-                </div>
+            const sorted = [...cards].sort((a, b) => {
+              const ra = cardRestants(a).restants, rb = cardRestants(b).restants;
+              const readyA = ra <= 0 ? 0 : 1, readyB = rb <= 0 ? 0 : 1;
+              if (readyA !== readyB) return readyA - readyB; // récompenses prêtes d'abord
+              return ra - rb;                                // puis restants croissants
+            });
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {sorted.map((card, i) => <CardItem key={card.walletId} card={card} delay={i * 0.06} />)}
               </div>
-            ));
+            );
           })()
         )}
 
@@ -950,35 +955,63 @@ export default function MesCartesPage() {
               <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>{t.mes_cartes_empty_messages}</p>
               <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_messages_sub}</p>
             </div>
-          ) : notifs.map(n => {
-            const card = cards.find(c => c.marchandId === n.marchandId);
-            const date = new Date(n.sentAt);
-            const dateStr = date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-            const timeStr = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-            return (
-              <div key={n.id} style={{
-                ...glass, borderRadius: 20, overflow: "hidden",
-                opacity: n.read ? 0.7 : 1,
-              }}>
-                <div style={{ padding: "16px 18px", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  {card?.logoUrl ? (
-                    <img src={(card.logoShape === "round" && card.logoCircleUrl) ? card.logoCircleUrl : card.logoUrl} alt="" style={{ width: 40, height: 40, borderRadius: card?.logoShape === "round" ? "50%" : 12, objectFit: "contain", background: "rgba(142,155,181,0.1)", flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ width: 40, height: 40, borderRadius: card?.logoShape === "round" ? "50%" : 12, background: card?.couleur || "#5B7CFA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{n.marchandNom[0]?.toUpperCase()}</span>
+          ) : (() => {
+            // Regroupe par commerce ; chaque groupe trié du plus récent au plus ancien.
+            const groups = new Map<string, ClientNotif[]>();
+            notifs.forEach(n => { const a = groups.get(n.marchandId) || []; a.push(n); groups.set(n.marchandId, a); });
+            const list = [...groups.entries()].map(([mid, arr]) => {
+              const sorted = [...arr].sort((a, b) => b.sentAt.localeCompare(a.sentAt));
+              return { mid, arr: sorted, last: sorted[0], unread: sorted.filter(n => !n.read).length, nom: sorted[0].marchandNom };
+            }).sort((a, b) => b.last.sentAt.localeCompare(a.last.sentAt));
+
+            return list.map(g => {
+              const card = cards.find(c => c.marchandId === g.mid);
+              const open = openMsgCommerce === g.mid;
+              const d = new Date(g.last.sentAt);
+              const dateStr = d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+              const logo = (card?.logoShape === "round" && card?.logoCircleUrl) ? card.logoCircleUrl : card?.logoUrl;
+              return (
+                <div key={g.mid} style={{ ...glass, borderRadius: 20, overflow: "hidden" }}>
+                  <button onClick={() => { const next = open ? null : g.mid; setOpenMsgCommerce(next); if (!open) markCommerceRead(g.mid); }}
+                    style={{ width: "100%", background: "transparent", border: "none", cursor: "pointer", textAlign: "left", padding: "16px 18px", display: "flex", gap: 14, alignItems: "center" }}>
+                    {logo ? (
+                      <img src={logo} alt="" style={{ width: 40, height: 40, borderRadius: card?.logoShape === "round" ? "50%" : 12, objectFit: "contain", background: "rgba(142,155,181,0.1)", flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: card?.couleur || "#5B7CFA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: "white" }}>{g.nom[0]?.toUpperCase()}</span>
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                        <p style={{ fontSize: 14, fontWeight: g.unread > 0 ? 600 : 500, color: "#1C2333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.nom}</p>
+                        <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                          <span style={{ fontSize: 11, color: "#8E9BB5" }}>{dateStr}</span>
+                          {g.unread > 0 && <span style={{ minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9, background: "#9E8BD6", color: "white", fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{g.unread}</span>}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 13, color: "#6E7A8A", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: g.unread > 0 ? 600 : 400 }}>{g.last.title}</p>
+                    </div>
+                  </button>
+                  {open && (
+                    <div style={{ borderTop: "1px solid rgba(142,155,181,0.14)", display: "flex", flexDirection: "column" }}>
+                      {g.arr.map(n => {
+                        const nd = new Date(n.sentAt);
+                        return (
+                          <div key={n.id} style={{ padding: "12px 18px", borderBottom: "1px solid rgba(142,155,181,0.08)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                              <p style={{ fontSize: 13, fontWeight: 600, color: "#1C2333" }}>{n.title}</p>
+                              <p style={{ fontSize: 11, color: "#8E9BB5", flexShrink: 0 }}>{nd.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} {nd.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</p>
+                            </div>
+                            <p style={{ fontSize: 13, color: "#6E7A8A", lineHeight: 1.45, marginTop: 3 }}>{n.body}</p>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#1C2333" }}>{n.title}</p>
-                      <p style={{ fontSize: 11, color: "#8E9BB5", flexShrink: 0, marginLeft: 8 }}>{dateStr} {timeStr}</p>
-                    </div>
-                    <p style={{ fontSize: 13, color: "#6E7A8A", lineHeight: 1.45 }}>{n.body}</p>
-                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            });
+          })()
         )}
 
         {/* ── Tab Découvrir ── */}
@@ -988,147 +1021,112 @@ export default function MesCartesPage() {
             <p style={{ fontSize: 13, color: "#007AFF", fontWeight: 500, margin: 0 }}>Rejoignez un prestataire ci-dessous pour activer votre carte.</p>
           </div>
         )}
-        {tab === "decouvrir" && (
-          merchants.length === 0 ? (
-            <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
-              <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(52,199,89,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="1.8" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-              </div>
-              <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>{t.mes_cartes_empty_discover}</p>
-              <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_discover_sub}</p>
-            </div>
-          ) : (() => {
-            const grouped: Record<string, typeof merchants> = {};
-            merchants.forEach(m => { const k = m.ville || "Autres"; grouped[k] = grouped[k] || []; grouped[k].push(m); });
-            const sortedVilles = Object.keys(grouped).sort((a, b) => a === "Autres" ? 1 : b === "Autres" ? -1 : a.localeCompare(b, "fr"));
-            return sortedVilles.map(ville => (
-              <div key={ville}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#8E9BB5", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 8, marginTop: 4, paddingLeft: 2 }}>{ville}</p>
-                {grouped[ville].map((m, i) => (
-            <div key={m.id} className="card-appear" style={{ animationDelay: `${i * 0.06}s`, ...glass, borderRadius: 22, overflow: "hidden" }}>
-              <div style={{ padding: "18px 18px 14px", display: "flex", alignItems: "center", gap: 14 }}>
-                {m.logoUrl ? (
-                  <img src={(m.logoShape === "round" && m.logoCircleUrl) ? m.logoCircleUrl : m.logoUrl} alt="" style={{ width: 48, height: 48, borderRadius: m.logoShape === "round" ? "50%" : 14, objectFit: "contain", background: "rgba(142,155,181,0.1)", flexShrink: 0 }} />
-                ) : (
-                  <div style={{ width: 48, height: 48, borderRadius: m.logoShape === "round" ? "50%" : 14, background: m.couleur, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ fontSize: 20, fontWeight: 700, color: "white" }}>{m.nom[0]?.toUpperCase()}</span>
-                  </div>
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 16, fontWeight: 600, color: "#1C2333", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.nom}</p>
-                  <p style={{ fontSize: 12, color: "#8E9BB5" }}>{t.mes_cartes_loyalty}</p>
+        {tab === "decouvrir" && (() => {
+          // Catégories réellement présentes
+          const catsPresent = Array.from(new Set(merchants.map(m => m.categorie).filter(Boolean))) as string[];
+          const filtered = merchants
+            .filter(m => catFilter === "tous" || m.categorie === catFilter)
+            .sort((a, b) => (a.ville || "zzz").localeCompare(b.ville || "zzz", "fr"));
+          const now = Date.now() / 1000;
+
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* Titre + sélecteur Liste/Carte */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <p style={{ fontSize: 17, fontWeight: 700, color: "#1C2333" }}>Par ville</p>
+                <div style={{ display: "flex", gap: 4, padding: 3, background: "rgba(142,155,181,0.12)", borderRadius: 11 }}>
+                  {(["liste", "carte"] as const).map(v => (
+                    <button key={v} onClick={() => setDiscoverView(v)} style={{ padding: "5px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, textTransform: "capitalize", background: discoverView === v ? "white" : "transparent", color: discoverView === v ? "#1C2333" : "#8E9BB5", boxShadow: discoverView === v ? "0 1px 6px rgba(100,120,160,0.15)" : "none" }}>{v}</button>
+                  ))}
                 </div>
-                <button
-                  onClick={() => rejoindre(m)}
-                  disabled={joining.has(m.id) || joined.has(m.id)}
-                  style={{
-                    padding: "9px 18px", borderRadius: 12, border: "none", cursor: joining.has(m.id) ? "wait" : "pointer",
-                    background: joined.has(m.id) ? "rgba(52,199,89,0.12)" : "linear-gradient(135deg,#5B7CFA,#7C5BFA)",
-                    color: joined.has(m.id) ? "#34C759" : "white",
-                    fontSize: 13, fontWeight: 600, flexShrink: 0,
-                    boxShadow: joined.has(m.id) ? "none" : "0 4px 14px rgba(91,124,250,0.3)",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {joining.has(m.id) ? "…" : joined.has(m.id) ? t.mes_cartes_joined : t.mes_cartes_join}
-                </button>
               </div>
-              {!prenom && (
-                <div style={{ padding: "10px 18px 14px", borderTop: "1px solid rgba(142,155,181,0.1)" }}>
-                  <p style={{ fontSize: 12, color: "#8E9BB5", textAlign: "center" }}>
-                    {t.mes_cartes_nfc_required}
-                  </p>
+
+              {/* Filtres par catégorie */}
+              {catsPresent.length > 0 && (
+                <div style={{ display: "flex", gap: 7, overflowX: "auto", paddingBottom: 2, WebkitOverflowScrolling: "touch" }}>
+                  {["tous", ...catsPresent].map(c => (
+                    <button key={c} onClick={() => setCatFilter(c)} style={{ flexShrink: 0, padding: "7px 14px", borderRadius: 100, border: "1px solid " + (catFilter === c ? "transparent" : "rgba(142,155,181,0.25)"), cursor: "pointer", fontSize: 13, fontWeight: 600, background: catFilter === c ? "#6D4FC0" : "transparent", color: catFilter === c ? "white" : "#6E7A8A" }}>
+                      {c === "tous" ? "Tous" : DISCOVER_CATS[c] || c}
+                    </button>
+                  ))}
                 </div>
               )}
+
+              {discoverView === "carte" ? (
+                <DiscoverMap merchants={filtered} registeredIds={registeredIdsRef.current} onJoin={rejoindre} />
+              ) : filtered.length === 0 ? (
+                <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(52,199,89,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="1.8" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  </div>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>{t.mes_cartes_empty_discover}</p>
+                  <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_discover_sub}</p>
+                </div>
+              ) : filtered.map((m, i) => {
+                const isNew = m.dateInscription != null && (now - m.dateInscription) < 30 * 86400;
+                const sousTitre = [m.categorie ? DISCOVER_CATS[m.categorie] : "", m.ville].filter(Boolean).join(" · ");
+                return (
+                  <div key={m.id} className="card-appear" onClick={() => { window.location.href = `/c/${m.id}`; }}
+                    style={{ animationDelay: `${i * 0.05}s`, ...glass, borderRadius: 22, overflow: "hidden", cursor: "pointer" }}>
+                    {/* Bannière + badge Nouveau */}
+                    <div style={{ position: "relative", height: 92, background: m.banner ? `center/cover url(${m.banner})` : m.couleur }}>
+                      {isNew && <span style={{ position: "absolute", top: 10, left: 10, padding: "3px 9px", borderRadius: 100, background: "rgba(255,255,255,0.92)", fontSize: 11, fontWeight: 700, color: "#1C2333" }}>Nouveau</span>}
+                    </div>
+                    <div style={{ padding: "0 16px 14px", position: "relative" }}>
+                      {/* Logo qui chevauche */}
+                      <div style={{ position: "absolute", top: -22, left: 16, width: 46, height: 46, borderRadius: 12, overflow: "hidden", border: "2px solid white", background: m.couleur, display: "flex", alignItems: "center", justifyContent: "center", backgroundImage: m.logoUrl ? `url(${(m.logoShape === "round" && m.logoCircleUrl) ? m.logoCircleUrl : m.logoUrl})` : undefined, backgroundSize: "cover", backgroundPosition: "center" }}>
+                        {!m.logoUrl && <span style={{ fontSize: 18, fontWeight: 700, color: "white" }}>{m.nom[0]?.toUpperCase()}</span>}
+                      </div>
+                      <div style={{ paddingTop: 30 }}>
+                        <p style={{ fontSize: 16, fontWeight: 600, color: "#1C2333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.nom}</p>
+                        {sousTitre && <p style={{ fontSize: 12, color: "#8E9BB5", marginTop: 1 }}>{sousTitre}</p>}
+                      </div>
+                      <div style={{ borderTop: "1px solid rgba(142,155,181,0.14)", marginTop: 12, paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                        <span style={{ fontSize: 13, color: "#6E7A8A" }}>{m.objectif ? `${m.objectif} tampons → ${m.reward || "récompense"}` : "Programme de fidélité"}</span>
+                        <button
+                          onClick={e => { e.stopPropagation(); rejoindre(m); }}
+                          disabled={joining.has(m.id) || joined.has(m.id)}
+                          style={{ flexShrink: 0, padding: "8px 16px", borderRadius: 11, border: "none", cursor: joining.has(m.id) ? "wait" : "pointer", background: joined.has(m.id) ? "rgba(52,199,89,0.12)" : "rgba(123,97,214,0.12)", color: joined.has(m.id) ? "#34C759" : "#4B4FD6", fontSize: 13, fontWeight: 600 }}>
+                          {joining.has(m.id) ? "…" : joined.has(m.id) ? t.mes_cartes_joined : t.mes_cartes_join}
+                        </button>
+                      </div>
+                      {!prenom && <p style={{ fontSize: 11, color: "#8E9BB5", textAlign: "center", marginTop: 10 }}>{t.mes_cartes_nfc_required}</p>}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-                ))}
-              </div>
-            ));
-          })()
-        )}
+          );
+        })()}
       </div>
 
-      {/* Supprimer mon compte */}
-      <div style={{ textAlign: "center", paddingBottom: 40, paddingTop: 8 }}>
-        <button
-          onClick={() => setDeleteConfirm(true)}
-          style={{ fontSize: 12, color: "#C0C8D8", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
-          {t.mes_cartes_delete_account}
-        </button>
-      </div>
-
-      {/* Modal confirmation suppression */}
-      {deleteConfirm && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(6px)" }}>
-          <div style={{ width: "100%", maxWidth: 430, background: "#FFFFFF", borderRadius: "24px 24px 0 0", padding: "28px 24px 48px" }}>
-            <div style={{ width: 36, height: 4, background: "rgba(0,0,0,0.1)", borderRadius: 2, margin: "0 auto 24px" }} />
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#1C2333", marginBottom: 8, textAlign: "center" }}>{t.mes_cartes_delete_title}</p>
-            <p style={{ fontSize: 14, color: "#8E9BB5", lineHeight: 1.6, textAlign: "center", marginBottom: 28 }}>
-              {t.mes_cartes_delete_body}
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-                style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: "#FF3B30", color: "white", fontSize: 16, fontWeight: 700, border: "none", cursor: deleting ? "default" : "pointer", opacity: deleting ? 0.6 : 1 }}>
-                {deleting ? t.mes_cartes_deleting : t.mes_cartes_delete_confirm}
-              </button>
-              <button
-                onClick={() => setDeleteConfirm(false)}
-                style={{ width: "100%", padding: "15px 0", borderRadius: 14, background: "rgba(0,0,0,0.05)", color: "#1C2333", fontSize: 16, fontWeight: 500, border: "none", cursor: "pointer" }}>
-                {t.mes_cartes_delete_cancel}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 8 }}>{t.mes_cartes_footer}</p>
-      <p style={{ textAlign: "center", fontSize: 11, color: "#C7C7CC", paddingBottom: 8, display: "flex", justifyContent: "center", gap: 16 }}>
-        <a href="/privacy" style={{ color: "#C7C7CC", textDecoration: "none" }}>Confidentialité</a>
-        <a href="/terms" style={{ color: "#C7C7CC", textDecoration: "none" }}>CGU</a>
-        <a href="/legal" style={{ color: "#C7C7CC", textDecoration: "none" }}>Mentions légales</a>
-      </p>
+      <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 8, paddingTop: 8 }}>{t.mes_cartes_footer}</p>
       <div style={{ height: "max(48px, env(safe-area-inset-bottom, 48px))" }} />
     </main>
   );
 }
 
-function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { card: CardData; delay: number; onEnableNotif: () => void; enablingNotif: boolean; isAndroid: boolean }) {
-  const mapsHref = card.mapsUrl || (card.ville ? `https://maps.google.com/?q=${encodeURIComponent(`${card.marchandNom} ${card.ville}`)}` : null);
-  const { t } = useLang();
-
-  let displayObjectif = card.stampsObjective;
-  let displayReward = card.rewardName;
+function cardRestants(card: CardData): { restants: number; reward: string; objectif: number } {
+  let objectif = card.stampsObjective;
+  let reward = card.rewardName;
   if (card.modeRecompense === "progressif" && card.paliers?.length) {
     const pv = card.paliersValides || [];
     const prochain = card.paliers.find((p, i) => !pv[i]) ?? card.paliers[card.paliers.length - 1];
-    displayObjectif = prochain.tampons;
-    displayReward = prochain.recompense;
+    objectif = prochain.tampons;
+    reward = prochain.recompense;
   }
-  const pct = Math.min(100, Math.round((card.stampsCurrent / displayObjectif) * 100));
-  const restants = displayObjectif - card.stampsCurrent;
-  const dark = isColorDark(card.couleur);
-  const [copied, setCopied] = useState(false);
+  return { restants: Math.max(0, objectif - card.stampsCurrent), reward, objectif };
+}
 
-  function partager() {
-    const base = card.nfcId
-      ? `${window.location.origin}/nfc/${card.nfcId}?ref=${card.walletId}`
-      : `${window.location.origin}/ref/${card.walletId}`;
-    const message = `Salut ! Je suis client chez ${card.marchandNom} et je t'invite à rejoindre leur programme de fidélité. Crée ta carte gratuitement, viens au restaurant, et on gagne tous les deux un tampon bonus :\n${base}`;
-    if (navigator.share) {
-      navigator.share({ text: message }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(message).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }).catch(() => {});
-    }
-  }
+function CardItem({ card, delay }: { card: CardData; delay: number }) {
+  const { restants, reward, objectif } = cardRestants(card);
+  const pct = Math.min(100, Math.round((card.stampsCurrent / objectif) * 100));
+  const ready = restants <= 0;
+  const dark = isColorDark(card.couleur);
 
   return (
-    <div className="card-appear" style={{ animationDelay: `${delay}s`, borderRadius: 24, overflow: "hidden", boxShadow: "0 12px 40px rgba(100,120,160,0.18)" }}>
-      {/* Card top — couleur du marchand */}
+    <a href={`/c/${card.marchandId}`} className="card-appear" style={{ display: "block", textDecoration: "none", animationDelay: `${delay}s`, borderRadius: 24, overflow: "hidden", boxShadow: "0 12px 40px rgba(100,120,160,0.18)" }}>
+      {/* Haut coloré — inchangé : logo, nom, compteur, barre */}
       <div style={{ background: card.couleur, padding: "20px 20px 18px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1141,103 +1139,27 @@ function CardItem({ card, delay, onEnableNotif, enablingNotif, isAndroid }: { ca
             <span style={{ fontSize: 15, fontWeight: 600, color: dark ? "white" : "#1C2333", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{card.marchandNom}</span>
           </div>
           <span style={{ fontSize: 24, fontWeight: 700, color: dark ? "white" : "#1C2333", letterSpacing: -0.5 }}>
-            {card.stampsCurrent}<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.55 }}>/{card.stampsObjective}</span>
+            {card.stampsCurrent}<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.55 }}>/{objectif}</span>
           </span>
         </div>
-
-        {/* Progress */}
         <div style={{ height: 5, background: "rgba(255,255,255,0.2)", borderRadius: 10, overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${pct}%`, borderRadius: 10, background: dark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.45)", transition: "width 0.8s cubic-bezier(.16,1,.3,1)" }} />
         </div>
-        <p style={{ fontSize: 12, color: dark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.4)", marginTop: 8 }}>
-          {restants > 0 ? `${restants} ${restants > 1 ? t.mes_cartes_stamps_before_pl : t.mes_cartes_stamps_before} → ${displayReward}` : `${t.mes_cartes_reward_available} ${displayReward}`}
-        </p>
       </div>
 
-      {/* Card bottom — glass */}
-      <div style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)", padding: "14px 18px" }}>
-        {!card.hasPushToken && (
-          <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 10, background: "rgba(255,149,0,0.08)", border: "1px solid rgba(255,149,0,0.2)", display: "flex", alignItems: "center", gap: 8 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF9500" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span style={{ fontSize: 11, color: "#FF9500", fontWeight: 500 }}>{t.mes_cartes_redownload}</span>
-          </div>
+      {/* Ligne du bas : à gauche l'état, à droite la récompense */}
+      <div style={{ background: "#fff", padding: "13px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        {ready ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: card.couleur }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            Récompense prête
+          </span>
+        ) : (
+          <span style={{ fontSize: 13, color: "#6E7A8A" }}>{card.stampsCurrent === 0 ? "Première visite" : `Encore ${restants} tampon${restants > 1 ? "s" : ""}`}</span>
         )}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {!isAndroid && (
-            <a href={`/api/apple-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#000", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="7" cy="14.5" r="1.5" fill="white" stroke="none"/></svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>{t.mes_cartes_apple_wallet}</span>
-            </a>
-          )}
-          {isAndroid && process.env.NEXT_PUBLIC_GOOGLE_WALLET_ENABLED === "true" && (
-            <a href={`/api/google-wallet/generate/${card.walletId}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#1a73e8", borderRadius: 12, padding: "11px 16px", textDecoration: "none" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "white" }}>{t.mes_cartes_google_wallet}</span>
-            </a>
-          )}
-          <p style={{ fontSize: 11, color: "#AEAEB2", textAlign: "center" }}>{pct === 100 ? "Récompense disponible !" : `${pct}% complété`}</p>
-
-          {card.parrainageActif && card.nfcId && (
-            <button
-              onClick={partager}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "10px 16px", borderRadius: 12,
-                border: `1.5px solid ${card.couleur}44`,
-                background: `${card.couleur}10`,
-                cursor: "pointer", width: "100%",
-                color: card.couleur, fontSize: 13, fontWeight: 600,
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
-              {copied ? t.mes_cartes_link_copied : t.mes_cartes_invite}
-            </button>
-          )}
-
-          {mapsHref && (
-            <a
-              href={mapsHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "10px 16px", borderRadius: 12,
-                border: "1.5px solid rgba(142,155,181,0.25)",
-                background: "rgba(142,155,181,0.08)",
-                textDecoration: "none", width: "100%",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6E7A8A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#6E7A8A" }}>Y aller</span>
-            </a>
-          )}
-
-          {/* Activer les notifications si pas encore fait */}
-          {!card.hasFcmToken && typeof window !== "undefined" && "Notification" in window && Notification.permission !== "denied" && (
-            <button
-              onClick={onEnableNotif}
-              disabled={enablingNotif}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                padding: "10px 16px", borderRadius: 12, border: "1.5px solid rgba(91,124,250,0.3)",
-                background: "rgba(91,124,250,0.06)", cursor: enablingNotif ? "wait" : "pointer",
-                color: "#5B7CFA", fontSize: 13, fontWeight: 600,
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
-              </svg>
-              {enablingNotif ? t.mes_cartes_enabling_notif : t.mes_cartes_enable_notif}
-            </button>
-          )}
-        </div>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "#1C2333", textAlign: "right", maxWidth: "55%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{reward}</span>
       </div>
-    </div>
+    </a>
   );
 }
 

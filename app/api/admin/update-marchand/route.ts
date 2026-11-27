@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { adminDb, initAdmin } from "@/lib/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { extractLatLng } from "@/lib/geo";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "wallio.card@gmail.com";
 const SECRET = process.env.ADMIN_SECRET ?? process.env.CRON_SECRET ?? "";
@@ -55,10 +56,27 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 });
   }
 
-  const adminAllowed = ["actif", "nfc_id", "abonnement_statut", "abonnement_type", "abonnement_debut", "abonnement_fin", "abonnement_paiements", "ville", "pays", "telephone", "equipe_actif", "code_etablissement", "maps_url", "is_test"];
+  const adminAllowed = ["actif", "nfc_id", "abonnement_statut", "abonnement_type", "abonnement_debut", "abonnement_fin", "abonnement_paiements", "ville", "pays", "telephone", "equipe_actif", "code_etablissement", "maps_url", "is_test", "latitude", "longitude"];
   const data: Record<string, unknown> = { updated_at: FieldValue.serverTimestamp() };
   for (const key of adminAllowed) {
     if (key in fields) data[key] = fields[key];
+  }
+
+  // Coordonnées GPS : saisie manuelle prioritaire, sinon extraction depuis le lien Google Maps.
+  let geo: { lat: number; lng: number } | null = null;
+  let geoError: string | undefined;
+  if (fields.latitude != null && fields.longitude != null) {
+    geo = { lat: Number(fields.latitude), lng: Number(fields.longitude) };
+  } else if ("maps_url" in fields) {
+    const url = (fields.maps_url as string) || "";
+    if (!url) {
+      data.latitude = null;
+      data.longitude = null;
+    } else {
+      const r = await extractLatLng(url);
+      if (r) { data.latitude = r.lat; data.longitude = r.lng; geo = r; }
+      else geoError = "Coordonnées introuvables dans ce lien.";
+    }
   }
 
   initAdmin();
@@ -73,7 +91,7 @@ export async function PATCH(req: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, geo, geoError });
 }
 
 // DELETE — suppression complète d'un marchand (Firestore + Auth + clients)

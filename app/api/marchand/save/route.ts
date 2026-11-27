@@ -135,6 +135,8 @@ export async function POST(req: Request) {
     "automatisations",
     "milestone_rewards",
     "parrainage_actif",
+    // Fiche établissement (Découvrir)
+    "categorie", "instagram", "horaires", "fermetures_exceptionnelles",
   ];
 
   const data: Record<string, unknown> = { updated_at: FieldValue.serverTimestamp() };

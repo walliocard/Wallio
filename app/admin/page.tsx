@@ -25,6 +25,9 @@ type Marchand = {
   telephone?: string;
   equipe_actif?: boolean;
   code_etablissement?: string;
+  maps_url?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 const VILLES_ADMIN: Record<string, string[]> = {
@@ -183,6 +186,10 @@ export default function AdminPage() {
   const [locVille, setLocVille] = useState("");
   const [locTel, setLocTel] = useState("");
   const [locMaps, setLocMaps] = useState("");
+  const [locLat, setLocLat] = useState("");
+  const [locLng, setLocLng] = useState("");
+  const [geoMsg, setGeoMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [recalcing, setRecalcing] = useState(false);
   const [savingLoc, setSavingLoc] = useState(false);
   const [cardFormat, setCardFormat] = useState<"A5" | "A6">("A5");
   const router = useRouter();
@@ -275,6 +282,7 @@ export default function AdminPage() {
   async function adminPatch(marchandId: string, fields: Record<string, unknown>) {
     const res = await fetch("/api/admin/update-marchand", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ marchandId, fields }) });
     if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
+    return res.json().catch(() => ({})) as Promise<{ geo?: { lat: number; lng: number } | null; geoError?: string }>;
   }
   async function adminDelete(marchandId: string) {
     const res = await fetch("/api/admin/update-marchand", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ marchandId }) });
@@ -315,6 +323,9 @@ export default function AdminPage() {
     setLocVille(m.ville || "");
     setLocTel(m.telephone || "");
     setLocMaps((m as Record<string, unknown>).maps_url as string || "");
+    setLocLat(m.latitude != null ? String(m.latitude) : "");
+    setLocLng(m.longitude != null ? String(m.longitude) : "");
+    setGeoMsg(null);
     setDrawerClientCount(null);
     try {
       const snap = await getCountFromServer(query(collection(db, "clients"), where("marchand_id", "==", m.id)));
@@ -324,12 +335,53 @@ export default function AdminPage() {
   async function saveLocalisation() {
     if (!selected) return;
     setSavingLoc(true);
+    setGeoMsg(null);
     const updated = { ...selected, pays: locPays, ville: locVille, telephone: locTel || undefined };
     setMarchands(prev => prev.map(x => x.id === selected.id ? updated : x));
     setSelected(updated);
-    try { await adminPatch(selected.id, { pays: locPays, ville: locVille, telephone: locTel || null, maps_url: locMaps || null }); }
+    try {
+      const r = await adminPatch(selected.id, { pays: locPays, ville: locVille, telephone: locTel || null, maps_url: locMaps || null });
+      if (r?.geo) {
+        setLocLat(String(r.geo.lat));
+        setLocLng(String(r.geo.lng));
+        const geoUpdated = { ...updated, latitude: r.geo.lat, longitude: r.geo.lng };
+        setMarchands(prev => prev.map(x => x.id === selected.id ? geoUpdated : x));
+        setSelected(geoUpdated);
+        setGeoMsg({ ok: true, text: `Coordonnées trouvées : ${r.geo.lat.toFixed(5)}, ${r.geo.lng.toFixed(5)}` });
+      } else if (r?.geoError) {
+        setGeoMsg({ ok: false, text: r.geoError + " Saisissez-les à la main ci-dessous." });
+      } else if (!locMaps) {
+        setLocLat(""); setLocLng("");
+      }
+    }
     catch { setMarchands(prev => prev.map(x => x.id === selected.id ? selected : x)); setSelected(selected); }
     setSavingLoc(false);
+  }
+  async function saveCoordsManuelles() {
+    if (!selected) return;
+    const lat = parseFloat(locLat), lng = parseFloat(locLng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) { setGeoMsg({ ok: false, text: "Latitude/longitude invalides." }); return; }
+    setSavingLoc(true);
+    const updated = { ...selected, latitude: lat, longitude: lng };
+    setMarchands(prev => prev.map(x => x.id === selected.id ? updated : x));
+    setSelected(updated);
+    try { await adminPatch(selected.id, { latitude: lat, longitude: lng }); setGeoMsg({ ok: true, text: "Coordonnées enregistrées." }); }
+    catch { setMarchands(prev => prev.map(x => x.id === selected.id ? selected : x)); setSelected(selected); }
+    setSavingLoc(false);
+  }
+  async function recalcGeoTous() {
+    if (recalcing) return;
+    setRecalcing(true);
+    try {
+      const res = await fetch("/api/admin/recalc-geo", { method: "POST" });
+      const d = await res.json();
+      if (d.failed?.length) {
+        alert(`Recalcul terminé : ${d.updated} mis à jour.\n\nÉchecs (${d.failed.length}) :\n` + d.failed.map((f: { nom: string }) => "· " + f.nom).join("\n"));
+      } else {
+        alert(`Recalcul terminé : ${d.updated} commerçant(s) mis à jour, aucun échec.`);
+      }
+    } catch { alert("Erreur pendant le recalcul."); }
+    setRecalcing(false);
   }
   function openPaiementModal(m: Marchand) {
     let debutDefault = new Date();
@@ -1330,7 +1382,25 @@ export default function AdminPage() {
                   style={{ padding: "11px 0", borderRadius: 10, background: T.btnBg, color: T.btnFg, fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
                   {savingLoc ? "Enregistrement…" : "Enregistrer"}
                 </button>
+                {geoMsg && <p style={{ fontSize: 12, color: geoMsg.ok ? "#2E9E5B" : "#E0533D", textAlign: "center" }}>{geoMsg.text}</p>}
+
+                {selected.latitude != null && selected.longitude != null && (
+                  <iframe title="Vérification GPS" style={{ width: "100%", height: 150, border: `1px solid ${T.border}`, borderRadius: 10 }}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${selected.longitude - 0.004}%2C${selected.latitude - 0.003}%2C${selected.longitude + 0.004}%2C${selected.latitude + 0.003}&layer=mapnik&marker=${selected.latitude}%2C${selected.longitude}`} />
+                )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input type="text" inputMode="decimal" placeholder="Latitude" value={locLat} onChange={e => setLocLat(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                  <input type="text" inputMode="decimal" placeholder="Longitude" value={locLng} onChange={e => setLocLng(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                </div>
+                <button onClick={saveCoordsManuelles} disabled={savingLoc}
+                  style={{ padding: "9px 0", borderRadius: 10, background: "transparent", color: T.sec, fontSize: 12, fontWeight: 600, border: `1px solid ${T.border}`, cursor: "pointer" }}>
+                  Enregistrer les coordonnées manuelles
+                </button>
                 {selected.ville && <p style={{ fontSize: 12, color: T.tert, textAlign: "center" }}>Actuellement : {selected.ville}</p>}
+                <button onClick={recalcGeoTous} disabled={recalcing}
+                  style={{ padding: "9px 0", borderRadius: 10, background: "transparent", color: T.tert, fontSize: 12, fontWeight: 500, border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                  {recalcing ? "Recalcul en cours…" : "Recalculer les GPS pour tous les commerçants"}
+                </button>
               </div>
 
               <SLabel>Tag NFC physique</SLabel>
