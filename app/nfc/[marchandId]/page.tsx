@@ -80,6 +80,15 @@ export default function NfcPage({ params }: { params: Promise<{ marchandId: stri
   // Polling quand le client attend un choix — se met à jour si le barista choisit pour lui
   const choixRequisKey = screen.type === "result" && screen.result.type === "choix_requis"
     ? screen.client.wallet_id : null;
+  // Page de scan transitoire : après un tampon CRÉDITÉ, neutralise l'URL (barre d'adresse
+  // + bouton retour) via un replaceState natif — SANS naviguer, la page résultat reste affichée.
+  // Ne touche ni au tampon, ni au dead flag, ni à l'anti-doublon. Scopé au seul cas "crédité".
+  useEffect(() => {
+    if (screen.type === "result" && (screen.result.type === "ok" || screen.result.type === "recompense")) {
+      try { window.history.replaceState(null, "", "/mes-cartes"); } catch { /* */ }
+    }
+  }, [screen]);
+
   useEffect(() => {
     if (!choixRequisKey || screen.type !== "result" || screen.result.type !== "choix_requis") return;
     const wId = screen.client.wallet_id;
