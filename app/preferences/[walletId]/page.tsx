@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { registerFcmToken } from "@/lib/fcm";
 import { useTimeTheme } from "@/hooks/useTimeTheme";
+import BackLink from "@/components/BackLink";
 
 export default function PreferencesPage({ params }: { params: Promise<{ walletId: string }> }) {
   const { walletId } = use(params);
@@ -51,6 +52,7 @@ export default function PreferencesPage({ params }: { params: Promise<{ walletId
   return (
     <main className="min-h-screen flex flex-col justify-center px-5" style={{ background: "#F5F5F7" }}>
       <div className="w-full max-w-[390px] mx-auto">
+        <div className="mb-4"><BackLink /></div>
 
         <div className="rounded-[28px] p-7" style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 8px 40px rgba(0,0,0,0.06)" }}>
 

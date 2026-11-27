@@ -55,7 +55,6 @@ export default function ProfilPage() {
   const [nom, setNom] = useState("");
   const [dob, setDob] = useState("");
   const [comptes, setComptes] = useState<Compte[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editPrenom, setEditPrenom] = useState(false);
   const [prenomDraft, setPrenomDraft] = useState("");
   const [editDob, setEditDob] = useState(false);
@@ -90,7 +89,6 @@ export default function ProfilPage() {
           setComptes(list);
         }
       } catch { /* silent */ }
-      setLoading(false);
     })();
   }, []);
 
@@ -150,9 +148,7 @@ export default function ProfilPage() {
           <p style={{ fontSize: 14, color: SEC, marginTop: 2 }}>{maskPhone(phone)}</p>
         </div>
 
-        {loading ? (
-          <p style={{ textAlign: "center", color: SEC, fontSize: 14, marginTop: 32 }}>Chargement…</p>
-        ) : (<>
+        {(<>
           {/* Mon compte */}
           <Label>Mon compte</Label>
           <Card>

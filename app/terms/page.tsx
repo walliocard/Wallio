@@ -1,11 +1,12 @@
 import Link from "next/link";
+import BackLink from "@/components/BackLink";
 
 export const metadata = { title: "Conditions Générales d'Utilisation — Wallio" };
 
 export default function TermsPage() {
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "clamp(40px,6vw,80px) clamp(16px,4vw,40px)", fontFamily: "-apple-system, 'Helvetica Neue', sans-serif", color: "#1D1D1F", lineHeight: 1.7 }}>
-      <Link href="/" style={{ fontSize: 14, color: "#007AFF", textDecoration: "none" }}>← Wallio</Link>
+      <BackLink />
 
       <h1 style={{ fontSize: "clamp(26px,5vw,36px)", fontWeight: 700, marginTop: 32, marginBottom: 8, letterSpacing: -0.5 }}>Conditions Générales d&apos;Utilisation</h1>
       <p style={{ color: "#6E6E73", marginBottom: 40 }}>Dernière mise à jour : septembre 2026</p>

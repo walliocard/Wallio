@@ -1072,10 +1072,19 @@ export default function MesCartesPage() {
                   <p style={{ fontSize: 15, fontWeight: 600, color: "#1C2333", marginBottom: 6 }}>{t.mes_cartes_empty_discover}</p>
                   <p style={{ fontSize: 13, color: "#8E9BB5" }}>{t.mes_cartes_empty_discover_sub}</p>
                 </div>
-              ) : filtered.map((m, i) => {
-                const isNew = m.dateInscription != null && (now - m.dateInscription) < 30 * 86400;
-                const sousTitre = [m.categorie ? DISCOVER_CATS[m.categorie] : "", m.ville].filter(Boolean).join(" · ");
-                return (
+              ) : (() => {
+                const groups: Record<string, typeof filtered> = {};
+                filtered.forEach(mm => { const k = mm.ville || "Autres"; (groups[k] = groups[k] || []).push(mm); });
+                const villes = Object.keys(groups).sort((a, b) => a === "Autres" ? 1 : b === "Autres" ? -1 : a.localeCompare(b, "fr"));
+                let i = -1;
+                return villes.map(ville => (
+                  <div key={ville} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: "#8E9BB5", textTransform: "uppercase", letterSpacing: "0.08em", paddingLeft: 2 }}>{ville}</p>
+                    {groups[ville].map(m => {
+                      i++;
+                      const isNew = m.dateInscription != null && (now - m.dateInscription) < 30 * 86400;
+                      const sousTitre = [m.categorie ? DISCOVER_CATS[m.categorie] : "", m.ville].filter(Boolean).join(" · ");
+                      return (
                   <div key={m.id} className="card-appear" onClick={() => router.push(`/c/${m.id}`)}
                     style={{ animationDelay: `${i * 0.05}s`, ...glass, borderRadius: 22, overflow: "hidden", cursor: "pointer" }}>
                     {/* Bannière + badge Nouveau */}
@@ -1103,8 +1112,11 @@ export default function MesCartesPage() {
                       {!prenom && <p style={{ fontSize: 11, color: "#8E9BB5", textAlign: "center", marginTop: 10 }}>{t.mes_cartes_nfc_required}</p>}
                     </div>
                   </div>
-                );
-              })}
+                      );
+                    })}
+                  </div>
+                ));
+              })()}
             </div>
           );
         })()}
