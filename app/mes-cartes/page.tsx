@@ -1034,8 +1034,8 @@ export default function MesCartesPage() {
           </div>
         )}
         {tab === "decouvrir" && (() => {
-          // Catégories réellement présentes
-          const catsPresent = Array.from(new Set(merchants.map(m => m.categorie).filter(Boolean))) as string[];
+          // Catégories réellement présentes (sur TOUS les marchands, pour que les filtres marchent aussi sur la carte)
+          const catsPresent = Array.from(new Set(allMerchantsRef.current.map(m => m.categorie).filter(Boolean))) as string[];
           const filtered = merchants
             .filter(m => catFilter === "tous" || m.categorie === catFilter)
             .sort((a, b) => (a.ville || "zzz").localeCompare(b.ville || "zzz", "fr"));
@@ -1065,7 +1065,11 @@ export default function MesCartesPage() {
               )}
 
               {discoverView === "carte" ? (
-                <DiscoverMap merchants={filtered} registeredIds={registeredIdsRef.current} onJoin={rejoindre} />
+                <DiscoverMap
+                  merchants={allMerchantsRef.current.filter(mm => catFilter === "tous" || mm.categorie === catFilter)}
+                  registeredIds={registeredIdsRef.current}
+                  onJoin={rejoindre}
+                />
               ) : filtered.length === 0 ? (
                 <div style={{ ...glass, padding: "40px 24px", borderRadius: 24, textAlign: "center" }}>
                   <div style={{ width: 48, height: 48, borderRadius: 16, background: "rgba(52,199,89,0.10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>

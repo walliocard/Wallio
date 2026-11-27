@@ -48,7 +48,7 @@ export function toMarchandPublic(id: string, m: Doc, now: Date = new Date()): Ma
     slug: (m.slug as string) ?? null,
     logo_url: (m.logo_url as string) ?? null,
     strip_url: (m.strip_url as string) ?? (m.strip_raw_url as string) ?? null,
-    couleur_principale: (m.couleur_principale as string) ?? null,
+    couleur_principale: (m.apple_bg_color as string) || (m.couleur_principale as string) || null,
     couleur_secondaire: (m.couleur_secondaire as string) ?? null,
     categorie: (m.categorie as string) ?? null,
     ville: (m.ville as string) ?? null,
