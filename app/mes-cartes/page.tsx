@@ -294,6 +294,16 @@ export default function MesCartesPage() {
       if (p) { localStorage.setItem(PRENOM_KEY, p); localStorage.setItem(NOM_KEY, n); if (d) localStorage.setItem(DOB_KEY, d); }
       setCards(results);
 
+      // Préchargement : routes + données des pages marchand (affichage instantané au tap)
+      router.prefetch("/profil");
+      results.forEach(c => {
+        router.prefetch(`/c/${c.marchandId}`);
+        fetch(`/api/public/marchand/${c.marchandId}`)
+          .then(r => (r.ok ? r.json() : null))
+          .then(d => { if (d) try { sessionStorage.setItem(`wallio_m_${c.marchandId}`, JSON.stringify(d)); } catch { /* */ } })
+          .catch(() => {});
+      });
+
       // Détecter si un email existe déjà sur l'un des docs client
       const foundEmail = snap.docs.map(d => d.data().email as string | undefined).find(e => !!e) ?? "";
       setClientEmail2(foundEmail);

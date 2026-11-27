@@ -60,19 +60,21 @@ export default function MarchandPage() {
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [events, setEvents] = useState<Evt[]>([]);
   const [parrainages, setParrainages] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [showAllHist, setShowAllHist] = useState(false);
   const [quitConfirm, setQuitConfirm] = useState(false);
   const [shareMsg, setShareMsg] = useState(false);
 
   useEffect(() => {
+    // Affichage instantané depuis le cache (préchargé par Mes cartes)
+    try { const cached = sessionStorage.getItem(`wallio_m_${id}`); if (cached) setM(JSON.parse(cached)); } catch { /* */ }
     (async () => {
       try {
         const res = await fetch(`/api/public/marchand/${id}`);
-        if (!res.ok) { setNotFound(true); setLoading(false); return; }
+        if (!res.ok) { setNotFound(true); return; }
         const data: MarchandPublic = await res.json();
         setM(data);
+        try { sessionStorage.setItem(`wallio_m_${id}`, JSON.stringify(data)); } catch { /* */ }
         const phone = localStorage.getItem(PHONE_KEY) || "";
         if (phone) {
           const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", phone), where("marchand_id", "==", data.id)));
@@ -86,12 +88,10 @@ export default function MarchandPage() {
           }
         }
       } catch { setNotFound(true); }
-      setLoading(false);
     })();
   }, [id]);
 
-  if (loading) return <Centered>Chargement…</Centered>;
-  if (notFound || !m) return <Centered>Ce commerce est introuvable.</Centered>;
+  if (!m) return <Centered>{notFound ? "Ce commerce est introuvable." : "Chargement…"}</Centered>;
 
   const couleur = m.couleur_principale || "#5B7CFA";
   const membre = !!carte;

@@ -74,11 +74,21 @@ export default function DiscoverMap({ merchants, registeredIds, onJoin }: {
     if (!map || !mapkit) return;
     if (map.annotations?.length) map.removeAnnotations(map.annotations);
     const withCoords = merchants.filter(m => m.latitude != null && m.longitude != null);
-    const anns = withCoords.map(m => {
-      const a = new mapkit.MarkerAnnotation(new mapkit.Coordinate(m.latitude, m.longitude), {
-        color: m.couleur || "#5B7CFA", title: m.nom, clusteringIdentifier: "resto",
+    const anns = withCoords.map(mm => {
+      // Épingle ronde blanche avec le logo du commerçant (comme la maquette)
+      const factory = () => {
+        const el = document.createElement("div");
+        el.style.cssText = "width:42px;height:42px;border-radius:50%;background:#fff;padding:3px;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,.22);";
+        const inner = document.createElement("div");
+        inner.style.cssText = `width:100%;height:100%;border-radius:50%;background-size:cover;background-position:center;background-color:${mm.couleur || "#5B7CFA"};`
+          + (mm.logoUrl ? `background-image:url("${mm.logoUrl}");` : "");
+        el.appendChild(inner);
+        return el;
+      };
+      const a = new mapkit.Annotation(new mapkit.Coordinate(mm.latitude, mm.longitude), factory, {
+        clusteringIdentifier: "resto", anchorOffset: new DOMPoint(0, -21), title: mm.nom,
       });
-      a.data = m;
+      a.data = mm;
       return a;
     });
     if (anns.length) { map.addAnnotations(anns); map.showItems(anns, { animate: false }); }
