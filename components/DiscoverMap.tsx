@@ -78,10 +78,19 @@ export default function DiscoverMap({ merchants, registeredIds, onJoin }: {
           const a = e.annotation;
           if (!a) return;
           if (a.clusterMembers?.length) {
-            // Groupe : on zoome pour séparer les commerces
+            // Groupe : on zoome pour que chaque commerce soit à sa place (dé-cluster).
             try {
-              const sp = map.region.span;
-              map.setRegionAnimated(new mapkit.CoordinateRegion(a.coordinate, new mapkit.CoordinateSpan(Math.max(sp.latitudeDelta / 3, 0.002), Math.max(sp.longitudeDelta / 3, 0.002))), true);
+              const members = a.clusterMembers as { coordinate: { latitude: number; longitude: number } }[];
+              const lats = members.map(x => x.coordinate.latitude);
+              const lngs = members.map(x => x.coordinate.longitude);
+              const spread = Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lngs) - Math.min(...lngs));
+              if (spread > 0.0002) {
+                // Positions distinctes → cadrer les membres les sépare
+                map.showItems(members, { animate: true, minimumSpan: new mapkit.CoordinateSpan(0.0014, 0.0014) });
+              } else {
+                // Quasi au même point → zoom rapproché centré
+                map.setRegionAnimated(new mapkit.CoordinateRegion(a.coordinate, new mapkit.CoordinateSpan(0.004, 0.004)), true);
+              }
               map.selectedAnnotation = null;
             } catch { /* */ }
             return;
