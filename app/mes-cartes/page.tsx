@@ -377,8 +377,15 @@ export default function MesCartesPage() {
         localStorage.setItem(PHONE_KEY, telephone);
         localStorage.setItem(VERIFIED_KEY, "1");
         await loadCards(telephone); // bascule sur "main" au 1er snapshot
+      } else {
+        // Credential absent (supprimé dans les Réglages) → on nettoie pour re-proposer l'enregistrement
+        try { localStorage.removeItem("wallio_passkey_on"); } catch { /* */ }
+        setFaceIdAvail(false);
       }
-    } catch { /* annulation / échec → on reste sur la connexion */ } finally {
+    } catch {
+      try { localStorage.removeItem("wallio_passkey_on"); } catch { /* */ }
+      setFaceIdAvail(false);
+    } finally {
       setFaceIdLoading(false);
     }
   }

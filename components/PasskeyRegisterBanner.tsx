@@ -10,10 +10,12 @@ export default function PasskeyRegisterBanner({ telephone }: { telephone: string
     if (!telephone) { setState("hidden"); return; }
     setIsAndroid(/android/i.test(navigator.userAgent));
     async function check() {
-      const { isPasskeySupported, isPasskeyRegistered } = await import("@/lib/passkey-client");
+      const { isPasskeySupported } = await import("@/lib/passkey-client");
       if (!(await isPasskeySupported())) { setState("hidden"); return; }
-      const registered = await isPasskeyRegistered(telephone);
-      setState(registered ? "hidden" : "idle");
+      // Un passkey est PAR APPAREIL → on se base sur le flag local de CET appareil
+      // (et non sur le serveur, qui ignore une suppression faite dans les Réglages iOS).
+      const registeredHere = (() => { try { return localStorage.getItem("wallio_passkey_on") === "1"; } catch { return false; } })();
+      setState(registeredHere ? "hidden" : "idle");
     }
     check();
   }, [telephone]);
