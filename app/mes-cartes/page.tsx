@@ -1170,6 +1170,29 @@ function cardRestants(card: CardData): { restants: number; reward: string; objec
   return { restants: Math.max(0, objectif - card.stampsCurrent), reward, objectif };
 }
 
+// Compteur qui monte en douceur quand la valeur augmente (ex. un tampon qui tombe).
+function AnimatedNumber({ value }: { value: number }) {
+  const [display, setDisplay] = useState(value);
+  const prev = useRef(value);
+  useEffect(() => {
+    const from = prev.current;
+    prev.current = value;
+    const reduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (value <= from || reduced) { setDisplay(value); return; }
+    const start = performance.now(), dur = 500;
+    let raf = 0;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(from + (value - from) * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <>{display}</>;
+}
+
 function CardItem({ card, delay }: { card: CardData; delay: number }) {
   const { restants, reward, objectif } = cardRestants(card);
   const pct = Math.min(100, Math.round((card.stampsCurrent / objectif) * 100));
@@ -1191,7 +1214,7 @@ function CardItem({ card, delay }: { card: CardData; delay: number }) {
             <span style={{ fontSize: 15, fontWeight: 600, color: dark ? "white" : "#1C2333", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{card.marchandNom}</span>
           </div>
           <span style={{ fontSize: 24, fontWeight: 700, color: dark ? "white" : "#1C2333", letterSpacing: -0.5 }}>
-            {card.stampsCurrent}<span style={{ fontSize: 14, fontWeight: 400, opacity: 0.55 }}>/{objectif}</span>
+            <AnimatedNumber value={card.stampsCurrent} /><span style={{ fontSize: 14, fontWeight: 400, opacity: 0.55 }}>/{objectif}</span>
           </span>
         </div>
         <div style={{ height: 5, background: "rgba(255,255,255,0.2)", borderRadius: 10, overflow: "hidden" }}>
@@ -1203,7 +1226,7 @@ function CardItem({ card, delay }: { card: CardData; delay: number }) {
       <div style={{ background: "#fff", padding: "13px 18px 12px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           {ready ? (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: card.couleur }}>
+            <span className="reward-ready" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 600, color: card.couleur }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
               Récompense prête
             </span>

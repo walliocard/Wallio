@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -51,6 +51,27 @@ function Icon({ name, size = 18, stroke = 1.8, color = "currentColor" }: { name:
 }
 function Pi({ name, couleur }: { name: string; couleur: string }) {
   return <span style={{ width: 30, height: 30, borderRadius: 9, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", background: soft(couleur, 12) }}><Icon name={name} size={15} stroke={1.8} color={couleur} /></span>;
+}
+function AnimatedNumber({ value }: { value: number }) {
+  const [display, setDisplay] = useState(value);
+  const prev = useRef(value);
+  useEffect(() => {
+    const from = prev.current;
+    prev.current = value;
+    const reduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (value <= from || reduced) { setDisplay(value); return; }
+    const start = performance.now(), dur = 500;
+    let raf = 0;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(from + (value - from) * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <>{display}</>;
 }
 
 export default function MarchandPage() {
@@ -222,7 +243,7 @@ export default function MarchandPage() {
           <div style={cardStyle}>
             {membre ? (<>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                <b style={{ fontSize: 42, fontWeight: 700, lineHeight: 1, letterSpacing: -1.5 }}>{tampons}</b>
+                <b style={{ fontSize: 42, fontWeight: 700, lineHeight: 1, letterSpacing: -1.5 }}><AnimatedNumber value={tampons} /></b>
                 <span style={{ fontSize: 18, fontWeight: 500, color: FG3 }}>/ {objectif}</span>
                 <em style={{ marginLeft: "auto", alignSelf: "center", fontSize: 13, fontWeight: 600, padding: "6px 10px", borderRadius: 10, fontStyle: "normal", background: soft(couleur, 12), color: couleur }}>{restants ? "Encore " + restants : "Complet"}</em>
               </div>

@@ -139,9 +139,16 @@ input[type="date"] {
 
 .tab-indicator { transition: transform 0.32s cubic-bezier(.32,.72,0,1); }
 
+@keyframes reward-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.05); opacity: 0.9; }
+}
+.reward-ready { animation: reward-pulse 2.2s ease-in-out infinite; transform-origin: left center; }
+
 @media (prefers-reduced-motion: reduce) {
   .page-enter, .tab-fade { animation: none; }
   .tab-indicator { transition: none; }
+  .reward-ready { animation: none; }
 }
 
 /* Sliders — style iOS */
