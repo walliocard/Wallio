@@ -1,0 +1,22 @@
+{
+  "name": "wallio-client-native",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Wallio (app client) — shell natif Capacitor chargeant app.walliocard.com. Distinct de Wallio Pro (../ios).",
+  "scripts": {
+    "sync": "cap sync",
+    "sync:ios": "cap sync ios",
+    "sync:android": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.9"
+  }
+}

@@ -1,0 +1,5 @@
+# Dépendances du sous-projet natif client (réinstallées par Xcode Cloud via ci_post_clone)
+node_modules/
+
+# Divers
+.DS_Store

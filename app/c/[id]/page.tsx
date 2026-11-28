@@ -170,6 +170,7 @@ export default function MarchandPage() {
   // Carte déjà dans le Wallet ? (signal fiable : apns pour Apple, wallet_type pour Google)
   const inWallet = membre && (isIOS() ? carte!.apnsToken : carte!.walletType === "google");
   const walletLabel = isIOS() ? "Apple Wallet" : "Google Wallet";
+  const walletBadge = isIOS() ? "/apple-wallet-badge.svg" : "/google-wallet-badge.svg";
 
   function partager() {
     if (!carte) return;
@@ -234,9 +235,9 @@ export default function MarchandPage() {
                 <span>Dans {walletLabel}</span>
               </div>
             ) : (
-              <a href={walletHref} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, height: 52, borderRadius: 13, background: "#000", textDecoration: "none" }}>
-                <Icon name="wallet" size={20} stroke={1.7} color="#fff" />
-                <span style={{ color: "#fff", fontSize: 16, fontWeight: 600 }}>Ajouter à {walletLabel}</span>
+              <a href={walletHref} aria-label={`Ajouter à ${walletLabel}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={walletBadge} alt={`Ajouter à ${walletLabel}`} style={{ height: 52, width: "auto" }} />
               </a>
             )
           )}
