@@ -132,7 +132,7 @@ export default function MarchandPage() {
     return () => { document.body.style.overscrollBehavior = ""; document.documentElement.style.overscrollBehavior = ""; };
   }, []);
 
-  if (!m) return <Centered>{notFound ? "Ce commerce est introuvable." : "Chargement…"}</Centered>;
+  if (!m) return notFound ? <Centered>Ce commerce est introuvable.</Centered> : <MerchantSkeleton />;
 
   const couleur = m.couleur_principale || "#5B7CFA";
   const membre = !!carte;
@@ -389,6 +389,32 @@ const cardStyle: React.CSSProperties = { background: "#fff", borderRadius: 16, b
 const capsStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: FG3 };
 function gbStyle(side: "left" | "right"): React.CSSProperties {
   return { position: "absolute", top: "max(16px, env(safe-area-inset-top, 16px))", [side]: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,.8)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } as React.CSSProperties;
+}
+// Squelette de la page marchand : apparaît instantanément, se remplit (pas de texte « Chargement »).
+function Sk({ w, h, r = 10, style }: { w?: number | string; h: number; r?: number; style?: React.CSSProperties }) {
+  return <div className="shimmer" style={{ width: w ?? "100%", height: h, borderRadius: r, ...style }} />;
+}
+function MerchantSkeleton() {
+  return (
+    <main className="page-enter" style={{ minHeight: "100dvh", background: BG, fontFamily: "-apple-system, 'SF Pro Display', system-ui, sans-serif" }}>
+      <div style={{ maxWidth: 480, margin: "0 auto" }}>
+        <Sk h={300} r={0} />
+        <div style={{ padding: "0 20px", marginTop: -74, position: "relative" }}>
+          <Sk w={64} h={64} r={16} style={{ boxShadow: "0 0 0 3px " + BG }} />
+          <div style={{ marginTop: 14 }}><Sk w={200} h={24} r={8} /></div>
+          <div style={{ marginTop: 8 }}><Sk w={140} h={14} r={6} /></div>
+          <div style={{ marginTop: 8 }}><Sk w={120} h={14} r={6} /></div>
+        </div>
+        <div style={{ padding: "18px 16px 0", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(3,1fr)" }}>
+            <Sk h={66} r={14} /><Sk h={66} r={14} /><Sk h={66} r={14} />
+          </div>
+          <Sk h={132} r={16} />
+          <Sk h={96} r={16} />
+        </div>
+      </div>
+    </main>
+  );
 }
 function Centered({ children }: { children: React.ReactNode }) {
   return <main style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: BG, color: FG3, fontFamily: "-apple-system, 'SF Pro Display', system-ui, sans-serif", fontSize: 14 }}>{children}</main>;
