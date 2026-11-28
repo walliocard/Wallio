@@ -12,7 +12,10 @@ export async function GET(req: Request) {
   const snap = await adminDb().collection("marchands").where("actif", "==", true).get();
 
   const now = new Date();
-  let marchands = snap.docs.map(d => toMarchandPublic(d.id, d.data() as Record<string, unknown>, now));
+  // On exclut les commerçants de test (démo) — invisibles pour les vrais clients.
+  let marchands = snap.docs
+    .filter(d => !(d.data() as Record<string, unknown>).is_test)
+    .map(d => toMarchandPublic(d.id, d.data() as Record<string, unknown>, now));
   if (categorie && categorie !== "tous") {
     marchands = marchands.filter(m => m.categorie === categorie);
   }

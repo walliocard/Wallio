@@ -155,7 +155,7 @@ export default function MesCartesPage() {
     if (unsubMerchantsRef.current) return;
     const q = query(collection(db, "marchands"), where("actif", "==", true));
     unsubMerchantsRef.current = onSnapshot(q, snap => {
-      allMerchantsRef.current = snap.docs.map(d => {
+      allMerchantsRef.current = snap.docs.filter(d => !d.data().is_test).map(d => {
         const m = d.data();
         const di = m.date_inscription as { seconds?: number } | undefined;
         return {
