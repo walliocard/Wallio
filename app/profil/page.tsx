@@ -49,12 +49,16 @@ function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   );
 }
 
+// Cache mémoire du profil : survit aux allers-retours (affichage instantané, pas de flip du toggle).
+let profilCache: { phone: string; prenom: string; nom: string; dob: string; comptes: Compte[] } | null = null;
+
 export default function ProfilPage() {
-  const [phone, setPhone] = useState("");
-  const [prenom, setPrenom] = useState("");
-  const [nom, setNom] = useState("");
-  const [dob, setDob] = useState("");
-  const [comptes, setComptes] = useState<Compte[]>([]);
+  const [phone, setPhone] = useState(() => profilCache?.phone ?? "");
+  const [prenom, setPrenom] = useState(() => profilCache?.prenom ?? "");
+  const [nom, setNom] = useState(() => profilCache?.nom ?? "");
+  const [dob, setDob] = useState(() => profilCache?.dob ?? "");
+  const [comptes, setComptes] = useState<Compte[]>(() => profilCache?.comptes ?? []);
+  const [comptesReady, setComptesReady] = useState(!!profilCache);
   const [editPrenom, setEditPrenom] = useState(false);
   const [prenomDraft, setPrenomDraft] = useState("");
   const [editDob, setEditDob] = useState(false);
@@ -66,17 +70,20 @@ export default function ProfilPage() {
     const p = localStorage.getItem(PHONE_KEY) || "";
     if (!p) { window.location.href = "/mes-cartes"; return; }
     setPhone(p);
-    setPrenom(localStorage.getItem(PRENOM_KEY) || "");
-    setNom(localStorage.getItem(NOM_KEY) || "");
-    setDob(localStorage.getItem(DOB_KEY) || "");
+    if (!profilCache) {
+      setPrenom(localStorage.getItem(PRENOM_KEY) || "");
+      setNom(localStorage.getItem(NOM_KEY) || "");
+      setDob(localStorage.getItem(DOB_KEY) || "");
+    }
     (async () => {
       try {
         const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", p)));
         if (!snap.empty) {
           const d0 = snap.docs[0].data();
-          if (d0.prenom) setPrenom(d0.prenom as string);
-          if (d0.nom) setNom((d0.nom as string) || "");
-          if (d0.date_naissance) setDob(d0.date_naissance as string);
+          const fp = (d0.prenom as string) || localStorage.getItem(PRENOM_KEY) || "";
+          const fn = (d0.nom as string) || localStorage.getItem(NOM_KEY) || "";
+          const fd = (d0.date_naissance as string) || localStorage.getItem(DOB_KEY) || "";
+          setPrenom(fp); setNom(fn); setDob(fd);
           const list = await Promise.all(snap.docs.map(async d => {
             const c = d.data();
             let marchandNom = "Établissement", logoUrl: string | undefined;
@@ -87,8 +94,10 @@ export default function ProfilPage() {
             return { clientId: d.id, walletId: c.wallet_id as string, marchandId: c.marchand_id as string, marchandNom, logoUrl, notifOn: !!c.fcm_token } as Compte;
           }));
           setComptes(list);
+          profilCache = { phone: p, prenom: fp, nom: fn, dob: fd, comptes: list };
         }
       } catch { /* silent */ }
+      setComptesReady(true);
     })();
   }, []);
 
@@ -183,7 +192,9 @@ export default function ProfilPage() {
           {/* Notifications */}
           <Label>Notifications</Label>
           <Card>
-            <Row label="Recevoir les notifications" right={<Toggle on={notifGlobalOn} onChange={() => { if (notifGlobalOn) disableAllNotifs(); else setShowCommerces(true); }} />} />
+            <Row label="Recevoir les notifications" right={comptesReady
+              ? <Toggle on={notifGlobalOn} onChange={() => { if (notifGlobalOn) disableAllNotifs(); else setShowCommerces(true); }} />
+              : <span style={{ width: 44, height: 26, borderRadius: 100, background: "rgba(142,155,181,0.2)", display: "inline-block" }} />} />
             <Row label="Par commerce" last={!showCommerces} right={<Chevron />} onClick={() => setShowCommerces(v => !v)} />
             {showCommerces && comptes.map((c, i) => (
               <Row key={c.walletId} last={i === comptes.length - 1}

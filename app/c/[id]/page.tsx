@@ -88,30 +88,41 @@ export default function MarchandPage() {
   const [shareMsg, setShareMsg] = useState(false);
 
   useEffect(() => {
-    // Affichage instantané depuis le cache (préchargé par Mes cartes)
-    try { const cached = sessionStorage.getItem(`wallio_m_${id}`); if (cached) setM(JSON.parse(cached)); } catch { /* */ }
-    (async () => {
-      try {
-        const res = await fetch(`/api/public/marchand/${id}`);
-        if (!res.ok) { setNotFound(true); return; }
-        const data: MarchandPublic = await res.json();
+    // Affichage instantané depuis les caches (commerce + ta carte)
+    try { const cm = sessionStorage.getItem(`wallio_m_${id}`); if (cm) setM(JSON.parse(cm)); } catch { /* */ }
+    try { const cc = sessionStorage.getItem(`wallio_card_${id}`); if (cc) { setCarte(JSON.parse(cc)); setCarteChecked(true); } } catch { /* */ }
+
+    const phone = typeof window !== "undefined" ? localStorage.getItem(PHONE_KEY) || "" : "";
+
+    // 1) Infos commerce (revalidation) — en parallèle de la carte
+    fetch(`/api/public/marchand/${id}`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error("404"))))
+      .then((data: MarchandPublic) => {
         setM(data);
         try { sessionStorage.setItem(`wallio_m_${id}`, JSON.stringify(data)); } catch { /* */ }
-        const phone = localStorage.getItem(PHONE_KEY) || "";
-        if (phone) {
-          const snap = await getDocs(query(collection(db, "clients"), where("telephone", "==", phone), where("marchand_id", "==", data.id)));
-          if (!snap.empty) {
-            const c = snap.docs[0].data();
-            const walletId = c.wallet_id as string;
-            setCarte({ walletId, clientId: snap.docs[0].id, tampons: (c.tampons as number) || 0, paliersValides: c.paliers_valides as boolean[] | undefined, recompenseEnAttente: !!c.recompense_en_attente, nfcId: c.nfc_id as string | undefined, apnsToken: !!c.apns_push_token, walletType: (c.wallet_type as string) || null, notifOn: !!c.fcm_token });
-            const raw = (c.notifs as Notif[] | undefined) || [];
-            setNotifs([...raw].sort((a, b) => b.sentAt.localeCompare(a.sentAt)).slice(0, 2));
-            fetch(`/api/public/carte?walletId=${walletId}`).then(r => r.json()).then(d => { setEvents(d.events || []); setParrainages(d.parrainagesReussis || 0); }).catch(() => {});
-          }
+      })
+      .catch(() => { try { if (!sessionStorage.getItem(`wallio_m_${id}`)) setNotFound(true); } catch { setNotFound(true); } });
+
+    // 2) Ta carte chez ce commerce (en parallèle, pas après)
+    if (!phone) { setCarteChecked(true); return; }
+    getDocs(query(collection(db, "clients"), where("telephone", "==", phone), where("marchand_id", "==", id)))
+      .then(snap => {
+        if (!snap.empty) {
+          const c = snap.docs[0].data();
+          const walletId = c.wallet_id as string;
+          const carteObj: Carte = { walletId, clientId: snap.docs[0].id, tampons: (c.tampons as number) || 0, paliersValides: c.paliers_valides as boolean[] | undefined, recompenseEnAttente: !!c.recompense_en_attente, nfcId: c.nfc_id as string | undefined, apnsToken: !!c.apns_push_token, walletType: (c.wallet_type as string) || null, notifOn: !!c.fcm_token };
+          setCarte(carteObj);
+          try { sessionStorage.setItem(`wallio_card_${id}`, JSON.stringify(carteObj)); } catch { /* */ }
+          const raw = (c.notifs as Notif[] | undefined) || [];
+          setNotifs([...raw].sort((a, b) => b.sentAt.localeCompare(a.sentAt)).slice(0, 2));
+          fetch(`/api/public/carte?walletId=${walletId}`).then(r => r.json()).then(d => { setEvents(d.events || []); setParrainages(d.parrainagesReussis || 0); }).catch(() => {});
+        } else {
+          setCarte(null);
+          try { sessionStorage.removeItem(`wallio_card_${id}`); } catch { /* */ }
         }
-        setCarteChecked(true);
-      } catch { setNotFound(true); setCarteChecked(true); }
-    })();
+      })
+      .catch(() => {})
+      .finally(() => setCarteChecked(true));
   }, [id]);
 
   // Rebond iOS natif (même sensation que Mes cartes)

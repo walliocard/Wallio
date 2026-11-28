@@ -308,6 +308,14 @@ export default function MesCartesPage() {
       router.prefetch("/profil");
       results.forEach(c => {
         router.prefetch(`/c/${c.marchandId}`);
+        // Cache de TA carte (tampons/progression instantanés sur la page marchand)
+        try {
+          sessionStorage.setItem(`wallio_card_${c.marchandId}`, JSON.stringify({
+            walletId: c.walletId, clientId: c.clientId, tampons: c.stampsCurrent,
+            paliersValides: c.paliersValides, recompenseEnAttente: false,
+            nfcId: c.nfcId, apnsToken: c.hasPushToken, walletType: null, notifOn: c.hasFcmToken,
+          }));
+        } catch { /* */ }
         fetch(`/api/public/marchand/${c.marchandId}`)
           .then(r => (r.ok ? r.json() : null))
           .then(d => { if (d) try { sessionStorage.setItem(`wallio_m_${c.marchandId}`, JSON.stringify(d)); } catch { /* */ } })
