@@ -808,7 +808,7 @@ export default function MesCartesPage() {
         {/* Logo + halo */}
         <div style={{ position: "relative", marginBottom: 30, display: "flex", justifyContent: "center" }}>
           <div style={{ position: "absolute", width: 210, height: 210, top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: "radial-gradient(circle, rgba(123,92,246,0.34), rgba(47,123,255,0.16) 45%, transparent 70%)", filter: "blur(28px)", pointerEvents: "none" }} />
-          <img src="/wallio-instagram-profil.png" alt="Wallio" style={{ position: "relative", width: 96, height: 96, borderRadius: 24, boxShadow: "0 14px 36px rgba(99,102,241,0.28)" }} />
+          <img id="login-logo" src="/wallio-instagram-profil.png" alt="Wallio" style={{ position: "relative", width: 96, height: 96, borderRadius: 24, boxShadow: "0 14px 36px rgba(99,102,241,0.28)" }} />
         </div>
 
         {/* Titre + sous-titre */}
