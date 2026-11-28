@@ -124,6 +124,26 @@ input[type="date"] {
   background: rgba(0, 122, 255, 0.2);
 }
 
+/* Transitions de page (slide iOS) + onglets */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateX(22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.page-enter { animation: page-enter 0.34s cubic-bezier(.32,.72,0,1) both; }
+
+@keyframes tab-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tab-fade { animation: tab-fade 0.26s cubic-bezier(.32,.72,0,1) both; }
+
+.tab-indicator { transition: transform 0.32s cubic-bezier(.32,.72,0,1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter, .tab-fade { animation: none; }
+  .tab-indicator { transition: none; }
+}
+
 /* Sliders — style iOS */
 input[type="range"] {
   -webkit-appearance: none;

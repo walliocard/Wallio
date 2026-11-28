@@ -867,8 +867,13 @@ export default function MesCartesPage() {
           </Link>
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: "flex", gap: 6, padding: "5px", background: "rgba(142,155,181,0.12)", borderRadius: 18, marginBottom: 20, backdropFilter: "blur(8px)" }}>
+        {/* Tabs — indicateur unique qui glisse */}
+        <div style={{ position: "relative", display: "flex", padding: "5px", background: "rgba(142,155,181,0.12)", borderRadius: 18, marginBottom: 20, backdropFilter: "blur(8px)" }}>
+          <div className="tab-indicator" aria-hidden style={{
+            position: "absolute", top: 5, bottom: 5, left: 5, width: "calc((100% - 10px) / 4)", borderRadius: 13,
+            background: "white", boxShadow: "0 2px 12px rgba(100,120,160,0.15)", zIndex: 0,
+            transform: `translateX(${["cartes", "messages", "map", "decouvrir"].indexOf(tab) * 100}%)`,
+          }} />
           {(() => {
             const unread = notifs.filter(n => !n.read).length;
             return ([
@@ -878,12 +883,11 @@ export default function MesCartesPage() {
               ["decouvrir", t.mes_cartes_tab_discover, 0],
             ] as const).map(([key, label, badge]) => (
               <button key={key} onClick={() => setTab(key)} style={{
-                flex: 1, padding: "10px 4px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 11.5, fontWeight: 600,
+                position: "relative", zIndex: 1, flex: 1, padding: "10px 4px", borderRadius: 12, border: "none", cursor: "pointer", fontSize: 11.5, fontWeight: 600,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 5, whiteSpace: "nowrap",
-                background: tab === key ? "white" : "transparent",
+                background: "transparent",
                 color: tab === key ? "#1C2333" : "#8E9BB5",
-                boxShadow: tab === key ? "0 2px 12px rgba(100,120,160,0.15)" : "none",
-                transition: "all 0.2s",
+                transition: "color 0.2s",
               }}>
                 {label}
                 {badge > 0 && (
@@ -937,6 +941,7 @@ export default function MesCartesPage() {
           </div>
         )}
 
+        <div key={tab} className="tab-fade" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {/* ── Tab Mes cartes ── */}
         {tab === "cartes" && (
           cards.length === 0 ? (
@@ -1144,6 +1149,7 @@ export default function MesCartesPage() {
             </div>
           );
         })()}
+        </div>
       </div>
 
       <p style={{ textAlign: "center", fontSize: 12, color: "#B0BAD0", paddingBottom: 8, paddingTop: 8 }}>{t.mes_cartes_footer}</p>

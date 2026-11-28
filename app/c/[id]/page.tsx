@@ -157,7 +157,7 @@ export default function MarchandPage() {
   const evtLabel = (e: Evt) => e.type === "auto_validation" ? "Récompense délivrée" : (e.recompense || e.type === "recompense" || e.type === "choix_gerant") ? "Récompense validée" : e.type.includes("parrain") ? "Tampon de parrainage" : "Tampon ajouté";
 
   return (
-    <main style={{ minHeight: "100dvh", background: BG, color: FG, fontFamily: "-apple-system, 'SF Pro Display', system-ui, sans-serif" }}>
+    <main className="page-enter" style={{ minHeight: "100dvh", background: BG, color: FG, fontFamily: "-apple-system, 'SF Pro Display', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 480, margin: "0 auto", paddingBottom: membre ? 48 : 110 }}>
 
         {/* HERO + dégradé + boutons ronds */}
