@@ -28,7 +28,7 @@ export default function PasskeyRegisterBanner({ telephone }: { telephone: string
       const { registerPasskey } = await import("@/lib/passkey-client");
       const ok = await registerPasskey(telephone);
       setState(ok ? "done" : "idle");
-      if (ok) setTimeout(() => setState("hidden"), 2000);
+      if (ok) { try { localStorage.setItem("wallio_passkey_on", "1"); } catch { /* */ } setTimeout(() => setState("hidden"), 2000); }
     } catch {
       setState("idle");
     }

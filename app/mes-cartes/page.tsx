@@ -125,6 +125,17 @@ export default function MesCartesPage() {
   }, []);
   const [countryCode, setCountryCode] = useState("+212");
   const [phoneInput, setPhoneInput]   = useState("");
+  const [faceIdAvail, setFaceIdAvail] = useState(false);
+  const [faceIdLoading, setFaceIdLoading] = useState(false);
+
+  // Face ID disponible ? (passkey enregistré sur CET appareil + support plateforme)
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("wallio_passkey_on") === "1") {
+        import("@/lib/passkey-client").then(({ isPasskeySupported }) => isPasskeySupported().then(ok => setFaceIdAvail(ok)).catch(() => {}));
+      }
+    } catch { /* */ }
+  }, []);
   const [phone, setPhone]       = useState(() => cardsCache?.phone ?? "");
   const [prenom, setPrenom]     = useState(() => cardsCache?.prenom ?? "");
   const [nom, setNom]           = useState(() => cardsCache?.nom ?? "");
@@ -355,6 +366,22 @@ export default function MesCartesPage() {
     }, () => { setNotFound(true); setStep("login"); setFetching(false); });
   }
 
+
+  async function handleFaceId() {
+    setFaceIdLoading(true);
+    try {
+      const { authenticateWithPasskey } = await import("@/lib/passkey-client");
+      const telephone = await authenticateWithPasskey();
+      if (telephone) {
+        setPhone(telephone);
+        localStorage.setItem(PHONE_KEY, telephone);
+        localStorage.setItem(VERIFIED_KEY, "1");
+        await loadCards(telephone); // bascule sur "main" au 1er snapshot
+      }
+    } catch { /* annulation / échec → on reste sur la connexion */ } finally {
+      setFaceIdLoading(false);
+    }
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -828,7 +855,25 @@ export default function MesCartesPage() {
         </p>
 
         {/* Formulaire */}
-        <form onSubmit={handleLogin} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12, marginTop: 30 }}>
+        {faceIdAvail && (
+          <div style={{ width: "100%", marginTop: 28 }}>
+            <button onClick={handleFaceId} disabled={faceIdLoading}
+              style={{ width: "100%", height: 54, borderRadius: 16, border: "1px solid #E3E5EC", background: "#fff", cursor: faceIdLoading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontSize: 16, fontWeight: 600, color: "#1C2333" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2F7BFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2" />
+                <path d="M9 10v1M15 10v1M12 10v3l-1 1M9.5 15c.8.6 1.6.9 2.5.9s1.7-.3 2.5-.9" />
+              </svg>
+              {faceIdLoading ? "Connexion…" : "Se connecter avec Face ID"}
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0 2px" }}>
+              <div style={{ flex: 1, height: 1, background: "#E3E5EC" }} />
+              <span style={{ fontSize: 13, color: "#8E9BB5" }}>ou</span>
+              <div style={{ flex: 1, height: 1, background: "#E3E5EC" }} />
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12, marginTop: faceIdAvail ? 10 : 30 }}>
           <div style={{ display: "flex", gap: 8 }}>
             <select value={countryCode} onChange={e => setCountryCode(e.target.value)}
               style={{ flexShrink: 0, width: 118, height: 54, borderRadius: 15, background: "#F1F2F6", border: "1px solid #E3E5EC", padding: "0 12px", fontSize: 16, fontWeight: 500, color: "#1C2333", appearance: "none", WebkitAppearance: "none", outline: "none" }}>
